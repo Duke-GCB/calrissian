@@ -6,8 +6,8 @@ import os
 import shutil
 import tempfile
 
-
 log = logging.getLogger("seawall.job")
+
 
 class SubmittableKubernetesJob(object):
 
@@ -161,6 +161,7 @@ class SeawallCommandLineJob(CommandLineJob):
         # Stage the files using cwltool job's stage_files function
         # Using the CWL defaults here that do symlinks
         # TODO: REANA does not use symlinks, does that break?
+        # NOTE: REANA wraps this in a check for OSError, so maybe we should skip it
         stage_files(self.pathmapper, ignore_writable=True, symlink=True,
                     secret_store=runtimeContext.secret_store)
         if self.generatemapper is not None:
@@ -218,12 +219,13 @@ class SeawallCommandLineJob(CommandLineJob):
                     with os.fdopen(fd, "wb") as f:
                         f.write(vol.resolved.encode("utf-8"))
 
-    def build_submittable_job(self):
-        submittable_job = SubmittableKubernetesJob(self)
+    def build_submittable_job(self, name):
+        submittable_job = SubmittableKubernetesJob(self, name)
         return submittable_job
 
     def submit_job(self, submittable_job):
-        log.info(submittable_job.build())
+        import yaml
+        log.info(yaml.dump(submittable_job.build()))
 
     def wait_for_completion(self):
         pass
@@ -242,9 +244,10 @@ class SeawallCommandLineJob(CommandLineJob):
         self._setup(runtimeContext)
         self.make_tmpdir()
         self.populate_env_vars()
-        self.stage_files(runtimeContext)
+        # Skipping stage_files for now. REANA silently captures an exception anyways, so it may not be necessary
+        # self.stage_files(runtimeContext)
         self.populate_volumes()
-        j = self.build_submittable_job()
+        j = self.build_submittable_job(self.name)
         self.submit_job(j)
         self.wait_for_completion()
         self.finish()
