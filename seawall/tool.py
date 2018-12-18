@@ -1,5 +1,6 @@
 from cwltool.command_line_tool import CommandLineTool
 from cwltool.workflow import default_make_tool
+from job import SeawallCommandLineJob
 import logging
 
 log = logging.getLogger("seawall.tool")
@@ -9,7 +10,8 @@ class SeawallCommandLineTool(CommandLineTool):
     def make_job_runner(self, runtimeContext):
         log.info('inside make_job_runner')
         # TODO: inject Docker requirement
-        return super(SeawallCommandLineTool, self).make_job_runner(runtimeContext)
+        # This should return a callable
+        return SeawallCommandLineJob
 
 
 def seawall_make_tool(spec, loadingContext):
