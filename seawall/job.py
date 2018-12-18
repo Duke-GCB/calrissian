@@ -71,19 +71,26 @@ class SubmittableKubernetesJob(object):
         Array of volume mounts
         :return:
         """
-        pass
+        mounts = []
+        for index, volume in enumerate(self.seawall_job.volumes):
+            mounts.append({
+                'name': '{}-vol-{}'.format(self.name, index),
+                'mountPath': volume[1]
+            })
+        return mounts
 
-    def volume_name(self):
-        #TODO: what should this be
-        return 'seawall-job'
-
-    def volume_mount_path(self):
-        #TODO: What should this be?
-        return '/mount-path'
-
-    def volume_host_path(self):
-        #TODO: what should this be?
-        return '/host-path'
+    def volumes(self):
+        """
+        Array of volumes to attach
+        :return:
+        """
+        volumes = []
+        for index, volume in enumerate(self.seawall_job.volumes):
+            volumes.append({
+                'name': '{}-vol-{}'.format(self.name, index),
+                'hostPath': volume[0]
+            })
+        return volumes
 
     def container_command(self):
         pass
@@ -115,20 +122,10 @@ class SubmittableKubernetesJob(object):
                                 'name': self.container_name(),
                                 'image': self.container_image(),
                                 'command': self.container_command(),
-                                'volumeMounts': [
-                                    {
-                                        'name': self.volume_name(),
-                                        'mountPath': self.volume_mount_path()
-                                    }
-                                ]
+                                'volumeMounts': self.container_volume_mounts()
                              }
                         ],
-                        'volumes': [
-                            {
-                                'name': self.volume_name(),
-                                'hostPath': self.volume_host_path()
-                            }
-                        ]
+                        'volumes': self.volumes()
                     }
                 }
             }
@@ -211,6 +208,9 @@ class SeawallCommandLineJob(CommandLineJob):
                         shutil.copytree(vol.resolved, host_outdir_tgt)
                         ensure_writable(host_outdir_tgt)
             elif vol.type == "CreateFile":
+                # This is the case where the file contents are literal in the job order
+                # So this code can simply write that out to temporary space in the filesystem
+                # but it doesn't make it into self.volumes list
                 if host_outdir_tgt:
                     with open(host_outdir_tgt, "wb") as f:
                         f.write(vol.resolved.encode("utf-8"))
