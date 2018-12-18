@@ -239,6 +239,7 @@ class SeawallCommandLineJob(CommandLineJob):
 
     def run(self, runtimeContext):
         log.info('run seawall job')
+        self._setup(runtimeContext)
         self.make_tmpdir()
         self.populate_env_vars()
         self.stage_files(runtimeContext)
