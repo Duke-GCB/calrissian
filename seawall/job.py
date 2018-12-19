@@ -15,41 +15,6 @@ class SubmittableKubernetesJob(object):
         self.seawall_job = seawall_job
         self.name = name
 
-    # Internal
-    def _build_cp_volumes_line(self):
-        pass
-
-    def _handle_shell_command(self):
-        pass
-
-    def _replace_local_cwl_dirs(self):
-        pass
-
-
-    def _connect_stdin(self):
-        pass
-
-    def _connect_stdout(self):
-        pass
-
-    def _connect_stderr(self):
-        pass
-
-    def _build_set_wd_command(self):
-        #TODO: May not be necessary, can probably set workdir
-        pass
-
-    def handle_docker_outputdir(self):
-        pass
-
-    def build_copy_to_outputdir_line(self):
-        pass
-
-    def wrap_commandline(self):
-        pass
-
-    # These functions produce the objects in the k8s job.containers spec
-
     def job_name(self):
         return '{}-job'.format(self.name)
 
@@ -107,22 +72,28 @@ class SubmittableKubernetesJob(object):
         })
         return volumes
 
+    # To provide the CWL command-line to kubernetes, we must wrap it in 'sh -c <command string>'
+    # Otherwise we can't do things like redirecting stdout.
+
     def container_command(self):
-        # TODO: Check shellquote or shell command requirement
+        return ['/bin/sh', '-c']
+
+    def container_args(self):
+        # TODO: Check shouldquote/shellescape/pipes.quote/etc
         # TODO: stdout/in/err may point to directory paths that don't exist yet
         # so add a container beforehand with a simple script that creates those
         # I think a k8s job can have multiple containers in sequence.
-        command = []
-        command.extend(self.seawall_job.command_line)
+        job_command = self.seawall_job.command_line.copy()
         if self.seawall_job.stdout:
-            command.extend(['>', self.seawall_job.stdout])
+            job_command.extend(['>', self.seawall_job.stdout])
         if self.seawall_job.stderr:
-            command.extend(['2>', self.seawall_job.stderr])
+            job_command.extend(['2>', self.seawall_job.stderr])
         if self.seawall_job.stdin:
-            command.extend(['<', self.seawall_job.stdin])
-        import shellescape
-        command = [shellescape.quote(x) for x in command]
-        return ['/bin/sh', '-c'] + command
+            job_command.extend(['<', self.seawall_job.stdin])
+        # job_command is a list of strings. Needs to be turned into a single string
+        # and passed as an argument to sh -c. Otherwise we cannot redirect STDIN/OUT/ERR inside a kubernetes job
+        # Join everything into a single string and then return a single args list
+        return [' '.join(job_command)]
 
     def container_environment(self):
         """
@@ -139,6 +110,7 @@ class SubmittableKubernetesJob(object):
         Return the working directory for this container
         :return:
         """
+        #TODO: Handle DockerOutputDir, here if appropriate
         return self.seawall_job.environment['HOME']
 
     def build(self):
@@ -156,6 +128,7 @@ class SubmittableKubernetesJob(object):
                                 'name': self.container_name(),
                                 'image': self.container_image(),
                                 'command': self.container_command(),
+                                'args': self.container_args(),
                                 'env': self.container_environment(),
                                 'volumeMounts': self.container_volume_mounts(),
                                 'workingDir': self.container_workingdir(),
@@ -182,12 +155,15 @@ class SeawallCommandLineJob(CommandLineJob):
 
     def populate_env_vars(self):
         # cwltool command-line job sets this to self.outdir, but reana uses self.builder.outdir
+        # Update: it looks like self.builder.outdir is the inside-container variant, while self.outdir is the host path
         self.environment["HOME"] = self.builder.outdir
         self.environment["TMPDIR"] = self.tmpdir
         # Reana also sets some varaibles from os.environ, but those wouldn't make any sense here
         # Looks like leftovers from cwl's local executor
 
     def stage_files(self, runtimeContext):
+        # This is currently not used
+        raise Exception('stage_files is not functional')
         # Stage the files using cwltool job's stage_files function
         # Using the CWL defaults here that do symlinks
         # TODO: REANA does not use symlinks, does that break?
