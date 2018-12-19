@@ -76,6 +76,12 @@ class SubmittableKubernetesJob(object):
                 'name': '{}-vol-{}'.format(self.name, index),
                 'mountPath': volume[1]
             })
+
+        # Also need an output volume
+        mounts.append({
+            'name': '{}-vol-outdir'.format(self.name),
+            'mountPath': self.seawall_job.builder.outdir
+        })
         return mounts
 
     def volumes(self):
@@ -92,11 +98,19 @@ class SubmittableKubernetesJob(object):
                     # Leaving off type here since we won't be using hostPath long-term
                 }
             })
+        # And also add the outdir
+        volumes.append({
+            'name': '{}-vol-outdir'.format(self.name),
+            'hostPath': {
+                'path': self.seawall_job.outdir
+            }
+        })
         return volumes
 
     def container_command(self):
         # TODO: Check shellquote or shell command requirement
-        # TODO: stdout/in/err may point to directory paths that don't exist, so add a container beforehand with a simple script that creates those
+        # TODO: stdout/in/err may point to directory paths that don't exist yet
+        # so add a container beforehand with a simple script that creates those
         # I think a k8s job can have multiple containers in sequence.
         command = []
         command.extend(self.seawall_job.command_line)
@@ -106,10 +120,8 @@ class SubmittableKubernetesJob(object):
             command.extend(['2>', self.seawall_job.stderr])
         if self.seawall_job.stdin:
             command.extend(['<', self.seawall_job.stdin])
-        import pipes
         import shellescape
         command = [shellescape.quote(x) for x in command]
-
         return ['/bin/sh', '-c'] + command
 
     def container_environment(self):
@@ -232,6 +244,8 @@ class SeawallCommandLineJob(CommandLineJob):
                 # This is the case where the file contents are literal in the job order
                 # So this code can simply write that out to temporary space in the filesystem
                 # but it doesn't make it into self.volumes list
+                # Looks like the underlying assumption is that we can just write that out locally from the engine
+                # and it goes to the directory that will be the working dir for the container
                 if host_outdir_tgt:
                     with open(host_outdir_tgt, "wb") as f:
                         f.write(vol.resolved.encode("utf-8"))
