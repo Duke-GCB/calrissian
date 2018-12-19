@@ -132,10 +132,6 @@ class SubmittableKubernetesJob(object):
         }
 
 
-
-
-
-
 class SeawallCommandLineJob(CommandLineJob):
 
     def __init__(self, *args, **kwargs):
