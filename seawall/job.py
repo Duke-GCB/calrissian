@@ -16,9 +16,6 @@ class SubmittableKubernetesJob(object):
         self.name = name
 
     # Internal
-    def _build_exported_vars_line(self):
-        pass
-
     def _build_cp_volumes_line(self):
         pass
 
@@ -51,7 +48,6 @@ class SubmittableKubernetesJob(object):
     def wrap_commandline(self):
         pass
 
-
     # These functions produce the objects in the k8s job.containers spec
 
     def job_name(self):
@@ -63,8 +59,11 @@ class SubmittableKubernetesJob(object):
     def container_image(self):
         """
         The docker image to use
-        :return:
+        :return: Name of docker image from CWL DockerRequirement.
         """
+        # Only looking at dockerPull here, since we are not implementing local image lookups
+        docker_req, _ = self.seawall_job.get_requirement("DockerRequirement")
+        return str(docker_req['dockerPull'])
 
     def container_volume_mounts(self):
         """
@@ -88,31 +87,49 @@ class SubmittableKubernetesJob(object):
         for index, volume in enumerate(self.seawall_job.volumes):
             volumes.append({
                 'name': '{}-vol-{}'.format(self.name, index),
-                'hostPath': volume[0]
+                'hostPath': {
+                    'path': volume[0]
+                    # Leaving off type here since we won't be using hostPath long-term
+                }
             })
         return volumes
 
     def container_command(self):
-        pass
+        # TODO: Check shellquote or shell command requirement
+        # TODO: stdout/in/err may point to directory paths that don't exist, so add a container beforehand with a simple script that creates those
+        # I think a k8s job can have multiple containers in sequence.
+        command = self.seawall_job.command_line.copy()
+        if self.seawall_job.stdout:
+            command.extend(['>', self.seawall_job.stdout])
+        if self.seawall_job.stderr:
+            command.extend(['2>', self.seawall_job.stderr])
+        if self.seawall_job.stdin:
+            command.extend(['<', self.seawall_job.stdin])
+        return command
 
     def container_environment(self):
         """
         Build the environment line for the kubernetes yaml
-        :return:
+        :return: array of env variables to set
         """
+        environment = []
+        for name, value in self.seawall_job.environment.items():
+            environment.append({'name': name, 'value': value})
+        return environment
 
     def container_workingdir(self):
         """
         Return the working directory for this container
         :return:
         """
-        pass
+        return self.seawall_job.environment['HOME']
 
     def build(self):
         return {
             'metadata': {
                 'name': self.job_name()
             },
+            'apiVersion': 'batch/v1',
             'kind':'Job',
             'spec': {
                 'template': {
@@ -122,9 +139,12 @@ class SubmittableKubernetesJob(object):
                                 'name': self.container_name(),
                                 'image': self.container_image(),
                                 'command': self.container_command(),
-                                'volumeMounts': self.container_volume_mounts()
+                                'env': self.container_environment(),
+                                'volumeMounts': self.container_volume_mounts(),
+                                'workingDir': self.container_workingdir(),
                              }
                         ],
+                        'restartPolicy': 'Never',
                         'volumes': self.volumes()
                     }
                 }
