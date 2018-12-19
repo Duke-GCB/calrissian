@@ -98,14 +98,19 @@ class SubmittableKubernetesJob(object):
         # TODO: Check shellquote or shell command requirement
         # TODO: stdout/in/err may point to directory paths that don't exist, so add a container beforehand with a simple script that creates those
         # I think a k8s job can have multiple containers in sequence.
-        command = self.seawall_job.command_line.copy()
+        command = []
+        command.extend(self.seawall_job.command_line)
         if self.seawall_job.stdout:
             command.extend(['>', self.seawall_job.stdout])
         if self.seawall_job.stderr:
             command.extend(['2>', self.seawall_job.stderr])
         if self.seawall_job.stdin:
             command.extend(['<', self.seawall_job.stdin])
-        return command
+        import pipes
+        import shellescape
+        command = [shellescape.quote(x) for x in command]
+
+        return ['/bin/sh', '-c'] + command
 
     def container_environment(self):
         """
