@@ -144,6 +144,8 @@ class KubernetesJobBuilder(object):
         }
 
 
+# This now subclasses ContainerCommandLineJob, but only uses two of its methods:
+# create_file_and_add_volume and add_volumes
 class SeawallCommandLineJob(ContainerCommandLineJob):
 
     def __init__(self, *args, **kwargs):
@@ -174,13 +176,12 @@ class SeawallCommandLineJob(ContainerCommandLineJob):
 
     def wait_for_kubernetes_job(self):
         self.client.wait()
+        #TODO: check the results
 
     def finish(self):
+        #TODO Check the results for real and clean-up
         status = 'success'
         # collect_outputs (and collect_output) is definied in command_line_tool
-        # It needs filesystem access to compute checksums and stuff
-        # can that happen remotely or does it need to happen here?
-        # I guess this needs to run in k8s too, so it might as well all have that assumption that it's per bespin-job
         outputs = self.collect_outputs(self.outdir)
         self.output_callback(outputs, status)
 
@@ -222,7 +223,7 @@ class SeawallCommandLineJob(ContainerCommandLineJob):
                 any_path_okay=any_path_okay)
 
         # TODO: Determine if we can port --read-only, networkaccess, log-driver, --user
-        # TODO: Provide the resource limits
+        # TODO: Provide the CPU/memory limits
 
         k8s_builder = KubernetesJobBuilder(
             self.name,
@@ -236,17 +237,22 @@ class SeawallCommandLineJob(ContainerCommandLineJob):
         )
         built = k8s_builder.build()
         log.debug('{}\n{}{}\n'.format('-' * 80, yaml.dump(built), '-' * 80))
-        # Anything left in runtime
-        log.info('Runtime leftovers are {}'.format(' '.join(runtime)))
+        # Report an error if anything was added to the runtime list
+        if runtime:
+            log.error('Runtime list is not empty. k8s does not use that, so you should see who put something there:\n{}'.format(' '.join(runtime)))
         return built
 
     def execute_kubernetes_job(self, k8s_job):
         self.client.submit_job(k8s_job)
 
     def _add_volume_binding(self, source, target, note='', writable=False):
+        # TODO: Consider if this should have a field for a File or a Directory, and promote to custom object
         self.volumes.append({'source':source, 'target':target, 'note':note, 'writable':writable})
 
-    # these add_*_volume methods are based on https://github.com/common-workflow-language/cwltool/blob/1.0.20181201184214/cwltool/docker.py
+    # Below are concrete implementations of methods called by add_volumes
+    # They are based on https://github.com/common-workflow-language/cwltool/blob/1.0.20181201184214/cwltool/docker.py
+    # But the key difference is that docker is invoked via command-line, so the ones in docker.py append to
+    # a runtime list. Here, we instead call self._add_volume_binding()
 
     def add_file_or_directory_volume(self,
                                      runtime,         # type: List[Text]
@@ -255,7 +261,6 @@ class SeawallCommandLineJob(ContainerCommandLineJob):
                                      ):
         """Append volume a file/dir mapping to the runtime option list."""
         if not volume.resolved.startswith("_:"):
-            # TODO: Would it be better to mark these as files/directories?
             self._add_volume_binding(volume.resolved, volume.target) # this one defaults to read_only
 
     def add_writable_file_volume(self,
@@ -280,7 +285,6 @@ class SeawallCommandLineJob(ContainerCommandLineJob):
                     tmpdir, os.path.basename(volume.resolved))
                 log.debug('shutil.copy({}, {})'.format(volume.resolved, file_copy))
                 shutil.copy(volume.resolved, file_copy)
-                # TODO: Would it be better to mark these as files or directories?
                 self._add_volume_binding(file_copy, volume.target, writable=True)
             ensure_writable(host_outdir_tgt or file_copy)
 
@@ -298,7 +302,6 @@ class SeawallCommandLineJob(ContainerCommandLineJob):
                 new_dir = os.path.join(
                     tempfile.mkdtemp(dir=self.tmpdir),
                     os.path.basename(volume.target))
-                # TODO: Would it be better to mark these as files or directories?
                 self._add_volume_binding(new_dir, volume.target, writable=True)
             elif not os.path.exists(host_outdir_tgt):
                 log.debug('os.makedirs({}, 0o0755)'.format(host_outdir_tgt))
@@ -319,9 +322,19 @@ class SeawallCommandLineJob(ContainerCommandLineJob):
                     log.debug('shutil.copytree({}, {})'.format(volume.resolved, host_outdir_tgt))
                     shutil.copytree(volume.resolved, host_outdir_tgt)
                 ensure_writable(host_outdir_tgt or new_dir)
-    #####
-    #### These methods are not implemented and are here to prove they are not called
-    #####
+
+    def run(self, runtimeContext):
+        self.make_tmpdir()
+        self.populate_env_vars()
+        self._setup(runtimeContext)
+        k8s_job = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
+        self.execute_kubernetes_job(k8s_job) # analogous to _execute()
+        self.wait_for_kubernetes_job()
+        self.finish()
+
+    # Below are concrete implementations of the remaining abstract methods in ContainerCommandLineJob
+    # They are not implemented and not expected to be called, so they all raise NotImplementedError
+
     def get_from_requirements(self,
                               r,                                    # type: Dict[Text, Text]
                               pull_image,                           # type: bool
@@ -341,11 +354,3 @@ class SeawallCommandLineJob(ContainerCommandLineJob):
     def append_volume(runtime, source, target, writable=False):
         raise NotImplementedError('append_volume')
 
-    def run(self, runtimeContext):
-        self.make_tmpdir()
-        self.populate_env_vars()
-        self._setup(runtimeContext)
-        k8s_job = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
-        self.execute_kubernetes_job(k8s_job) # analogous to _execute()
-        self.wait_for_kubernetes_job()
-        self.finish()
