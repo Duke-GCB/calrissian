@@ -12,7 +12,6 @@ for logger in loggers:
 def main():
 
     argslist = [
-        '--outdir=cwl/out',
         'cwl/revsort-single.cwl',
         'cwl/revsort-single-job.json'
     ]

@@ -49,4 +49,5 @@ class Client(object):
             if job.status.failed:
                 self._job_failed(job)
             if self._done_waiting():
+                self.batch_api_instance.delete_namespaced_job(job.metadata.name, self.namespace, body=client.V1DeleteOptions())
                 w.stop()
