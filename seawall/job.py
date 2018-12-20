@@ -233,8 +233,10 @@ class SeawallCommandLineJob(CommandLineJob):
 
     def submit_kubernetes_job(self):
         k8s_builder = KubernetesJobBuilder(self, self.name)
-        log.info('Submitting job with name {}'.format(k8s_builder.name))
-        self.client.submit_job(k8s_builder.build())
+        built = k8s_builder.build()
+        import yaml
+        log.debug('{}\n{}{}\n'.format('-' * 80, yaml.dump(built), '-' * 80))
+        self.client.submit_job(built)
 
     def wait_for_kubernetes_job(self):
         self.client.wait()
@@ -249,7 +251,6 @@ class SeawallCommandLineJob(CommandLineJob):
         self.output_callback(outputs, status)
 
     def run(self, runtimeContext):
-        log.info('run seawall job')
         self._setup(runtimeContext)
         self.make_tmpdir()
         self.populate_env_vars()

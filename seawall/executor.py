@@ -12,5 +12,4 @@ class SeawallExecutor(SingleJobExecutor):
                  logger,
                  runtime_context     # type: RuntimeContext
                 ):
-        log.info('Inside executor.run_jobs()')
         return super(SeawallExecutor, self).run_jobs(process, job_order_object, logger, runtime_context)

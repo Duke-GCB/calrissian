@@ -3,6 +3,9 @@ import logging
 
 log = logging.getLogger('seawall.k8s')
 
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 class SeawallJobException(Exception):
     pass
 
@@ -15,12 +18,15 @@ class Client(object):
         self.namespace = namespace
 
     def _job_started(self, job):
+        log.info('k8s job \'{}\' started'.format(job.metadata.name))
         self.job_ids.append(job.metadata.uid)
 
     def _job_succeeded(self, job):
+        log.info('k8s job \'{}\' succeeded'.format(job.metadata.name))
         self.job_ids.remove(job.metadata.uid)
 
     def _job_failed(self, job):
+        log.info('k8s job \'{}\' failed'.format(job.metadata.name))
         self.job_ids.remove(job.metadata.uid)
         raise SeawallJobException('Job failed')
 
@@ -34,16 +40,12 @@ class Client(object):
         self._job_started(job)
 
     def wait(self):
-        # Not sure what this does. Looks like it emits an event every time something changes.
         w = watch.Watch()
         for event in w.stream(self.batch_api_instance.list_namespaced_job, self.namespace):
             job = event['object']
             if job.metadata.uid not in self.job_ids:
                 # Not a job we're looking for
                 continue
-            log.info("{} name: {} active:{} succeeded:{} failed: {}".format(event['type'],
-                                                                            job.metadata.name, job.status.active,
-                                                                            job.status.succeeded, job.status.failed))
             if job.status.succeeded:
                 self._job_succeeded(job)
             if job.status.failed:
