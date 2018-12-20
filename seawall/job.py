@@ -1,19 +1,26 @@
-from cwltool.job import CommandLineJob, relink_initialworkdir
-from cwltool.pathmapper import ensure_writable
-from cwltool.process import stage_files
+from cwltool.job import ContainerCommandLineJob
+from cwltool.utils import DEFAULT_TMP_PREFIX
 from k8s import Client
 import logging
 import os
+import yaml
 import shutil
 import tempfile
+from cwltool.pathmapper import ensure_writable, ensure_non_writable
 
 log = logging.getLogger("seawall.job")
 
 class KubernetesJobBuilder(object):
 
-    def __init__(self, seawall_job, name):
-        self.seawall_job = seawall_job
+    def __init__(self, name, container_image, environment, volumes, command_line, stdout, stderr, stdin):
         self.name = name
+        self.container_image = container_image
+        self.environment = environment
+        self.volumes = volumes
+        self.command_line = command_line
+        self.stdout = stdout
+        self.stderr = stderr
+        self.stdin = stdin
 
     def job_name(self):
         return '{}-job'.format(self.name)
@@ -21,7 +28,7 @@ class KubernetesJobBuilder(object):
     def container_name(self):
         return '{}-container'.format(self.name)
 
-    def container_image(self):
+    def set_container_image(self):
         """
         The docker image to use
         :return: Name of docker image from CWL DockerRequirement.
@@ -30,46 +37,37 @@ class KubernetesJobBuilder(object):
         docker_req, _ = self.seawall_job.get_requirement("DockerRequirement")
         return str(docker_req['dockerPull'])
 
+    def _volume_name(self, volume, index):
+        return '{}-{}-{}'.format(self.name, volume['note'], index)
+
     def container_volume_mounts(self):
         """
         Array of volume mounts
         :return:
         """
         mounts = []
-        for index, volume in enumerate(self.seawall_job.volumes):
+        for index, volume in enumerate(self.volumes):
             mounts.append({
-                'name': '{}-vol-{}'.format(self.name, index),
-                'mountPath': volume[1]
+                'name': self._volume_name(volume, index),
+                'mountPath': volume['target']
             })
-
-        # Also need an output volume
-        mounts.append({
-            'name': '{}-vol-outdir'.format(self.name),
-            'mountPath': self.seawall_job.builder.outdir
-        })
+        # TODO: can we make these read-only?
         return mounts
 
-    def volumes(self):
+    def container_volumes(self):
         """
         Array of volumes to attach
         :return:
         """
         volumes = []
-        for index, volume in enumerate(self.seawall_job.volumes):
+        for index, volume in enumerate(self.volumes):
             volumes.append({
-                'name': '{}-vol-{}'.format(self.name, index),
+                'name': self._volume_name(volume, index),
                 'hostPath': {
-                    'path': volume[0]
+                    'path': volume['source']
                     # Leaving off type here since we won't be using hostPath long-term
                 }
             })
-        # And also add the outdir
-        volumes.append({
-            'name': '{}-vol-outdir'.format(self.name),
-            'hostPath': {
-                'path': self.seawall_job.outdir
-            }
-        })
         return volumes
 
     # To provide the CWL command-line to kubernetes, we must wrap it in 'sh -c <command string>'
@@ -79,17 +77,19 @@ class KubernetesJobBuilder(object):
         return ['/bin/sh', '-c']
 
     def container_args(self):
-        # TODO: Check shouldquote/shellescape/pipes.quote/etc
-        # TODO: stdout/in/err may point to directory paths that don't exist yet
+        # TODO: Add missing features (quoting, creating directories for stdout, secret_store)
+        # Look to _execute in https://github.com/common-workflow-language/cwltool/blob/1.0.20181201184214/cwltool/job.py
+
         # so add a container beforehand with a simple script that creates those
         # I think a k8s job can have multiple containers in sequence.
-        job_command = self.seawall_job.command_line.copy()
-        if self.seawall_job.stdout:
-            job_command.extend(['>', self.seawall_job.stdout])
-        if self.seawall_job.stderr:
-            job_command.extend(['2>', self.seawall_job.stderr])
-        if self.seawall_job.stdin:
-            job_command.extend(['<', self.seawall_job.stdin])
+        # And for symmetry, where should the result code checking be? here or in the client?
+        job_command = self.command_line.copy()
+        if self.stdout:
+            job_command.extend(['>', self.stdout])
+        if self.stderr:
+            job_command.extend(['2>', self.stderr])
+        if self.stdin:
+            job_command.extend(['<', self.stdin])
         # job_command is a list of strings. Needs to be turned into a single string
         # and passed as an argument to sh -c. Otherwise we cannot redirect STDIN/OUT/ERR inside a kubernetes job
         # Join everything into a single string and then return a single args list
@@ -101,7 +101,7 @@ class KubernetesJobBuilder(object):
         :return: array of env variables to set
         """
         environment = []
-        for name, value in self.seawall_job.environment.items():
+        for name, value in self.environment.items():
             environment.append({'name': name, 'value': value})
         return environment
 
@@ -111,7 +111,7 @@ class KubernetesJobBuilder(object):
         :return:
         """
         #TODO: Handle DockerOutputDir, here if appropriate
-        return self.seawall_job.environment['HOME']
+        return self.environment['HOME']
 
     def build(self):
         return {
@@ -135,14 +135,14 @@ class KubernetesJobBuilder(object):
                              }
                         ],
                         'restartPolicy': 'Never',
-                        'volumes': self.volumes()
+                        'volumes': self.container_volumes()
                     }
                 }
             }
         }
 
 
-class SeawallCommandLineJob(CommandLineJob):
+class SeawallCommandLineJob(ContainerCommandLineJob):
 
     def __init__(self, *args, **kwargs):
         super(SeawallCommandLineJob, self).__init__(*args, **kwargs)
@@ -152,68 +152,16 @@ class SeawallCommandLineJob(CommandLineJob):
     def make_tmpdir(self):
         # Doing this because cwltool.job does it
         if not os.path.exists(self.tmpdir):
+            log.debug('os.makedirs({})'.format(self.tmpdir))
             os.makedirs(self.tmpdir)
 
     def populate_env_vars(self):
-        # cwltool command-line job sets this to self.outdir, but reana uses self.builder.outdir
-        # Update: it looks like self.builder.outdir is the inside-container variant, while self.outdir is the host path
+        # cwltool DockerCommandLineJob always sets HOME to self.builder.outdir
+        # https://github.com/common-workflow-language/cwltool/blob/1.0.20181201184214/cwltool/docker.py#L338
         self.environment["HOME"] = self.builder.outdir
-        self.environment["TMPDIR"] = self.tmpdir
-        # Reana also sets some varaibles from os.environ, but those wouldn't make any sense here
-        # Looks like leftovers from cwl's local executor
-
-    def populate_volumes(self):
-        pathmapper = self.pathmapper
-        # This method copied from cwl_reana.py.
-        # what does it do?
-
-        host_outdir = self.outdir
-        container_outdir = self.builder.outdir
-        for src, vol in pathmapper.items():
-            if not vol.staged:
-                continue
-            if vol.target.startswith(container_outdir + "/"):
-                host_outdir_tgt = os.path.join(
-                    host_outdir, vol.target[len(container_outdir) + 1:])
-            else:
-                host_outdir_tgt = None
-            if vol.type in ("File", "Directory"):
-                if not vol.resolved.startswith("_:"):
-                    resolved = vol.resolved
-                    if not os.path.exists(resolved):
-                        resolved = "/".join(
-                            vol.resolved.split("/")[:-1]) + "/" + \
-                            vol.target.split("/")[-1]
-                    self.volumes.append((resolved, vol.target))
-            elif vol.type == "WritableFile":
-                if self.inplace_update:
-                    self.volumes.append((vol.resolved, vol.target))
-                else:
-                    shutil.copy(vol.resolved, host_outdir_tgt)
-                    ensure_writable(host_outdir_tgt)
-            if vol.type == "WritableDirectory":
-                if vol.resolved.startswith("_:"):
-                    if not os.path.exists(vol.target):
-                        os.makedirs(vol.target, mode=0o0755)
-                else:
-                    if self.inplace_update:
-                        pass
-                    else:
-                        shutil.copytree(vol.resolved, host_outdir_tgt)
-                        ensure_writable(host_outdir_tgt)
-            elif vol.type == "CreateFile":
-                # This is the case where the file contents are literal in the job order
-                # So this code can simply write that out to temporary space in the filesystem
-                # but it doesn't make it into self.volumes list
-                # Looks like the underlying assumption is that we can just write that out locally from the engine
-                # and it goes to the directory that will be the working dir for the container
-                if host_outdir_tgt:
-                    with open(host_outdir_tgt, "wb") as f:
-                        f.write(vol.resolved.encode("utf-8"))
-                else:
-                    fd, createtmp = tempfile.mkstemp(dir=self.tmpdir)
-                    with os.fdopen(fd, "wb") as f:
-                        f.write(vol.resolved.encode("utf-8"))
+        # cwltool DockerCommandLineJob always sets TMPDIR to /tmp
+        # https://github.com/common-workflow-language/cwltool/blob/1.0.20181201184214/cwltool/docker.py#L333
+        self.environment["TMPDIR"] = '/tmp'
 
     def submit_kubernetes_job(self):
         k8s_builder = KubernetesJobBuilder(self, self.name)
@@ -234,12 +182,163 @@ class SeawallCommandLineJob(CommandLineJob):
         outputs = self.collect_outputs(self.outdir)
         self.output_callback(outputs, status)
 
+    def _get_container_image(self):
+        # we only use dockerPull here
+        # Could possibly make an API call to kubernetes to check for the image there, but that's not important right now
+        (docker_req, docker_is_req) = self.get_requirement("DockerRequirement")
+        return str(docker_req["dockerPull"])
+
+    def create_kubernetes_runtime(self, runtimeContext):
+        # In cwltool, the runtime list starts as something like ['docker','run'] and these various builder methods
+        # append to that list with docker (or singularity) options like volume mount paths
+        # As we build up kubernetes, these aren't really used this way so we leave it empty
+        runtime = []
+
+        # Append volume for outdir
+        self._add_volume_binding(os.path.realpath(self.outdir), self.builder.outdir, 'outdir', writable=True)
+        # Append volume for tmp
+        self._add_volume_binding(os.path.realpath(self.tmpdir), '/tmp', 'tmp', writable=True)
+
+        # Call the ContainerCommandLineJob add_volumes method
+        self.add_volumes(self.pathmapper, runtime, any_path_okay=True,
+                         secret_store=runtimeContext.secret_store,
+                         tmpdir_prefix=runtimeContext.tmpdir_prefix)
+
+        if self.generatemapper is not None:
+            # TODO: look at what any_path_okay is for
+            # Seems to be true if docker is a hard requirement
+            # This evaluates to true if docker_is_required is true
+            # Used only for generatemapper add volumes
+            any_path_okay = self.builder.get_requirement("DockerRequirement")[1] or False
+            self.add_volumes(
+                self.generatemapper, runtime, any_path_okay=any_path_okay,
+                secret_store=runtimeContext.secret_store)
+
+        # TODO: Determine if we can port --read-only, networkaccess, log-driver, --user
+        # TODO: Provide the resource limits
+
+        k8s_builder = KubernetesJobBuilder(
+            self.name,
+            self._get_container_image(),
+            self.environment,
+            self.volumes,
+            self.command_line,
+            self.stdout,
+            self.stderr,
+            self.stdin
+        )
+        built = k8s_builder.build()
+        log.debug('{}\n{}{}\n'.format('-' * 80, yaml.dump(built), '-' * 80))
+        # Anything left in runtime
+        log.info('Runtime leftovers are {}'.format(' '.join(runtime)))
+        return built
+
+    def execute_kubernetes_job(self, k8s_job):
+        self.client.submit_job(k8s_job)
+
+    def _add_volume_binding(self):
+        self.volumes.append({'source':source, 'target':target, 'note':note, 'writable':writable})
+
+    # these add_*_volume methods are based on https://github.com/common-workflow-language/cwltool/blob/1.0.20181201184214/cwltool/docker.py
+
+    def add_file_or_directory_volume(self,
+                                     runtime,         # type: List[Text]
+                                     volume,          # type: MapperEnt
+                                     host_outdir_tgt  # type: Optional[Text]
+                                     ):
+        """Append volume a file/dir mapping to the runtime option list."""
+        if not volume.resolved.startswith("_:"):
+            # TODO: Would it be better to mark these as files/directories?
+            self._add_volume_binding(volume.resolved, volume.target, writable=True)
+
+    def add_writable_file_volume(self,
+                                 runtime,          # type: List[Text]
+                                 volume,           # type: MapperEnt
+                                 host_outdir_tgt,  # type: Optional[Text]
+                                 tmpdir_prefix     # type: Text
+                                 ):
+        """Append a writable file mapping to the runtime option list."""
+        if self.inplace_update:
+            self._add_volume_binding(volume.resolved, volume.target, writable=True)
+        else:
+            if host_outdir_tgt:
+                # shortcut, just copy to the output directory
+                # which is already going to be mounted
+                log.debug('shutil.copy({}, {})'.format(volume.resolved, host_outdir_tgt))
+                shutil.copy(volume.resolved, host_outdir_tgt)
+            else:
+                log.debug('tempfile.mkdtemp(dir={})'.format(self.tmpdir))
+                tmpdir = tempfile.mkdtemp(dir=self.tmpdir)
+                file_copy = os.path.join(
+                    tmpdir, os.path.basename(volume.resolved))
+                log.debug('shutil.copy({}, {})'.format(volume.resolved, file_copy))
+                shutil.copy(volume.resolved, file_copy)
+                # TODO: Would it be better to mark these as files or directories?
+                self._add_volume_binding(file_copy, volume.target, writable=True)
+            ensure_writable(host_outdir_tgt or file_copy)
+
+    def add_writable_directory_volume(self,
+                                      runtime,          # type: List[Text]
+                                      volume,           # type: MapperEnt
+                                      host_outdir_tgt,  # type: Optional[Text]
+                                      tmpdir_prefix     # type: Text
+                                      ):
+        """Append a writable directory mapping to the runtime option list."""
+        if volume.resolved.startswith("_:"):
+            # Synthetic directory that needs creating first
+            if not host_outdir_tgt:
+                log.debug('tempfile.mkdtemp(dir={})'.format(self.tmpdir))
+                new_dir = os.path.join(
+                    tempfile.mkdtemp(dir=self.tmpdir),
+                    os.path.basename(volume.target))
+                # TODO: Would it be better to mark these as files or directories?
+                self._add_volume_binding(new_dir, volume.target, writable=True)
+            elif not os.path.exists(host_outdir_tgt):
+                log.debug('os.makedirs({}, 0o0755)'.format(host_outdir_tgt))
+                os.makedirs(host_outdir_tgt, 0o0755)
+        else:
+            if self.inplace_update:
+                self._add_volume_binding(volume.resolved, volume.target, writable=True)
+            else:
+                if not host_outdir_tgt:
+                    log.debug('tempfile.mkdtemp(dir={})'.format(self.tmpdir))
+                    tmpdir = tempfile.mkdtemp(dir=self.tmpdir)
+                    new_dir = os.path.join(
+                        tmpdir, os.path.basename(volume.resolved))
+                    log.debug('shutil.copytree({}, {})'.format(volume.resolved, new_dir))
+                    shutil.copytree(volume.resolved, new_dir)
+                    self._add_volume_binding(new_dir, volume.target, writable=True)
+                else:
+                    log.debug('shutil.copytree({}, {})'.format(volume.resolved, host_outdir_tgt))
+                    shutil.copytree(volume.resolved, host_outdir_tgt)
+                ensure_writable(host_outdir_tgt or new_dir)
+    #####
+    #### These methods are not implemented and are here to prove they are not called
+    #####
+    def get_from_requirements(self,
+                              r,                                    # type: Dict[Text, Text]
+                              pull_image,                           # type: bool
+                              force_pull=False,                     # type: bool
+                              tmp_outdir_prefix=DEFAULT_TMP_PREFIX  # type: Text
+                              ):
+        raise NotImplementedError('get_from_requirements')
+
+    def create_runtime(self,
+                       env,             # type: MutableMapping[Text, Text]
+                       runtime_context  # type: RuntimeContext
+                       ):
+        # expected to return runtime list and cid string
+        raise NotImplementedError('create_runtime')
+
+    @staticmethod
+    def append_volume(runtime, source, target, writable=False):
+        raise NotImplementedError('append_volume')
+
     def run(self, runtimeContext):
-        self._setup(runtimeContext)
         self.make_tmpdir()
         self.populate_env_vars()
-        # Removed stage_files call - cwltool docker doesn't use it
-        self.populate_volumes()
-        self.submit_kubernetes_job()
+        self._setup(runtimeContext)
+        k8s_job = self.create_kubernetes_runtime() # analogous to create_runtime()
+        self.execute_kubernetes_job(k8s_job) # analogous to _execute()
         self.wait_for_kubernetes_job()
         self.finish()
