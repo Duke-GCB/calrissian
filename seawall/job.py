@@ -1,6 +1,7 @@
 from cwltool.job import CommandLineJob, relink_initialworkdir
 from cwltool.pathmapper import ensure_writable
 from cwltool.process import stage_files
+from k8s import Client
 import logging
 import os
 import shutil
@@ -8,8 +9,7 @@ import tempfile
 
 log = logging.getLogger("seawall.job")
 
-
-class SubmittableKubernetesJob(object):
+class KubernetesJobBuilder(object):
 
     def __init__(self, seawall_job, name):
         self.seawall_job = seawall_job
@@ -147,6 +147,7 @@ class SeawallCommandLineJob(CommandLineJob):
     def __init__(self, *args, **kwargs):
         super(SeawallCommandLineJob, self).__init__(*args, **kwargs)
         self.volumes = []
+        self.client = Client(os.getenv('K8S_NAMESPACE', 'default'))
 
     def make_tmpdir(self):
         # Doing this because cwltool.job does it
@@ -230,16 +231,13 @@ class SeawallCommandLineJob(CommandLineJob):
                     with os.fdopen(fd, "wb") as f:
                         f.write(vol.resolved.encode("utf-8"))
 
-    def build_submittable_job(self, name):
-        submittable_job = SubmittableKubernetesJob(self, name)
-        return submittable_job
+    def submit_kubernetes_job(self):
+        k8s_builder = KubernetesJobBuilder(self, self.name)
+        log.info('Submitting job with name {}'.format(k8s_builder.name))
+        self.client.submit_job(k8s_builder.build())
 
-    def submit_job(self, submittable_job):
-        import yaml
-        log.info(yaml.dump(submittable_job.build()))
-
-    def wait_for_completion(self):
-        pass
+    def wait_for_kubernetes_job(self):
+        self.client.wait()
 
     def finish(self):
         status = 'success'
@@ -258,7 +256,6 @@ class SeawallCommandLineJob(CommandLineJob):
         # Skipping stage_files for now. REANA silently captures an exception anyways, so it may not be necessary
         # self.stage_files(runtimeContext)
         self.populate_volumes()
-        j = self.build_submittable_job(self.name)
-        self.submit_job(j)
-        self.wait_for_completion()
+        self.submit_kubernetes_job()
+        self.wait_for_kubernetes_job()
         self.finish()

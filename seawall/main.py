@@ -4,7 +4,7 @@ from version import version
 from cwltool.main import main as cwlmain
 import logging
 
-loggers = ['executor','context','tool','job']
+loggers = ['executor','context','tool','job', 'k8s']
 for logger in loggers:
     logging.getLogger('seawall.{}'.format(logger)).setLevel(logging.INFO)
     logging.getLogger('seawall.{}'.format(logger)).addHandler(logging.StreamHandler())
