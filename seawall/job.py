@@ -238,7 +238,7 @@ class SeawallCommandLineJob(ContainerCommandLineJob):
     def execute_kubernetes_job(self, k8s_job):
         self.client.submit_job(k8s_job)
 
-    def _add_volume_binding(self, source, target, note='', writable=False):
+    def _add_volume_binding(self, source, target, note='vol', writable=False):
         # TODO: Consider if this should have a field for a File or a Directory, and promote to custom object
         self.volumes.append({'source':source, 'target':target, 'note':note, 'writable':writable})
 
