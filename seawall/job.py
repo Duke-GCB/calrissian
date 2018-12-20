@@ -49,7 +49,8 @@ class KubernetesJobBuilder(object):
         for index, volume in enumerate(self.volumes):
             mounts.append({
                 'name': self._volume_name(volume, index),
-                'mountPath': volume['target']
+                'mountPath': volume['target'],
+                'readOnly': not volume['writable']
             })
         # TODO: can we make these read-only?
         return mounts
@@ -254,7 +255,7 @@ class SeawallCommandLineJob(ContainerCommandLineJob):
         """Append volume a file/dir mapping to the runtime option list."""
         if not volume.resolved.startswith("_:"):
             # TODO: Would it be better to mark these as files/directories?
-            self._add_volume_binding(volume.resolved, volume.target, writable=True)
+            self._add_volume_binding(volume.resolved, volume.target) # this one defaults to read_only
 
     def add_writable_file_volume(self,
                                  runtime,          # type: List[Text]
