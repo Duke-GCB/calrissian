@@ -167,13 +167,6 @@ class SeawallCommandLineJob(ContainerCommandLineJob):
         # https://github.com/common-workflow-language/cwltool/blob/1.0.20181201184214/cwltool/docker.py#L333
         self.environment["TMPDIR"] = '/tmp'
 
-    def submit_kubernetes_job(self):
-        k8s_builder = KubernetesJobBuilder(self, self.name)
-        built = k8s_builder.build()
-        import yaml
-        log.debug('{}\n{}{}\n'.format('-' * 80, yaml.dump(built), '-' * 80))
-        self.client.submit_job(built)
-
     def wait_for_kubernetes_job(self):
         self.client.wait()
         #TODO: check the results
