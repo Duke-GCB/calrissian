@@ -162,22 +162,6 @@ class SeawallCommandLineJob(CommandLineJob):
         # Reana also sets some varaibles from os.environ, but those wouldn't make any sense here
         # Looks like leftovers from cwl's local executor
 
-    def stage_files(self, runtimeContext):
-        # This is currently not used
-        raise Exception('stage_files is not functional')
-        # Stage the files using cwltool job's stage_files function
-        # Using the CWL defaults here that do symlinks
-        # TODO: REANA does not use symlinks, does that break?
-        # NOTE: REANA wraps this in a check for OSError, so maybe we should skip it
-        stage_files(self.pathmapper, ignore_writable=True, symlink=True,
-                    secret_store=runtimeContext.secret_store)
-        if self.generatemapper is not None:
-            stage_files(self.generatemapper, ignore_writable=self.inplace_update,
-                        symlink=True, secret_store=runtimeContext.secret_store)
-            relink_initialworkdir(
-                self.generatemapper, self.outdir, self.builder.outdir,
-                inplace_update=self.inplace_update)
-
     def populate_volumes(self):
         pathmapper = self.pathmapper
         # This method copied from cwl_reana.py.
@@ -254,8 +238,7 @@ class SeawallCommandLineJob(CommandLineJob):
         self._setup(runtimeContext)
         self.make_tmpdir()
         self.populate_env_vars()
-        # Skipping stage_files for now. REANA silently captures an exception anyways, so it may not be necessary
-        # self.stage_files(runtimeContext)
+        # Removed stage_files call - cwltool docker doesn't use it
         self.populate_volumes()
         self.submit_kubernetes_job()
         self.wait_for_kubernetes_job()
