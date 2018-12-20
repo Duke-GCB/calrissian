@@ -1,7 +1,8 @@
 from executor import SeawallExecutor
-from context import SeawallLoadingContext, SeawallRuntimeContext
+from context import SeawallLoadingContext
 from version import version
 from cwltool.main import main as cwlmain
+from cwltool.argparser import arg_parser
 import logging
 
 loggers = ['executor','context','tool','job', 'k8s']
@@ -11,25 +12,21 @@ for logger in loggers:
 
 def main():
 
-    argslist = [
+    args = [
+        '--tmpdir-prefix', './cwl/tmp/tmp',
+        '--tmp-outdir-prefix', './cwl/tmp/tmpout',
         'cwl/revsort-single.cwl',
         'cwl/revsort-single-job.json'
     ]
-    logging.getLogger('seawall.context').setLevel(logging.INFO)
 
-    executor = SeawallExecutor()
-    loading_context = SeawallLoadingContext()
-    # Note using the args list format, it appears I need to put the prefix args into the runtime context
-    # maybe the arg parser works around this
-    runtime_context = SeawallRuntimeContext({'tmpdir_prefix': 'cwl/tmp/tmpout', 'tmp_outdir_prefix': 'cwl/tmp/tmpout'})
+    parser = arg_parser()
+    parsed_args = parser.parse_args(args)
 
-    result = cwlmain(argslist,
-                     executor=executor,
-                     loadingContext=loading_context,
-                     runtimeContext=runtime_context,
+    result = cwlmain(args=parsed_args,
+                     executor=SeawallExecutor(),
+                     loadingContext=SeawallLoadingContext(),
                      versionfunc=version,
-                 )
-
+                     )
     print(result)
 
 
