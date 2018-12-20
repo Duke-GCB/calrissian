@@ -126,7 +126,7 @@ class KubernetesJobBuilder(object):
                         'containers': [
                             {
                                 'name': self.container_name(),
-                                'image': self.container_image(),
+                                'image': self.container_image,
                                 'command': self.container_command(),
                                 'args': self.container_args(),
                                 'env': self.container_environment(),
@@ -200,9 +200,11 @@ class SeawallCommandLineJob(ContainerCommandLineJob):
         self._add_volume_binding(os.path.realpath(self.tmpdir), '/tmp', 'tmp', writable=True)
 
         # Call the ContainerCommandLineJob add_volumes method
-        self.add_volumes(self.pathmapper, runtime, any_path_okay=True,
+        self.add_volumes(self.pathmapper,
+                         runtime,
+                         tmpdir_prefix=runtimeContext.tmpdir_prefix,
                          secret_store=runtimeContext.secret_store,
-                         tmpdir_prefix=runtimeContext.tmpdir_prefix)
+                         any_path_okay=True)
 
         if self.generatemapper is not None:
             # TODO: look at what any_path_okay is for
@@ -211,8 +213,11 @@ class SeawallCommandLineJob(ContainerCommandLineJob):
             # Used only for generatemapper add volumes
             any_path_okay = self.builder.get_requirement("DockerRequirement")[1] or False
             self.add_volumes(
-                self.generatemapper, runtime, any_path_okay=any_path_okay,
-                secret_store=runtimeContext.secret_store)
+                self.generatemapper,
+                runtime,
+                tmpdir_prefix=runtimeContext.tmpdir_prefix,
+                secret_store=runtimeContext.secret_store,
+                any_path_okay=any_path_okay)
 
         # TODO: Determine if we can port --read-only, networkaccess, log-driver, --user
         # TODO: Provide the resource limits
@@ -236,7 +241,7 @@ class SeawallCommandLineJob(ContainerCommandLineJob):
     def execute_kubernetes_job(self, k8s_job):
         self.client.submit_job(k8s_job)
 
-    def _add_volume_binding(self):
+    def _add_volume_binding(self, source, target, note='', writable=False):
         self.volumes.append({'source':source, 'target':target, 'note':note, 'writable':writable})
 
     # these add_*_volume methods are based on https://github.com/common-workflow-language/cwltool/blob/1.0.20181201184214/cwltool/docker.py
@@ -338,7 +343,7 @@ class SeawallCommandLineJob(ContainerCommandLineJob):
         self.make_tmpdir()
         self.populate_env_vars()
         self._setup(runtimeContext)
-        k8s_job = self.create_kubernetes_runtime() # analogous to create_runtime()
+        k8s_job = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
         self.execute_kubernetes_job(k8s_job) # analogous to _execute()
         self.wait_for_kubernetes_job()
         self.finish()
