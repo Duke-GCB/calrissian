@@ -10,6 +10,7 @@ from cwltool.pathmapper import ensure_writable, ensure_non_writable
 
 log = logging.getLogger("seawall.job")
 
+
 class KubernetesJobBuilder(object):
 
     def __init__(self, name, container_image, environment, volumes, command_line, stdout, stderr, stdin):
