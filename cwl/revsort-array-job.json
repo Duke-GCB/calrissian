@@ -1,0 +1,9 @@
+{
+  "input": [
+    { "class": "File", "path": "hello1.txt" },
+    { "class": "File", "path": "hello2.txt" },
+    { "class": "File", "path": "hello3.txt" },
+    { "class": "File", "path": "hello4.txt" },
+    { "class": "File", "path": "hello5.txt" }
+  ]
+}
