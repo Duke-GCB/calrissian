@@ -42,12 +42,7 @@ class KubernetesVolumeBuilder(object):
         self.add_persistent_volume_entry('/calrissian/output-data', 'calrissian-output-data')
         self.add_persistent_volume_entry('/calrissian/tmptmp', 'calrissian-tmp')
         self.add_persistent_volume_entry('/calrissian/tmpout', 'calrissian-tmpout')
-        # This one is just for local testing
-        self.add_persistent_volume_entry('/Users/dcl9/Code/k8s/calrissian/cwl/tmp/out', 'local-tmpout')
-        self.add_persistent_volume_entry('/Users/dcl9/Code/k8s/calrissian/cwl/tmp/tmp', 'local-tmp')
-        # Ack, this has a shared prefix with the other two
-        self.add_persistent_volume_entry('/Users/dcl9/Code/k8s/calrissian/cwl/', 'local')
-
+        
     def add_persistent_volume_entry(self, prefix, claim_name):
         self.persistent_volume_entries[prefix] = {
             'prefix': prefix,
