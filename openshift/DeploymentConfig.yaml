@@ -81,6 +81,30 @@ items:
           - containerPort: 8080
             protocol: TCP
           resources: {}
+          volumeMounts:
+          - mountPath: /calrissian/input-data
+            name: calrissian-input-data
+            # input-data should be read-only
+          - mountPath: /calrissian/tmpout
+            name: calrissian-tmpout
+          - mountPath: /calrissian/tmp
+            name: calrissian-tmp
+            # tmp not need to be persistent
+          - mountPath: /calrissian/output-data
+            name: calrissian-output-data
+        volumes:
+        - name: calrissian-input-data
+          persistentVolumeClaim:
+            claimName: calrissian-input-data
+        - name: calrissian-tmpout
+          persistentVolumeClaim:
+            claimName: calrissian-tmpout
+        - name: calrissian-tmp
+          persistentVolumeClaim:
+            claimName: calrissian-tmp
+        - name: calrissian-output-data
+          persistentVolumeClaim:
+            claimName: calrissian-output-data
     test: false
     triggers:
     - type: ConfigChange
