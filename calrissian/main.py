@@ -4,6 +4,7 @@ from version import version
 from cwltool.main import main as cwlmain
 from cwltool.argparser import arg_parser
 import logging
+import sys
 
 loggers = ['executor','context','tool','job', 'k8s']
 for logger in loggers:
@@ -12,22 +13,13 @@ for logger in loggers:
 
 
 def main():
-    args = [
-        '--tmpdir-prefix', './cwl/tmp/tmp',
-        '--tmp-outdir-prefix', './cwl/tmp/tmpout',
-        'cwl/revsort-array.cwl',
-        'cwl/revsort-array-job.json'
-    ]
-
     parser = arg_parser()
-    parsed_args = parser.parse_args(args)
-
+    parsed_args = parser.parse_args()
     result = cwlmain(args=parsed_args,
                      executor=CalrissianExecutor(),
                      loadingContext=CalrissianLoadingContext(),
                      versionfunc=version,
                      )
-    print(result)
 
 
 if __name__ == '__main__':
