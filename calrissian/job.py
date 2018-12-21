@@ -56,7 +56,6 @@ class KubernetesJobBuilder(object):
                 'mountPath': volume['target'],
                 'readOnly': not volume['writable']
             })
-        # TODO: can we make these read-only?
         return mounts
 
     def container_volumes(self):

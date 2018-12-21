@@ -10,8 +10,8 @@ for logger in loggers:
     logging.getLogger('calrissian.{}'.format(logger)).setLevel(logging.DEBUG)
     logging.getLogger('calrissian.{}'.format(logger)).addHandler(logging.StreamHandler())
 
-def main():
 
+def main():
     args = [
         '--tmpdir-prefix', './cwl/tmp/tmp',
         '--tmp-outdir-prefix', './cwl/tmp/tmpout',
