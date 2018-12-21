@@ -1,3 +1,10 @@
 #!/bin/bash
 
-python calrissian/main.py --tmpdir-prefix ./cwl/tmp/tmp --tmp-outdir-prefix ./cwl/tmp/tmpout cwl/revsort-array.cwl cwl/revsort-array-job.json 
+python calrissian/main.py \
+  --tmpdir-prefix /calrissian/tmptmp/ \
+  --tmp-outdir-prefix /calrissian/tmpout/ \
+  --outdir /calrissian/output-data \
+  /calrissian/input-data/revsort-array.cwl \
+  /calrissian/input-data/revsort-array-job.json
+
+
