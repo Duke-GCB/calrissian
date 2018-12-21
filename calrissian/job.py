@@ -153,7 +153,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
     def __init__(self, *args, **kwargs):
         super(CalrissianCommandLineJob, self).__init__(*args, **kwargs)
         self.volumes = []
-        self.client = KubernetesClient(os.getenv('K8S_NAMESPACE', 'default'))
+        self.client = KubernetesClient()
 
     def make_tmpdir(self):
         # Doing this because cwltool.job does it

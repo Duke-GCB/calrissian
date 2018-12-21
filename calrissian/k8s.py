@@ -9,13 +9,24 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 class CalrissianJobException(Exception):
     pass
 
+def load_config_get_namespace():
+    try:
+        # Assume we're in the cluster
+        config.load_incluster_config()
+        namespace = open("/var/run/secrets/kubernetes.io/serviceaccount/namespace").read()
+    except config.ConfigException:
+        config.load_kube_config()
+        namespace = 'default'
+    return namespace
+
+
 class KubernetesClient(object):
 
-    def __init__(self, namespace):
+    def __init__(self):
         self.job_ids = []
-        config.load_kube_config()
+        # load_config must happen before instantiating client
+        self.namespace = load_config_get_namespace()
         self.batch_api_instance = client.BatchV1Api()
-        self.namespace = namespace
 
     def _job_started(self, job):
         log.info('k8s job \'{}\' started'.format(job.metadata.name))
