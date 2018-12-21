@@ -4,6 +4,7 @@ cwlVersion: v1.0
 requirements:
   - class: DockerRequirement
     dockerPull: debian:stretch-slim
+  - class: InlineJavascriptRequirement
 inputs:
   - id: reverse
     type: boolean
@@ -19,7 +20,7 @@ outputs:
   - id: output
     type: File
     outputBinding:
-      glob: output.txt
+      glob: $('sorted-' + inputs.input.basename)
 
 baseCommand: sort
-stdout: output.txt
+stdout: $('sorted-' + inputs.input.basename)

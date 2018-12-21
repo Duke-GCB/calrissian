@@ -4,6 +4,7 @@ doc: "Reverse each line using the `rev` command"
 requirements:
   - class: DockerRequirement
     dockerPull: debian:stretch-slim
+  - class: InlineJavascriptRequirement
 inputs:
   input:
     type: File
@@ -12,6 +13,6 @@ outputs:
   output:
     type: File
     outputBinding:
-      glob: output.txt
+      glob: $('reversed-' + inputs.input.basename)
 baseCommand: rev
-stdout: output.txt
+stdout: $('reversed-' + inputs.input.basename)
