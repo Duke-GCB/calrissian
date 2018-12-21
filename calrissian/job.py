@@ -64,7 +64,7 @@ class KubernetesVolumeBuilder(object):
 
     @staticmethod
     def calculate_subpath(source, prefix):
-        return source[len(prefix):]
+        return source[len(prefix) + 1:]
 
     @staticmethod
     def random_tag(length=8):
