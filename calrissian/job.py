@@ -42,7 +42,7 @@ class KubernetesVolumeBuilder(object):
         self.add_persistent_volume_entry('/calrissian/output-data', 'calrissian-output-data')
         self.add_persistent_volume_entry('/calrissian/tmptmp', 'calrissian-tmp')
         self.add_persistent_volume_entry('/calrissian/tmpout', 'calrissian-tmpout')
-        
+
     def add_persistent_volume_entry(self, prefix, claim_name):
         self.persistent_volume_entries[prefix] = {
             'prefix': prefix,
@@ -68,7 +68,7 @@ class KubernetesVolumeBuilder(object):
 
     @staticmethod
     def random_tag(length=8):
-        return ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase, k=length))
+        return ''.join(random.choices(string.ascii_lowercase, k=length))
 
     def add_volume_binding(self, base_name, source, target, note, writable):
         # Find the persistent volume claim where this goes
