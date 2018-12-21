@@ -1,10 +1,10 @@
-from cwltool.executors import SingleJobExecutor
+from cwltool.executors import MultithreadedJobExecutor
 import logging
 
 log = logging.getLogger("seawall.executor")
 
 
-class SeawallExecutor(SingleJobExecutor):
+class SeawallExecutor(MultithreadedJobExecutor):
 
     def run_jobs(self,
                  process,           # type: Process

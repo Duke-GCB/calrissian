@@ -23,11 +23,23 @@ class KubernetesJobBuilder(object):
         self.stderr = stderr
         self.stdin = stdin
 
+    @staticmethod
+    def k8s_safe_name(name):
+        """
+        Kubernetes does not allow underscores
+        DNS-1123 subdomain must consist of lower case alphanumeric characters, '-' or '.',
+        and must start and end with an alphanumeric character (e.g. 'example.com', regex used
+        for validation is '[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*'),
+        :param name:
+        :return: a safe name
+        """
+        return name.replace('_', '-')
+
     def job_name(self):
-        return '{}-job'.format(self.name)
+        return self.k8s_safe_name('{}-job'.format(self.name))
 
     def container_name(self):
-        return '{}-container'.format(self.name)
+        return self.k8s_safe_name('{}-container'.format(self.name))
 
     def set_container_image(self):
         """
@@ -39,7 +51,7 @@ class KubernetesJobBuilder(object):
         return str(docker_req['dockerPull'])
 
     def _volume_name(self, volume, index):
-        return '{}-{}-{}'.format(self.name, volume['note'], index)
+        return self.k8s_safe_name('{}-{}-{}'.format(self.name, volume['note'], index))
 
     def container_volume_mounts(self):
         """

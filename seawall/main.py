@@ -15,8 +15,8 @@ def main():
     args = [
         '--tmpdir-prefix', './cwl/tmp/tmp',
         '--tmp-outdir-prefix', './cwl/tmp/tmpout',
-        'cwl/revsort-single.cwl',
-        'cwl/revsort-single-job.json'
+        'cwl/revsort-array.cwl',
+        'cwl/revsort-array-job.json'
     ]
 
     parser = arg_parser()
