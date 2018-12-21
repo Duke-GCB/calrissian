@@ -6,73 +6,113 @@ import os
 import yaml
 import shutil
 import tempfile
+import random
+import string
 from cwltool.pathmapper import ensure_writable, ensure_non_writable
 
 log = logging.getLogger("calrissian.job")
 
+class VolumeBuilderException(Exception):
+    pass
+
+
+def k8s_safe_name(name):
+    """
+    Kubernetes does not allow underscores
+    DNS-1123 subdomain must consist of lower case alphanumeric characters, '-' or '.',
+    and must start and end with an alphanumeric character (e.g. 'example.com', regex used
+    for validation is '[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*'),
+    :param name:
+    :return: a safe name
+    """
+    return name.replace('_', '-')
+
+
+class KubernetesVolumeBuilder(object):
+
+    def __init__(self):
+        self.persistent_volume_entries = {}
+        self.populate_demo_values()
+        self.volume_mounts = []
+        self.volumes = []
+
+    def populate_demo_values(self):
+        # TODO: fetch these from the kubernetes API since they are attached to this pod
+        self.add_persistent_volume_entry('/calrissian/input-data', 'calrissian-input-data')
+        self.add_persistent_volume_entry('/calrissian/output-data', 'calrissian-output-data')
+        self.add_persistent_volume_entry('/calrissian/tmptmp', 'calrissian-tmp')
+        self.add_persistent_volume_entry('/calrissian/tmpout', 'calrissian-tmpout')
+        # This one is just for local testing
+        self.add_persistent_volume_entry('/Users/dcl9/Code/k8s/calrissian/cwl/tmp/out', 'local-tmpout')
+        self.add_persistent_volume_entry('/Users/dcl9/Code/k8s/calrissian/cwl/tmp/tmp', 'local-tmp')
+        # Ack, this has a shared prefix with the other two
+        self.add_persistent_volume_entry('/Users/dcl9/Code/k8s/calrissian/cwl/', 'local')
+
+    def add_persistent_volume_entry(self, prefix, claim_name):
+        self.persistent_volume_entries[prefix] = {
+            'prefix': prefix,
+            'volume': {
+                'persistentVolumeClaim': {
+                    'claimName': claim_name
+                }
+            }
+        }
+
+    def find_persistent_volume(self, source):
+        """
+        For a given source path, return the volume entry that contains it
+        """
+        for prefix, entry in self.persistent_volume_entries.items():
+            if source.startswith(prefix):
+                return entry
+        return None
+
+    @staticmethod
+    def calculate_subpath(source, prefix):
+        return source[len(prefix):]
+
+    @staticmethod
+    def random_tag(length=8):
+        return ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase, k=length))
+
+    def add_volume_binding(self, base_name, source, target, note, writable):
+        # Find the persistent volume claim where this goes
+        pv = self.find_persistent_volume(source)
+        if not pv:
+            raise VolumeBuilderException('Could not find a persistent volume mounted for {}'.format(source))
+        # Now build up the volume and volumeMount entries for this container
+        name = k8s_safe_name('{}-{}-{}'.format(base_name, note, self.random_tag(8)))
+        volume = pv['volume'].copy()
+        volume['name'] = name
+        self.volumes.append(volume)
+
+        volume_mount = {
+            'name': name,
+            'mountPath': target,
+            'subPath': self.calculate_subpath(source, pv['prefix']),
+            'readOnly': not writable
+        }
+        self.volume_mounts.append(volume_mount)
+
 
 class KubernetesJobBuilder(object):
 
-    def __init__(self, name, container_image, environment, volumes, command_line, stdout, stderr, stdin):
+    def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin):
         self.name = name
         self.container_image = container_image
         self.environment = environment
+        self.volume_mounts = volume_mounts
         self.volumes = volumes
         self.command_line = command_line
         self.stdout = stdout
         self.stderr = stderr
         self.stdin = stdin
 
-    @staticmethod
-    def k8s_safe_name(name):
-        """
-        Kubernetes does not allow underscores
-        DNS-1123 subdomain must consist of lower case alphanumeric characters, '-' or '.',
-        and must start and end with an alphanumeric character (e.g. 'example.com', regex used
-        for validation is '[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*'),
-        :param name:
-        :return: a safe name
-        """
-        return name.replace('_', '-')
-
     def job_name(self):
-        return self.k8s_safe_name('{}-job'.format(self.name))
+        return k8s_safe_name('{}-job'.format(self.name))
 
     def container_name(self):
-        return self.k8s_safe_name('{}-container'.format(self.name))
-
-    def _volume_name(self, volume, index):
-        return self.k8s_safe_name('{}-{}-{}'.format(self.name, volume['note'], index))
-
-    def container_volume_mounts(self):
-        """
-        Array of volume mounts
-        :return:
-        """
-        mounts = []
-        for index, volume in enumerate(self.volumes):
-            mounts.append({
-                'name': self._volume_name(volume, index),
-                'mountPath': volume['target'],
-                'readOnly': not volume['writable']
-            })
-        return mounts
-
-    def container_volumes(self):
-        """
-        Array of volumes to attach
-        :return:
-        """
-        volumes = []
-        for index, volume in enumerate(self.volumes):
-            volumes.append({
-                'name': self._volume_name(volume, index),
-                'hostPath': {
-                    'path': volume['source']
-                    # Leaving off type here since we won't be using hostPath long-term
-                }
-            })
-        return volumes
+        return k8s_safe_name('{}-container'.format(self.name))
 
     # To provide the CWL command-line to kubernetes, we must wrap it in 'sh -c <command string>'
     # Otherwise we can't do things like redirecting stdout.
@@ -134,12 +174,12 @@ class KubernetesJobBuilder(object):
                                 'command': self.container_command(),
                                 'args': self.container_args(),
                                 'env': self.container_environment(),
-                                'volumeMounts': self.container_volume_mounts(),
+                                'volumeMounts': self.volume_mounts,
                                 'workingDir': self.container_workingdir(),
                              }
                         ],
                         'restartPolicy': 'Never',
-                        'volumes': self.container_volumes()
+                        'volumes': self.volumes
                     }
                 }
             }
@@ -152,8 +192,8 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
 
     def __init__(self, *args, **kwargs):
         super(CalrissianCommandLineJob, self).__init__(*args, **kwargs)
-        self.volumes = []
         self.client = KubernetesClient()
+        self.volume_builder = KubernetesVolumeBuilder()
 
     def make_tmpdir(self):
         # Doing this because cwltool.job does it
@@ -224,7 +264,8 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             self.name,
             self._get_container_image(),
             self.environment,
-            self.volumes,
+            self.volume_builder.volume_mounts,
+            self.volume_builder.volumes,
             self.command_line,
             self.stdout,
             self.stderr,
@@ -241,8 +282,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         self.client.submit_job(k8s_job)
 
     def _add_volume_binding(self, source, target, note='vol', writable=False):
-        # TODO: Consider if this should have a field for a File or a Directory, and promote to custom object
-        self.volumes.append({'source':source, 'target':target, 'note':note, 'writable':writable})
+        self.volume_builder.add_volume_binding(self.name, source, target, note, writable)
 
     # Below are concrete implementations of methods called by add_volumes
     # They are based on https://github.com/common-workflow-language/cwltool/blob/1.0.20181201184214/cwltool/docker.py
