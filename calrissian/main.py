@@ -1,5 +1,5 @@
-from executor import SeawallExecutor
-from context import SeawallLoadingContext
+from executor import CalrissianExecutor
+from context import CalrissianLoadingContext
 from version import version
 from cwltool.main import main as cwlmain
 from cwltool.argparser import arg_parser
@@ -7,8 +7,8 @@ import logging
 
 loggers = ['executor','context','tool','job', 'k8s']
 for logger in loggers:
-    logging.getLogger('seawall.{}'.format(logger)).setLevel(logging.DEBUG)
-    logging.getLogger('seawall.{}'.format(logger)).addHandler(logging.StreamHandler())
+    logging.getLogger('calrissian.{}'.format(logger)).setLevel(logging.DEBUG)
+    logging.getLogger('calrissian.{}'.format(logger)).addHandler(logging.StreamHandler())
 
 def main():
 
@@ -23,8 +23,8 @@ def main():
     parsed_args = parser.parse_args(args)
 
     result = cwlmain(args=parsed_args,
-                     executor=SeawallExecutor(),
-                     loadingContext=SeawallLoadingContext(),
+                     executor=CalrissianExecutor(),
+                     loadingContext=CalrissianLoadingContext(),
                      versionfunc=version,
                      )
     print(result)

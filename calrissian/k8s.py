@@ -1,15 +1,15 @@
 from kubernetes import client, config, watch
 import logging
 
-log = logging.getLogger('seawall.k8s')
+log = logging.getLogger('calrissian.k8s')
 
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-class SeawallJobException(Exception):
+class CalrissianJobException(Exception):
     pass
 
-class Client(object):
+class KubernetesClient(object):
 
     def __init__(self, namespace):
         self.job_ids = []
@@ -28,7 +28,7 @@ class Client(object):
     def _job_failed(self, job):
         log.info('k8s job \'{}\' failed'.format(job.metadata.name))
         self.job_ids.remove(job.metadata.uid)
-        raise SeawallJobException('Job failed')
+        raise CalrissianJobException('Job failed')
 
     def _done_waiting(self):
         return len(self.job_ids) == 0

@@ -1,10 +1,10 @@
 from cwltool.executors import MultithreadedJobExecutor
 import logging
 
-log = logging.getLogger("seawall.executor")
+log = logging.getLogger("calrissian.executor")
 
 
-class SeawallExecutor(MultithreadedJobExecutor):
+class CalrissianExecutor(MultithreadedJobExecutor):
 
     # MultithreadedJobExecutor sets self.max_ram and self.max_cores to the local machine's resources
     # TODO: override init to set this
@@ -15,4 +15,4 @@ class SeawallExecutor(MultithreadedJobExecutor):
                  logger,
                  runtime_context     # type: RuntimeContext
                 ):
-        return super(SeawallExecutor, self).run_jobs(process, job_order_object, logger, runtime_context)
+        return super(CalrissianExecutor, self).run_jobs(process, job_order_object, logger, runtime_context)

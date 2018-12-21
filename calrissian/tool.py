@@ -1,19 +1,19 @@
 from cwltool.command_line_tool import CommandLineTool
 from cwltool.workflow import default_make_tool
-from job import SeawallCommandLineJob
+from job import CalrissianCommandLineJob
 import logging
 
-log = logging.getLogger("seawall.tool")
+log = logging.getLogger("calrissian.tool")
 
-class SeawallCommandLineTool(CommandLineTool):
+class CalrissianCommandLineTool(CommandLineTool):
 
     def make_job_runner(self, runtimeContext):
         # TODO: inject Docker requirement
         # This should return a callable
-        return SeawallCommandLineJob
+        return CalrissianCommandLineJob
 
 
-def seawall_make_tool(spec, loadingContext):
+def calrissian_make_tool(spec, loadingContext):
     """
     Construct a Process object from a CWL document loaded into spec
     :param spec:
@@ -22,7 +22,7 @@ def seawall_make_tool(spec, loadingContext):
     For other types of documents, return the CWL default_make_tool
     """
     if "class" in spec and spec["class"] == "CommandLineTool":
-        return SeawallCommandLineTool(spec, loadingContext)
+        return CalrissianCommandLineTool(spec, loadingContext)
     else:
         return default_make_tool(spec, loadingContext)
 

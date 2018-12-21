@@ -1,6 +1,6 @@
 from cwltool.job import ContainerCommandLineJob
 from cwltool.utils import DEFAULT_TMP_PREFIX
-from k8s import Client
+from k8s import KubernetesClient
 import logging
 import os
 import yaml
@@ -8,7 +8,7 @@ import shutil
 import tempfile
 from cwltool.pathmapper import ensure_writable, ensure_non_writable
 
-log = logging.getLogger("seawall.job")
+log = logging.getLogger("calrissian.job")
 
 
 class KubernetesJobBuilder(object):
@@ -40,15 +40,6 @@ class KubernetesJobBuilder(object):
 
     def container_name(self):
         return self.k8s_safe_name('{}-container'.format(self.name))
-
-    def set_container_image(self):
-        """
-        The docker image to use
-        :return: Name of docker image from CWL DockerRequirement.
-        """
-        # Only looking at dockerPull here, since we are not implementing local image lookups
-        docker_req, _ = self.seawall_job.get_requirement("DockerRequirement")
-        return str(docker_req['dockerPull'])
 
     def _volume_name(self, volume, index):
         return self.k8s_safe_name('{}-{}-{}'.format(self.name, volume['note'], index))
@@ -158,12 +149,12 @@ class KubernetesJobBuilder(object):
 
 # This now subclasses ContainerCommandLineJob, but only uses two of its methods:
 # create_file_and_add_volume and add_volumes
-class SeawallCommandLineJob(ContainerCommandLineJob):
+class CalrissianCommandLineJob(ContainerCommandLineJob):
 
     def __init__(self, *args, **kwargs):
-        super(SeawallCommandLineJob, self).__init__(*args, **kwargs)
+        super(CalrissianCommandLineJob, self).__init__(*args, **kwargs)
         self.volumes = []
-        self.client = Client(os.getenv('K8S_NAMESPACE', 'default'))
+        self.client = KubernetesClient(os.getenv('K8S_NAMESPACE', 'default'))
 
     def make_tmpdir(self):
         # Doing this because cwltool.job does it
