@@ -80,7 +80,7 @@ class KubernetesVolumeBuilder(object):
             raise VolumeBuilderException('Could not find a persistent volume mounted for {}'.format(source))
         # Now build up the volumeMount entry for this container
         volume_mount = {
-            'name': name,
+            'name': pv['volume']['name'],
             'mountPath': target,
             'subPath': self.calculate_subpath(source, pv['prefix']),
             'readOnly': not writable
