@@ -44,14 +44,17 @@ class KubernetesVolumeBuilder(object):
         self.add_persistent_volume_entry('/calrissian/tmpout', 'calrissian-tmpout')
 
     def add_persistent_volume_entry(self, prefix, claim_name):
-        self.persistent_volume_entries[prefix] = {
+        entry = {
             'prefix': prefix,
             'volume': {
+                'name': claim_name,
                 'persistentVolumeClaim': {
                     'claimName': claim_name
                 }
             }
         }
+        self.persistent_volume_entries[prefix] = entry
+        self.volumes.append(entry['volume'])
 
     def find_persistent_volume(self, source):
         """
@@ -75,12 +78,7 @@ class KubernetesVolumeBuilder(object):
         pv = self.find_persistent_volume(source)
         if not pv:
             raise VolumeBuilderException('Could not find a persistent volume mounted for {}'.format(source))
-        # Now build up the volume and volumeMount entries for this container
-        name = k8s_safe_name('{}-{}-{}'.format(base_name, note, self.random_tag(8)))
-        volume = pv['volume'].copy()
-        volume['name'] = name
-        self.volumes.append(volume)
-
+        # Now build up the volumeMount entry for this container
         volume_mount = {
             'name': name,
             'mountPath': target,
