@@ -32,9 +32,9 @@ class KubernetesVolumeBuilder(object):
 
     def __init__(self):
         self.persistent_volume_entries = {}
-        self.populate_demo_values()
         self.volume_mounts = []
         self.volumes = []
+        self.populate_demo_values()
 
     def populate_demo_values(self):
         # TODO: fetch these from the kubernetes API since they are attached to this pod
