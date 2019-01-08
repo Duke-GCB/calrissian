@@ -85,6 +85,7 @@ class KubernetesVolumeBuilder(object):
             'name': name,
             'mountPath': target,
             'subPath': self.calculate_subpath(source, pv['prefix']),
+            'readOnly': not writable
         }
         self.volume_mounts.append(volume_mount)
 
