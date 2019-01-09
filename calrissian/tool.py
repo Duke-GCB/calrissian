@@ -1,6 +1,6 @@
 from cwltool.command_line_tool import CommandLineTool
 from cwltool.workflow import default_make_tool
-from job import CalrissianCommandLineJob
+from calrissian.job import CalrissianCommandLineJob
 import logging
 
 log = logging.getLogger("calrissian.tool")

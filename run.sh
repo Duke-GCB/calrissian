@@ -1,6 +1,6 @@
 #!/bin/bash
 
-python calrissian/main.py \
+python -m calrissian.main \
   --tmpdir-prefix /calrissian/tmptmp/ \
   --tmp-outdir-prefix /calrissian/tmpout/ \
   --outdir /calrissian/output-data \

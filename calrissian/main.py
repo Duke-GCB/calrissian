@@ -1,6 +1,6 @@
-from executor import CalrissianExecutor
-from context import CalrissianLoadingContext
-from version import version
+from calrissian.executor import CalrissianExecutor
+from calrissian.context import CalrissianLoadingContext
+from calrissian.version import version
 from cwltool.main import main as cwlmain
 from cwltool.argparser import arg_parser
 import logging

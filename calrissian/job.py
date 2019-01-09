@@ -1,6 +1,6 @@
 from cwltool.job import ContainerCommandLineJob
 from cwltool.utils import DEFAULT_TMP_PREFIX
-from k8s import KubernetesClient
+from calrissian.k8s import KubernetesClient
 import logging
 import os
 import yaml
