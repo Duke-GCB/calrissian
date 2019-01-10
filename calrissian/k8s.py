@@ -31,9 +31,8 @@ class CalrissianJobException(Exception):
 
 
 class KubernetesClient(object):
-
     def __init__(self):
-        self.job_ids = []
+        self.job_ids = []  # This really only applies to one job, so should probably update that
         # load_config must happen before instantiating client
         self.namespace = load_config_get_namespace()
         self.batch_api_instance = client.BatchV1Api()
