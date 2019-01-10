@@ -1,5 +1,6 @@
-from unittest import TestCase, mock
-from calrissian.job import k8s_safe_name, KubernetesVolumeBuilder, VolumeBuilderException
+from unittest import TestCase
+from unittest.mock import Mock
+from calrissian.job import k8s_safe_name, KubernetesVolumeBuilder, VolumeBuilderException, KubernetesJobBuilder
 
 
 class SafeNameTestCase(TestCase):
@@ -57,3 +58,80 @@ class KubernetesVolumeBuilderTestCase(TestCase):
             self.volume_builder.add_volume_binding('/prefix/2/input2', '/input2-target', False)
 
 
+class KubernetesJobBuilderTestCase(TestCase):
+
+    def setUp(self):
+        self.name = 'JobName'
+        self.container_image = 'dockerimage:1.0'
+        self.environment = {'K1':'V1', 'K2':'V2', 'HOME': '/homedir'}
+        self.volume_mounts = [Mock(), Mock()]
+        self.volumes = [Mock()]
+        self.command_line = ['cat']
+        self.stdout = 'stdout.txt'
+        self.stderr = 'stderr.txt'
+        self.stdin = 'stdin.txt'
+        self.job_builder = KubernetesJobBuilder(self.name, self.container_image, self.environment, self.volume_mounts,
+                                                self.volumes, self.command_line, self.stdout, self.stderr, self.stdin)
+
+    def test_safe_job_name(self):
+        self.assertEqual('jobname-job', self.job_builder.job_name())
+
+    def test_safe_container_name(self):
+        self.assertEqual('jobname-container', self.job_builder.container_name())
+
+    def test_container_command(self):
+        self.assertEqual(['/bin/sh', '-c'], self.job_builder.container_command())
+
+    def test_container_args_without_redirects(self):
+        # container_args returns a list with a single item since it is passed to 'sh', '-c'
+        self.job_builder.stdout = None
+        self.job_builder.stderr = None
+        self.job_builder.stdin = None
+        self.assertEqual(['cat'], self.job_builder.container_args())
+
+    def test_container_args_with_redirects(self):
+        self.assertEqual(['cat > stdout.txt 2> stderr.txt < stdin.txt'], self.job_builder.container_args())
+
+    def test_container_environment(self):
+        environment = self.job_builder.container_environment()
+        self.assertEqual(len(self.environment), len(environment))
+        self.assertIn({'name': 'K1', 'value': 'V1'}, environment)
+        self.assertIn({'name': 'K2', 'value': 'V2'}, environment)
+        self.assertIn({'name': 'HOME', 'value': '/homedir'}, environment)
+
+    def test_container_workingdir(self):
+        workingdir = self.job_builder.container_workingdir()
+        self.assertEqual('/homedir', workingdir)
+
+    def test_build(self):
+        expected = {
+            'metadata': {
+                'name': 'jobname-job'
+            },
+            'apiVersion': 'batch/v1',
+            'kind':'Job',
+            'spec': {
+                'template': {
+                    'spec': {
+                        'containers': [
+                            {
+                                'name': 'jobname-container',
+                                'image': 'dockerimage:1.0',
+                                'command': ['/bin/sh', '-c'],
+                                'args': ['cat > stdout.txt 2> stderr.txt < stdin.txt'],
+                                'env': [
+                                    {'name': 'HOME', 'value': '/homedir'},
+                                    {'name': 'K1', 'value': 'V1'},
+                                    {'name': 'K2', 'value': 'V2'},
+                                ],
+                                'volumeMounts': self.volume_mounts,
+                                'workingDir': '/homedir',
+                             }
+                        ],
+                        'restartPolicy': 'Never',
+                        'volumes': self.volumes
+                    }
+                }
+            }
+        }
+        self.assertEqual(expected, self.job_builder.build())

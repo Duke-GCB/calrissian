@@ -138,7 +138,7 @@ class KubernetesJobBuilder(object):
         :return: array of env variables to set
         """
         environment = []
-        for name, value in self.environment.items():
+        for name, value in sorted(self.environment.items()):
             environment.append({'name': name, 'value': value})
         return environment
 
