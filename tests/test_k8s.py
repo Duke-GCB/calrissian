@@ -41,11 +41,10 @@ class KubernetesClientTestCase(TestCase):
         mock_create_namespaced_job.return_value = Mock(metadata=Mock(uid='123'))
         mock_client.BatchV1Api.return_value.create_namespaced_job = mock_create_namespaced_job
         kc = KubernetesClient()
-        self.assertEqual(len(kc.job_ids), 0)
         mock_body = Mock()
         kc.submit_job(mock_body)
+        self.assertEqual(kc.job_uid, '123')
         self.assertEqual(mock_create_namespaced_job.call_args, call('namespace', mock_body))
-        self.assertEqual(kc.job_ids, ['123'])
 
     def setup_mock_watch(self, mock_watch, event):
         mock_stream = Mock()
@@ -57,28 +56,26 @@ class KubernetesClientTestCase(TestCase):
     @patch('calrissian.k8s.watch')
     def test_wait_successful_job(self, mock_watch, mock_get_namespace, mock_client):
         kc = KubernetesClient()
-        kc.job_ids.append('456')
-        self.assertEqual(len(kc.job_ids), 1)
+        kc.watch_job(Mock(metadata=Mock(uid='456')))
         success_job_event = Mock(status=Mock(succeeded=True, failed=False), metadata=Mock(uid='456'))
         self.setup_mock_watch(mock_watch, success_job_event)
         kc.wait()
         self.assertTrue(mock_watch.Watch.return_value.stream.called)
-        self.assertEqual(len(kc.job_ids), 0)
         self.assertTrue(mock_watch.Watch.return_value.stop.called)
+        self.assertIsNone(kc.job_uid)
         # job should be deleted
         self.assertTrue(mock_client.BatchV1Api.return_value.delete_namespaced_job.called)
 
     @patch('calrissian.k8s.watch')
     def test_wait_failed_job_raises(self, mock_watch, mock_get_namespace, mock_client):
         kc = KubernetesClient()
-        kc.job_ids.append('456')
-        self.assertEqual(len(kc.job_ids), 1)
+        kc.watch_job(Mock(metadata=Mock(uid='456')))
         failed_job_event = Mock(status=Mock(succeeded=False, failed=True), metadata=Mock(uid='456'))
         self.setup_mock_watch(mock_watch, failed_job_event)
         with self.assertRaises(CalrissianJobException):
             kc.wait()
+        self.assertIsNone(kc.job_uid)
         self.assertTrue(mock_watch.Watch.return_value.stream.called)
-        self.assertEqual(len(kc.job_ids), 0)
         self.assertFalse(mock_watch.Watch.return_value.stop.called)
         # job should not be deleted
         self.assertFalse(mock_client.BatchV1Api.return_value.delete_namespaced_job.called)
@@ -86,15 +83,19 @@ class KubernetesClientTestCase(TestCase):
     @patch('calrissian.k8s.watch')
     def test_ignores_other_job_ids(self, mock_watch, mock_get_namespace, mock_client):
         kc = KubernetesClient()
-        kc.job_ids.append('456')
-        self.assertEqual(len(kc.job_ids), 1)
+        kc.watch_job(Mock(metadata=Mock(uid='456')))
         other_job_event = Mock(status=Mock(succeeded=True, failed=False), metadata=Mock(uid='789'))
         self.setup_mock_watch(mock_watch, other_job_event)
         kc.wait()
+        self.assertIsNotNone(kc.job_uid)
         # None of kc's critical state should have changed
         self.assertTrue(mock_watch.Watch.return_value.stream.called)
-        self.assertEqual(len(kc.job_ids), 1)
         self.assertFalse(mock_watch.Watch.return_value.stop.called)
         # job should not be deleted
         self.assertFalse(mock_client.BatchV1Api.return_value.delete_namespaced_job.called)
 
+    def test_raises_on_watch_second_job(self, mock_get_namespace, mock_client):
+        kc = KubernetesClient()
+        kc.watch_job(Mock(metadata=Mock(uid='123')))
+        with self.assertRaises(CalrissianJobException):
+            kc.watch_job(Mock(metadata=Mock(uid='123')))
