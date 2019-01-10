@@ -154,11 +154,12 @@ class CalrissianCommandLineJobTestCase(TestCase):
         return CalrissianCommandLineJob(self.builder, self.joborder, self.make_path_mapper, self.requirements,
                                        self.hints, self.name)
 
-    def test_init(self, mock_volume_builder, mock_client):
+    @patch('calrissian.job.populate_demo_volume_builder_entries')
+    def test_init(self, mock_populate_demo_volume_builder_entries, mock_volume_builder, mock_client):
         job = self.make_job()
         self.assertTrue(mock_client.called)
         self.assertTrue(mock_volume_builder.called)
-        self.assertTrue(mock_volume_builder.return_value.populate_demo_values.called)
+        self.assertTrue(mock_populate_demo_volume_builder_entries.called)
         self.assertEqual(job.client, mock_client.return_value)
         self.assertEqual(job.volume_builder, mock_volume_builder.return_value)
         self.assertEqual(job.name, self.name)

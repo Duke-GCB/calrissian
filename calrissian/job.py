@@ -187,7 +187,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         super(CalrissianCommandLineJob, self).__init__(*args, **kwargs)
         self.client = KubernetesClient()
         volume_builder = KubernetesVolumeBuilder()
-        volume_builder.populate_demo_values()
+        populate_demo_volume_builder_entries(volume_builder)
         self.volume_builder = volume_builder
 
     def make_tmpdir(self):
