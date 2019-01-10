@@ -6,18 +6,28 @@ log = logging.getLogger('calrissian.k8s')
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-class CalrissianJobException(Exception):
-    pass
+# When running inside a pod, kubernetes puts the namespace in a text file at this location
+K8S_NAMESPACE_FILE = '/var/run/secrets/kubernetes.io/serviceaccount/namespace'
+
+# Namespace to use if not running in cluster
+K8S_FALLBACK_NAMESPACE = 'default'
+
+def read_file(path):
+    return open(path).read()
+
 
 def load_config_get_namespace():
     try:
-        # Assume we're in the cluster
-        config.load_incluster_config()
-        namespace = open("/var/run/secrets/kubernetes.io/serviceaccount/namespace").read()
+        config.load_incluster_config() # raises if not in cluster
+        namespace = read_file(K8S_NAMESPACE_FILE)
     except config.ConfigException:
         config.load_kube_config()
-        namespace = 'default'
+        namespace = K8S_FALLBACK_NAMESPACE
     return namespace
+
+
+class CalrissianJobException(Exception):
+    pass
 
 
 class KubernetesClient(object):
