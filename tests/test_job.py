@@ -12,6 +12,7 @@ class SafeNameTestCase(TestCase):
         made_safe = k8s_safe_name(self.unsafe_name)
         self.assertEqual(self.safe_name, made_safe)
 
+
 class KubernetesVolumeBuilderTestCase(TestCase):
 
     def setUp(self):
