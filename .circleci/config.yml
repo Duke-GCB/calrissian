@@ -1,0 +1,26 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.6
+    working_directory: ~/calrissian
+    steps:
+      - checkout:
+          path: ~/calrissian
+      - restore_cache:
+          key: v1-dependency-cache-{{ checksum "requirements.txt" }}
+      - run:
+          name: install python dependencies
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt
+      - save_cache:
+          key: v1-dependency-cache-{{ checksum "requirements.txt" }}
+          paths:
+            - "venv"
+      - run:
+          name: run tests
+          command: |
+            . venv/bin/activate
+            nose2

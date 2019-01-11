@@ -1,4 +1,4 @@
-from tool import calrissian_make_tool
+from calrissian.tool import calrissian_make_tool
 from cwltool.context import LoadingContext
 import logging
 

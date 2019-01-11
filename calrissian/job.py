@@ -1,6 +1,6 @@
 from cwltool.job import ContainerCommandLineJob
 from cwltool.utils import DEFAULT_TMP_PREFIX
-from k8s import KubernetesClient
+from calrissian.k8s import KubernetesClient
 import logging
 import os
 import yaml
@@ -25,7 +25,15 @@ def k8s_safe_name(name):
     :param name:
     :return: a safe name
     """
-    return name.replace('_', '-')
+    return name.lower().replace('_', '-')
+
+
+# TODO: fetch these from the kubernetes API since they are attached to this pod
+def populate_demo_volume_builder_entries(volume_builder):
+    volume_builder.add_persistent_volume_entry('/calrissian/input-data', 'calrissian-input-data')
+    volume_builder.add_persistent_volume_entry('/calrissian/output-data', 'calrissian-output-data')
+    volume_builder.add_persistent_volume_entry('/calrissian/tmptmp', 'calrissian-tmp')
+    volume_builder.add_persistent_volume_entry('/calrissian/tmpout', 'calrissian-tmpout')
 
 
 class KubernetesVolumeBuilder(object):
@@ -34,14 +42,6 @@ class KubernetesVolumeBuilder(object):
         self.persistent_volume_entries = {}
         self.volume_mounts = []
         self.volumes = []
-        self.populate_demo_values()
-
-    def populate_demo_values(self):
-        # TODO: fetch these from the kubernetes API since they are attached to this pod
-        self.add_persistent_volume_entry('/calrissian/input-data', 'calrissian-input-data')
-        self.add_persistent_volume_entry('/calrissian/output-data', 'calrissian-output-data')
-        self.add_persistent_volume_entry('/calrissian/tmptmp', 'calrissian-tmp')
-        self.add_persistent_volume_entry('/calrissian/tmpout', 'calrissian-tmpout')
 
     def add_persistent_volume_entry(self, prefix, claim_name):
         entry = {
@@ -73,7 +73,7 @@ class KubernetesVolumeBuilder(object):
     def random_tag(length=8):
         return ''.join(random.choices(string.ascii_lowercase, k=length))
 
-    def add_volume_binding(self, base_name, source, target, note, writable):
+    def add_volume_binding(self, source, target, writable):
         # Find the persistent volume claim where this goes
         pv = self.find_persistent_volume(source)
         if not pv:
@@ -138,7 +138,7 @@ class KubernetesJobBuilder(object):
         :return: array of env variables to set
         """
         environment = []
-        for name, value in self.environment.items():
+        for name, value in sorted(self.environment.items()):
             environment.append({'name': name, 'value': value})
         return environment
 
@@ -186,7 +186,9 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
     def __init__(self, *args, **kwargs):
         super(CalrissianCommandLineJob, self).__init__(*args, **kwargs)
         self.client = KubernetesClient()
-        self.volume_builder = KubernetesVolumeBuilder()
+        volume_builder = KubernetesVolumeBuilder()
+        populate_demo_volume_builder_entries(volume_builder)
+        self.volume_builder = volume_builder
 
     def make_tmpdir(self):
         # Doing this because cwltool.job does it
@@ -226,9 +228,9 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         runtime = []
 
         # Append volume for outdir
-        self._add_volume_binding(os.path.realpath(self.outdir), self.builder.outdir, 'outdir', writable=True)
+        self._add_volume_binding(os.path.realpath(self.outdir), self.builder.outdir, writable=True)
         # Append volume for tmp
-        self._add_volume_binding(os.path.realpath(self.tmpdir), '/tmp', 'tmp', writable=True)
+        self._add_volume_binding(os.path.realpath(self.tmpdir), '/tmp', writable=True)
 
         # Call the ContainerCommandLineJob add_volumes method
         self.add_volumes(self.pathmapper,
@@ -274,8 +276,8 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
     def execute_kubernetes_job(self, k8s_job):
         self.client.submit_job(k8s_job)
 
-    def _add_volume_binding(self, source, target, note='vol', writable=False):
-        self.volume_builder.add_volume_binding(self.name, source, target, note, writable)
+    def _add_volume_binding(self, source, target, writable=False):
+        self.volume_builder.add_volume_binding(source, target, writable)
 
     # Below are concrete implementations of methods called by add_volumes
     # They are based on https://github.com/common-workflow-language/cwltool/blob/1.0.20181201184214/cwltool/docker.py
