@@ -1,7 +1,0 @@
-{
-  "input": {
-    "class": "File",
-    "basename": "hello.txt",
-    "contents": "Hello World"
-  }
-}
