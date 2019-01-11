@@ -28,7 +28,6 @@ def k8s_safe_name(name):
     return name.lower().replace('_', '-')
 
 
-# TODO: fetch these from the kubernetes API since they are attached to this pod
 def populate_demo_volume_builder_entries(volume_builder):
     volume_builder.add_persistent_volume_entry('/calrissian/input-data', 'calrissian-input-data')
     volume_builder.add_persistent_volume_entry('/calrissian/output-data', 'calrissian-output-data')
@@ -114,12 +113,6 @@ class KubernetesJobBuilder(object):
         return ['/bin/sh', '-c']
 
     def container_args(self):
-        # TODO: Add missing features (quoting, creating directories for stdout, secret_store)
-        # Look to _execute in https://github.com/common-workflow-language/cwltool/blob/1.0.20181201184214/cwltool/job.py
-
-        # so add a container beforehand with a simple script that creates those
-        # I think a k8s job can have multiple containers in sequence.
-        # And for symmetry, where should the result code checking be? here or in the client?
         job_command = self.command_line.copy()
         if self.stdout:
             job_command.extend(['>', self.stdout])
@@ -147,7 +140,6 @@ class KubernetesJobBuilder(object):
         Return the working directory for this container
         :return:
         """
-        #TODO: Handle DockerOutputDir, here if appropriate
         return self.environment['HOME']
 
     def build(self):
@@ -206,10 +198,8 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
 
     def wait_for_kubernetes_job(self):
         self.client.wait()
-        #TODO: check the results
 
     def finish(self):
-        #TODO Check the results for real and clean-up
         status = 'success'
         # collect_outputs (and collect_output) is definied in command_line_tool
         outputs = self.collect_outputs(self.outdir)
@@ -240,7 +230,6 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
                          any_path_okay=True)
 
         if self.generatemapper is not None:
-            # TODO: look at what any_path_okay is for
             # Seems to be true if docker is a hard requirement
             # This evaluates to true if docker_is_required is true
             # Used only for generatemapper add volumes
@@ -251,9 +240,6 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
                 tmpdir_prefix=runtimeContext.tmpdir_prefix,
                 secret_store=runtimeContext.secret_store,
                 any_path_okay=any_path_okay)
-
-        # TODO: Determine if we can port --read-only, networkaccess, log-driver, --user
-        # TODO: Provide the CPU/memory limits
 
         k8s_builder = KubernetesJobBuilder(
             self.name,

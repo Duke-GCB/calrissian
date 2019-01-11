@@ -8,7 +8,6 @@ log = logging.getLogger("calrissian.tool")
 class CalrissianCommandLineTool(CommandLineTool):
 
     def make_job_runner(self, runtimeContext):
-        # TODO: inject Docker requirement
         # This should return a callable
         return CalrissianCommandLineJob
 
