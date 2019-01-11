@@ -33,8 +33,8 @@ items:
     resources: {}
     source:
       git:
-        ref: openshift-config
-        uri: https://github.com/dleehr/calrissian
+        ref: master
+        uri: https://github.com/Duke-GCB/calrissian
       type: Git
     strategy:
       sourceStrategy:
