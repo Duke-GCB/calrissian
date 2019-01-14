@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: stagedata-revsort
+spec:
+  template:
+    spec:
+      containers:
+      - name: stagedata-revsort
+        # Jobs cannot use ImageStream images directly, so we have to provide the registry/repo variant
+        image: docker-registry.default.svc:5000/calrissian/calrissian:latest
+        command:
+        - "sh"
+        - "-c"
+        - "cp input-data/* /calrissian/input-data/"
+        volumeMounts:
+        - mountPath: /calrissian/input-data
+          name: calrissian-input-data
+      restartPolicy: OnFailure
+      volumes:
+      - name: calrissian-input-data
+        persistentVolumeClaim:
+          claimName: calrissian-input-data
