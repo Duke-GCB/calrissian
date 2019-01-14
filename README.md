@@ -14,7 +14,7 @@ It is in development and includes a simple workflow (revsort) to reverse and sor
 
 The `openshift/` directory contains YAML files that demonstrate the basic functionality. To configure Openshift, do the following:
 
-1. Create a project in openshift (e.g. `calrissian`)
+1. Create a project in openshift (e.g. `calrissian`). Note that namespaces must be unique, so if `calrissian` is already in use on the cluster, you will need to choose a different name here and other places where the namespace is referenced.
 
         oc new-project calrissian
 
@@ -36,7 +36,7 @@ The `openshift/` directory contains YAML files that demonstrate the basic functi
 
 ## Running the example
 
-With the VolumeClaims and Build processes in place, you can run the example with 2 jobs
+With the VolumeClaims and Build processes in place, you can run the example with 2 jobs. These jobs use the docker image built by the BuildConfig, so they cannot be run until the build completes.
 
 1. Stage the input data and workflow onto the `input-data` volume with the StageDataJob.
 
@@ -48,7 +48,7 @@ With the VolumeClaims and Build processes in place, you can run the example with
 
 3. Job pods can be monitored from the openshift web interface or via command-line
 
-        oc log -f job/calrissian-revsort-array
+        oc logs -f job/calrissian-revsort-array
 
 ## Notes
 
