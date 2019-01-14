@@ -6,9 +6,9 @@ CWL on Kubernetes
 
 ## Overview
 
-Calrissian is a CWL implementation designed to run individual steps as Jobs in a kubernetes cluster
+Calrissian is a [CWL](https://www.commonwl.org) implementation designed to run individual steps as Jobs in a kubernetes cluster
 
-It is in development and includes a simple workflow (revsort) to reverse and sort the contents of text files.
+It is in development and includes a simple workflow (revsort [single](input-data/revsort-single.cwl) / [array](input-data/revsort-array.cwl) to reverse and sort the contents of text files.
 
 ## Preparing Openshift
 
