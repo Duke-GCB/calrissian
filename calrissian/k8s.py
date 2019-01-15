@@ -73,12 +73,13 @@ class KubernetesClient(object):
         :param container_statuses: list of V1ContainerStatus
         :return: V1ContainerStatus if len of list is 1, None if 0, and raises CalrissianJobException if > 1
         """
-        if len(container_statuses) > 1:
+        if not container_statuses: # None or empty list
+            return None
+        elif len(container_statuses) > 1:
             raise CalrissianJobException(
                 'Expected 0 or 1 container statuses in job, found {}'.format(len(container_statuses), container_statuses))
-        if len(container_statuses) == 0:
-            return None
-        return container_statuses[0]
+        else:
+            return container_statuses[0]
 
     def handle_terminated_status(self, status):
         """
