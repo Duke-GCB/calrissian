@@ -41,7 +41,7 @@ class KubernetesClient(object):
 
     def set_job(self, job):
         log.info('k8s job \'{}\' started'.format(job.metadata.name))
-        if self.jobis not None:
+        if self.job is not None:
             raise CalrissianJobException('This client is already observing job {}'.format(self.job))
         self.job = job
 
