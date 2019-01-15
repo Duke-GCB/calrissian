@@ -29,13 +29,6 @@ def k8s_safe_name(name):
     return name.lower().replace('_', '-')
 
 
-def populate_demo_volume_builder_entries(volume_builder):
-    volume_builder.add_persistent_volume_entry('/calrissian/input-data', 'calrissian-input-data')
-    volume_builder.add_persistent_volume_entry('/calrissian/output-data', 'calrissian-output-data')
-    volume_builder.add_persistent_volume_entry('/calrissian/tmptmp', 'calrissian-tmp')
-    volume_builder.add_persistent_volume_entry('/calrissian/tmpout', 'calrissian-tmpout')
-
-
 class KubernetesPod(object):
     def __init__(self, pod):
         self.pod = pod
@@ -55,7 +48,7 @@ class KubernetesPod(object):
         mounted_persistent_volumes = []
         persistent_volumes = self._persistent_volumes_dict()
         for volume_mount in self.get_first_container().volume_mounts:
-            pvc_name = persistent_volumes.get(pod_volume.name)
+            pvc_name = persistent_volumes.get(volume_mount.name)
             if pvc_name:
                 mounted_persistent_volumes.append((volume_mount.mount_path, pvc_name))
         return mounted_persistent_volumes
