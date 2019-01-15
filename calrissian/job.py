@@ -11,6 +11,8 @@ import string
 from cwltool.pathmapper import ensure_writable, ensure_non_writable
 
 log = logging.getLogger("calrissian.job")
+POD_NAME_ENV_VARIABLE = 'CALRISSIAN_POD_NAME'
+
 
 class VolumeBuilderException(Exception):
     pass
@@ -35,12 +37,47 @@ def populate_demo_volume_builder_entries(volume_builder):
     volume_builder.add_persistent_volume_entry('/calrissian/tmpout', 'calrissian-tmpout')
 
 
+class KubernetesPod(object):
+    def __init__(self, pod):
+        self.pod = pod
+
+    def _persistent_volumes_dict(self):
+        persistent_volumes = {}
+        for pod_volume in self.pod.spec.volumes:
+            if pod_volume.persistent_volume_claim:
+                pvc_name = pod_volume.persistent_volume_claim.claim_name
+                persistent_volumes[pod_volume.name] = pvc_name
+        return persistent_volumes
+
+    def get_first_container(self):
+        return self.pod.spec.containers[0]
+
+    def get_mounted_persistent_volumes(self):
+        mounted_persistent_volumes = []
+        persistent_volumes = self._persistent_volumes_dict()
+        for volume_mount in self.get_first_container().volume_mounts:
+            pvc_name = persistent_volumes.get(pod_volume.name)
+            if pvc_name:
+                mounted_persistent_volumes.append((volume_mount.mount_path, pvc_name))
+        return mounted_persistent_volumes
+
+
 class KubernetesVolumeBuilder(object):
 
     def __init__(self):
         self.persistent_volume_entries = {}
         self.volume_mounts = []
         self.volumes = []
+
+    def add_persistent_volume_entry_from_pod(self, pod):
+        """
+        Add a mounted persistent volume claim for each mounted PVC in the first container in the specified pod
+        :param pod: V1Pod
+        """
+        k8s_pod = KubernetesPod(pod)
+        # TODO volume mounts may have sub_path entries already
+        for mount_path, pvc_name in k8s_pod.get_mounted_persistent_volumes():
+            self.add_persistent_volume_entry(mount_path, pvc_name)
 
     def add_persistent_volume_entry(self, prefix, claim_name):
         entry = {
@@ -179,7 +216,8 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         super(CalrissianCommandLineJob, self).__init__(*args, **kwargs)
         self.client = KubernetesClient()
         volume_builder = KubernetesVolumeBuilder()
-        populate_demo_volume_builder_entries(volume_builder)
+        this_pods_name = os.environ.get(POD_NAME_ENV_VARIABLE)
+        volume_builder.populate_volume_entries(self.client.get_pod_for_name(this_pods_name))
         self.volume_builder = volume_builder
 
     def make_tmpdir(self):

@@ -35,6 +35,7 @@ class KubernetesClient(object):
         self.job_uid = None
         # load_config must happen before instantiating client
         self.namespace = load_config_get_namespace()
+        self.core_api_instance = client.CoreV1Api()
         self.batch_api_instance = client.BatchV1Api()
 
     def _watching_job(self, job):
@@ -74,3 +75,12 @@ class KubernetesClient(object):
                 self.batch_api_instance.delete_namespaced_job(job.metadata.name, self.namespace, body=client.V1DeleteOptions())
             if job.status.failed:
                 self._job_failed(job)
+
+    def get_pod_for_name(self, pod_name):
+        pod_name_field_selector='metadata.name={}'.format(pod_name)
+        pod_list = self.core_api_instance.list_namespaced_pod(self.namespace, field_selector=pod_name_field_selector)
+        if not pod_list.items:
+            raise CalrissianJobException("Unable to find pod with name {}".format(pod_name))
+        if len(pod_list.items) != 1:
+            raise CalrissianJobException("Multiple pods found with name with name {}".format(pod_name))
+        return pod_list.items[0]
