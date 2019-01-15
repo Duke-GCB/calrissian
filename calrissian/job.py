@@ -11,7 +11,6 @@ import string
 from cwltool.pathmapper import ensure_writable, ensure_non_writable
 
 log = logging.getLogger("calrissian.job")
-POD_NAME_ENV_VARIABLE = 'CALRISSIAN_POD_NAME'
 
 
 class VolumeBuilderException(Exception):
@@ -69,9 +68,9 @@ class KubernetesVolumeBuilder(object):
         self.volume_mounts = []
         self.volumes = []
 
-    def add_persistent_volume_entry_from_pod(self, pod):
+    def add_persistent_volume_entries_from_pod(self, pod):
         """
-        Add a mounted persistent volume claim for each mounted PVC in the first container in the specified pod
+        Add a mounted persistent volume claim for each mounted PVC in the specified pod
         :param pod: V1Pod
         """
         k8s_pod = KubernetesPod(pod)
@@ -216,8 +215,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         super(CalrissianCommandLineJob, self).__init__(*args, **kwargs)
         self.client = KubernetesClient()
         volume_builder = KubernetesVolumeBuilder()
-        this_pods_name = os.environ.get(POD_NAME_ENV_VARIABLE)
-        volume_builder.populate_volume_entries(self.client.get_pod_for_name(this_pods_name))
+        volume_builder.add_persistent_volume_entries_from_pod(self.client.get_current_pod())
         self.volume_builder = volume_builder
 
     def make_tmpdir(self):

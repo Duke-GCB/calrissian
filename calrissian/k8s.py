@@ -1,5 +1,6 @@
 from kubernetes import client, config, watch
 import logging
+import os
 
 log = logging.getLogger('calrissian.k8s')
 
@@ -8,6 +9,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # When running inside a pod, kubernetes puts the namespace in a text file at this location
 K8S_NAMESPACE_FILE = '/var/run/secrets/kubernetes.io/serviceaccount/namespace'
+POD_NAME_ENV_VARIABLE = 'CALRISSIAN_POD_NAME'
 
 # Namespace to use if not running in cluster
 K8S_FALLBACK_NAMESPACE = 'default'
@@ -77,6 +79,11 @@ class KubernetesClient(object):
                 self._job_failed(job)
 
     def get_pod_for_name(self, pod_name):
+        """
+        Given a pod name return details about this pod
+        :param pod_name: str: name of the pod to read data about
+        :return: V1Pod
+        """
         pod_name_field_selector='metadata.name={}'.format(pod_name)
         pod_list = self.core_api_instance.list_namespaced_pod(self.namespace, field_selector=pod_name_field_selector)
         if not pod_list.items:
@@ -84,3 +91,13 @@ class KubernetesClient(object):
         if len(pod_list.items) != 1:
             raise CalrissianJobException("Multiple pods found with name with name {}".format(pod_name))
         return pod_list.items[0]
+
+    def get_current_pod(self):
+        """
+        Return pod details about the current pod (requires 'CALRISSIAN_POD_NAME' environment variable to be set)
+        :return: V1Pod
+        """
+        pod_name = os.environ.get(POD_NAME_ENV_VARIABLE)
+        if not pod_name:
+            raise CalrissianJobException("Missing required environment variable ${}".format(POD_NAME_ENV_VARIABLE))
+        return self.get_pod_for_name(pod_name)
