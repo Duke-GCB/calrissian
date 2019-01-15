@@ -102,7 +102,7 @@ class KubernetesClient(object):
                 continue
             elif self.state_is_terminated(status.state):
                 self.handle_terminated_state(status.state)
-                self.batch_api_instance.delete_namespaced_job(self.job.name, self.namespace, body=client.V1DeleteOptions(propagation_policy='Background'))
+                self.batch_api_instance.delete_namespaced_job(self.job.metadata.name, self.namespace, body=client.V1DeleteOptions(propagation_policy='Background'))
                 self.clear_job()
                 # stop watching for events, our job is done. Causes wait loop to exit
                 w.stop()
