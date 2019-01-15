@@ -96,6 +96,8 @@ class KubernetesClient(object):
         for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, label_selector=self._get_pod_label_selector()):
             pod = event['object']
             status = self.get_first_status_or_none(pod.status.container_statuses)
+            if status is None:
+                continue
             if self.status_is_running(status):
                 continue
             elif self.status_is_terminated(status):
