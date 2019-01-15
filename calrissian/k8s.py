@@ -32,7 +32,7 @@ class CalrissianJobException(Exception):
 
 class KubernetesClient(object):
     def __init__(self):
-        self.job_uid = None
+        self.job = None
         # load_config must happen before instantiating client
         self.process_exit_code = None
         self.namespace = load_config_get_namespace()
@@ -41,12 +41,12 @@ class KubernetesClient(object):
 
     def set_job(self, job):
         log.info('k8s job \'{}\' started'.format(job.metadata.name))
-        if self.job_uid is not None:
-            raise CalrissianJobException('This client is already observing job {}'.format(self.job_uid))
-        self.job_uid = job.metadata.uid
+        if self.jobis not None:
+            raise CalrissianJobException('This client is already observing job {}'.format(self.job))
+        self.job = job
 
     def clear_job(self):
-        self.job_uid = None
+        self.job = None
 
     def submit_job(self, job_body):
         job = self.batch_api_instance.create_namespaced_job(self.namespace, job_body)
@@ -55,7 +55,7 @@ class KubernetesClient(object):
 
     def _get_pod_label_selector(self):
         # We list pods by their controller uid, which should match our job uid
-        return 'controller-uid={}'.format(self.job_uid)
+        return 'controller-uid={}'.format(self.job.metadata.uid)
 
     @staticmethod
     def state_is_running(state):
