@@ -58,12 +58,12 @@ class KubernetesClient(object):
         return 'controller-uid={}'.format(self.job_uid)
 
     @staticmethod
-    def status_is_running(status):
-        return status.running or status.waiting
+    def state_is_running(state):
+        return state.running or state.waiting
 
     @staticmethod
-    def status_is_terminated(status):
-        return status.terminated
+    def state_is_terminated(state):
+        return state.terminated
 
     @staticmethod
     def get_first_status_or_none(container_statuses):
@@ -81,15 +81,15 @@ class KubernetesClient(object):
         else:
             return container_statuses[0]
 
-    def handle_terminated_status(self, status):
+    def handle_terminated_state(self, state):
         """
         Sets self.process_exit_code to the exit code from a terminated container
-        :param status: V1ContainerStatus
+        :param status: V1ContainerState
         :return: None
         """
         # Extract the exit code out of the status
-        log.info('setting process_exit_code from status {}'.format(status))
-        self.process_exit_code = status.state.terminated.exit_code
+        log.info('setting process_exit_code from state {}'.format(state))
+        self.process_exit_code = state.terminated.exit_code
 
     def wait_for_completion(self):
         w = watch.Watch()
@@ -98,10 +98,10 @@ class KubernetesClient(object):
             status = self.get_first_status_or_none(pod.status.container_statuses)
             if status is None:
                 continue
-            if self.status_is_running(status):
+            if self.state_is_running(status.state):
                 continue
-            elif self.status_is_terminated(status):
-                self.handle_terminated_status(status)
+            elif self.state_is_terminated(status.state):
+                self.handle_terminated_state(status.state)
                 self.batch_api_instance.delete_namespaced_job(self.job.name, self.namespace, body=client.V1DeleteOptions(propagation_policy='Background'))
                 self.clear_job()
                 # stop watching for events, our job is done. Causes wait loop to exit
