@@ -87,7 +87,7 @@ class KubernetesVolumeBuilder(object):
         self.volume_mounts.append(volume_mount)
 
 
-class KubernetesJobBuilder(object):
+class KubernetesPodBuilder(object):
 
     def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin):
         self.name = name
@@ -100,8 +100,8 @@ class KubernetesJobBuilder(object):
         self.stderr = stderr
         self.stdin = stdin
 
-    def job_name(self):
-        return k8s_safe_name('{}-job'.format(self.name))
+    def pod_name(self):
+        return k8s_safe_name('{}-pod'.format(self.name))
 
     def container_name(self):
         return k8s_safe_name('{}-container'.format(self.name))
@@ -113,17 +113,17 @@ class KubernetesJobBuilder(object):
         return ['/bin/sh', '-c']
 
     def container_args(self):
-        job_command = self.command_line.copy()
+        pod_command = self.command_line.copy()
         if self.stdout:
-            job_command.extend(['>', self.stdout])
+            pod_command.extend(['>', self.stdout])
         if self.stderr:
-            job_command.extend(['2>', self.stderr])
+            pod_command.extend(['2>', self.stderr])
         if self.stdin:
-            job_command.extend(['<', self.stdin])
-        # job_command is a list of strings. Needs to be turned into a single string
+            pod_command.extend(['<', self.stdin])
+        # pod_command is a list of strings. Needs to be turned into a single string
         # and passed as an argument to sh -c. Otherwise we cannot redirect STDIN/OUT/ERR inside a kubernetes job
         # Join everything into a single string and then return a single args list
-        return [' '.join(job_command)]
+        return [' '.join(pod_command)]
 
     def container_environment(self):
         """
@@ -145,28 +145,24 @@ class KubernetesJobBuilder(object):
     def build(self):
         return {
             'metadata': {
-                'name': self.job_name()
+                'name': self.pod_name()
             },
-            'apiVersion': 'batch/v1',
-            'kind':'Job',
-            'spec': {
-                'template': {
-                    'spec': {
-                        'containers': [
-                            {
-                                'name': self.container_name(),
-                                'image': self.container_image,
-                                'command': self.container_command(),
-                                'args': self.container_args(),
-                                'env': self.container_environment(),
-                                'volumeMounts': self.volume_mounts,
-                                'workingDir': self.container_workingdir(),
-                             }
-                        ],
-                        'restartPolicy': 'Never',
-                        'volumes': self.volumes
-                    }
-                }
+            'apiVersion': 'v1',
+            'kind':'Pod',
+                'spec': {
+                    'containers': [
+                        {
+                            'name': self.container_name(),
+                            'image': self.container_image,
+                            'command': self.container_command(),
+                            'args': self.container_args(),
+                            'env': self.container_environment(),
+                            'volumeMounts': self.volume_mounts,
+                            'workingDir': self.container_workingdir(),
+                         }
+                    ],
+                    'restartPolicy': 'Never',
+                    'volumes': self.volumes
             }
         }
 
@@ -250,7 +246,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
                 secret_store=runtimeContext.secret_store,
                 any_path_okay=any_path_okay)
 
-        k8s_builder = KubernetesJobBuilder(
+        k8s_builder = KubernetesPodBuilder(
             self.name,
             self._get_container_image(),
             self.environment,
