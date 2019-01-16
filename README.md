@@ -6,7 +6,7 @@ CWL on Kubernetes
 
 ## Overview
 
-Calrissian is a [CWL](https://www.commonwl.org) implementation designed to run individual steps as Jobs in a kubernetes cluster
+Calrissian is a [CWL](https://www.commonwl.org) implementation designed to run individual steps as Pods in a kubernetes cluster
 
 It is in development and includes a simple workflow (revsort [single](input-data/revsort-single.cwl) / [array](input-data/revsort-array.cwl) to reverse and sort the contents of text files.
 
@@ -18,21 +18,19 @@ The `openshift/` directory contains YAML files that demonstrate the basic functi
 
         oc new-project calrissian
 
-2. Create a pair of roles in your project to allow managing `Job`s and their `Pod`s:
+2. Create a role in your project to allow managing `Pod`s:
 
-        oc create role job-manager-role --verb=create,delete --resource=jobs
-        oc create role pod-manager-role --verb=list,watch --resource=pods
+        oc create role pod-manager-role --verb=create,delete,list,watch --resource=pods
 
 3. Bind your project's default service account access to these roles. Calrissian running inside the cluster will use this service account to make Kubernetes API calls.
 
-        oc create rolebinding job-manager-default-binding --role=job-manager-role --serviceaccount=calrissian:default
         oc create rolebinding pod-manager-default-binding --role=pod-manager-role --serviceaccount=calrissian:default
 
 4. Create the BuildConfig - this allows Openshift to build the source code into a Docker image and starts a build automatically. If you wish to build a different branch or repo, edit this file.
 
         oc create -f openshift/BuildConfig.yaml
 
-5. Create the VolumeClaims - these are the storage locations that will be shared between Jobs, and must support read-write many access.
+5. Create the VolumeClaims - these are the storage locations that will be shared between pods, and must support read-write many access.
 
         oc create -f openshift/VolumeClaims.yaml
 
