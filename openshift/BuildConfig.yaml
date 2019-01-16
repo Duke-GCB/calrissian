@@ -33,7 +33,7 @@ items:
     resources: {}
     source:
       git:
-        ref: 9-check-job-result
+        ref: master
         uri: https://github.com/Duke-GCB/calrissian
       type: Git
     strategy:
