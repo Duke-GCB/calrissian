@@ -91,7 +91,7 @@ class KubernetesClientTestCase(TestCase):
         self.assertIsNotNone(kc.job)
 
     @patch('calrissian.k8s.watch')
-    def test_wait_raises_exception_when_state_is_unexpected(self, mock_watch, mock_get_namespace, mock_client):
+    def test_wait_finishes_when_pod_state_is_terminated(self, mock_watch, mock_get_namespace, mock_client):
         mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=None, terminated=Mock(exit_code=123), waiting=None))]))
         self.setup_mock_watch(mock_watch, [mock_pod])
         kc = KubernetesClient()
@@ -100,7 +100,7 @@ class KubernetesClientTestCase(TestCase):
         self.assertEqual(exit_code, 123)
 
     @patch('calrissian.k8s.watch')
-    def test_wait_finishes_when_pod_state_is_terminated(self, mock_watch, mock_get_namespace, mock_client):
+    def test_wait_raises_exception_when_state_is_unexpected(self, mock_watch, mock_get_namespace, mock_client):
         mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=None, terminated=None, waiting=None))]))
         self.setup_mock_watch(mock_watch, [mock_pod])
         kc = KubernetesClient()
@@ -108,15 +108,6 @@ class KubernetesClientTestCase(TestCase):
         with self.assertRaises(CalrissianJobException) as context:
             kc.wait_for_completion()
         self.assertIn('Unexpected pod container status', str(context.exception))
-
-    @patch('calrissian.k8s.watch')
-    def test_wait_returns_exit_code(self, mock_watch, mock_get_namespace, mock_client):
-        mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=None, terminated=Mock(exit_code=123), waiting=None))]))
-        self.setup_mock_watch(mock_watch, [mock_pod])
-        kc = KubernetesClient()
-        kc._set_job(Mock(metadata=Mock(uid='456')))
-        exit_code = kc.wait_for_completion()
-        self.assertEqual(exit_code, 123)
 
     def test_raises_on_set_second_job(self, mock_get_namespace, mock_client):
         kc = KubernetesClient()
