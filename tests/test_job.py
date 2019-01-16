@@ -55,8 +55,9 @@ class KubernetesVolumeBuilderTestCase(TestCase):
 
     def test_volume_binding_exception_if_not_found(self):
         self.assertEqual(0, len(self.volume_builder.volumes))
-        with self.assertRaises(VolumeBuilderException):
+        with self.assertRaises(VolumeBuilderException) as context:
             self.volume_builder.add_volume_binding('/prefix/2/input2', '/input2-target', False)
+        self.assertIn('Could not find a persistent volume', str(context.exception))
 
 
 class KubernetesJobBuilderTestCase(TestCase):
