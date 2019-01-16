@@ -249,7 +249,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         # Append volume for outdir
         self._add_volume_binding(os.path.realpath(self.outdir), self.builder.outdir, writable=True)
         # Append volume for tmp
-        self._add_volume_binding(os.path.realpath(self.tmpdir), '/tmp', writable=True)
+        #self._add_volume_binding(os.path.realpath(self.tmpdir), '/tmp', writable=True)
 
         # Call the ContainerCommandLineJob add_volumes method
         self.add_volumes(self.pathmapper,
