@@ -33,7 +33,7 @@ items:
     resources: {}
     source:
       git:
-        ref: 22-try-create-pods
+        ref: master
         uri: https://github.com/Duke-GCB/calrissian
       type: Git
     strategy:
