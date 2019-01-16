@@ -1,5 +1,5 @@
 from unittest import TestCase
-from unittest.mock import Mock, patch, call
+from unittest.mock import Mock, patch, call, PropertyMock
 from calrissian.k8s import load_config_get_namespace, KubernetesClient, CalrissianJobException
 
 
@@ -33,21 +33,20 @@ class KubernetesClientTestCase(TestCase):
     def test_init(self, mock_get_namespace, mock_client):
         kc = KubernetesClient()
         self.assertEqual(kc.namespace, mock_get_namespace.return_value)
-        self.assertEqual(kc.batch_api_instance, mock_client.BatchV1Api.return_value)
         self.assertEqual(kc.core_api_instance, mock_client.CoreV1Api.return_value)
-        self.assertIsNone(kc.job)
+        self.assertIsNone(kc.pod)
         self.assertIsNone(kc.process_exit_code)
 
-    def test_submit_job(self, mock_get_namespace, mock_client):
+    def test_submit_pod(self, mock_get_namespace, mock_client):
         mock_get_namespace.return_value = 'namespace'
-        mock_create_namespaced_job = Mock()
-        mock_create_namespaced_job.return_value = Mock(metadata=Mock(uid='123'))
-        mock_client.BatchV1Api.return_value.create_namespaced_job = mock_create_namespaced_job
+        mock_create_namespaced_pod = Mock()
+        mock_create_namespaced_pod.return_value = Mock(metadata=Mock(uid='123'))
+        mock_client.CoreV1Api.return_value.create_namespaced_pod = mock_create_namespaced_pod
         kc = KubernetesClient()
         mock_body = Mock()
-        kc.submit_job(mock_body)
-        self.assertEqual(kc.job.metadata.uid, '123')
-        self.assertEqual(mock_create_namespaced_job.call_args, call('namespace', mock_body))
+        kc.submit_pod(mock_body)
+        self.assertEqual(kc.pod.metadata.uid, '123')
+        self.assertEqual(mock_create_namespaced_pod.call_args, call('namespace', mock_body))
 
     def setup_mock_watch(self, mock_watch, event_objects=[]):
         mock_stream = Mock()
@@ -59,52 +58,63 @@ class KubernetesClientTestCase(TestCase):
         mock_watch.Watch.return_value.stream = mock_stream
         mock_watch.Watch.return_value.stop = mock_stop
 
+    def make_mock_pod(self, name):
+        mock_metadata = Mock()
+        # Cannot mock name attribute without a propertymock
+        name_property = PropertyMock(return_value='test123')
+        type(mock_metadata).name = name_property
+        return Mock(metadata=mock_metadata)
+
     @patch('calrissian.k8s.watch')
-    def test_wait_calls_watch_pod_with_job_uid_label_selector(self, mock_watch, mock_get_namespace, mock_client):
+    def test_wait_calls_watch_pod_with_pod_name_field_selector(self, mock_watch, mock_get_namespace, mock_client):
         self.setup_mock_watch(mock_watch)
+        mock_pod = self.make_mock_pod('test123')
         kc = KubernetesClient()
-        kc._set_job(Mock(metadata=Mock(uid='456')))
+        kc._set_pod(mock_pod)
         kc.wait_for_completion()
         mock_stream = mock_watch.Watch.return_value.stream
-        self.assertEqual(mock_stream.call_args, call(kc.core_api_instance.list_namespaced_pod, kc.namespace, label_selector='controller-uid=456'))
+        self.assertEqual(mock_stream.call_args, call(kc.core_api_instance.list_namespaced_pod, kc.namespace, field_selector='metadata.name=test123'))
 
     @patch('calrissian.k8s.watch')
     def test_wait_skips_pod_when_status_is_none(self, mock_watch, mock_get_namespace, mock_client):
         mock_pod = Mock(status=Mock(container_statuses=None))
         self.setup_mock_watch(mock_watch, [mock_pod])
         kc = KubernetesClient()
-        kc._set_job(Mock(metadata=Mock(uid='456')))
+        kc._set_pod(Mock())
         kc.wait_for_completion()
         self.assertFalse(mock_watch.Watch.return_value.stop.called)
-        self.assertFalse(mock_client.BatchV1Api.return_value.delete_namespaced_job.called)
-        self.assertIsNotNone(kc.job)
+        self.assertFalse(mock_client.CoreV1Api.return_value.delete_namespaced_pod.called)
+        self.assertIsNotNone(kc.pod)
 
     @patch('calrissian.k8s.watch')
     def test_wait_skips_pod_when_state_is_running(self, mock_watch, mock_get_namespace, mock_client):
         mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=Mock(), terminated=None, waiting=None))]))
         self.setup_mock_watch(mock_watch, [mock_pod])
         kc = KubernetesClient()
-        kc._set_job(Mock(metadata=Mock(uid='456')))
+        kc._set_pod(Mock())
         kc.wait_for_completion()
         self.assertFalse(mock_watch.Watch.return_value.stop.called)
-        self.assertFalse(mock_client.BatchV1Api.return_value.delete_namespaced_job.called)
-        self.assertIsNotNone(kc.job)
-
-    @patch('calrissian.k8s.watch')
-    def test_wait_raises_exception_when_state_is_unexpected(self, mock_watch, mock_get_namespace, mock_client):
-        mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=None, terminated=Mock(exit_code=123), waiting=None))]))
-        self.setup_mock_watch(mock_watch, [mock_pod])
-        kc = KubernetesClient()
-        kc._set_job(Mock(metadata=Mock(uid='456')))
-        exit_code = kc.wait_for_completion()
-        self.assertEqual(exit_code, 123)
+        self.assertFalse(mock_client.CoreV1Api.return_value.delete_namespaced_pod.called)
+        self.assertIsNotNone(kc.pod)
 
     @patch('calrissian.k8s.watch')
     def test_wait_finishes_when_pod_state_is_terminated(self, mock_watch, mock_get_namespace, mock_client):
+        mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=None, terminated=Mock(exit_code=123), waiting=None))]))
+        self.setup_mock_watch(mock_watch, [mock_pod])
+        kc = KubernetesClient()
+        kc._set_pod(Mock())
+        exit_code = kc.wait_for_completion()
+        self.assertEqual(exit_code, 123)
+        self.assertTrue(mock_watch.Watch.return_value.stop.called)
+        self.assertTrue(mock_client.CoreV1Api.return_value.delete_namespaced_pod.called)
+        self.assertIsNone(kc.pod)
+
+    @patch('calrissian.k8s.watch')
+    def test_wait_raises_exception_when_state_is_unexpected(self, mock_watch, mock_get_namespace, mock_client):
         mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=None, terminated=None, waiting=None))]))
         self.setup_mock_watch(mock_watch, [mock_pod])
         kc = KubernetesClient()
-        kc._set_job(Mock(metadata=Mock(uid='456')))
+        kc._set_pod(Mock())
         with self.assertRaises(CalrissianJobException) as context:
             kc.wait_for_completion()
         self.assertIn('Unexpected pod container status', str(context.exception))
@@ -114,16 +124,16 @@ class KubernetesClientTestCase(TestCase):
         mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=None, terminated=Mock(exit_code=123), waiting=None))]))
         self.setup_mock_watch(mock_watch, [mock_pod])
         kc = KubernetesClient()
-        kc._set_job(Mock(metadata=Mock(uid='456')))
+        kc._set_pod(Mock())
         exit_code = kc.wait_for_completion()
         self.assertEqual(exit_code, 123)
 
-    def test_raises_on_set_second_job(self, mock_get_namespace, mock_client):
+    def test_raises_on_set_second_pod(self, mock_get_namespace, mock_client):
         kc = KubernetesClient()
-        kc._set_job(Mock(metadata=Mock(uid='123')))
+        kc._set_pod(Mock())
         with self.assertRaises(CalrissianJobException) as context:
-            kc._set_job(Mock(metadata=Mock(uid='123')))
-        self.assertIn('his client is already observing job', str(context.exception))
+            kc._set_pod(Mock())
+        self.assertIn('This client is already observing pod', str(context.exception))
 
 
 class KubernetesClientStateTestCase(TestCase):
@@ -164,4 +174,4 @@ class KubernetesClientStatusTestCase(TestCase):
         self.assertEqual(len(self.multiple_statuses), 2)
         with self.assertRaises(CalrissianJobException) as context:
             KubernetesClient.get_first_status_or_none(self.multiple_statuses)
-        self.assertIn('Expected 0 or 1 container statuses in job, found 2', str(context.exception))
+        self.assertIn('Expected 0 or 1 container statuses, found 2', str(context.exception))

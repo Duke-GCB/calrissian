@@ -38,14 +38,14 @@ class KubernetesClient(object):
         self.namespace = load_config_get_namespace()
         self.core_api_instance = client.CoreV1Api()
 
-    def submit_job(self, pod_body):
+    def submit_pod(self, pod_body):
         pod = self.core_api_instance.create_namespaced_pod(self.namespace, pod_body)
         log.info('Created k8s pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
         self._set_pod(pod)
 
     def wait_for_completion(self):
         w = watch.Watch()
-        for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_label_selector()):
+        for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_field_selector()):
             pod = event['object']
             status = self.get_first_status_or_none(pod.status.container_statuses)
             if status is None:
@@ -56,7 +56,7 @@ class KubernetesClient(object):
                 self._handle_terminated_state(status.state)
                 self.core_api_instance.delete_namespaced_pod(self.pod.metadata.name, self.namespace, client.V1DeleteOptions())
                 self._clear_pod()
-                # stop watching for events, our job is done. Causes wait loop to exit
+                # stop watching for events, our pod is done. Causes wait loop to exit
                 w.stop()
             else:
                 raise CalrissianJobException('Unexpected pod container status', status)
@@ -71,8 +71,7 @@ class KubernetesClient(object):
     def _clear_pod(self):
         self.pod = None
 
-    def _get_pod_label_selector(self):
-        # We list pods by their controller uid, which should match our job uid
+    def _get_pod_field_selector(self):
         return 'metadata.name={}'.format(self.pod.metadata.name)
 
     @staticmethod
@@ -95,7 +94,7 @@ class KubernetesClient(object):
             return None
         elif len(container_statuses) > 1:
             raise CalrissianJobException(
-                'Expected 0 or 1 container statuses in job, found {}'.format(len(container_statuses), container_statuses))
+                'Expected 0 or 1 container statuses, found {}'.format(len(container_statuses), container_statuses))
         else:
             return container_statuses[0]
 

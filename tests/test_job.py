@@ -1,6 +1,6 @@
 from unittest import TestCase
 from unittest.mock import Mock, patch, call
-from calrissian.job import k8s_safe_name, KubernetesVolumeBuilder, VolumeBuilderException, KubernetesJobBuilder
+from calrissian.job import k8s_safe_name, KubernetesVolumeBuilder, VolumeBuilderException, KubernetesPodBuilder
 from calrissian.job import CalrissianCommandLineJob
 
 
@@ -60,10 +60,10 @@ class KubernetesVolumeBuilderTestCase(TestCase):
         self.assertIn('Could not find a persistent volume', str(context.exception))
 
 
-class KubernetesJobBuilderTestCase(TestCase):
+class KubernetesPodBuilderTestCase(TestCase):
 
     def setUp(self):
-        self.name = 'JobName'
+        self.name = 'PodName'
         self.container_image = 'dockerimage:1.0'
         self.environment = {'K1':'V1', 'K2':'V2', 'HOME': '/homedir'}
         self.volume_mounts = [Mock(), Mock()]
@@ -72,71 +72,67 @@ class KubernetesJobBuilderTestCase(TestCase):
         self.stdout = 'stdout.txt'
         self.stderr = 'stderr.txt'
         self.stdin = 'stdin.txt'
-        self.job_builder = KubernetesJobBuilder(self.name, self.container_image, self.environment, self.volume_mounts,
+        self.pod_builder = KubernetesPodBuilder(self.name, self.container_image, self.environment, self.volume_mounts,
                                                 self.volumes, self.command_line, self.stdout, self.stderr, self.stdin)
 
-    def test_safe_job_name(self):
-        self.assertEqual('jobname-job', self.job_builder.job_name())
+    def test_safe_pod_name(self):
+        self.assertEqual('podname-pod', self.pod_builder.pod_name())
 
     def test_safe_container_name(self):
-        self.assertEqual('jobname-container', self.job_builder.container_name())
+        self.assertEqual('podname-container', self.pod_builder.container_name())
 
     def test_container_command(self):
-        self.assertEqual(['/bin/sh', '-c'], self.job_builder.container_command())
+        self.assertEqual(['/bin/sh', '-c'], self.pod_builder.container_command())
 
     def test_container_args_without_redirects(self):
         # container_args returns a list with a single item since it is passed to 'sh', '-c'
-        self.job_builder.stdout = None
-        self.job_builder.stderr = None
-        self.job_builder.stdin = None
-        self.assertEqual(['cat'], self.job_builder.container_args())
+        self.pod_builder.stdout = None
+        self.pod_builder.stderr = None
+        self.pod_builder.stdin = None
+        self.assertEqual(['cat'], self.pod_builder.container_args())
 
     def test_container_args_with_redirects(self):
-        self.assertEqual(['cat > stdout.txt 2> stderr.txt < stdin.txt'], self.job_builder.container_args())
+        self.assertEqual(['cat > stdout.txt 2> stderr.txt < stdin.txt'], self.pod_builder.container_args())
 
     def test_container_environment(self):
-        environment = self.job_builder.container_environment()
+        environment = self.pod_builder.container_environment()
         self.assertEqual(len(self.environment), len(environment))
         self.assertIn({'name': 'K1', 'value': 'V1'}, environment)
         self.assertIn({'name': 'K2', 'value': 'V2'}, environment)
         self.assertIn({'name': 'HOME', 'value': '/homedir'}, environment)
 
     def test_container_workingdir(self):
-        workingdir = self.job_builder.container_workingdir()
+        workingdir = self.pod_builder.container_workingdir()
         self.assertEqual('/homedir', workingdir)
 
     def test_build(self):
         expected = {
             'metadata': {
-                'name': 'jobname-job'
+                'name': 'podname-pod'
             },
-            'apiVersion': 'batch/v1',
-            'kind':'Job',
+            'apiVersion': 'v1',
+            'kind':'Pod',
             'spec': {
-                'template': {
-                    'spec': {
-                        'containers': [
-                            {
-                                'name': 'jobname-container',
-                                'image': 'dockerimage:1.0',
-                                'command': ['/bin/sh', '-c'],
-                                'args': ['cat > stdout.txt 2> stderr.txt < stdin.txt'],
-                                'env': [
-                                    {'name': 'HOME', 'value': '/homedir'},
-                                    {'name': 'K1', 'value': 'V1'},
-                                    {'name': 'K2', 'value': 'V2'},
-                                ],
-                                'volumeMounts': self.volume_mounts,
-                                'workingDir': '/homedir',
-                             }
+                'containers': [
+                    {
+                        'name': 'podname-container',
+                        'image': 'dockerimage:1.0',
+                        'command': ['/bin/sh', '-c'],
+                        'args': ['cat > stdout.txt 2> stderr.txt < stdin.txt'],
+                        'env': [
+                            {'name': 'HOME', 'value': '/homedir'},
+                            {'name': 'K1', 'value': 'V1'},
+                            {'name': 'K2', 'value': 'V2'},
                         ],
-                        'restartPolicy': 'Never',
-                        'volumes': self.volumes
-                    }
-                }
+                        'volumeMounts': self.volume_mounts,
+                        'workingDir': '/homedir',
+                     }
+                ],
+                'restartPolicy': 'Never',
+                'volumes': self.volumes
             }
         }
-        self.assertEqual(expected, self.job_builder.build())
+        self.assertEqual(expected, self.pod_builder.build())
 
 
 @patch('calrissian.job.KubernetesClient')
@@ -189,9 +185,9 @@ class CalrissianCommandLineJobTestCase(TestCase):
         # home should be builder.outdir
         self.assertEqual(job.environment['HOME'], '/out')
 
-    def test_wait_for_kubernetes_job(self, mock_volume_builder, mock_client):
+    def test_wait_for_kubernetes_pod(self, mock_volume_builder, mock_client):
         job = self.make_job()
-        job.wait_for_kubernetes_job()
+        job.wait_for_kubernetes_pod()
         self.assertTrue(mock_client.return_value.wait_for_completion.called)
 
     def test_finish_calls_output_callback_with_status(self, mock_volume_builder, mock_client):
@@ -231,16 +227,16 @@ class CalrissianCommandLineJobTestCase(TestCase):
         image = job._get_container_image()
         self.assertEqual(image, 'dockerimage:1.0')
 
-    @patch('calrissian.job.KubernetesJobBuilder')
+    @patch('calrissian.job.KubernetesPodBuilder')
     @patch('calrissian.job.os')
-    def test_create_kubernetes_runtime(self, mock_os, mock_job_builder, mock_volume_builder, mock_client):
+    def test_create_kubernetes_runtime(self, mock_os, mock_pod_builder, mock_volume_builder, mock_client):
         def realpath(path):
             return '/real' + path
         mock_os.path.realpath = realpath
         mock_add_volume_binding = Mock()
         mock_volume_builder.return_value.add_volume_binding = mock_add_volume_binding
 
-        mock_job_builder.return_value.build.return_value = '<built job>'
+        mock_pod_builder.return_value.build.return_value = '<built pod>'
         job = self.make_job()
         job.outdir = '/outdir'
         job.tmpdir = '/tmpdir'
@@ -252,8 +248,8 @@ class CalrissianCommandLineJobTestCase(TestCase):
                          [call('/real/outdir', '/out', True),
                           call('/real/tmpdir', '/tmp', True)])
         # looks at generatemapper
-        # creates a KubernetesJobBuilder
-        self.assertEqual(mock_job_builder.call_args, call(
+        # creates a KubernetesPodBuilder
+        self.assertEqual(mock_pod_builder.call_args, call(
             job.name,
             job._get_container_image(),
             job.environment,
@@ -265,15 +261,15 @@ class CalrissianCommandLineJobTestCase(TestCase):
             job.stdin
         ))
         # calls builder.build
-        self.assertTrue(mock_job_builder.return_value.build.called)
         # returns that
-        self.assertEqual(built, mock_job_builder.return_value.build.return_value)
+        self.assertTrue(mock_pod_builder.return_value.build.called)
+        self.assertEqual(built, mock_pod_builder.return_value.build.return_value)
 
-    def test_execute_kubernetes_job(self, mock_volume_builder, mock_client):
+    def test_execute_kubernetes_pod(self, mock_volume_builder, mock_client):
         job = self.make_job()
-        k8s_job = Mock()
-        job.execute_kubernetes_job(k8s_job)
-        self.assertTrue(mock_client.return_value.submit_job.called_with(k8s_job))
+        k8s_pod = Mock()
+        job.execute_kubernetes_pod(k8s_pod)
+        self.assertTrue(mock_client.return_value.submit_pod.called_with(k8s_pod))
 
     def test_add_file_or_directory_volume_ro(self, mock_volume_builder, mock_client):
         mock_add_volume_binding = mock_volume_builder.return_value.add_volume_binding
@@ -348,8 +344,8 @@ class CalrissianCommandLineJobTestCase(TestCase):
         job.populate_env_vars = Mock()
         job._setup = Mock()
         job.create_kubernetes_runtime = Mock()
-        job.execute_kubernetes_job = Mock()
-        job.wait_for_kubernetes_job = Mock()
+        job.execute_kubernetes_pod = Mock()
+        job.wait_for_kubernetes_pod = Mock()
         job.finish = Mock()
 
         runtimeContext = Mock()
@@ -358,6 +354,6 @@ class CalrissianCommandLineJobTestCase(TestCase):
         self.assertTrue(job.populate_env_vars.called)
         self.assertEqual(job._setup.call_args, call(runtimeContext))
         self.assertEqual(job.create_kubernetes_runtime.call_args, call(runtimeContext))
-        self.assertEqual(job.execute_kubernetes_job.call_args, call(job.create_kubernetes_runtime.return_value))
-        self.assertTrue(job.wait_for_kubernetes_job.called)
-        self.assertEqual(job.finish.call_args, call(job.wait_for_kubernetes_job.return_value))
+        self.assertEqual(job.execute_kubernetes_pod.call_args, call(job.create_kubernetes_runtime.return_value))
+        self.assertTrue(job.wait_for_kubernetes_pod.called)
+        self.assertEqual(job.finish.call_args, call(job.wait_for_kubernetes_pod.return_value))
