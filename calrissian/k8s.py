@@ -109,4 +109,3 @@ class KubernetesClient(object):
         # Extract the exit code out of the status
         log.info('setting process_exit_code from state {}'.format(state))
         self.process_exit_code = state.terminated.exit_code
-
