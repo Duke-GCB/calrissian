@@ -19,17 +19,18 @@ def add_arguments(parser):
     parser.add_argument('--max-cores', type=int, help='Maximum number of CPU cores to use')
 
 
-def check_arguments(parser, args):
+def parse_arguments(parser):
+    args = parser.parse_args()
     if not (args.max_ram and args.max_cores):
         parser.print_help()
         sys.exit(1)
+    return args
 
 
 def main():
     parser = arg_parser()
     add_arguments(parser)
-    parsed_args = parser.parse_args()
-    check_arguments(parser, parsed_args)
+    parsed_args = parse_arguments(parser)
     result = cwlmain(args=parsed_args,
                      executor=CalrissianExecutor(parsed_args.max_ram, parsed_args.max_cores),
                      loadingContext=CalrissianLoadingContext(),
