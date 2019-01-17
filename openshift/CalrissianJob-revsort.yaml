@@ -21,7 +21,7 @@ spec:
           name: calrissian-tmp
         - mountPath: /calrissian/output-data
           name: calrissian-output-data
-      restartPolicy: OnFailure
+      restartPolicy: Never
       volumes:
       - name: calrissian-input-data
         persistentVolumeClaim:
@@ -35,3 +35,4 @@ spec:
       - name: calrissian-output-data
         persistentVolumeClaim:
           claimName: calrissian-output-data
+  backOffLimit: 0
