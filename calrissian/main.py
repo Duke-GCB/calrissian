@@ -6,10 +6,11 @@ from cwltool.argparser import arg_parser
 import logging
 import sys
 
-loggers = ['executor','context','tool','job', 'k8s']
-for logger in loggers:
-    logging.getLogger('calrissian.{}'.format(logger)).setLevel(logging.DEBUG)
-    logging.getLogger('calrissian.{}'.format(logger)).addHandler(logging.StreamHandler())
+def activate_logging():
+    loggers = ['executor','context','tool','job', 'k8s']
+    for logger in loggers:
+        logging.getLogger('calrissian.{}'.format(logger)).setLevel(logging.DEBUG)
+        logging.getLogger('calrissian.{}'.format(logger)).addHandler(logging.StreamHandler())
 
 
 def main():
@@ -20,7 +21,9 @@ def main():
                      loadingContext=CalrissianLoadingContext(),
                      versionfunc=version,
                      )
+    return result
 
 
 if __name__ == '__main__':
-    main()
+    activate_logging()
+    sys.exit(main())

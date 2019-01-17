@@ -18,13 +18,15 @@ The `openshift/` directory contains YAML files that demonstrate the basic functi
 
         oc new-project calrissian
 
-2. Create a role in your project to allow managing `Job`s:
+2. Create a pair of roles in your project to allow managing `Job`s and their `Pod`s:
 
-        oc create role job-manager-role --verb=get,list,watch,create,delete --resource=jobs
+        oc create role job-manager-role --verb=create,delete --resource=jobs
+        oc create role pod-manager-role --verb=list,watch --resource=pods
 
-3. Give your project's default service account access to this role. This allows the calrissian Job to create Jobs for each step.
+3. Bind your project's default service account access to these roles. Calrissian running inside the cluster will use this service account to make Kubernetes API calls.
 
         oc create rolebinding job-manager-default-binding --role=job-manager-role --serviceaccount=calrissian:default
+        oc create rolebinding pod-manager-default-binding --role=pod-manager-role --serviceaccount=calrissian:default
 
 4. Create the BuildConfig - this allows Openshift to build the source code into a Docker image and starts a build automatically. If you wish to build a different branch or repo, edit this file.
 
@@ -38,9 +40,9 @@ The `openshift/` directory contains YAML files that demonstrate the basic functi
 
 With the VolumeClaims and Build processes in place, you can run the example with 2 jobs. These jobs use the docker image built by the BuildConfig, so they cannot be run until the build completes.
 
-1. Stage the input data and workflow onto the `input-data` volume with the StageDataJob.
+1. Stage the input data and workflow onto the `input-data` volume with the StageInputDataJob.
 
-        oc create -f openshift/StageDataJob-revsort.yaml
+        oc create -f openshift/StageInputDataJob.yaml
 
 2. Run the workflow engine with the CalrissianJob
 

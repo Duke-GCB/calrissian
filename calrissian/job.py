@@ -226,10 +226,19 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         self.environment["TMPDIR"] = '/tmp'
 
     def wait_for_kubernetes_job(self):
-        self.client.wait()
+        return self.client.wait_for_completion()
 
-    def finish(self):
-        status = 'success'
+    def finish(self, exit_code):
+        if exit_code in self.successCodes:
+            status = "success"
+        elif exit_code in self.temporaryFailCodes:
+            status = "temporaryFail"
+        elif exit_code in self.permanentFailCodes:
+            status = "permanentFail"
+        elif exit_code == 0:
+            status = "success"
+        else:
+            status = "permanentFail"
         # collect_outputs (and collect_output) is definied in command_line_tool
         outputs = self.collect_outputs(self.outdir)
         self.output_callback(outputs, status)
@@ -374,8 +383,8 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         self._setup(runtimeContext)
         k8s_job = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
         self.execute_kubernetes_job(k8s_job) # analogous to _execute()
-        self.wait_for_kubernetes_job()
-        self.finish()
+        k8s_exit_code = self.wait_for_kubernetes_job()
+        self.finish(k8s_exit_code)
 
     # Below are concrete implementations of the remaining abstract methods in ContainerCommandLineJob
     # They are not implemented and not expected to be called, so they all raise NotImplementedError
