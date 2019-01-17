@@ -126,12 +126,13 @@ class KubernetesClient(object):
         if not pod_list.items:
             raise CalrissianJobException("Unable to find pod with name {}".format(pod_name))
         if len(pod_list.items) != 1:
-            raise CalrissianJobException("Multiple pods found with name with name {}".format(pod_name))
+            raise CalrissianJobException("Multiple pods found with name {}".format(pod_name))
         return pod_list.items[0]
 
     def get_current_pod(self):
         """
-        Return pod details about the current pod (requires 'CALRISSIAN_POD_NAME' environment variable to be set)
+        Return pod details about the current pod (ie the one we are running inside of).
+        Requires 'CALRISSIAN_POD_NAME' environment variable to be set.
         :return: V1Pod
         """
         pod_name = os.environ.get(POD_NAME_ENV_VARIABLE)

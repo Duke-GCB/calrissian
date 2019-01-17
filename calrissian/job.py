@@ -33,7 +33,7 @@ class KubernetesPod(object):
     def __init__(self, pod):
         self.pod = pod
 
-    def _persistent_volumes_dict(self):
+    def get_persistent_volumes_dict(self):
         persistent_volumes = {}
         for pod_volume in self.pod.spec.volumes:
             if pod_volume.persistent_volume_claim:
@@ -46,7 +46,7 @@ class KubernetesPod(object):
 
     def get_mounted_persistent_volumes(self):
         mounted_persistent_volumes = []
-        persistent_volumes = self._persistent_volumes_dict()
+        persistent_volumes = self.get_persistent_volumes_dict()
         for volume_mount in self.get_first_container().volume_mounts:
             pvc_name = persistent_volumes.get(volume_mount.name)
             if pvc_name:
@@ -67,7 +67,6 @@ class KubernetesVolumeBuilder(object):
         :param pod: V1Pod
         """
         k8s_pod = KubernetesPod(pod)
-        # TODO volume mounts may have sub_path entries already
         for mount_path, pvc_name in k8s_pod.get_mounted_persistent_volumes():
             self.add_persistent_volume_entry(mount_path, pvc_name)
 
@@ -258,7 +257,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         # Append volume for outdir
         self._add_volume_binding(os.path.realpath(self.outdir), self.builder.outdir, writable=True)
         # Append volume for tmp
-        #self._add_volume_binding(os.path.realpath(self.tmpdir), '/tmp', writable=True)
+        self._add_volume_binding(os.path.realpath(self.tmpdir), '/tmp', writable=True)
 
         # Call the ContainerCommandLineJob add_volumes method
         self.add_volumes(self.pathmapper,

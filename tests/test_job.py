@@ -1,7 +1,7 @@
 from unittest import TestCase
 from unittest.mock import Mock, patch, call
 from calrissian.job import k8s_safe_name, KubernetesVolumeBuilder, VolumeBuilderException, KubernetesJobBuilder
-from calrissian.job import CalrissianCommandLineJob
+from calrissian.job import CalrissianCommandLineJob, KubernetesPod
 
 
 class SafeNameTestCase(TestCase):
@@ -13,6 +13,76 @@ class SafeNameTestCase(TestCase):
     def test_makes_name_safe(self):
         made_safe = k8s_safe_name(self.unsafe_name)
         self.assertEqual(self.safe_name, made_safe)
+
+
+class KubernetesPodTestCase(TestCase):
+    def test_first_container_with_one_container(self):
+        mock_pod = Mock()
+        mock_pod.spec.containers = ['somecontainer']
+        kpod = KubernetesPod(mock_pod)
+        container = kpod.get_first_container()
+        self.assertEqual(container, 'somecontainer')
+
+    def test_first_container_with_two_container(self):
+        mock_pod = Mock()
+        mock_pod.spec.containers = ['container1', 'container2']
+        kpod = KubernetesPod(mock_pod)
+        container = kpod.get_first_container()
+        self.assertEqual(container, 'container1')
+
+    def test_get_persistent_volumes_dict(self):
+        mock_pod = Mock()
+        kpod = KubernetesPod(mock_pod)
+        mock_data1_volume = Mock()
+        mock_data1_volume.name = 'data1'
+        mock_data1_volume.persistent_volume_claim = Mock(claim_name='data1-claim-name')
+        mock_data2_volume = Mock()
+        mock_data2_volume.name = 'data2'
+        mock_data2_volume.persistent_volume_claim = Mock(claim_name='data2-claim-name')
+
+        mock_ignored_volume = Mock(persistent_volume_claim=Mock())
+        mock_pod.spec.volumes = [mock_data1_volume, mock_data2_volume]
+        expected_dict = {
+            'data1': 'data1-claim-name',
+            'data2': 'data2-claim-name',
+        }
+        self.assertEqual(kpod.get_persistent_volumes_dict(), expected_dict)
+
+    def test_get_mounted_persistent_volumes(self):
+        mock_pod = Mock()
+        mock_volume_mount1 = Mock()
+        mock_volume_mount1.name = 'data1'
+        mock_volume_mount1.mount_path = '/data/one'
+        mock_volume_mount2 = Mock()
+        mock_volume_mount2.name = 'data2'
+        mock_volume_mount2.mount_path = '/data/two'
+        mock_pod.spec.containers = [
+            Mock(volume_mounts=[mock_volume_mount1, mock_volume_mount2])
+        ]
+        kpod = KubernetesPod(mock_pod)
+        kpod.get_persistent_volumes_dict = Mock()
+        kpod.get_persistent_volumes_dict.return_value = {'data1': 'data1-claim', 'data2': 'data2-claim'}
+        mp_volumes = kpod.get_mounted_persistent_volumes()
+
+        self.assertEqual(mp_volumes, [('/data/one', 'data1-claim'), ('/data/two', 'data2-claim')])
+
+    def test_get_mounted_persistent_volumes_ignores_unmounted_volumes(self):
+        mock_pod = Mock()
+        mock_volume_mount1 = Mock()
+        mock_volume_mount1.name = 'data1'
+        mock_volume_mount1.mount_path = '/data/one'
+        mock_volume_mount2 = Mock()
+        mock_volume_mount2.name = 'data2'
+        mock_volume_mount2.mount_path = '/data/two'
+        mock_pod.spec.containers = [
+            Mock(volume_mounts=[mock_volume_mount1, mock_volume_mount2])
+        ]
+        kpod = KubernetesPod(mock_pod)
+        kpod.get_persistent_volumes_dict = Mock()
+        kpod.get_persistent_volumes_dict.return_value = {'data1': 'data1-claim'}
+        mp_volumes = kpod.get_mounted_persistent_volumes()
+
+        self.assertEqual(mp_volumes, [('/data/one', 'data1-claim')])
 
 
 class KubernetesVolumeBuilderTestCase(TestCase):
@@ -58,6 +128,42 @@ class KubernetesVolumeBuilderTestCase(TestCase):
         with self.assertRaises(VolumeBuilderException) as context:
             self.volume_builder.add_volume_binding('/prefix/2/input2', '/input2-target', False)
         self.assertIn('Could not find a persistent volume', str(context.exception))
+
+    @patch('calrissian.job.KubernetesPod')
+    def test_add_persistent_volume_entries_from_pod(self, mock_kubernetes_pod):
+        mock_kubernetes_pod.return_value.get_mounted_persistent_volumes.return_value = [
+            ('/tmp/data1', 'data1-claim'),
+            ('/tmp/data2', 'data2-claim'),
+        ]
+
+        self.volume_builder.add_persistent_volume_entries_from_pod('some-pod-data')
+
+        pv_entries = self.volume_builder.persistent_volume_entries
+        self.assertEqual(pv_entries.keys(), set(['/tmp/data1', '/tmp/data2']))
+        expected_entry1 = {
+            'prefix': '/tmp/data1',
+            'volume': {
+                'name': 'data1-claim',
+                'persistentVolumeClaim': {
+                    'claimName': 'data1-claim'
+                }
+            }
+        }
+        expected_entry2 = {
+            'prefix': '/tmp/data2',
+            'volume': {
+                'name': 'data2-claim',
+                'persistentVolumeClaim': {
+                    'claimName': 'data2-claim'
+                }
+            }
+        }
+        self.assertEqual(pv_entries['/tmp/data1'], expected_entry1)
+        self.assertEqual(pv_entries['/tmp/data2'], expected_entry2)
+        volumes = self.volume_builder.volumes
+        self.assertEqual(len(volumes), 2)
+        self.assertEqual(volumes[0], expected_entry1['volume'])
+        self.assertEqual(volumes[1], expected_entry2['volume'])
 
 
 class KubernetesJobBuilderTestCase(TestCase):
@@ -154,6 +260,12 @@ class CalrissianCommandLineJobTestCase(TestCase):
     def make_job(self):
         return CalrissianCommandLineJob(self.builder, self.joborder, self.make_path_mapper, self.requirements,
                                        self.hints, self.name)
+
+    def test_constructor_calculates_persistent_volume_entries(self, mock_volume_builder, mock_client):
+        job = self.make_job()
+        mock_volume_builder.return_value.add_persistent_volume_entries_from_pod.assert_called_with(
+            mock_client.return_value.get_current_pod.return_value
+        )
 
     @patch('calrissian.job.os')
     def test_makes_tmpdir_when_not_exists(self, mock_os, mock_volume_builder, mock_client):

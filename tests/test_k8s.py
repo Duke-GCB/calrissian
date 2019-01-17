@@ -116,6 +116,48 @@ class KubernetesClientTestCase(TestCase):
             kc._set_job(Mock(metadata=Mock(uid='123')))
         self.assertIn('his client is already observing job', str(context.exception))
 
+    def test_get_pod_for_name_not_found(self, mock_get_namespace, mock_client):
+        mock_client.CoreV1Api.return_value.list_namespaced_pod.return_value = Mock(items=[])
+        kc = KubernetesClient()
+        with self.assertRaises(CalrissianJobException) as raised_exception:
+            kc.get_pod_for_name('somepod')
+        self.assertEqual(str(raised_exception.exception), 'Unable to find pod with name somepod')
+
+    def test_get_pod_for_name_one_found(self, mock_get_namespace, mock_client):
+        mock_client.CoreV1Api.return_value.list_namespaced_pod.return_value = Mock(items=['pod1'])
+        kc = KubernetesClient()
+        pod = kc.get_pod_for_name('somepod')
+        self.assertEqual(pod, 'pod1')
+
+    def test_get_pod_for_name_multiple_found(self, mock_get_namespace, mock_client):
+        mock_client.CoreV1Api.return_value.list_namespaced_pod.return_value = Mock(items=['pod1', 'pod2'])
+        kc = KubernetesClient()
+        with self.assertRaises(CalrissianJobException) as raised_exception:
+            kc.get_pod_for_name('somepod')
+        self.assertEqual(str(raised_exception.exception), 'Multiple pods found with name somepod')
+
+    @patch('calrissian.k8s.os')
+    def test_get_current_pod_missing_env_var(self, mock_os, mock_get_namespace, mock_client):
+        mock_os.environ = {}
+        kc = KubernetesClient()
+        with self.assertRaises(CalrissianJobException) as raised_exception:
+            kc.get_current_pod()
+        self.assertEqual(str(raised_exception.exception),
+                         'Missing required environment variable $CALRISSIAN_POD_NAME')
+
+    @patch('calrissian.k8s.os')
+    def test_get_current_pod_with_env_var(self, mock_os, mock_get_namespace, mock_client):
+        mock_client.CoreV1Api.return_value.list_namespaced_pod.return_value = Mock(
+            items=[{'name': 'mypod'}]
+        )
+        mock_os.environ = {'CALRISSIAN_POD_NAME': 'mypod'}
+        kc = KubernetesClient()
+        pod = kc.get_current_pod()
+        self.assertEqual(pod, {'name': 'mypod'})
+        mock_client.CoreV1Api.return_value.list_namespaced_pod.assert_called_with(
+            mock_get_namespace.return_value, field_selector='metadata.name=mypod'
+        )
+
 
 class KubernetesClientStateTestCase(TestCase):
 
