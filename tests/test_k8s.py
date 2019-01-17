@@ -34,6 +34,9 @@ class KubernetesClientTestCase(TestCase):
         kc = KubernetesClient()
         self.assertEqual(kc.namespace, mock_get_namespace.return_value)
         self.assertEqual(kc.batch_api_instance, mock_client.BatchV1Api.return_value)
+        self.assertEqual(kc.core_api_instance, mock_client.CoreV1Api.return_value)
+        self.assertIsNone(kc.job)
+        self.assertIsNone(kc.process_exit_code)
 
     def test_submit_job(self, mock_get_namespace, mock_client):
         mock_get_namespace.return_value = 'namespace'
@@ -43,59 +46,113 @@ class KubernetesClientTestCase(TestCase):
         kc = KubernetesClient()
         mock_body = Mock()
         kc.submit_job(mock_body)
-        self.assertEqual(kc.job_uid, '123')
+        self.assertEqual(kc.job.metadata.uid, '123')
         self.assertEqual(mock_create_namespaced_job.call_args, call('namespace', mock_body))
 
-    def setup_mock_watch(self, mock_watch, event):
+    def setup_mock_watch(self, mock_watch, event_objects=[]):
         mock_stream = Mock()
         mock_stop = Mock()
-        mock_stream.return_value = [{'object': event}]
+        stream_events = []
+        for event_object in event_objects:
+            stream_events.append({'object': event_object})
+        mock_stream.return_value = stream_events
         mock_watch.Watch.return_value.stream = mock_stream
         mock_watch.Watch.return_value.stop = mock_stop
 
     @patch('calrissian.k8s.watch')
-    def test_wait_successful_job(self, mock_watch, mock_get_namespace, mock_client):
+    def test_wait_calls_watch_pod_with_job_uid_label_selector(self, mock_watch, mock_get_namespace, mock_client):
+        self.setup_mock_watch(mock_watch)
         kc = KubernetesClient()
-        kc.watch_job(Mock(metadata=Mock(uid='456')))
-        success_job_event = Mock(status=Mock(succeeded=True, failed=False), metadata=Mock(uid='456'))
-        self.setup_mock_watch(mock_watch, success_job_event)
-        kc.wait()
-        self.assertTrue(mock_watch.Watch.return_value.stream.called)
-        self.assertTrue(mock_watch.Watch.return_value.stop.called)
-        self.assertIsNone(kc.job_uid)
-        # job should be deleted
-        self.assertTrue(mock_client.BatchV1Api.return_value.delete_namespaced_job.called)
+        kc._set_job(Mock(metadata=Mock(uid='456')))
+        kc.wait_for_completion()
+        mock_stream = mock_watch.Watch.return_value.stream
+        self.assertEqual(mock_stream.call_args, call(kc.core_api_instance.list_namespaced_pod, kc.namespace, label_selector='controller-uid=456'))
 
     @patch('calrissian.k8s.watch')
-    def test_wait_failed_job_raises(self, mock_watch, mock_get_namespace, mock_client):
+    def test_wait_skips_pod_when_status_is_none(self, mock_watch, mock_get_namespace, mock_client):
+        mock_pod = Mock(status=Mock(container_statuses=None))
+        self.setup_mock_watch(mock_watch, [mock_pod])
         kc = KubernetesClient()
-        kc.watch_job(Mock(metadata=Mock(uid='456')))
-        failed_job_event = Mock(status=Mock(succeeded=False, failed=True), metadata=Mock(uid='456'))
-        self.setup_mock_watch(mock_watch, failed_job_event)
-        with self.assertRaises(CalrissianJobException):
-            kc.wait()
-        self.assertIsNone(kc.job_uid)
-        self.assertTrue(mock_watch.Watch.return_value.stream.called)
+        kc._set_job(Mock(metadata=Mock(uid='456')))
+        kc.wait_for_completion()
         self.assertFalse(mock_watch.Watch.return_value.stop.called)
-        # job should not be deleted
         self.assertFalse(mock_client.BatchV1Api.return_value.delete_namespaced_job.called)
+        self.assertIsNotNone(kc.job)
 
     @patch('calrissian.k8s.watch')
-    def test_ignores_other_job_ids(self, mock_watch, mock_get_namespace, mock_client):
+    def test_wait_skips_pod_when_state_is_running(self, mock_watch, mock_get_namespace, mock_client):
+        mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=Mock(), terminated=None, waiting=None))]))
+        self.setup_mock_watch(mock_watch, [mock_pod])
         kc = KubernetesClient()
-        kc.watch_job(Mock(metadata=Mock(uid='456')))
-        other_job_event = Mock(status=Mock(succeeded=True, failed=False), metadata=Mock(uid='789'))
-        self.setup_mock_watch(mock_watch, other_job_event)
-        kc.wait()
-        self.assertIsNotNone(kc.job_uid)
-        # None of kc's critical state should have changed
-        self.assertTrue(mock_watch.Watch.return_value.stream.called)
+        kc._set_job(Mock(metadata=Mock(uid='456')))
+        kc.wait_for_completion()
         self.assertFalse(mock_watch.Watch.return_value.stop.called)
-        # job should not be deleted
         self.assertFalse(mock_client.BatchV1Api.return_value.delete_namespaced_job.called)
+        self.assertIsNotNone(kc.job)
 
-    def test_raises_on_watch_second_job(self, mock_get_namespace, mock_client):
+    @patch('calrissian.k8s.watch')
+    def test_wait_finishes_when_pod_state_is_terminated(self, mock_watch, mock_get_namespace, mock_client):
+        mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=None, terminated=Mock(exit_code=123), waiting=None))]))
+        self.setup_mock_watch(mock_watch, [mock_pod])
         kc = KubernetesClient()
-        kc.watch_job(Mock(metadata=Mock(uid='123')))
-        with self.assertRaises(CalrissianJobException):
-            kc.watch_job(Mock(metadata=Mock(uid='123')))
+        kc._set_job(Mock(metadata=Mock(uid='456')))
+        exit_code = kc.wait_for_completion()
+        self.assertEqual(exit_code, 123)
+
+    @patch('calrissian.k8s.watch')
+    def test_wait_raises_exception_when_state_is_unexpected(self, mock_watch, mock_get_namespace, mock_client):
+        mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=None, terminated=None, waiting=None))]))
+        self.setup_mock_watch(mock_watch, [mock_pod])
+        kc = KubernetesClient()
+        kc._set_job(Mock(metadata=Mock(uid='456')))
+        with self.assertRaises(CalrissianJobException) as context:
+            kc.wait_for_completion()
+        self.assertIn('Unexpected pod container status', str(context.exception))
+
+    def test_raises_on_set_second_job(self, mock_get_namespace, mock_client):
+        kc = KubernetesClient()
+        kc._set_job(Mock(metadata=Mock(uid='123')))
+        with self.assertRaises(CalrissianJobException) as context:
+            kc._set_job(Mock(metadata=Mock(uid='123')))
+        self.assertIn('his client is already observing job', str(context.exception))
+
+
+class KubernetesClientStateTestCase(TestCase):
+
+    def setUp(self):
+        self.running_state = Mock(running=Mock(), waiting=None, terminated=None)
+        self.waiting_state = Mock(running=None, waiting=Mock(), terminated=None)
+        self.terminated_state = Mock(running=None, waiting=None, terminated=Mock())
+
+    def test_is_running(self):
+        self.assertTrue(KubernetesClient.state_is_running(self.running_state))
+        self.assertTrue(KubernetesClient.state_is_running(self.waiting_state))
+        self.assertFalse(KubernetesClient.state_is_running(self.terminated_state))
+
+    def test_is_terminated(self):
+        self.assertFalse(KubernetesClient.state_is_terminated(self.running_state))
+        self.assertFalse(KubernetesClient.state_is_terminated(self.waiting_state))
+        self.assertTrue(KubernetesClient.state_is_terminated(self.terminated_state))
+
+
+class KubernetesClientStatusTestCase(TestCase):
+
+    def setUp(self):
+        self.none_statuses = None
+        self.empty_list_statuses = []
+        self.multiple_statuses = [Mock(), Mock()]
+        self.singular_status = [Mock()]
+
+    def test_none_statuses(self):
+        self.assertIsNone(KubernetesClient.get_first_status_or_none(self.none_statuses))
+        self.assertIsNone(KubernetesClient.get_first_status_or_none(self.empty_list_statuses))
+
+    def test_singular_status(self):
+        self.assertEqual(len(self.singular_status), 1)
+        self.assertIsNotNone(KubernetesClient.get_first_status_or_none(self.singular_status))
+
+    def test_multiple_statuses_raises(self):
+        self.assertEqual(len(self.multiple_statuses), 2)
+        with self.assertRaises(CalrissianJobException) as context:
+            KubernetesClient.get_first_status_or_none(self.multiple_statuses)
+        self.assertIn('Expected 0 or 1 container statuses in job, found 2', str(context.exception))

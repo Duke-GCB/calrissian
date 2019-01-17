@@ -55,8 +55,9 @@ class KubernetesVolumeBuilderTestCase(TestCase):
 
     def test_volume_binding_exception_if_not_found(self):
         self.assertEqual(0, len(self.volume_builder.volumes))
-        with self.assertRaises(VolumeBuilderException):
+        with self.assertRaises(VolumeBuilderException) as context:
             self.volume_builder.add_volume_binding('/prefix/2/input2', '/input2-target', False)
+        self.assertIn('Could not find a persistent volume', str(context.exception))
 
 
 class KubernetesJobBuilderTestCase(TestCase):
@@ -191,7 +192,7 @@ class CalrissianCommandLineJobTestCase(TestCase):
     def test_wait_for_kubernetes_job(self, mock_volume_builder, mock_client):
         job = self.make_job()
         job.wait_for_kubernetes_job()
-        self.assertTrue(mock_client.return_value.wait.called)
+        self.assertTrue(mock_client.return_value.wait_for_completion.called)
 
     def test_finish_calls_output_callback_with_status(self, mock_volume_builder, mock_client):
         job = self.make_job()
@@ -199,9 +200,31 @@ class CalrissianCommandLineJobTestCase(TestCase):
         job.collect_outputs = Mock()
         job.collect_outputs.return_value = mock_collected_outputs
         job.output_callback = Mock()
-        job.finish()
+        job.finish(0) # 0 = exit success
         self.assertTrue(job.collect_outputs.called)
         job.output_callback.assert_called_with(mock_collected_outputs, 'success')
+
+    def test_finish_looks_up_codes(self, mock_volume_builder, mock_client):
+        job = self.make_job()
+        mock_collected_outputs = Mock()
+        job.collect_outputs = Mock()
+        job.collect_outputs.return_value = mock_collected_outputs
+        job.output_callback = Mock()
+
+        job.successCodes = [1,] # Also 0
+        job.temporaryFailCodes = [2,]
+        job.permanentFailCodes = [3,] # also anything not covered
+        expected_codes = {
+            0: 'success',
+            1: 'success',
+            2: 'temporaryFail',
+            3: 'permanentFail',
+            4: 'permanentFail',
+            -1: 'permanentFail'
+        }
+        for code, status in expected_codes.items():
+            job.finish(code)
+            job.output_callback.assert_called_with(mock_collected_outputs, status)
 
     def test__get_container_image(self, mock_volume_builder, mock_client):
         job = self.make_job()
@@ -337,4 +360,4 @@ class CalrissianCommandLineJobTestCase(TestCase):
         self.assertEqual(job.create_kubernetes_runtime.call_args, call(runtimeContext))
         self.assertEqual(job.execute_kubernetes_job.call_args, call(job.create_kubernetes_runtime.return_value))
         self.assertTrue(job.wait_for_kubernetes_job.called)
-        self.assertTrue(job.finish.called)
+        self.assertEqual(job.finish.call_args, call(job.wait_for_kubernetes_job.return_value))

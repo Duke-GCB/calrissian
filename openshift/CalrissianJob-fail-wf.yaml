@@ -1,8 +1,7 @@
----
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: calrissian-revsort-array
+  name: calrissian-fail-wf
 spec:
   template:
     spec:
@@ -11,7 +10,7 @@ spec:
         # Jobs cannot use ImageStream images directly, so we have to provide the registry/repo variant
         image: docker-registry.default.svc:5000/calrissian/calrissian:latest
         command: ["/bin/bash", "-c"]
-        args: ["python -m calrissian.main --tmpdir-prefix /calrissian/tmptmp/ --tmp-outdir-prefix /calrissian/tmpout/ --outdir /calrissian/output-data/ /calrissian/input-data/revsort-array.cwl /calrissian/input-data/revsort-array-job.json"]
+        args: ["python -m calrissian.main --tmpdir-prefix /calrissian/tmptmp/ --tmp-outdir-prefix /calrissian/tmpout/ --outdir /calrissian/output-data/ /calrissian/input-data/fail-wf.cwl /calrissian/input-data/fail-wf-job.json"]
         volumeMounts:
         - mountPath: /calrissian/input-data
           name: calrissian-input-data
