@@ -19,10 +19,6 @@ class CalrissianExecutor(MultithreadedJobExecutor):
         self.max_cores = max_cores
         log.debug('Initialized executor to allow {} MB RAM and {} CPU cores'.format(self.max_ram, self.max_cores))
 
-    def select_resources(self, request, runtime_context):
-        log.debug('CalrissianExecutor.select_resources: {}'.format(request))
-        return super(CalrissianExecutor, self).select_resources(request, runtime_context)
-
     def run_jobs(self,
                  process,           # type: Process
                  job_order_object,  # type: Dict[Text, Any]
