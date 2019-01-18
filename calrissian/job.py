@@ -50,7 +50,8 @@ class KubernetesPodVolumeInspector(object):
         for volume_mount in self.get_first_container().volume_mounts:
             pvc_name = persistent_volumes.get(volume_mount.name)
             if pvc_name:
-                mounted_persistent_volumes.append((volume_mount.mount_path, pvc_name))
+                mounted_persistent_volumes.append(
+                    (volume_mount.mount_path, volume_mount.sub_path, pvc_name))
         return mounted_persistent_volumes
 
 
@@ -67,12 +68,13 @@ class KubernetesVolumeBuilder(object):
         :param pod: V1Pod
         """
         inspector = KubernetesPodVolumeInspector(pod)
-        for mount_path, pvc_name in inspector.get_mounted_persistent_volumes():
-            self.add_persistent_volume_entry(mount_path, pvc_name)
+        for mount_path, sub_path, pvc_name in inspector.get_mounted_persistent_volumes():
+            self.add_persistent_volume_entry(mount_path, sub_path, pvc_name)
 
-    def add_persistent_volume_entry(self, prefix, claim_name):
+    def add_persistent_volume_entry(self, prefix, sub_path, claim_name):
         entry = {
             'prefix': prefix,
+            'subPath': sub_path,
             'volume': {
                 'name': claim_name,
                 'persistentVolumeClaim': {
@@ -93,8 +95,12 @@ class KubernetesVolumeBuilder(object):
         return None
 
     @staticmethod
-    def calculate_subpath(source, prefix):
-        return source[len(prefix) + 1:]
+    def calculate_subpath(source, prefix, parent_sub_path):
+        source_without_prefix = source[len(prefix) + 1:]
+        if parent_sub_path:
+            return '{}/{}'.format(parent_sub_path, source_without_prefix)
+        else:
+            return source_without_prefix
 
     @staticmethod
     def random_tag(length=8):
@@ -109,7 +115,7 @@ class KubernetesVolumeBuilder(object):
         volume_mount = {
             'name': pv['volume']['name'],
             'mountPath': target,
-            'subPath': self.calculate_subpath(source, pv['prefix']),
+            'subPath': self.calculate_subpath(source, pv['prefix'], pv['subPath']),
             'readOnly': not writable
         }
         self.volume_mounts.append(volume_mount)
