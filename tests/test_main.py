@@ -9,20 +9,25 @@ class CalrissianMainTestCase(TestCase):
     @patch('calrissian.main.arg_parser')
     @patch('calrissian.main.CalrissianExecutor')
     @patch('calrissian.main.CalrissianLoadingContext')
+    @patch('calrissian.main.RuntimeContext')
     @patch('calrissian.main.version')
     @patch('calrissian.main.parse_arguments')
     @patch('calrissian.main.add_arguments')
-    def test_main_calls_cwlmain_returns_exit_code(self, mock_add_arguments, mock_parse_arguments, mock_version, mock_loading_context, mock_executor, mock_arg_parser, mock_cwlmain):
+    def test_main_calls_cwlmain_returns_exit_code(self, mock_add_arguments, mock_parse_arguments, mock_version, mock_runtime_context, mock_loading_context, mock_executor, mock_arg_parser, mock_cwlmain):
         mock_exit_code = Mock()
         mock_cwlmain.return_value = mock_exit_code
         result = main()
         self.assertTrue(mock_arg_parser.called)
         self.assertEqual(mock_add_arguments.call_args, call(mock_arg_parser.return_value))
         self.assertEqual(mock_parse_arguments.call_args, call(mock_arg_parser.return_value))
+        self.assertEqual(mock_executor.call_args, call(mock_parse_arguments.return_value.max_ram, mock_parse_arguments.return_value.max_cores))
+        self.assertTrue(mock_runtime_context.called)
         self.assertEqual(mock_cwlmain.call_args, call(args=mock_parse_arguments.return_value,
                                                       executor=mock_executor.return_value,
                                                       loadingContext=mock_loading_context.return_value,
+                                                      runtimeContext=mock_runtime_context.return_value,
                                                       versionfunc=mock_version))
+        self.assertEqual(mock_runtime_context.return_value.select_resources, mock_executor.return_value.select_resources)
         self.assertEqual(result, mock_exit_code)
 
     def test_add_arguments(self):
