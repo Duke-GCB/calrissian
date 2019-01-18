@@ -21,6 +21,11 @@ spec:
           name: calrissian-tmp
         - mountPath: /calrissian/output-data
           name: calrissian-output-data
+        env:
+        - name: CALRISSIAN_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
       restartPolicy: Never
       volumes:
       - name: calrissian-input-data
