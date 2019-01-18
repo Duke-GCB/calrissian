@@ -178,8 +178,10 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.stdout = 'stdout.txt'
         self.stderr = 'stderr.txt'
         self.stdin = 'stdin.txt'
+        self.resources = {'coresMin': 1, 'ramMin': 1024}
         self.pod_builder = KubernetesPodBuilder(self.name, self.container_image, self.environment, self.volume_mounts,
-                                                self.volumes, self.command_line, self.stdout, self.stderr, self.stdin)
+                                                self.volumes, self.command_line, self.stdout, self.stderr, self.stdin,
+                                                self.resources)
 
     def test_safe_pod_name(self):
         self.assertEqual('podname-pod', self.pod_builder.pod_name())
@@ -211,6 +213,37 @@ class KubernetesPodBuilderTestCase(TestCase):
         workingdir = self.pod_builder.container_workingdir()
         self.assertEqual('/homedir', workingdir)
 
+    def test_resource_bound(self):
+        self.assertEqual('requests', KubernetesPodBuilder.resource_bound('coresMin'))
+        self.assertEqual('limits', KubernetesPodBuilder.resource_bound('ramMax'))
+        self.assertEqual('limits', KubernetesPodBuilder.resource_bound('outdirMax'))
+        self.assertEqual(None, KubernetesPodBuilder.resource_bound('coresMid'))
+
+    def test_resource_type(self):
+        self.assertEqual('cpu', KubernetesPodBuilder.resource_type('coresMin'))
+        self.assertEqual('memory', KubernetesPodBuilder.resource_type('ramMax'))
+        self.assertEqual(None, KubernetesPodBuilder.resource_type('outdirMax'))
+        self.assertEqual('cpu', KubernetesPodBuilder.resource_type('coresMid'))
+
+    def test_resource_value(self):
+        self.assertEqual('3Mi', KubernetesPodBuilder.resource_value('memory', 3))
+        self.assertEqual('4', KubernetesPodBuilder.resource_value('cpu', 4))
+        self.assertEqual(None, KubernetesPodBuilder.resource_value('outdir', 62))
+
+    def test_container_resources(self):
+        self.pod_builder.resources = {'coresMin': 2, 'ramMin': 256, 'coresMax': 4}
+        resources = self.pod_builder.container_resources()
+        expected = {
+            'limits': {
+                'cpu': '4',
+            },
+            'requests': {
+                'cpu': '2',
+                'memory': '256Mi'
+            }
+        }
+        self.assertEqual(expected, resources)
+
     def test_build(self):
         expected = {
             'metadata': {
@@ -230,6 +263,12 @@ class KubernetesPodBuilderTestCase(TestCase):
                             {'name': 'K1', 'value': 'V1'},
                             {'name': 'K2', 'value': 'V2'},
                         ],
+                        'resources': {
+                            'requests': {
+                                'cpu': '1',
+                                'memory': '1024Mi',
+                            }
+                        },
                         'volumeMounts': self.volume_mounts,
                         'workingDir': '/homedir',
                      }
@@ -360,7 +399,8 @@ class CalrissianCommandLineJobTestCase(TestCase):
             job.command_line,
             job.stdout,
             job.stderr,
-            job.stdin
+            job.stdin,
+            job.builder.resources
         ))
         # calls builder.build
         # returns that
