@@ -32,21 +32,20 @@ class CalrissianJobException(Exception):
 
 class KubernetesClient(object):
     def __init__(self):
-        self.job = None
+        self.pod = None
         # load_config must happen before instantiating client
         self.process_exit_code = None
         self.namespace = load_config_get_namespace()
         self.core_api_instance = client.CoreV1Api()
-        self.batch_api_instance = client.BatchV1Api()
 
-    def submit_job(self, job_body):
-        job = self.batch_api_instance.create_namespaced_job(self.namespace, job_body)
-        log.info('Created k8s job name {} with id {}'.format(job.metadata.name, job.metadata.uid))
-        self._set_job(job)
+    def submit_pod(self, pod_body):
+        pod = self.core_api_instance.create_namespaced_pod(self.namespace, pod_body)
+        log.info('Created k8s pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
+        self._set_pod(pod)
 
     def wait_for_completion(self):
         w = watch.Watch()
-        for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, label_selector=self._get_pod_label_selector()):
+        for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_field_selector()):
             pod = event['object']
             status = self.get_first_status_or_none(pod.status.container_statuses)
             if status is None:
@@ -55,26 +54,25 @@ class KubernetesClient(object):
                 continue
             elif self.state_is_terminated(status.state):
                 self._handle_terminated_state(status.state)
-                self.batch_api_instance.delete_namespaced_job(self.job.metadata.name, self.namespace, body=client.V1DeleteOptions(propagation_policy='Background'))
-                self._clear_job()
-                # stop watching for events, our job is done. Causes wait loop to exit
+                self.core_api_instance.delete_namespaced_pod(self.pod.metadata.name, self.namespace, client.V1DeleteOptions())
+                self._clear_pod()
+                # stop watching for events, our pod is done. Causes wait loop to exit
                 w.stop()
             else:
                 raise CalrissianJobException('Unexpected pod container status', status)
         return self.process_exit_code
 
-    def _set_job(self, job):
-        log.info('k8s job \'{}\' started'.format(job.metadata.name))
-        if self.job is not None:
-            raise CalrissianJobException('This client is already observing job {}'.format(self.job))
-        self.job = job
+    def _set_pod(self, pod):
+        log.info('k8s pod \'{}\' started'.format(pod.metadata.name))
+        if self.pod is not None:
+            raise CalrissianJobException('This client is already observing pod {}'.format(self.pod))
+        self.pod = pod
 
-    def _clear_job(self):
-        self.job = None
+    def _clear_pod(self):
+        self.pod = None
 
-    def _get_pod_label_selector(self):
-        # We list pods by their controller uid, which should match our job uid
-        return 'controller-uid={}'.format(self.job.metadata.uid)
+    def _get_pod_field_selector(self):
+        return 'metadata.name={}'.format(self.pod.metadata.name)
 
     @staticmethod
     def state_is_running(state):
@@ -96,7 +94,7 @@ class KubernetesClient(object):
             return None
         elif len(container_statuses) > 1:
             raise CalrissianJobException(
-                'Expected 0 or 1 container statuses in job, found {}'.format(len(container_statuses), container_statuses))
+                'Expected 0 or 1 container statuses, found {}'.format(len(container_statuses), container_statuses))
         else:
             return container_statuses[0]
 

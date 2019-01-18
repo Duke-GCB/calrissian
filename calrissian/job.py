@@ -87,7 +87,7 @@ class KubernetesVolumeBuilder(object):
         self.volume_mounts.append(volume_mount)
 
 
-class KubernetesJobBuilder(object):
+class KubernetesPodBuilder(object):
 
     def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin):
         self.name = name
@@ -100,8 +100,8 @@ class KubernetesJobBuilder(object):
         self.stderr = stderr
         self.stdin = stdin
 
-    def job_name(self):
-        return k8s_safe_name('{}-job'.format(self.name))
+    def pod_name(self):
+        return k8s_safe_name('{}-pod'.format(self.name))
 
     def container_name(self):
         return k8s_safe_name('{}-container'.format(self.name))
@@ -113,17 +113,17 @@ class KubernetesJobBuilder(object):
         return ['/bin/sh', '-c']
 
     def container_args(self):
-        job_command = self.command_line.copy()
+        pod_command = self.command_line.copy()
         if self.stdout:
-            job_command.extend(['>', self.stdout])
+            pod_command.extend(['>', self.stdout])
         if self.stderr:
-            job_command.extend(['2>', self.stderr])
+            pod_command.extend(['2>', self.stderr])
         if self.stdin:
-            job_command.extend(['<', self.stdin])
-        # job_command is a list of strings. Needs to be turned into a single string
-        # and passed as an argument to sh -c. Otherwise we cannot redirect STDIN/OUT/ERR inside a kubernetes job
+            pod_command.extend(['<', self.stdin])
+        # pod_command is a list of strings. Needs to be turned into a single string
+        # and passed as an argument to sh -c. Otherwise we cannot redirect STDIN/OUT/ERR inside a kubernetes container
         # Join everything into a single string and then return a single args list
-        return [' '.join(job_command)]
+        return [' '.join(pod_command)]
 
     def container_environment(self):
         """
@@ -145,28 +145,24 @@ class KubernetesJobBuilder(object):
     def build(self):
         return {
             'metadata': {
-                'name': self.job_name()
+                'name': self.pod_name()
             },
-            'apiVersion': 'batch/v1',
-            'kind':'Job',
-            'spec': {
-                'template': {
-                    'spec': {
-                        'containers': [
-                            {
-                                'name': self.container_name(),
-                                'image': self.container_image,
-                                'command': self.container_command(),
-                                'args': self.container_args(),
-                                'env': self.container_environment(),
-                                'volumeMounts': self.volume_mounts,
-                                'workingDir': self.container_workingdir(),
-                             }
-                        ],
-                        'restartPolicy': 'Never',
-                        'volumes': self.volumes
-                    }
-                }
+            'apiVersion': 'v1',
+            'kind':'Pod',
+                'spec': {
+                    'containers': [
+                        {
+                            'name': self.container_name(),
+                            'image': self.container_image,
+                            'command': self.container_command(),
+                            'args': self.container_args(),
+                            'env': self.container_environment(),
+                            'volumeMounts': self.volume_mounts,
+                            'workingDir': self.container_workingdir(),
+                         }
+                    ],
+                    'restartPolicy': 'Never',
+                    'volumes': self.volumes
             }
         }
 
@@ -196,7 +192,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         # https://github.com/common-workflow-language/cwltool/blob/1.0.20181201184214/cwltool/docker.py#L333
         self.environment["TMPDIR"] = '/tmp'
 
-    def wait_for_kubernetes_job(self):
+    def wait_for_kubernetes_pod(self):
         return self.client.wait_for_completion()
 
     def finish(self, exit_code):
@@ -250,7 +246,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
                 secret_store=runtimeContext.secret_store,
                 any_path_okay=any_path_okay)
 
-        k8s_builder = KubernetesJobBuilder(
+        k8s_builder = KubernetesPodBuilder(
             self.name,
             self._get_container_image(),
             self.environment,
@@ -268,8 +264,8 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             log.error('Runtime list is not empty. k8s does not use that, so you should see who put something there:\n{}'.format(' '.join(runtime)))
         return built
 
-    def execute_kubernetes_job(self, k8s_job):
-        self.client.submit_job(k8s_job)
+    def execute_kubernetes_pod(self, pod):
+        self.client.submit_pod(pod)
 
     def _add_volume_binding(self, source, target, writable=False):
         self.volume_builder.add_volume_binding(source, target, writable)
@@ -352,9 +348,9 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         self.make_tmpdir()
         self.populate_env_vars()
         self._setup(runtimeContext)
-        k8s_job = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
-        self.execute_kubernetes_job(k8s_job) # analogous to _execute()
-        k8s_exit_code = self.wait_for_kubernetes_job()
+        pod = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
+        self.execute_kubernetes_pod(pod) # analogous to _execute()
+        k8s_exit_code = self.wait_for_kubernetes_pod()
         self.finish(k8s_exit_code)
 
     # Below are concrete implementations of the remaining abstract methods in ContainerCommandLineJob
