@@ -29,7 +29,7 @@ def k8s_safe_name(name):
     return name.lower().replace('_', '-')
 
 
-class KubernetesPod(object):
+class KubernetesPodVolumeInspector(object):
     def __init__(self, pod):
         self.pod = pod
 
@@ -66,8 +66,8 @@ class KubernetesVolumeBuilder(object):
         Add a mounted persistent volume claim for each mounted PVC in the specified pod
         :param pod: V1Pod
         """
-        k8s_pod = KubernetesPod(pod)
-        for mount_path, pvc_name in k8s_pod.get_mounted_persistent_volumes():
+        inspector = KubernetesPodVolumeInspector(pod)
+        for mount_path, pvc_name in inspector.get_mounted_persistent_volumes():
             self.add_persistent_volume_entry(mount_path, pvc_name)
 
     def add_persistent_volume_entry(self, prefix, claim_name):

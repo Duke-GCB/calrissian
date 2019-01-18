@@ -1,7 +1,7 @@
 from unittest import TestCase
 from unittest.mock import Mock, patch, call
 from calrissian.job import k8s_safe_name, KubernetesVolumeBuilder, VolumeBuilderException, KubernetesJobBuilder
-from calrissian.job import CalrissianCommandLineJob, KubernetesPod
+from calrissian.job import CalrissianCommandLineJob, KubernetesPodVolumeInspector
 
 
 class SafeNameTestCase(TestCase):
@@ -15,24 +15,24 @@ class SafeNameTestCase(TestCase):
         self.assertEqual(self.safe_name, made_safe)
 
 
-class KubernetesPodTestCase(TestCase):
+class KubernetesPodVolumeInspectorTestCase(TestCase):
     def test_first_container_with_one_container(self):
         mock_pod = Mock()
         mock_pod.spec.containers = ['somecontainer']
-        kpod = KubernetesPod(mock_pod)
+        kpod = KubernetesPodVolumeInspector(mock_pod)
         container = kpod.get_first_container()
         self.assertEqual(container, 'somecontainer')
 
     def test_first_container_with_two_container(self):
         mock_pod = Mock()
         mock_pod.spec.containers = ['container1', 'container2']
-        kpod = KubernetesPod(mock_pod)
+        kpod = KubernetesPodVolumeInspector(mock_pod)
         container = kpod.get_first_container()
         self.assertEqual(container, 'container1')
 
     def test_get_persistent_volumes_dict(self):
         mock_pod = Mock()
-        kpod = KubernetesPod(mock_pod)
+        kpod = KubernetesPodVolumeInspector(mock_pod)
         mock_data1_volume = Mock()
         mock_data1_volume.name = 'data1'
         mock_data1_volume.persistent_volume_claim = Mock(claim_name='data1-claim-name')
@@ -59,7 +59,7 @@ class KubernetesPodTestCase(TestCase):
         mock_pod.spec.containers = [
             Mock(volume_mounts=[mock_volume_mount1, mock_volume_mount2])
         ]
-        kpod = KubernetesPod(mock_pod)
+        kpod = KubernetesPodVolumeInspector(mock_pod)
         kpod.get_persistent_volumes_dict = Mock()
         kpod.get_persistent_volumes_dict.return_value = {'data1': 'data1-claim', 'data2': 'data2-claim'}
         mp_volumes = kpod.get_mounted_persistent_volumes()
@@ -77,7 +77,7 @@ class KubernetesPodTestCase(TestCase):
         mock_pod.spec.containers = [
             Mock(volume_mounts=[mock_volume_mount1, mock_volume_mount2])
         ]
-        kpod = KubernetesPod(mock_pod)
+        kpod = KubernetesPodVolumeInspector(mock_pod)
         kpod.get_persistent_volumes_dict = Mock()
         kpod.get_persistent_volumes_dict.return_value = {'data1': 'data1-claim'}
         mp_volumes = kpod.get_mounted_persistent_volumes()
@@ -129,9 +129,9 @@ class KubernetesVolumeBuilderTestCase(TestCase):
             self.volume_builder.add_volume_binding('/prefix/2/input2', '/input2-target', False)
         self.assertIn('Could not find a persistent volume', str(context.exception))
 
-    @patch('calrissian.job.KubernetesPod')
-    def test_add_persistent_volume_entries_from_pod(self, mock_kubernetes_pod):
-        mock_kubernetes_pod.return_value.get_mounted_persistent_volumes.return_value = [
+    @patch('calrissian.job.KubernetesPodVolumeInspector')
+    def test_add_persistent_volume_entries_from_pod(self, mock_kubernetes_pod_inspector):
+        mock_kubernetes_pod_inspector.return_value.get_mounted_persistent_volumes.return_value = [
             ('/tmp/data1', 'data1-claim'),
             ('/tmp/data2', 'data2-claim'),
         ]
