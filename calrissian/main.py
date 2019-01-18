@@ -3,7 +3,7 @@ from calrissian.context import CalrissianLoadingContext
 from calrissian.version import version
 from cwltool.main import main as cwlmain
 from cwltool.argparser import arg_parser
-import argparse
+from cwltool.context import RuntimeContext
 import logging
 import sys
 
@@ -31,9 +31,13 @@ def main():
     parser = arg_parser()
     add_arguments(parser)
     parsed_args = parse_arguments(parser)
+    executor = CalrissianExecutor(parsed_args.max_ram, parsed_args.max_cores)
+    runtimeContext = RuntimeContext(vars(parsed_args))
+    runtimeContext.select_resources = executor.select_resources
     result = cwlmain(args=parsed_args,
-                     executor=CalrissianExecutor(parsed_args.max_ram, parsed_args.max_cores),
+                     executor=executor,
                      loadingContext=CalrissianLoadingContext(),
+                     runtimeContext=runtimeContext,
                      versionfunc=version,
                      )
     return result
