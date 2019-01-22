@@ -199,6 +199,8 @@ class KubernetesPodBuilder(object):
             return '{}'.format(cwl_value)
         elif kind == 'memory':
             return '{}Mi'.format(cwl_value)
+        else:
+            return None
 
     def container_resources(self):
         container_resources = {}
