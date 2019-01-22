@@ -25,6 +25,10 @@ steps:
     out: [output]
     scatter: input
     run: revtool.cwl
+    requirements:
+      - class: ResourceRequirement
+        coresMin: 1
+        ramMin: 100
   sorted:
     in:
       input: rev/output
@@ -32,3 +36,7 @@ steps:
     scatter: input
     out: [output]
     run: sorttool.cwl
+    requirements:
+      - class: ResourceRequirement
+        coresMin: 1
+        ramMin: 100
