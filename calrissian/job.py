@@ -123,7 +123,7 @@ class KubernetesVolumeBuilder(object):
 
 class KubernetesPodBuilder(object):
 
-    def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin):
+    def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, resources):
         self.name = name
         self.container_image = container_image
         self.environment = environment
@@ -133,6 +133,7 @@ class KubernetesPodBuilder(object):
         self.stdout = stdout
         self.stderr = stderr
         self.stdin = stdin
+        self.resources = resources
 
     def pod_name(self):
         return k8s_safe_name('{}-pod'.format(self.name))
@@ -176,6 +177,49 @@ class KubernetesPodBuilder(object):
         """
         return self.environment['HOME']
 
+    # Conversions from CWL ResourceRequirements https://www.commonwl.org/v1.0/CommandLineTool.html#ResourceRequirement
+    # to Kubernetes Resource requests/limits
+    # https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#resource-requests-and-limits-of-pod-and-container
+
+    @staticmethod
+    def resource_bound(cwl_field):
+        if cwl_field.endswith('Min'):
+            return 'requests'
+        elif cwl_field.endswith('Max'):
+            return 'limits'
+        else:
+            return None
+
+    @staticmethod
+    def resource_type(cwl_field):
+        if cwl_field.startswith('cores'):
+            return 'cpu'
+        elif cwl_field.startswith('ram'):
+            return 'memory'
+        else:
+            return None
+
+    @staticmethod
+    def resource_value(kind, cwl_value):
+        if kind == 'cpu':
+            return '{}'.format(cwl_value)
+        elif kind == 'memory':
+            return '{}Mi'.format(cwl_value)
+        else:
+            return None
+
+    def container_resources(self):
+        container_resources = {}
+        for cwl_field, cwl_value in self.resources.items():
+            resource_bound = self.resource_bound(cwl_field)
+            resource_type = self.resource_type(cwl_field)
+            resource_value = self.resource_value(resource_type, cwl_value)
+            if resource_bound and resource_type and resource_value:
+                if not container_resources.get(resource_bound):
+                    container_resources[resource_bound] = {}
+                container_resources[resource_bound][resource_type] = resource_value
+        return container_resources
+
     def build(self):
         return {
             'metadata': {
@@ -191,6 +235,7 @@ class KubernetesPodBuilder(object):
                             'command': self.container_command(),
                             'args': self.container_args(),
                             'env': self.container_environment(),
+                            'resources': self.container_resources(),
                             'volumeMounts': self.volume_mounts,
                             'workingDir': self.container_workingdir(),
                          }
@@ -289,7 +334,8 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             self.command_line,
             self.stdout,
             self.stderr,
-            self.stdin
+            self.stdin,
+            self.builder.resources,
         )
         built = k8s_builder.build()
         log.debug('{}\n{}{}\n'.format('-' * 80, yaml.dump(built), '-' * 80))
