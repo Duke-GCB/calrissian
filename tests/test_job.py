@@ -53,9 +53,11 @@ class KubernetesPodVolumeInspectorTestCase(TestCase):
         mock_volume_mount1 = Mock()
         mock_volume_mount1.name = 'data1'
         mock_volume_mount1.mount_path = '/data/one'
+        mock_volume_mount1.sub_path = None
         mock_volume_mount2 = Mock()
         mock_volume_mount2.name = 'data2'
         mock_volume_mount2.mount_path = '/data/two'
+        mock_volume_mount2.sub_path = '/basedir'
         mock_pod.spec.containers = [
             Mock(volume_mounts=[mock_volume_mount1, mock_volume_mount2])
         ]
@@ -64,16 +66,18 @@ class KubernetesPodVolumeInspectorTestCase(TestCase):
         kpod.get_persistent_volumes_dict.return_value = {'data1': 'data1-claim', 'data2': 'data2-claim'}
         mp_volumes = kpod.get_mounted_persistent_volumes()
 
-        self.assertEqual(mp_volumes, [('/data/one', 'data1-claim'), ('/data/two', 'data2-claim')])
+        self.assertEqual(mp_volumes, [('/data/one', None, 'data1-claim'), ('/data/two', '/basedir', 'data2-claim')])
 
     def test_get_mounted_persistent_volumes_ignores_unmounted_volumes(self):
         mock_pod = Mock()
         mock_volume_mount1 = Mock()
         mock_volume_mount1.name = 'data1'
         mock_volume_mount1.mount_path = '/data/one'
+        mock_volume_mount1.sub_path = None
         mock_volume_mount2 = Mock()
         mock_volume_mount2.name = 'data2'
         mock_volume_mount2.mount_path = '/data/two'
+        mock_volume_mount2.sub_path = 'basedir'
         mock_pod.spec.containers = [
             Mock(volume_mounts=[mock_volume_mount1, mock_volume_mount2])
         ]
@@ -82,7 +86,7 @@ class KubernetesPodVolumeInspectorTestCase(TestCase):
         kpod.get_persistent_volumes_dict.return_value = {'data1': 'data1-claim'}
         mp_volumes = kpod.get_mounted_persistent_volumes()
 
-        self.assertEqual(mp_volumes, [('/data/one', 'data1-claim')])
+        self.assertEqual(mp_volumes, [('/data/one', None, 'data1-claim')])
 
 
 class KubernetesVolumeBuilderTestCase(TestCase):
@@ -91,14 +95,17 @@ class KubernetesVolumeBuilderTestCase(TestCase):
         self.volume_builder = KubernetesVolumeBuilder()
 
     def test_finds_persistent_volume(self):
-        self.volume_builder.add_persistent_volume_entry('/prefix/1', 'claim1')
+        self.volume_builder.add_persistent_volume_entry('/prefix/1', None, 'claim1')
         self.assertIsNotNone(self.volume_builder.find_persistent_volume('/prefix/1f'))
         self.assertIsNone(self.volume_builder.find_persistent_volume('/notfound'))
 
     def test_calculates_subpath(self):
-        self.volume_builder.add_persistent_volume_entry('/prefix/1', 'claim1')
-        subpath = KubernetesVolumeBuilder.calculate_subpath('/prefix/1/foo', '/prefix/1')
+        subpath = KubernetesVolumeBuilder.calculate_subpath('/prefix/1/foo', '/prefix/1', None)
         self.assertEqual('foo', subpath)
+
+    def test_calculates_subpath_with_parent_subpath(self):
+        subpath = KubernetesVolumeBuilder.calculate_subpath('/prefix/1/foo', '/prefix/1', 'basedir')
+        self.assertEqual('basedir/foo', subpath)
 
     def test_random_tag(self):
         random_tag = KubernetesVolumeBuilder.random_tag(8)
@@ -106,7 +113,7 @@ class KubernetesVolumeBuilderTestCase(TestCase):
 
     def test_add_rw_volume_binding(self):
         self.assertEqual(0, len(self.volume_builder.volumes))
-        self.volume_builder.add_persistent_volume_entry('/prefix/1', 'claim1')
+        self.volume_builder.add_persistent_volume_entry('/prefix/1', None, 'claim1')
         self.assertEqual({'name':'claim1', 'persistentVolumeClaim': {'claimName': 'claim1'}}, self.volume_builder.volumes[0])
 
         self.assertEqual(0, len(self.volume_builder.volume_mounts))
@@ -116,7 +123,7 @@ class KubernetesVolumeBuilderTestCase(TestCase):
     def test_add_ro_volume_binding(self):
         # read-only
         self.assertEqual(0, len(self.volume_builder.volumes))
-        self.volume_builder.add_persistent_volume_entry('/prefix/2', 'claim2')
+        self.volume_builder.add_persistent_volume_entry('/prefix/2', None, 'claim2')
         self.assertEqual({'name':'claim2', 'persistentVolumeClaim': {'claimName': 'claim2'}}, self.volume_builder.volumes[0])
 
         self.assertEqual(0, len(self.volume_builder.volume_mounts))
@@ -132,8 +139,8 @@ class KubernetesVolumeBuilderTestCase(TestCase):
     @patch('calrissian.job.KubernetesPodVolumeInspector')
     def test_add_persistent_volume_entries_from_pod(self, mock_kubernetes_pod_inspector):
         mock_kubernetes_pod_inspector.return_value.get_mounted_persistent_volumes.return_value = [
-            ('/tmp/data1', 'data1-claim'),
-            ('/tmp/data2', 'data2-claim'),
+            ('/tmp/data1', None, 'data1-claim'),
+            ('/tmp/data2', '/basedir', 'data2-claim'),
         ]
 
         self.volume_builder.add_persistent_volume_entries_from_pod('some-pod-data')
@@ -142,6 +149,7 @@ class KubernetesVolumeBuilderTestCase(TestCase):
         self.assertEqual(pv_entries.keys(), set(['/tmp/data1', '/tmp/data2']))
         expected_entry1 = {
             'prefix': '/tmp/data1',
+            'subPath': None,
             'volume': {
                 'name': 'data1-claim',
                 'persistentVolumeClaim': {
@@ -151,6 +159,7 @@ class KubernetesVolumeBuilderTestCase(TestCase):
         }
         expected_entry2 = {
             'prefix': '/tmp/data2',
+            'subPath': '/basedir',
             'volume': {
                 'name': 'data2-claim',
                 'persistentVolumeClaim': {
