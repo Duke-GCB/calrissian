@@ -1,6 +1,6 @@
 from unittest import TestCase
 from unittest.mock import Mock, patch, call
-from calrissian.tool import CalrissianCommandLineTool, calrissian_make_tool
+from calrissian.tool import CalrissianCommandLineTool, calrissian_make_tool, CalrissianToolException
 from calrissian.context import CalrissianLoadingContext
 
 
@@ -32,3 +32,25 @@ class CalrissianCommandLineToolTestCase(TestCase):
         tool = CalrissianCommandLineTool(toolpath_object, loadingContext)
         runner = tool.make_job_runner(Mock())
         self.assertEqual(runner, mock_command_line_job)
+
+    def test_fails_use_container_false(self):
+        toolpath_object = {'id': '1', 'inputs': [], 'outputs': []}
+        loadingContext = CalrissianLoadingContext()
+        tool = CalrissianCommandLineTool(toolpath_object, loadingContext)
+        runtimeContext = Mock(use_container=False)
+        with self.assertRaises(CalrissianToolException) as context:
+            tool.make_job_runner(runtimeContext)
+        self.assertIn('use_container is disabled', str(context.exception))
+
+    def test_fails_no_default_container(self):
+        toolpath_object = {'id': '1', 'inputs': [], 'outputs': []}
+        loadingContext = CalrissianLoadingContext()
+        tool = CalrissianCommandLineTool(toolpath_object, loadingContext)
+        runtimeContext = Mock()
+        runtimeContext.find_default_container.return_value = None
+        with self.assertRaises(CalrissianToolException) as context:
+            tool.make_job_runner(runtimeContext)
+        self.assertIn('no default_container', str(context.exception))
+
+    def test_injects_default_container(self):
+        self.fail()
