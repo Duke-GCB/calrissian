@@ -25,27 +25,25 @@ class CalrissianMakeToolTestCase(TestCase):
 
 class CalrissianCommandLineToolTestCase(TestCase):
 
+    def setUp(self):
+        self.toolpath_object = {'id': '1', 'inputs': [], 'outputs': []}
+        self.loadingContext = CalrissianLoadingContext()
+
     @patch('calrissian.tool.CalrissianCommandLineJob')
     def test_make_job_runner(self, mock_command_line_job):
-        toolpath_object = {'id': '1', 'inputs': [], 'outputs': []}
-        loadingContext = CalrissianLoadingContext()
-        tool = CalrissianCommandLineTool(toolpath_object, loadingContext)
+        tool = CalrissianCommandLineTool(self.toolpath_object, self.loadingContext)
         runner = tool.make_job_runner(Mock())
         self.assertEqual(runner, mock_command_line_job)
 
     def test_fails_use_container_false(self):
-        toolpath_object = {'id': '1', 'inputs': [], 'outputs': []}
-        loadingContext = CalrissianLoadingContext()
-        tool = CalrissianCommandLineTool(toolpath_object, loadingContext)
+        tool = CalrissianCommandLineTool(self.toolpath_object, self.loadingContext)
         runtimeContext = Mock(use_container=False)
         with self.assertRaises(CalrissianToolException) as context:
             tool.make_job_runner(runtimeContext)
         self.assertIn('use_container is disabled', str(context.exception))
 
     def test_fails_no_default_container(self):
-        toolpath_object = {'id': '1', 'inputs': [], 'outputs': []}
-        loadingContext = CalrissianLoadingContext()
-        tool = CalrissianCommandLineTool(toolpath_object, loadingContext)
+        tool = CalrissianCommandLineTool(self.toolpath_object, self.loadingContext)
         runtimeContext = Mock()
         runtimeContext.find_default_container.return_value = None
         with self.assertRaises(CalrissianToolException) as context:
