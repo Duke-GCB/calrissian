@@ -51,4 +51,18 @@ class CalrissianCommandLineToolTestCase(TestCase):
         self.assertIn('no default_container', str(context.exception))
 
     def test_injects_default_container(self):
-        self.fail()
+        tool = CalrissianCommandLineTool(self.toolpath_object, self.loadingContext)
+        runtimeContext = Mock(use_container=True)
+        runtimeContext.find_default_container.return_value = 'docker:default-container'
+        self.assertEqual([], tool.requirements)
+        tool.make_job_runner(runtimeContext)
+        self.assertIn({'class': 'DockerRequirement', 'dockerPull': 'docker:default-container'}, tool.requirements)
+
+    def test_uses_docker_requirement_container(self):
+        self.toolpath_object['requirements'] = [{'class': 'DockerRequirement', 'dockerPull': 'docker:tool-container'}]
+        tool = CalrissianCommandLineTool(self.toolpath_object, self.loadingContext)
+        runtimeContext = Mock(use_container=True)
+        runtimeContext.find_default_container.return_value = 'docker:default-container'
+        tool.make_job_runner(runtimeContext)
+        self.assertNotIn({'class': 'DockerRequirement', 'dockerPull': 'docker:default-container'}, tool.requirements)
+        self.assertIn({'class': 'DockerRequirement', 'dockerPull': 'docker:tool-container'}, tool.requirements)
