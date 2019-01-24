@@ -5,8 +5,10 @@ import logging
 
 log = logging.getLogger("calrissian.tool")
 
+
 class CalrissianToolException(BaseException):
     pass
+
 
 class CalrissianCommandLineTool(CommandLineTool):
 
@@ -17,7 +19,6 @@ class CalrissianCommandLineTool(CommandLineTool):
         :return: a callable that runs the job
         """
         # This implementation runs CommandLineTools exclusively in containers
-        # so we need to add a DockerRequirement if it's not present
         if not runtimeContext.use_container:
             raise CalrissianToolException('Unable to create a CalrissianCommandLineTool - use_container is disabled')
         return CalrissianCommandLineJob
