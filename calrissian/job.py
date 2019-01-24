@@ -17,6 +17,10 @@ class VolumeBuilderException(Exception):
     pass
 
 
+class CalrissianCommandLineJobException(Exception):
+    pass
+
+
 def k8s_safe_name(name):
     """
     Kubernetes does not allow underscores
@@ -290,10 +294,15 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         self.output_callback(outputs, status)
 
     def _get_container_image(self):
-        # we only use dockerPull here
-        # Could possibly make an API call to kubernetes to check for the image there, but that's not important right now
-        (docker_req, docker_is_req) = self.get_requirement("DockerRequirement")
-        return str(docker_req["dockerPull"])
+        docker_requirement, _ = self.get_requirement('DockerRequirement')
+        if docker_requirement:
+            container_image = docker_requirement['dockerPull']
+        else:
+            # No dockerRequirement, use the default container
+            container_image = self.builder.find_default_container()
+        if not container_image:
+            raise CalrissianCommandLineJobException('Unable to create Job - Please ensure tool has a DockerRequirement with dockerPull or specify a default_container')
+        return container_image
 
     def create_kubernetes_runtime(self, runtimeContext):
         # In cwltool, the runtime list starts as something like ['docker','run'] and these various builder methods
