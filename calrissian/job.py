@@ -1,5 +1,6 @@
 from cwltool.job import ContainerCommandLineJob
 from cwltool.utils import DEFAULT_TMP_PREFIX
+from cwltool.errors import WorkflowException, UnsupportedRequirement
 from calrissian.k8s import KubernetesClient
 import logging
 import os
@@ -13,11 +14,11 @@ from cwltool.pathmapper import ensure_writable, ensure_non_writable
 log = logging.getLogger("calrissian.job")
 
 
-class VolumeBuilderException(Exception):
+class VolumeBuilderException(WorkflowException):
     pass
 
 
-class CalrissianCommandLineJobException(Exception):
+class CalrissianCommandLineJobException(WorkflowException):
     pass
 
 
@@ -293,6 +294,20 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         outputs = self.collect_outputs(self.outdir)
         self.output_callback(outputs, status)
 
+    # Dictionary of supported features.
+    # Not yet complete, only checks features of DockerRequirement
+    supported_features = {
+        'DockerRequirement': ['class', 'dockerPull']
+    }
+
+    def check_requirements(self):
+        for feature in self.supported_features:
+            requirement, is_required = self.get_requirement(feature)
+            if requirement and is_required:
+                for field in requirement:
+                    if not field in self.supported_features[feature]:
+                        raise UnsupportedRequirement('Error: feature {}.{} is not supported'.format(feature, field))
+
     def _get_container_image(self):
         docker_requirement, _ = self.get_requirement('DockerRequirement')
         if docker_requirement:
@@ -434,6 +449,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
                 ensure_writable(host_outdir_tgt or new_dir)
 
     def run(self, runtimeContext):
+        self.check_requirements()
         self.make_tmpdir()
         self.populate_env_vars()
         self._setup(runtimeContext)

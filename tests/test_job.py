@@ -2,7 +2,7 @@ from unittest import TestCase
 from unittest.mock import Mock, patch, call
 from calrissian.job import k8s_safe_name, KubernetesVolumeBuilder, VolumeBuilderException, KubernetesPodBuilder
 from calrissian.job import CalrissianCommandLineJob, KubernetesPodVolumeInspector, CalrissianCommandLineJobException
-
+from cwltool.errors import UnsupportedRequirement
 
 class SafeNameTestCase(TestCase):
 
@@ -310,6 +310,18 @@ class CalrissianCommandLineJobTestCase(TestCase):
         mock_volume_builder.return_value.add_persistent_volume_entries_from_pod.assert_called_with(
             mock_client.return_value.get_current_pod.return_value
         )
+
+    def test_check_requirements_raises_with_docker_build(self, mock_volume_builder, mock_client):
+        self.requirements = [{'class': 'DockerRequirement', 'dockerBuild': 'FROM ubuntu:latest\n'}]
+        job = self.make_job()
+        with self.assertRaises(UnsupportedRequirement) as context:
+            job.check_requirements()
+        self.assertIn('DockerRequirement.dockerBuild is not supported', str(context.exception))
+
+    def test_check_requirements_ok_with_empty_requirements(self, mock_volume_builder, mock_client):
+        self.requirements = []
+        job = self.make_job()
+        job.check_requirements()
 
     @patch('calrissian.job.os')
     def test_makes_tmpdir_when_not_exists(self, mock_os, mock_volume_builder, mock_client):
