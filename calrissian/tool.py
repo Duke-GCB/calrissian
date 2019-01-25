@@ -18,8 +18,21 @@ class CalrissianCommandLineTool(CommandLineTool):
         :param runtimeContext: RuntimeContext object
         :return: a callable that runs the job
         """
-        # This implementation runs CommandLineTools exclusively in containers
-        # so we need to add a DockerRequirement if it's not present
+        # Calrissian runs CommandLineTools exclusively in containers, so must always return a CalrissianCommandLineJob
+        # If the tool definition does NOT have a DockerRequirement, we inject one here before returning the job_runner.
+        #
+        # Notes on why this is done here (as opposed to inside the job):
+        #
+        # 1. The job() method in the base CommandLineTool class (which this class inherits) checks for DockerRequirement
+        #    before setting the job's outdir, tmpdir, and stagedir. When the requirement is not present, local dirs
+        #    are used, which don't get mounted correctly to the container:
+        # See https://github.com/common-workflow-language/cwltool/blob/a94d75178c24ce77b59403fb8276af9ad1998929/cwltool/command_line_tool.py#L506-L515
+        #
+        # 2. The make_job_runner() method in the base CommandLineTool injects a DockerRequirement when appropriate.
+        #    Since we're overriding that method, we must inject the same requirement to be consistent with behavior in
+        #    (1) above.
+        # See https://github.com/common-workflow-language/cwltool/blob/a94d75178c24ce77b59403fb8276af9ad1998929/cwltool/command_line_tool.py#L243
+
         if not runtimeContext.use_container:
             raise CalrissianToolException('Unable to create a CalrissianCommandLineTool - use_container is disabled')
         docker_requirement, _ = self.get_requirement('DockerRequirement')
