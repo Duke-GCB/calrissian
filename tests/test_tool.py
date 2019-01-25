@@ -1,6 +1,6 @@
 from unittest import TestCase
 from unittest.mock import Mock, patch, call
-from calrissian.tool import CalrissianCommandLineTool, calrissian_make_tool, CalrissianToolException
+from calrissian.tool import CalrissianCommandLineTool, calrissian_make_tool, CalrissianCommandLineToolException
 from calrissian.context import CalrissianLoadingContext
 
 
@@ -38,7 +38,7 @@ class CalrissianCommandLineToolTestCase(TestCase):
     def test_fails_use_container_false(self):
         tool = CalrissianCommandLineTool(self.toolpath_object, self.loadingContext)
         runtimeContext = Mock(use_container=False)
-        with self.assertRaises(CalrissianToolException) as context:
+        with self.assertRaises(CalrissianCommandLineToolException) as context:
             tool.make_job_runner(runtimeContext)
         self.assertIn('use_container is disabled', str(context.exception))
 
@@ -46,7 +46,7 @@ class CalrissianCommandLineToolTestCase(TestCase):
         tool = CalrissianCommandLineTool(self.toolpath_object, self.loadingContext)
         runtimeContext = Mock()
         runtimeContext.find_default_container.return_value = None
-        with self.assertRaises(CalrissianToolException) as context:
+        with self.assertRaises(CalrissianCommandLineToolException) as context:
             tool.make_job_runner(runtimeContext)
         self.assertIn('no default_container', str(context.exception))
 
