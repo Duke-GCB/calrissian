@@ -8,8 +8,7 @@ spec:
     spec:
       containers:
       - name: calrissian
-        # Jobs cannot use ImageStream images directly, so we have to provide the registry/repo variant
-        image: docker-registry.default.svc:5000/calrissian/calrissian:latest
+        image: calrissian:latest
         command: ["/bin/bash", "-c"]
         args: ["python -m calrissian.main --max-ram 16384 --max-cores 8 --tmpdir-prefix /calrissian/tmptmp/ --tmp-outdir-prefix /calrissian/tmpout/ --outdir /calrissian/output-data/ /calrissian/input-data/revsort-array.cwl /calrissian/input-data/revsort-array-job.json"]
         volumeMounts:

@@ -8,7 +8,7 @@ CWL on Kubernetes
 
 Calrissian is a [CWL](https://www.commonwl.org) implementation designed to run individual steps as Pods in a kubernetes cluster
 
-It is in development and includes a simple workflow (revsort [single](input-data/revsort-single.cwl) / [array](input-data/revsort-array.cwl) to reverse and sort the contents of text files.
+It is in development and includes a simple workflow (revsort [single](input-data/revsort-single.cwl) / [array](input-data/revsort-array.cwl)) to reverse and sort the contents of text files.
 
 ## Preparing Openshift
 
@@ -52,5 +52,4 @@ With the VolumeClaims and Build processes in place, you can run the example with
 
 ## Notes
 
-1. Jobs cannot use ImageStreams, they must use standard docker registry URLs. Since these URLs include the namespace/project, you'll likely need to tweak the urls in the Job YAML if your project is not named `calrissian`.
-2. Calrissian will delete completed jobs for individual steps, but you may want to delete the `calrissian-revsort-array` job manually after running it.
+1. Calrissian will delete completed jobs for individual steps, but you may want to delete the `calrissian-revsort-array` job manually after running it.

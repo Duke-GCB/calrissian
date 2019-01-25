@@ -11,7 +11,7 @@ items:
     name: calrissian
   spec:
     lookupPolicy:
-      local: false
+      local: true
   status:
     dockerImageRepository: ""
 - apiVersion: v1

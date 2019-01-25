@@ -7,8 +7,7 @@ spec:
     spec:
       containers:
       - name: stage-input-data
-        # Jobs cannot use ImageStream images directly, so we have to provide the registry/repo variant
-        image: docker-registry.default.svc:5000/calrissian/calrissian:latest
+        image: calrissian:latest
         command:
         - "sh"
         - "-c"
