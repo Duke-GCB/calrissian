@@ -7,8 +7,7 @@ spec:
     spec:
       containers:
       - name: calrissian
-        # Jobs cannot use ImageStream images directly, so we have to provide the registry/repo variant
-        image: docker-registry.default.svc:5000/calrissian/calrissian:latest
+        image: calrissian:latest
         command: ["/bin/bash", "-c"]
         args: ["python -m calrissian.main --max-ram 1024 --max-cores 2 --tmpdir-prefix /calrissian/tmptmp/ --tmp-outdir-prefix /calrissian/tmpout/ --outdir /calrissian/output-data/ /calrissian/input-data/fail-wf.cwl /calrissian/input-data/fail-wf-job.json"]
         volumeMounts:
