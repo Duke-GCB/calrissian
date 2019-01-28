@@ -8,16 +8,16 @@ requirements:
 inputs:
   input:
     type: File[]
-    doc: "The input file to be processed."
+    doc: "Array of input files to be processed."
   reverse_sort:
     type: boolean
     default: true
-    doc: "If true, reverse (decending) sort"
+    doc: "If true, reverse (descending) sort"
 outputs:
   output:
     type: File[]
     outputSource: sorted/output
-    doc: "The output with the lines reversed and sorted."
+    doc: "The output files with the lines reversed and sorted."
 steps:
   rev:
     in:

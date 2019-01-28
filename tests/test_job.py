@@ -1,8 +1,8 @@
 from unittest import TestCase
 from unittest.mock import Mock, patch, call
 from calrissian.job import k8s_safe_name, KubernetesVolumeBuilder, VolumeBuilderException, KubernetesPodBuilder
-from calrissian.job import CalrissianCommandLineJob, KubernetesPodVolumeInspector
-
+from calrissian.job import CalrissianCommandLineJob, KubernetesPodVolumeInspector, CalrissianCommandLineJobException
+from cwltool.errors import UnsupportedRequirement
 
 class SafeNameTestCase(TestCase):
 
@@ -311,6 +311,18 @@ class CalrissianCommandLineJobTestCase(TestCase):
             mock_client.return_value.get_current_pod.return_value
         )
 
+    def test_check_requirements_raises_with_docker_build(self, mock_volume_builder, mock_client):
+        self.requirements = [{'class': 'DockerRequirement', 'dockerBuild': 'FROM ubuntu:latest\n'}]
+        job = self.make_job()
+        with self.assertRaises(UnsupportedRequirement) as context:
+            job.check_requirements()
+        self.assertIn('DockerRequirement.dockerBuild is not supported', str(context.exception))
+
+    def test_check_requirements_ok_with_empty_requirements(self, mock_volume_builder, mock_client):
+        self.requirements = []
+        job = self.make_job()
+        job.check_requirements()
+
     @patch('calrissian.job.os')
     def test_makes_tmpdir_when_not_exists(self, mock_os, mock_volume_builder, mock_client):
         mock_os.path.exists.return_value = False
@@ -372,10 +384,25 @@ class CalrissianCommandLineJobTestCase(TestCase):
             job.finish(code)
             job.output_callback.assert_called_with(mock_collected_outputs, status)
 
-    def test__get_container_image(self, mock_volume_builder, mock_client):
+    def test__get_container_image_docker_pull(self, mock_volume_builder, mock_client):
         job = self.make_job()
         image = job._get_container_image()
         self.assertEqual(image, 'dockerimage:1.0')
+
+    def test__get_container_image_find_default(self, mock_volume_builder, mock_client):
+        self.requirements = [] # Clear out the dockerimage:1.0 from our requirements
+        self.builder.find_default_container.return_value = 'default:tag'
+        job = self.make_job()
+        image = job._get_container_image()
+        self.assertEqual(image, 'default:tag')
+
+    def test__get_container_image_raises_no_default(self, mock_volume_builder, mock_client):
+        self.requirements = [] # Clear out the dockerimage:1.0 from our requirements
+        self.builder.find_default_container.return_value = None
+        job = self.make_job()
+        with self.assertRaises(CalrissianCommandLineJobException) as context:
+            image = job._get_container_image()
+        self.assertIn('Please ensure tool has a DockerRequirement with dockerPull', str(context.exception))
 
     @patch('calrissian.job.KubernetesPodBuilder')
     @patch('calrissian.job.os')
