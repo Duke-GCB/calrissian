@@ -1,4 +1,4 @@
-from cwltool.job import ContainerCommandLineJob
+from cwltool.job import ContainerCommandLineJob, needs_shell_quoting_re
 from cwltool.utils import DEFAULT_TMP_PREFIX
 from cwltool.errors import WorkflowException, UnsupportedRequirement
 from calrissian.k8s import KubernetesClient
@@ -9,6 +9,7 @@ import shutil
 import tempfile
 import random
 import string
+import shellescape
 from cwltool.pathmapper import ensure_writable, ensure_non_writable
 
 log = logging.getLogger("calrissian.job")
@@ -141,7 +142,8 @@ class KubernetesPodBuilder(object):
         self.resources = resources
 
     def pod_name(self):
-        return k8s_safe_name('{}-pod'.format(self.name))
+        tag = KubernetesVolumeBuilder.random_tag()
+        return k8s_safe_name('{}-pod-{}'.format(self.name, tag))
 
     def container_name(self):
         return k8s_safe_name('{}-container'.format(self.name))
@@ -182,24 +184,17 @@ class KubernetesPodBuilder(object):
         """
         return self.environment['HOME']
 
-    # Conversions from CWL ResourceRequirements https://www.commonwl.org/v1.0/CommandLineTool.html#ResourceRequirement
+    # Conversions from CWL Runtime variables https://www.commonwl.org/v1.0/CommandLineTool.html#Runtime_environment
     # to Kubernetes Resource requests/limits
     # https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#resource-requests-and-limits-of-pod-and-container
-
-    @staticmethod
-    def resource_bound(cwl_field):
-        if cwl_field.endswith('Min'):
-            return 'requests'
-        elif cwl_field.endswith('Max'):
-            return 'limits'
-        else:
-            return None
+    #
+    # runtime_context.select_resources returns a dictionary with keys 'cores','mem','tmpdirSize','outdirSize'
 
     @staticmethod
     def resource_type(cwl_field):
-        if cwl_field.startswith('cores'):
+        if cwl_field == 'cores':
             return 'cpu'
-        elif cwl_field.startswith('ram'):
+        elif cwl_field == 'ram':
             return 'memory'
         else:
             return None
@@ -214,12 +209,13 @@ class KubernetesPodBuilder(object):
             return None
 
     def container_resources(self):
+        log.debug('Building resources spec from {}'.format(self.resources))
         container_resources = {}
         for cwl_field, cwl_value in self.resources.items():
-            resource_bound = self.resource_bound(cwl_field)
+            resource_bound = 'requests'
             resource_type = self.resource_type(cwl_field)
             resource_value = self.resource_value(resource_type, cwl_value)
-            if resource_bound and resource_type and resource_value:
+            if resource_type and resource_value:
                 if not container_resources.get(resource_bound):
                     container_resources[resource_bound] = {}
                 container_resources[resource_bound][resource_type] = resource_value
@@ -319,6 +315,10 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             raise CalrissianCommandLineJobException('Unable to create Job - Please ensure tool has a DockerRequirement with dockerPull or specify a default_container')
         return container_image
 
+    def quoted_command_line(self):
+        shouldquote = needs_shell_quoting_re.search
+        return [shellescape.quote(arg) if shouldquote(arg) else arg for arg in self.command_line]
+
     def create_kubernetes_runtime(self, runtimeContext):
         # In cwltool, the runtime list starts as something like ['docker','run'] and these various builder methods
         # append to that list with docker (or singularity) options like volume mount paths
@@ -355,7 +355,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             self.environment,
             self.volume_builder.volume_mounts,
             self.volume_builder.volumes,
-            self.command_line,
+            self.quoted_command_line(),
             self.stdout,
             self.stderr,
             self.stdin,

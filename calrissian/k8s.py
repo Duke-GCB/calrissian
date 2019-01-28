@@ -48,6 +48,18 @@ class KubernetesClient(object):
         log.info('Created k8s pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
         self._set_pod(pod)
 
+    def should_delete_pod(self):
+        """
+        Decide whether or not to delete a pod. Defaults to True if unset.
+        Checks the CALRISSIAN_DELETE_PODS environment variable
+        :return:
+        """
+        delete_pods = os.getenv('CALRISSIAN_DELETE_PODS', '')
+        if str.lower(delete_pods) in ['false', 'no', '0']:
+            return False
+        else:
+            return True
+
     def wait_for_completion(self):
         w = watch.Watch()
         for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_field_selector()):
@@ -58,13 +70,16 @@ class KubernetesClient(object):
             if self.state_is_running(status.state):
                 continue
             elif self.state_is_terminated(status.state):
+                log.info('Handling terminated pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
                 self._handle_terminated_state(status.state)
-                self.core_api_instance.delete_namespaced_pod(self.pod.metadata.name, self.namespace, client.V1DeleteOptions())
+                if self.should_delete_pod():
+                    self.core_api_instance.delete_namespaced_pod(self.pod.metadata.name, self.namespace, client.V1DeleteOptions())
                 self._clear_pod()
                 # stop watching for events, our pod is done. Causes wait loop to exit
                 w.stop()
             else:
                 raise CalrissianJobException('Unexpected pod container status', status)
+        log.info('wait_for_completion returning with {}'.format(self.process_exit_code))
         return self.process_exit_code
 
     def _set_pod(self, pod):
@@ -110,7 +125,6 @@ class KubernetesClient(object):
         :return: None
         """
         # Extract the exit code out of the status
-        log.info('setting process_exit_code from state {}'.format(state))
         self.process_exit_code = state.terminated.exit_code
 
     def get_pod_for_name(self, pod_name):
