@@ -9,7 +9,7 @@ inputs:
   reverse_sort:
     type: boolean
     default: true
-    doc: "If true, reverse (decending) sort"
+    doc: "If true, reverse (descending) sort"
 outputs:
   output:
     type: File
