@@ -168,6 +168,20 @@ class KubernetesClientTestCase(TestCase):
             mock_get_namespace.return_value, field_selector='metadata.name=mypod'
         )
 
+    @patch('calrissian.k8s.os')
+    def test_should_delete_pod_defaults_yes(self, mock_os, mock_get_namespace, mock_client):
+        mock_os.getenv.return_value = ''
+        kc = KubernetesClient()
+        self.assertTrue(kc.should_delete_pod())
+        self.assertEqual(mock_os.getenv.call_args, call('CALRISSIAN_DELETE_PODS', ''))
+
+    @patch('calrissian.k8s.os')
+    def test_should_delete_pod_reads_env(self, mock_os, mock_get_namespace, mock_client):
+        mock_os.getenv.return_value = 'NO'
+        kc = KubernetesClient()
+        self.assertFalse(kc.should_delete_pod())
+        self.assertEqual(mock_os.getenv.call_args, call('CALRISSIAN_DELETE_PODS', ''))
+
 
 class KubernetesClientStateTestCase(TestCase):
 

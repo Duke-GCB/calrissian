@@ -35,6 +35,10 @@ def k8s_safe_name(name):
     return name.lower().replace('_', '-')
 
 
+def random_tag(length=8):
+    return ''.join(random.choices(string.ascii_lowercase, k=length))
+
+
 class KubernetesPodVolumeInspector(object):
     def __init__(self, pod):
         self.pod = pod
@@ -108,10 +112,6 @@ class KubernetesVolumeBuilder(object):
         else:
             return source_without_prefix
 
-    @staticmethod
-    def random_tag(length=8):
-        return ''.join(random.choices(string.ascii_lowercase, k=length))
-
     def add_volume_binding(self, source, target, writable):
         # Find the persistent volume claim where this goes
         pv = self.find_persistent_volume(source)
@@ -142,7 +142,7 @@ class KubernetesPodBuilder(object):
         self.resources = resources
 
     def pod_name(self):
-        tag = KubernetesVolumeBuilder.random_tag()
+        tag = random_tag()
         return k8s_safe_name('{}-pod-{}'.format(self.name, tag))
 
     def container_name(self):
