@@ -110,6 +110,20 @@ class KubernetesClientTestCase(TestCase):
         self.assertIsNone(kc.pod)
 
     @patch('calrissian.k8s.watch')
+    @patch('calrissian.k8s.KubernetesClient.should_delete_pod')
+    def test_wait_checks_should_delete_when_pod_state_is_terminated(self, mock_should_delete_pod, mock_watch, mock_get_namespace, mock_client):
+        mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=None, terminated=Mock(exit_code=123), waiting=None))]))
+        mock_should_delete_pod.return_value = False
+        self.setup_mock_watch(mock_watch, [mock_pod])
+        kc = KubernetesClient()
+        kc._set_pod(Mock())
+        exit_code = kc.wait_for_completion()
+        self.assertEqual(exit_code, 123)
+        self.assertTrue(mock_watch.Watch.return_value.stop.called)
+        self.assertFalse(mock_client.CoreV1Api.return_value.delete_namespaced_pod.called)
+        self.assertIsNone(kc.pod)
+
+    @patch('calrissian.k8s.watch')
     def test_wait_raises_exception_when_state_is_unexpected(self, mock_watch, mock_get_namespace, mock_client):
         mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=None, terminated=None, waiting=None))]))
         self.setup_mock_watch(mock_watch, [mock_pod])
@@ -167,6 +181,20 @@ class KubernetesClientTestCase(TestCase):
         mock_client.CoreV1Api.return_value.list_namespaced_pod.assert_called_with(
             mock_get_namespace.return_value, field_selector='metadata.name=mypod'
         )
+
+    @patch('calrissian.k8s.os')
+    def test_should_delete_pod_defaults_yes(self, mock_os, mock_get_namespace, mock_client):
+        mock_os.getenv.return_value = ''
+        kc = KubernetesClient()
+        self.assertTrue(kc.should_delete_pod())
+        self.assertEqual(mock_os.getenv.call_args, call('CALRISSIAN_DELETE_PODS', ''))
+
+    @patch('calrissian.k8s.os')
+    def test_should_delete_pod_reads_env(self, mock_os, mock_get_namespace, mock_client):
+        mock_os.getenv.return_value = 'NO'
+        kc = KubernetesClient()
+        self.assertFalse(kc.should_delete_pod())
+        self.assertEqual(mock_os.getenv.call_args, call('CALRISSIAN_DELETE_PODS', ''))
 
 
 class KubernetesClientStateTestCase(TestCase):

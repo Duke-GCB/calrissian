@@ -1,6 +1,6 @@
 from unittest import TestCase
 from unittest.mock import Mock, patch, call
-from calrissian.job import k8s_safe_name, KubernetesVolumeBuilder, VolumeBuilderException, KubernetesPodBuilder
+from calrissian.job import k8s_safe_name, KubernetesVolumeBuilder, VolumeBuilderException, KubernetesPodBuilder, random_tag
 from calrissian.job import CalrissianCommandLineJob, KubernetesPodVolumeInspector, CalrissianCommandLineJobException
 from cwltool.errors import UnsupportedRequirement
 
@@ -14,6 +14,13 @@ class SafeNameTestCase(TestCase):
         made_safe = k8s_safe_name(self.unsafe_name)
         self.assertEqual(self.safe_name, made_safe)
 
+class RandomTagTestCase(TestCase):
+
+    def test_makes_random_tags(self):
+        tag1, tag2 = random_tag(10), random_tag(10)
+        self.assertEqual(len(tag1), 10)
+        self.assertEqual(len(tag2), 10)
+        self.assertNotEqual(tag1, tag2)
 
 class KubernetesPodVolumeInspectorTestCase(TestCase):
     def test_first_container_with_one_container(self):
@@ -107,10 +114,6 @@ class KubernetesVolumeBuilderTestCase(TestCase):
         subpath = KubernetesVolumeBuilder.calculate_subpath('/prefix/1/foo', '/prefix/1', 'basedir')
         self.assertEqual('basedir/foo', subpath)
 
-    def test_random_tag(self):
-        random_tag = KubernetesVolumeBuilder.random_tag(8)
-        self.assertEqual(len(random_tag), 8)
-
     def test_add_rw_volume_binding(self):
         self.assertEqual(0, len(self.volume_builder.volumes))
         self.volume_builder.add_persistent_volume_entry('/prefix/1', None, 'claim1')
@@ -187,13 +190,15 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.stdout = 'stdout.txt'
         self.stderr = 'stderr.txt'
         self.stdin = 'stdin.txt'
-        self.resources = {'coresMin': 1, 'ramMin': 1024}
+        self.resources = {'cores': 1, 'ram': 1024}
         self.pod_builder = KubernetesPodBuilder(self.name, self.container_image, self.environment, self.volume_mounts,
                                                 self.volumes, self.command_line, self.stdout, self.stderr, self.stdin,
                                                 self.resources)
 
-    def test_safe_pod_name(self):
-        self.assertEqual('podname-pod', self.pod_builder.pod_name())
+    @patch('calrissian.job.random_tag')
+    def test_safe_pod_name(self, mock_random_tag):
+        mock_random_tag.return_value = 'random'
+        self.assertEqual('podname-pod-random', self.pod_builder.pod_name())
 
     def test_safe_container_name(self):
         self.assertEqual('podname-container', self.pod_builder.container_name())
@@ -222,17 +227,10 @@ class KubernetesPodBuilderTestCase(TestCase):
         workingdir = self.pod_builder.container_workingdir()
         self.assertEqual('/homedir', workingdir)
 
-    def test_resource_bound(self):
-        self.assertEqual('requests', KubernetesPodBuilder.resource_bound('coresMin'))
-        self.assertEqual('limits', KubernetesPodBuilder.resource_bound('ramMax'))
-        self.assertEqual('limits', KubernetesPodBuilder.resource_bound('outdirMax'))
-        self.assertEqual(None, KubernetesPodBuilder.resource_bound('coresMid'))
-
     def test_resource_type(self):
-        self.assertEqual('cpu', KubernetesPodBuilder.resource_type('coresMin'))
-        self.assertEqual('memory', KubernetesPodBuilder.resource_type('ramMax'))
-        self.assertEqual(None, KubernetesPodBuilder.resource_type('outdirMax'))
-        self.assertEqual('cpu', KubernetesPodBuilder.resource_type('coresMid'))
+        self.assertEqual('cpu', KubernetesPodBuilder.resource_type('cores'))
+        self.assertEqual('memory', KubernetesPodBuilder.resource_type('ram'))
+        self.assertEqual(None, KubernetesPodBuilder.resource_type('outdir'))
 
     def test_resource_value(self):
         self.assertEqual('3Mi', KubernetesPodBuilder.resource_value('memory', 3))
@@ -240,12 +238,9 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.assertEqual(None, KubernetesPodBuilder.resource_value('outdir', 62))
 
     def test_container_resources(self):
-        self.pod_builder.resources = {'coresMin': 2, 'ramMin': 256, 'coresMax': 4}
+        self.pod_builder.resources = {'cores': 2, 'ram': 256}
         resources = self.pod_builder.container_resources()
         expected = {
-            'limits': {
-                'cpu': '4',
-            },
             'requests': {
                 'cpu': '2',
                 'memory': '256Mi'
@@ -253,10 +248,12 @@ class KubernetesPodBuilderTestCase(TestCase):
         }
         self.assertEqual(expected, resources)
 
-    def test_build(self):
+    @patch('calrissian.job.random_tag')
+    def test_build(self, mock_random_tag):
+        mock_random_tag.return_value = 'random'
         expected = {
             'metadata': {
-                'name': 'podname-pod'
+                'name': 'podname-pod-random'
             },
             'apiVersion': 'v1',
             'kind':'Pod',
@@ -515,6 +512,11 @@ class CalrissianCommandLineJobTestCase(TestCase):
         # These were ported over from cwltool but are not used by our workflows
         # and can be tested later
         pass
+
+    def test_quoted_command_line(self, mock_volume_builder, mock_client):
+        job = self.make_job()
+        job.command_line = ['ls', '@foo']
+        self.assertEqual(job.quoted_command_line(), ['ls', '\'@foo\''])
 
     def test_run(self, mock_volume_builder, mock_client):
         job = self.make_job()
