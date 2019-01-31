@@ -110,6 +110,20 @@ class KubernetesClientTestCase(TestCase):
         self.assertIsNone(kc.pod)
 
     @patch('calrissian.k8s.watch')
+    @patch('calrissian.k8s.KubernetesClient.should_delete_pod')
+    def test_wait_checks_should_delete_when_pod_state_is_terminated(self, mock_should_delete_pod, mock_watch, mock_get_namespace, mock_client):
+        mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=None, terminated=Mock(exit_code=123), waiting=None))]))
+        mock_should_delete_pod.return_value = False
+        self.setup_mock_watch(mock_watch, [mock_pod])
+        kc = KubernetesClient()
+        kc._set_pod(Mock())
+        exit_code = kc.wait_for_completion()
+        self.assertEqual(exit_code, 123)
+        self.assertTrue(mock_watch.Watch.return_value.stop.called)
+        self.assertFalse(mock_client.CoreV1Api.return_value.delete_namespaced_pod.called)
+        self.assertIsNone(kc.pod)
+
+    @patch('calrissian.k8s.watch')
     def test_wait_raises_exception_when_state_is_unexpected(self, mock_watch, mock_get_namespace, mock_client):
         mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=None, terminated=None, waiting=None))]))
         self.setup_mock_watch(mock_watch, [mock_pod])
