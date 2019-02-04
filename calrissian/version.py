@@ -2,10 +2,10 @@ import pkg_resources  # part of setuptools
 
 
 def package_version(package_name):
-    pkg = pkg_resources.require(package_name)
-    if pkg:
+    try:
+        pkg = pkg_resources.require(package_name)
         return pkg[0].version
-    else:
+    except pkg_resources.DistributionNotFound:
         return 'unknown'
 
 
