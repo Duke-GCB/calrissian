@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -13,7 +13,7 @@ setup(
         'cwltool==1.0.20181217162649',
         'kubernetes==8.0.1',
     ],
-    test_suite='nose2',
+    test_suite='nose2.collector.collector',
     tests_require=['nose2'],
     entry_points={
         'console_scripts': [
