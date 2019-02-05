@@ -8,8 +8,20 @@ spec:
       containers:
       - name: calrissian
         image: calrissian:latest
-        command: ["/bin/bash", "-c"]
-        args: ["python -m calrissian.main --max-ram 1024 --max-cores 2 --tmpdir-prefix /calrissian/tmptmp/ --tmp-outdir-prefix /calrissian/tmpout/ --outdir /calrissian/output-data/ /calrissian/input-data/fail-wf.cwl /calrissian/input-data/fail-wf-job.json"]
+        command: ["calrissian"]
+        args:
+          - "--max-ram"
+          - "1024"
+          - "--max-cores"
+          - "2"
+          - "--tmpdir-prefix"
+          - "/calrissian/tmptmp/"
+          - "--tmp-outdir-prefix"
+          - "/calrissian/tmpout/"
+          - "--outdir"
+          - "/calrissian/output-data/"
+          - "/calrissian/input-data/fail-wf.cwl"
+          - "/calrissian/input-data/fail-wf-job.json"
         volumeMounts:
         - mountPath: /calrissian/input-data
           name: calrissian-input-data
