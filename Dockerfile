@@ -7,5 +7,6 @@ RUN apt-get update && apt-get install -y nodejs
 RUN mkdir -p /app
 COPY . /app
 RUN pip install /app
+WORKDIR /app
 
 CMD ["calrissian"]
