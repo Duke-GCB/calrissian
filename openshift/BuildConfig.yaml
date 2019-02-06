@@ -33,7 +33,7 @@ items:
     resources: {}
     source:
       git:
-        ref: 40-packaging
+        ref: master
         uri: https://github.com/Duke-GCB/calrissian.git
       type: Git
     strategy:
