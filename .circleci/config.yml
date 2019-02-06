@@ -5,8 +5,7 @@ jobs:
       - image: circleci/python:3.6
     working_directory: ~/calrissian
     steps:
-      - checkout:
-          path: ~/calrissian
+      - checkout
       - restore_cache:
           key: v1-dependency-cache-{{ checksum "requirements.txt" }}
       - run:
@@ -28,8 +27,7 @@ jobs:
     docker:
       - image: circleci/python:3.6
     steps:
-      - checkout:
-          path: ~/calrissian
+      - checkout
       - restore_cache:
           key: v1-setup-cache-{{ checksum "setup.py" }}
       - run:
