@@ -56,3 +56,13 @@ class CalrissianMainTestCase(TestCase):
         parsed = parse_arguments(mock_parser)
         self.assertEqual(parsed, mock_parser.parse_args.return_value)
         self.assertFalse(mock_sys.exit.called)
+
+    @patch('calrissian.main.sys')
+    @patch('calrissian.main.version')
+    def test_parse_arguments_exits_with_version(self, mock_version, mock_sys):
+        mock_parser = Mock()
+        mock_parser.parse_args.return_value = Mock(version=True)
+        parsed = parse_arguments(mock_parser)
+        self.assertEqual(parsed, mock_parser.parse_args.return_value)
+        self.assertTrue(mock_version.called)
+        self.assertEqual(mock_sys.exit.call_args, call(0))
