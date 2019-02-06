@@ -7,6 +7,7 @@ from cwltool.context import RuntimeContext
 import logging
 import sys
 
+
 def activate_logging():
     loggers = ['executor','context','tool','job', 'k8s']
     for logger in loggers:
@@ -19,8 +20,16 @@ def add_arguments(parser):
     parser.add_argument('--max-cores', type=int, help='Maximum number of CPU cores to use')
 
 
+def print_version():
+    print(version())
+
+
 def parse_arguments(parser):
     args = parser.parse_args()
+    # Check for version arg
+    if args.version:
+        print_version()
+        sys.exit(0)
     if not (args.max_ram and args.max_cores):
         parser.print_help()
         sys.exit(1)
