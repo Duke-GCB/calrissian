@@ -9,8 +9,20 @@ spec:
       containers:
       - name: calrissian
         image: calrissian:latest
-        command: ["/bin/bash", "-c"]
-        args: ["python -m calrissian.main --max-ram 16384 --max-cores 8 --tmpdir-prefix /calrissian/tmptmp/ --tmp-outdir-prefix /calrissian/tmpout/ --outdir /calrissian/output-data/ /calrissian/input-data/revsort-array.cwl /calrissian/input-data/revsort-array-job.json"]
+        command: ["calrissian"]
+        args:
+          - "--max-ram"
+          - "16384"
+          - "--max-cores"
+          - "8"
+          - "--tmpdir-prefix"
+          - "/calrissian/tmptmp/"
+          - "--tmp-outdir-prefix"
+          - "/calrissian/tmpout/"
+          - "--outdir"
+          - "/calrissian/output-data/"
+          - "/calrissian/input-data/revsort-array.cwl"
+          - "/calrissian/input-data/revsort-array-job.json"
         volumeMounts:
         - mountPath: /calrissian/input-data
           name: calrissian-input-data

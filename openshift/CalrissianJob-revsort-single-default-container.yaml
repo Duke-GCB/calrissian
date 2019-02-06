@@ -9,8 +9,22 @@ spec:
       containers:
       - name: calrissian
         image: calrissian:latest
-        command: ["/bin/bash", "-c"]
-        args: ["python -m calrissian.main --default-container debian:stretch-slim --max-ram 16384 --max-cores 8 --tmpdir-prefix /calrissian/tmptmp/ --tmp-outdir-prefix /calrissian/tmpout/ --outdir /calrissian/output-data/ /calrissian/input-data/revsort-single-no-docker.cwl /calrissian/input-data/revsort-single-job.json"]
+        command: ["calrissian"]
+        args:
+          - "--default-container"
+          - "debian:stretch-slim"
+          - "--max-ram"
+          - "16384"
+          - "--max-cores"
+          - "8"
+          - "--tmpdir-prefix"
+          - "/calrissian/tmptmp/"
+          - "--tmp-outdir-prefix"
+          - "/calrissian/tmpout/"
+          - "--outdir"
+          - "/calrissian/output-data/"
+          - "/calrissian/input-data/revsort-single-no-docker.cwl"
+          - "/calrissian/input-data/revsort-single-job.json"
         volumeMounts:
         - mountPath: /calrissian/input-data
           name: calrissian-input-data

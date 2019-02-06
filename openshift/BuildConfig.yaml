@@ -4,10 +4,10 @@ items:
   kind: ImageStream
   metadata:
     annotations:
-      openshift.io/generated-by: OpenShiftNewApp
+      openshift.io/generated-by: OpenShiftNewBuild
     creationTimestamp: null
     labels:
-      app: calrissian
+      build: calrissian
     name: calrissian
   spec:
     lookupPolicy:
@@ -18,10 +18,10 @@ items:
   kind: BuildConfig
   metadata:
     annotations:
-      openshift.io/generated-by: OpenShiftNewApp
+      openshift.io/generated-by: OpenShiftNewBuild
     creationTimestamp: null
     labels:
-      app: calrissian
+      build: calrissian
     name: calrissian
   spec:
     nodeSelector: null
@@ -34,15 +34,10 @@ items:
     source:
       git:
         ref: master
-        uri: https://github.com/Duke-GCB/calrissian
+        uri: https://github.com/Duke-GCB/calrissian.git
       type: Git
     strategy:
-      sourceStrategy:
-        from:
-          kind: ImageStreamTag
-          name: python:3.6
-          namespace: openshift
-      type: Source
+      type: Docker
     triggers:
     - type: ConfigChange
     - imageChange: {}
