@@ -49,6 +49,7 @@ def install_signal_handler():
 
 
 def main():
+    activate_logging()
     parser = arg_parser()
     add_arguments(parser)
     parsed_args = parse_arguments(parser)
@@ -70,5 +71,4 @@ def main():
 
 
 if __name__ == '__main__':
-    activate_logging()
     sys.exit(main())

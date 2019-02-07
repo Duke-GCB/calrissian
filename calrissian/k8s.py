@@ -170,13 +170,13 @@ class PodMonitor(object):
     @staticmethod
     def add(pod):
         with PodMonitor.lock:
-            log.info('PodMonitor added {}'.format(pod.metadata.name))
+            log.info('PodMonitor adding {}'.format(pod))
             PodMonitor.pods.append(pod)
 
     @staticmethod
     def remove(pod):
         with PodMonitor.lock:
-            log.info('PodMonitor removed {}'.format(pod.metadata.name))
+            log.info('PodMonitor removing {}'.format(pod))
             PodMonitor.pods.remove(pod)
 
     @staticmethod
@@ -184,7 +184,7 @@ class PodMonitor(object):
         with PodMonitor.lock:
             k8s_client = KubernetesClient()
             for pod in PodMonitor.pods:
-                log.info('PodMonitor deleting pod {}'.format(pod.metadata.name))
+                log.info('PodMonitor deleting pod {}'.format(pod))
                 k8s_client.delete_pod(pod)
             PodMonitor.pods = []
 
