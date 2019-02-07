@@ -1,4 +1,5 @@
 from kubernetes import client, config, watch
+import threading
 import logging
 import os
 
@@ -46,6 +47,7 @@ class KubernetesClient(object):
     def submit_pod(self, pod_body):
         pod = self.core_api_instance.create_namespaced_pod(self.namespace, pod_body)
         log.info('Created k8s pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
+        PodMonitor.add(pod)
         self._set_pod(pod)
 
     def should_delete_pod(self):
@@ -60,6 +62,9 @@ class KubernetesClient(object):
         else:
             return True
 
+    def delete_pod(self, pod):
+        self.core_api_instance.delete_namespaced_pod(pod.metadata.name, self.namespace, client.V1DeleteOptions())
+
     def wait_for_completion(self):
         w = watch.Watch()
         for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_field_selector()):
@@ -73,7 +78,8 @@ class KubernetesClient(object):
                 log.info('Handling terminated pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
                 self._handle_terminated_state(status.state)
                 if self.should_delete_pod():
-                    self.core_api_instance.delete_namespaced_pod(self.pod.metadata.name, self.namespace, client.V1DeleteOptions())
+                    self.delete_pod(pod)
+                    PodMonitor.remove(pod)
                 self._clear_pod()
                 # stop watching for events, our pod is done. Causes wait loop to exit
                 w.stop()
@@ -151,3 +157,37 @@ class KubernetesClient(object):
         if not pod_name:
             raise CalrissianJobException("Missing required environment variable ${}".format(POD_NAME_ENV_VARIABLE))
         return self.get_pod_for_name(pod_name)
+
+
+
+class PodMonitor(object):
+    """
+    Keeps track of pods that need to be deleted when killed
+    """
+    pods = []
+    lock = threading.Lock()
+
+    @staticmethod
+    def add(pod):
+        with PodMonitor.lock:
+            log.info('PodMonitor added {}'.format(pod.metadata.name))
+            PodMonitor.pods.append(pod)
+
+    @staticmethod
+    def remove(pod):
+        with PodMonitor.lock:
+            log.info('PodMonitor removed {}'.format(pod.metadata.name))
+            PodMonitor.pods.remove(pod)
+
+    @staticmethod
+    def cleanup():
+        with PodMonitor.lock:
+            k8s_client = KubernetesClient()
+            for pod in PodMonitor.pods:
+                log.info('PodMonitor deleting pod {}'.format(pod.metadata.name))
+                k8s_client.delete_pod(pod)
+            PodMonitor.pods = []
+
+
+def delete_pods():
+    PodMonitor.cleanup()

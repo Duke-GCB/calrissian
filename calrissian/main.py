@@ -1,11 +1,13 @@
 from calrissian.executor import CalrissianExecutor
 from calrissian.context import CalrissianLoadingContext
 from calrissian.version import version
+from calrissian.k8s import delete_pods
 from cwltool.main import main as cwlmain
 from cwltool.argparser import arg_parser
 from cwltool.context import RuntimeContext
 import logging
 import sys
+import signal
 
 
 def activate_logging():
@@ -36,6 +38,16 @@ def parse_arguments(parser):
     return args
 
 
+def handle_sigterm(signum, frame):
+    print('Received signal {}, deleting pods'.format(signum))
+    delete_pods()
+    sys.exit(signum)
+
+
+def install_signal_handler():
+    signal.signal(signal.SIGTERM, handle_sigterm)
+
+
 def main():
     parser = arg_parser()
     add_arguments(parser)
@@ -43,12 +55,17 @@ def main():
     executor = CalrissianExecutor(parsed_args.max_ram, parsed_args.max_cores)
     runtimeContext = RuntimeContext(vars(parsed_args))
     runtimeContext.select_resources = executor.select_resources
-    result = cwlmain(args=parsed_args,
-                     executor=executor,
-                     loadingContext=CalrissianLoadingContext(),
-                     runtimeContext=runtimeContext,
-                     versionfunc=version,
-                     )
+    install_signal_handler()
+    try:
+        result = cwlmain(args=parsed_args,
+                         executor=executor,
+                         loadingContext=CalrissianLoadingContext(),
+                         runtimeContext=runtimeContext,
+                         versionfunc=version,
+                         )
+    finally:
+        delete_pods()
+
     return result
 
 
