@@ -32,8 +32,8 @@ setup(
     author_email='dan.leehr@duke.edu',
     description='CWL runner for Kubernetes',
     install_requires=[
-        'cwltool==1.0.20181217162649',
         'kubernetes==8.0.1',
+        'cwltool==1.0.20181217162649',
     ],
     test_suite='nose2.collector.collector',
     tests_require=['nose2'],
