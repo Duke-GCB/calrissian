@@ -37,6 +37,7 @@ jobs:
             . venv/bin/activate
             python setup.py install
             pip install twine
+            pip install wheel
       - save_cache:
           key: v1-setup-cache-{{ checksum "setup.py" }}
           paths:
