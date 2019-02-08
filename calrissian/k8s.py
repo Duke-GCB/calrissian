@@ -192,7 +192,7 @@ class PodMonitor(object):
                     k8s_client.delete_pod_name(pod_name)
                 except Exception:
                     log.error('Error deleting pod named {}, ignoring'.format(pod_name))
-            PodMonitor.pods = []
+            PodMonitor.pod_names = []
 
 
 def delete_pods():
