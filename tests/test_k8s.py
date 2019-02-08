@@ -98,7 +98,8 @@ class KubernetesClientTestCase(TestCase):
         self.assertIsNotNone(kc.pod)
 
     @patch('calrissian.k8s.watch')
-    def test_wait_finishes_when_pod_state_is_terminated(self, mock_watch, mock_get_namespace, mock_client):
+    @patch('calrissian.k8s.PodMonitor')
+    def test_wait_finishes_when_pod_state_is_terminated(self, mock_podmonitor, mock_watch, mock_get_namespace, mock_client):
         mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=None, terminated=Mock(exit_code=123), waiting=None))]))
         self.setup_mock_watch(mock_watch, [mock_pod])
         kc = KubernetesClient()
