@@ -61,7 +61,7 @@ class KubernetesClientTestCase(TestCase):
     def make_mock_pod(self, name):
         mock_metadata = Mock()
         # Cannot mock name attribute without a propertymock
-        name_property = PropertyMock(return_value='test123')
+        name_property = PropertyMock(return_value=name)
         type(mock_metadata).name = name_property
         return Mock(metadata=mock_metadata)
 
