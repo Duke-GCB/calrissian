@@ -62,8 +62,11 @@ class KubernetesClient(object):
         else:
             return True
 
-    def delete_pod(self, pod):
-        self.core_api_instance.delete_namespaced_pod(pod.metadata.name, self.namespace, client.V1DeleteOptions())
+    def delete_pod_name(self, pod_name):
+        try:
+            self.core_api_instance.delete_namespaced_pod(pod_name, self.namespace, client.V1DeleteOptions())
+        except client.rest.ApiException as e:
+            raise CalrissianJobException('Error deleting pod named {}'.format(pod_name), e)
 
     def wait_for_completion(self):
         w = watch.Watch()
@@ -78,7 +81,7 @@ class KubernetesClient(object):
                 log.info('Handling terminated pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
                 self._handle_terminated_state(status.state)
                 if self.should_delete_pod():
-                    self.delete_pod(pod)
+                    self.delete_pod_name(pod.metadata.name)
                     PodMonitor.remove(pod)
                 self._clear_pod()
                 # stop watching for events, our pod is done. Causes wait loop to exit
@@ -159,34 +162,36 @@ class KubernetesClient(object):
         return self.get_pod_for_name(pod_name)
 
 
-
 class PodMonitor(object):
     """
     Keeps track of pods that need to be deleted when killed
     """
-    pods = []
+    pod_names = []
     lock = threading.Lock()
 
     @staticmethod
     def add(pod):
         with PodMonitor.lock:
             log.info('PodMonitor adding {}'.format(pod.metadata.name))
-            PodMonitor.pods.append(pod.metadata.name)
+            PodMonitor.pod_names.append(pod.metadata.name)
 
     @staticmethod
     def remove(pod):
         with PodMonitor.lock:
             log.info('PodMonitor removing {}'.format(pod.metadata.name))
             # This has to look up the pod by something unique
-            PodMonitor.pods.remove(pod.metadata.name)
+            PodMonitor.pod_names.remove(pod.metadata.name)
 
     @staticmethod
     def cleanup():
         with PodMonitor.lock:
             k8s_client = KubernetesClient()
-            for pod in PodMonitor.pods:
-                log.info('PodMonitor deleting pod {}'.format(pod.metadata.name))
-                k8s_client.delete_pod(pod)
+            for pod_name in PodMonitor.pod_names:
+                log.info('PodMonitor deleting pod {}'.format(pod_name))
+                try:
+                    k8s_client.delete_pod_name(pod_name)
+                except Exception:
+                    log.error('Error deleting pod named {}, ignoring'.format(pod_name))
             PodMonitor.pods = []
 
 
