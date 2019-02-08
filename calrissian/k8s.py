@@ -1,7 +1,7 @@
 from kubernetes import client, config, watch
-import threading
 import logging
 import os
+from calrissian.podmonitor import PodMonitor
 
 log = logging.getLogger('calrissian.k8s')
 
@@ -161,39 +161,3 @@ class KubernetesClient(object):
             raise CalrissianJobException("Missing required environment variable ${}".format(POD_NAME_ENV_VARIABLE))
         return self.get_pod_for_name(pod_name)
 
-
-class PodMonitor(object):
-    """
-    Keeps track of pods that need to be deleted when killed
-    """
-    pod_names = []
-    lock = threading.Lock()
-
-    @staticmethod
-    def add(pod):
-        with PodMonitor.lock:
-            log.info('PodMonitor adding {}'.format(pod.metadata.name))
-            PodMonitor.pod_names.append(pod.metadata.name)
-
-    @staticmethod
-    def remove(pod):
-        with PodMonitor.lock:
-            log.info('PodMonitor removing {}'.format(pod.metadata.name))
-            # This has to look up the pod by something unique
-            PodMonitor.pod_names.remove(pod.metadata.name)
-
-    @staticmethod
-    def cleanup():
-        with PodMonitor.lock:
-            k8s_client = KubernetesClient()
-            for pod_name in PodMonitor.pod_names:
-                log.info('PodMonitor deleting pod {}'.format(pod_name))
-                try:
-                    k8s_client.delete_pod_name(pod_name)
-                except Exception:
-                    log.error('Error deleting pod named {}, ignoring'.format(pod_name))
-            PodMonitor.pod_names = []
-
-
-def delete_pods():
-    PodMonitor.cleanup()
