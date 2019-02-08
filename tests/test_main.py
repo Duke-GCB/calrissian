@@ -13,7 +13,8 @@ class CalrissianMainTestCase(TestCase):
     @patch('calrissian.main.version')
     @patch('calrissian.main.parse_arguments')
     @patch('calrissian.main.add_arguments')
-    def test_main_calls_cwlmain_returns_exit_code(self, mock_add_arguments, mock_parse_arguments, mock_version, mock_runtime_context, mock_loading_context, mock_executor, mock_arg_parser, mock_cwlmain):
+    @patch('calrissian.main.delete_pods')
+    def test_main_calls_cwlmain_returns_exit_code(self, mock_delete_pods, mock_add_arguments, mock_parse_arguments, mock_version, mock_runtime_context, mock_loading_context, mock_executor, mock_arg_parser, mock_cwlmain):
         mock_exit_code = Mock()
         mock_cwlmain.return_value = mock_exit_code
         result = main()
