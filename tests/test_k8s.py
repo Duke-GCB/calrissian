@@ -197,6 +197,19 @@ class KubernetesClientTestCase(TestCase):
         self.assertFalse(kc.should_delete_pod())
         self.assertEqual(mock_os.getenv.call_args, call('CALRISSIAN_DELETE_PODS', ''))
 
+    def test_delete_pod_name_calls_api(self, mock_get_namespace, mock_client):
+        kc = KubernetesClient()
+        kc.delete_pod_name('pod-123')
+        self.assertEqual('pod-123', mock_client.CoreV1Api.return_value.delete_namespaced_pod.call_args[0][0])
+
+    def test_delete_pod_name_raises(self, mock_get_namespace, mock_client):
+        mock_client.rest.ApiException = Exception
+        mock_client.CoreV1Api.return_value.delete_namespaced_pod.side_effect = mock_client.rest.ApiException
+        kc = KubernetesClient()
+        with self.assertRaises(CalrissianJobException) as context:
+            kc.delete_pod_name('pod-123')
+        self.assertIn('Error deleting pod named pod-123', str(context.exception))
+
 
 class KubernetesClientStateTestCase(TestCase):
 
