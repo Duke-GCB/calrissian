@@ -45,10 +45,11 @@ class KubernetesClient(object):
         self.core_api_instance = client.CoreV1Api()
 
     def submit_pod(self, pod_body):
-        pod = self.core_api_instance.create_namespaced_pod(self.namespace, pod_body)
-        log.info('Created k8s pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
-        PodMonitor.add(pod)
-        self._set_pod(pod)
+        with PodMonitor() as monitor:
+            pod = self.core_api_instance.create_namespaced_pod(self.namespace, pod_body)
+            log.info('Created k8s pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
+            monitor.add(pod)
+            self._set_pod(pod)
 
     def should_delete_pod(self):
         """
@@ -81,8 +82,9 @@ class KubernetesClient(object):
                 log.info('Handling terminated pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
                 self._handle_terminated_state(status.state)
                 if self.should_delete_pod():
-                    self.delete_pod_name(pod.metadata.name)
-                    PodMonitor.remove(pod)
+                    with PodMonitor() as monitor:
+                        self.delete_pod_name(pod.metadata.name)
+                        monitor.remove(pod)
                 self._clear_pod()
                 # stop watching for events, our pod is done. Causes wait loop to exit
                 w.stop()
@@ -169,22 +171,26 @@ class PodMonitor(object):
     pod_names = []
     lock = threading.Lock()
 
-    @staticmethod
-    def add(pod):
-        with PodMonitor.lock:
-            log.info('PodMonitor adding {}'.format(pod.metadata.name))
-            PodMonitor.pod_names.append(pod.metadata.name)
+    def __enter__(self):
+        PodMonitor.lock.acquire()
+        return self
 
-    @staticmethod
-    def remove(pod):
-        with PodMonitor.lock:
-            log.info('PodMonitor removing {}'.format(pod.metadata.name))
-            # This has to look up the pod by something unique
-            PodMonitor.pod_names.remove(pod.metadata.name)
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        PodMonitor.lock.release()
+
+    # add and remove methods should be called with the lock acquired, e.g. inside PodMonitor():
+    def add(self, pod):
+        log.info('PodMonitor adding {}'.format(pod.metadata.name))
+        PodMonitor.pod_names.append(pod.metadata.name)
+
+    def remove(self, pod):
+        log.info('PodMonitor removing {}'.format(pod.metadata.name))
+        # This has to look up the pod by something unique
+        PodMonitor.pod_names.remove(pod.metadata.name)
 
     @staticmethod
     def cleanup():
-        with PodMonitor.lock:
+        with PodMonitor() as monitor:
             k8s_client = KubernetesClient()
             for pod_name in PodMonitor.pod_names:
                 log.info('PodMonitor deleting pod {}'.format(pod_name))

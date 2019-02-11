@@ -266,13 +266,15 @@ class PodMonitorTestCase(TestCase):
     def test_add(self):
         pod = self.make_mock_pod('pod-123')
         self.assertEqual(len(PodMonitor.pod_names), 0)
-        PodMonitor.add(pod)
+        with PodMonitor() as monitor:
+            monitor.add(pod)
         self.assertEqual(PodMonitor.pod_names, ['pod-123'])
 
     def test_remove(self):
         pod2 = self.make_mock_pod('pod2')
         PodMonitor.pod_names = ['pod1', 'pod2']
-        PodMonitor.remove(pod2)
+        with PodMonitor() as monitor:
+            monitor.remove(pod2)
         self.assertEqual(PodMonitor.pod_names, ['pod1'])
 
     @patch('calrissian.k8s.KubernetesClient')
