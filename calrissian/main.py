@@ -45,6 +45,11 @@ def handle_sigterm(signum, frame):
 
 
 def install_signal_handler():
+    """
+    Installs a handler to cleanup submitted pods on termination.
+    This is installed on the main thread and calls there on termination.
+    The CalrissianExecutor is multi-threaded and will submit jobs from other threads
+    """
     signal.signal(signal.SIGTERM, handle_sigterm)
 
 
@@ -65,6 +70,7 @@ def main():
                          versionfunc=version,
                          )
     finally:
+        # Always clean up after cwlmain
         delete_pods()
 
     return result
