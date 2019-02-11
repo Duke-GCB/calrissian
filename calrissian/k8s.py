@@ -37,6 +37,15 @@ class CalrissianJobException(Exception):
 
 
 class KubernetesClient(object):
+    """
+    Instances of this class are created by a `calrissian.job.CalrissianCommandLineJob`,
+    which are often running in background threads (spawned by `calrissian.executor.MultithreadedJobExecutor`
+
+    This class uses a PodMonitor to keep track of the pods it submits in a single, shared list.
+    KubernetesClient is responsible for telling PodMonitor after it has submitted a pod and when it knows that pod
+    is terminated. Using PodMonitor as a context manager (with PodMonitor() as p) acquires a lock for thread safety.
+
+    """
     def __init__(self):
         self.pod = None
         # load_config must happen before instantiating client
@@ -166,7 +175,14 @@ class KubernetesClient(object):
 
 class PodMonitor(object):
     """
-    Keeps track of pods that need to be deleted when killed
+    This class is designed to track pods submitted by KubernetesClient across different background threads,
+    and provide a static cleanup() method to attempt to delete those pods on termination.
+
+    Instances of this class are used as context manager, and acquire the shared lock.
+    The add and remove methods should only be called from inside the context block while the lock is acquired.
+
+    The static cleanup() method also acquires the lock and attempts to delete all outstanding pods.
+
     """
     pod_names = []
     lock = threading.Lock()

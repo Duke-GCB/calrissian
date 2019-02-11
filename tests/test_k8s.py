@@ -36,7 +36,8 @@ class KubernetesClientTestCase(TestCase):
         self.assertIsNone(kc.pod)
         self.assertIsNone(kc.process_exit_code)
 
-    def test_submit_pod(self, mock_get_namespace, mock_client):
+    @patch('calrissian.k8s.PodMonitor')
+    def test_submit_pod(self, mock_podmonitor, mock_get_namespace, mock_client):
         mock_get_namespace.return_value = 'namespace'
         mock_create_namespaced_pod = Mock()
         mock_create_namespaced_pod.return_value = Mock(metadata=Mock(uid='123'))
@@ -46,6 +47,8 @@ class KubernetesClientTestCase(TestCase):
         kc.submit_pod(mock_body)
         self.assertEqual(kc.pod.metadata.uid, '123')
         self.assertEqual(mock_create_namespaced_pod.call_args, call('namespace', mock_body))
+        # This is to inspect `with PodMonitor() as monitor`:
+        self.assertTrue(mock_podmonitor.return_value.__enter__.return_value.add.called)
 
     def setup_mock_watch(self, mock_watch, event_objects=[]):
         mock_stream = Mock()
@@ -108,6 +111,8 @@ class KubernetesClientTestCase(TestCase):
         self.assertTrue(mock_watch.Watch.return_value.stop.called)
         self.assertTrue(mock_client.CoreV1Api.return_value.delete_namespaced_pod.called)
         self.assertIsNone(kc.pod)
+        # This is to inspect `with PodMonitor() as monitor`:
+        self.assertTrue(mock_podmonitor.return_value.__enter__.return_value.remove.called)
 
     @patch('calrissian.k8s.watch')
     @patch('calrissian.k8s.KubernetesClient.should_delete_pod')
