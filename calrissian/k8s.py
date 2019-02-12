@@ -1,4 +1,5 @@
 from kubernetes import client, config, watch
+import threading
 import logging
 import os
 
@@ -25,7 +26,7 @@ def load_config_get_namespace():
     try:
         config.load_incluster_config() # raises if not in cluster
         namespace = read_file(K8S_NAMESPACE_FILE)
-    except config.ConfigException:
+    except config.config_exception.ConfigException:
         config.load_kube_config()
         namespace = K8S_FALLBACK_NAMESPACE
     return namespace
@@ -36,6 +37,15 @@ class CalrissianJobException(Exception):
 
 
 class KubernetesClient(object):
+    """
+    Instances of this class are created by a `calrissian.job.CalrissianCommandLineJob`,
+    which are often running in background threads (spawned by `calrissian.executor.MultithreadedJobExecutor`
+
+    This class uses a PodMonitor to keep track of the pods it submits in a single, shared list.
+    KubernetesClient is responsible for telling PodMonitor after it has submitted a pod and when it knows that pod
+    is terminated. Using PodMonitor as a context manager (with PodMonitor() as p) acquires a lock for thread safety.
+
+    """
     def __init__(self):
         self.pod = None
         # load_config must happen before instantiating client
@@ -44,9 +54,11 @@ class KubernetesClient(object):
         self.core_api_instance = client.CoreV1Api()
 
     def submit_pod(self, pod_body):
-        pod = self.core_api_instance.create_namespaced_pod(self.namespace, pod_body)
-        log.info('Created k8s pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
-        self._set_pod(pod)
+        with PodMonitor() as monitor:
+            pod = self.core_api_instance.create_namespaced_pod(self.namespace, pod_body)
+            log.info('Created k8s pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
+            monitor.add(pod)
+            self._set_pod(pod)
 
     def should_delete_pod(self):
         """
@@ -59,6 +71,12 @@ class KubernetesClient(object):
             return False
         else:
             return True
+
+    def delete_pod_name(self, pod_name):
+        try:
+            self.core_api_instance.delete_namespaced_pod(pod_name, self.namespace, client.V1DeleteOptions())
+        except client.rest.ApiException as e:
+            raise CalrissianJobException('Error deleting pod named {}'.format(pod_name), e)
 
     def wait_for_completion(self):
         w = watch.Watch()
@@ -73,7 +91,9 @@ class KubernetesClient(object):
                 log.info('Handling terminated pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
                 self._handle_terminated_state(status.state)
                 if self.should_delete_pod():
-                    self.core_api_instance.delete_namespaced_pod(self.pod.metadata.name, self.namespace, client.V1DeleteOptions())
+                    with PodMonitor() as monitor:
+                        self.delete_pod_name(pod.metadata.name)
+                        monitor.remove(pod)
                 self._clear_pod()
                 # stop watching for events, our pod is done. Causes wait loop to exit
                 w.stop()
@@ -151,3 +171,51 @@ class KubernetesClient(object):
         if not pod_name:
             raise CalrissianJobException("Missing required environment variable ${}".format(POD_NAME_ENV_VARIABLE))
         return self.get_pod_for_name(pod_name)
+
+
+class PodMonitor(object):
+    """
+    This class is designed to track pods submitted by KubernetesClient across different background threads,
+    and provide a static cleanup() method to attempt to delete those pods on termination.
+
+    Instances of this class are used as context manager, and acquire the shared lock.
+    The add and remove methods should only be called from inside the context block while the lock is acquired.
+
+    The static cleanup() method also acquires the lock and attempts to delete all outstanding pods.
+
+    """
+    pod_names = []
+    lock = threading.Lock()
+
+    def __enter__(self):
+        PodMonitor.lock.acquire()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        PodMonitor.lock.release()
+
+    # add and remove methods should be called with the lock acquired, e.g. inside PodMonitor():
+    def add(self, pod):
+        log.info('PodMonitor adding {}'.format(pod.metadata.name))
+        PodMonitor.pod_names.append(pod.metadata.name)
+
+    def remove(self, pod):
+        log.info('PodMonitor removing {}'.format(pod.metadata.name))
+        # This has to look up the pod by something unique
+        PodMonitor.pod_names.remove(pod.metadata.name)
+
+    @staticmethod
+    def cleanup():
+        with PodMonitor() as monitor:
+            k8s_client = KubernetesClient()
+            for pod_name in PodMonitor.pod_names:
+                log.info('PodMonitor deleting pod {}'.format(pod_name))
+                try:
+                    k8s_client.delete_pod_name(pod_name)
+                except Exception:
+                    log.error('Error deleting pod named {}, ignoring'.format(pod_name))
+            PodMonitor.pod_names = []
+
+
+def delete_pods():
+    PodMonitor.cleanup()

@@ -1,7 +1,6 @@
 from unittest import TestCase
 from unittest.mock import Mock, patch, call, PropertyMock
-from calrissian.k8s import load_config_get_namespace, KubernetesClient, CalrissianJobException
-
+from calrissian.k8s import load_config_get_namespace, KubernetesClient, CalrissianJobException, PodMonitor, delete_pods
 
 @patch('calrissian.k8s.read_file')
 @patch('calrissian.k8s.config')
@@ -17,7 +16,7 @@ class LoadConfigTestCase(TestCase):
 
     def test_load_config_get_namespace_external(self, mock_config, mock_read_file):
         # When load_incluster_config raises an exception, call load_kube_config and assume 'default'
-        mock_config.ConfigException = Exception
+        mock_config.config_exception.ConfigException = Exception
         mock_config.load_incluster_config.side_effect = Exception
         namespace = load_config_get_namespace()
         self.assertEqual(namespace, 'default')
@@ -37,7 +36,8 @@ class KubernetesClientTestCase(TestCase):
         self.assertIsNone(kc.pod)
         self.assertIsNone(kc.process_exit_code)
 
-    def test_submit_pod(self, mock_get_namespace, mock_client):
+    @patch('calrissian.k8s.PodMonitor')
+    def test_submit_pod(self, mock_podmonitor, mock_get_namespace, mock_client):
         mock_get_namespace.return_value = 'namespace'
         mock_create_namespaced_pod = Mock()
         mock_create_namespaced_pod.return_value = Mock(metadata=Mock(uid='123'))
@@ -47,6 +47,8 @@ class KubernetesClientTestCase(TestCase):
         kc.submit_pod(mock_body)
         self.assertEqual(kc.pod.metadata.uid, '123')
         self.assertEqual(mock_create_namespaced_pod.call_args, call('namespace', mock_body))
+        # This is to inspect `with PodMonitor() as monitor`:
+        self.assertTrue(mock_podmonitor.return_value.__enter__.return_value.add.called)
 
     def setup_mock_watch(self, mock_watch, event_objects=[]):
         mock_stream = Mock()
@@ -98,7 +100,8 @@ class KubernetesClientTestCase(TestCase):
         self.assertIsNotNone(kc.pod)
 
     @patch('calrissian.k8s.watch')
-    def test_wait_finishes_when_pod_state_is_terminated(self, mock_watch, mock_get_namespace, mock_client):
+    @patch('calrissian.k8s.PodMonitor')
+    def test_wait_finishes_when_pod_state_is_terminated(self, mock_podmonitor, mock_watch, mock_get_namespace, mock_client):
         mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=None, terminated=Mock(exit_code=123), waiting=None))]))
         self.setup_mock_watch(mock_watch, [mock_pod])
         kc = KubernetesClient()
@@ -108,6 +111,8 @@ class KubernetesClientTestCase(TestCase):
         self.assertTrue(mock_watch.Watch.return_value.stop.called)
         self.assertTrue(mock_client.CoreV1Api.return_value.delete_namespaced_pod.called)
         self.assertIsNone(kc.pod)
+        # This is to inspect `with PodMonitor() as monitor`:
+        self.assertTrue(mock_podmonitor.return_value.__enter__.return_value.remove.called)
 
     @patch('calrissian.k8s.watch')
     @patch('calrissian.k8s.KubernetesClient.should_delete_pod')
@@ -196,6 +201,19 @@ class KubernetesClientTestCase(TestCase):
         self.assertFalse(kc.should_delete_pod())
         self.assertEqual(mock_os.getenv.call_args, call('CALRISSIAN_DELETE_PODS', ''))
 
+    def test_delete_pod_name_calls_api(self, mock_get_namespace, mock_client):
+        kc = KubernetesClient()
+        kc.delete_pod_name('pod-123')
+        self.assertEqual('pod-123', mock_client.CoreV1Api.return_value.delete_namespaced_pod.call_args[0][0])
+
+    def test_delete_pod_name_raises(self, mock_get_namespace, mock_client):
+        mock_client.rest.ApiException = Exception
+        mock_client.CoreV1Api.return_value.delete_namespaced_pod.side_effect = mock_client.rest.ApiException
+        kc = KubernetesClient()
+        with self.assertRaises(CalrissianJobException) as context:
+            kc.delete_pod_name('pod-123')
+        self.assertIn('Error deleting pod named pod-123', str(context.exception))
+
 
 class KubernetesClientStateTestCase(TestCase):
 
@@ -236,3 +254,42 @@ class KubernetesClientStatusTestCase(TestCase):
         with self.assertRaises(CalrissianJobException) as context:
             KubernetesClient.get_first_status_or_none(self.multiple_statuses)
         self.assertIn('Expected 0 or 1 container statuses, found 2', str(context.exception))
+
+
+class PodMonitorTestCase(TestCase):
+
+    def make_mock_pod(self, name):
+        mock_metadata = Mock()
+        # Cannot mock name attribute without a propertymock
+        name_property = PropertyMock(return_value=name)
+        type(mock_metadata).name = name_property
+        return Mock(metadata=mock_metadata)
+
+    def setUp(self):
+        PodMonitor.pod_names = []
+
+    def test_add(self):
+        pod = self.make_mock_pod('pod-123')
+        self.assertEqual(len(PodMonitor.pod_names), 0)
+        with PodMonitor() as monitor:
+            monitor.add(pod)
+        self.assertEqual(PodMonitor.pod_names, ['pod-123'])
+
+    def test_remove(self):
+        pod2 = self.make_mock_pod('pod2')
+        PodMonitor.pod_names = ['pod1', 'pod2']
+        with PodMonitor() as monitor:
+            monitor.remove(pod2)
+        self.assertEqual(PodMonitor.pod_names, ['pod1'])
+
+    @patch('calrissian.k8s.KubernetesClient')
+    def test_cleanup(self, mock_client):
+        mock_delete_pod_name = mock_client.return_value.delete_pod_name
+        PodMonitor.pod_names = ['cleanup-pod']
+        PodMonitor.cleanup()
+        self.assertEqual(mock_delete_pod_name.call_args, call('cleanup-pod'))
+
+    @patch('calrissian.k8s.PodMonitor')
+    def test_delete_pods_calls_podmonitor(self, mock_pod_monitor):
+        delete_pods()
+        self.assertTrue(mock_pod_monitor.cleanup.called)

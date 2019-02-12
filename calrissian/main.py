@@ -1,11 +1,13 @@
 from calrissian.executor import CalrissianExecutor
 from calrissian.context import CalrissianLoadingContext
 from calrissian.version import version
+from calrissian.k8s import delete_pods
 from cwltool.main import main as cwlmain
 from cwltool.argparser import arg_parser
 from cwltool.context import RuntimeContext
 import logging
 import sys
+import signal
 
 
 def activate_logging():
@@ -36,22 +38,43 @@ def parse_arguments(parser):
     return args
 
 
+def handle_sigterm(signum, frame):
+    print('Received signal {}, deleting pods'.format(signum))
+    delete_pods()
+    sys.exit(signum)
+
+
+def install_signal_handler():
+    """
+    Installs a handler to cleanup submitted pods on termination.
+    This is installed on the main thread and calls there on termination.
+    The CalrissianExecutor is multi-threaded and will submit jobs from other threads
+    """
+    signal.signal(signal.SIGTERM, handle_sigterm)
+
+
 def main():
+    activate_logging()
     parser = arg_parser()
     add_arguments(parser)
     parsed_args = parse_arguments(parser)
     executor = CalrissianExecutor(parsed_args.max_ram, parsed_args.max_cores)
     runtimeContext = RuntimeContext(vars(parsed_args))
     runtimeContext.select_resources = executor.select_resources
-    result = cwlmain(args=parsed_args,
-                     executor=executor,
-                     loadingContext=CalrissianLoadingContext(),
-                     runtimeContext=runtimeContext,
-                     versionfunc=version,
-                     )
+    install_signal_handler()
+    try:
+        result = cwlmain(args=parsed_args,
+                         executor=executor,
+                         loadingContext=CalrissianLoadingContext(),
+                         runtimeContext=runtimeContext,
+                         versionfunc=version,
+                         )
+    finally:
+        # Always clean up after cwlmain
+        delete_pods()
+
     return result
 
 
 if __name__ == '__main__':
-    activate_logging()
     sys.exit(main())
