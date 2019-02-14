@@ -192,7 +192,7 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.stderr = 'stderr.txt'
         self.stdin = 'stdin.txt'
         self.resources = {'cores': 1, 'ram': 1024}
-        self.labels = {'key1': 'val1'}
+        self.labels = {'key1': 'val1', 'key2': 123}
         self.pod_builder = KubernetesPodBuilder(self.name, self.container_image, self.environment, self.volume_mounts,
                                                 self.volumes, self.command_line, self.stdout, self.stderr, self.stdin,
                                                 self.resources, self.labels)
@@ -250,6 +250,10 @@ class KubernetesPodBuilderTestCase(TestCase):
         }
         self.assertEqual(expected, resources)
 
+    def test_string_labels(self):
+        self.pod_builder.labels = {'key1': 123}
+        self.assertEqual(self.pod_builder.pod_labels(), {'key1':'123'})
+
     @patch('calrissian.job.random_tag')
     def test_build(self, mock_random_tag):
         mock_random_tag.return_value = 'random'
@@ -258,6 +262,7 @@ class KubernetesPodBuilderTestCase(TestCase):
                 'name': 'podname-pod-random',
                 'labels': {
                     'key1': 'val1',
+                    'key2': '123',
                 }
             },
             'apiVersion': 'v1',

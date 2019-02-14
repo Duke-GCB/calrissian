@@ -227,11 +227,18 @@ class KubernetesPodBuilder(object):
                 container_resources[resource_bound][resource_type] = resource_value
         return container_resources
 
+    def pod_labels(self):
+        """
+        Submitted labels must be strings
+        :return:
+        """
+        return {str(k): str(v) for k, v in self.labels.items()}
+
     def build(self):
         return {
             'metadata': {
                 'name': self.pod_name(),
-                'labels': self.labels,
+                'labels': self.pod_labels(),
             },
             'apiVersion': 'v1',
             'kind':'Pod',
