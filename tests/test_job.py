@@ -1,6 +1,6 @@
 from unittest import TestCase
 from unittest.mock import Mock, patch, call
-from calrissian.job import k8s_safe_name, KubernetesVolumeBuilder, VolumeBuilderException, KubernetesPodBuilder, random_tag
+from calrissian.job import k8s_safe_name, KubernetesVolumeBuilder, VolumeBuilderException, KubernetesPodBuilder, random_tag, read_yaml
 from calrissian.job import CalrissianCommandLineJob, KubernetesPodVolumeInspector, CalrissianCommandLineJobException
 from cwltool.errors import UnsupportedRequirement
 
@@ -21,6 +21,7 @@ class RandomTagTestCase(TestCase):
         self.assertEqual(len(tag1), 10)
         self.assertEqual(len(tag2), 10)
         self.assertNotEqual(tag1, tag2)
+
 
 class KubernetesPodVolumeInspectorTestCase(TestCase):
     def test_first_container_with_one_container(self):
@@ -191,9 +192,10 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.stderr = 'stderr.txt'
         self.stdin = 'stdin.txt'
         self.resources = {'cores': 1, 'ram': 1024}
+        self.labels = {'key1': 'val1', 'key2': 123}
         self.pod_builder = KubernetesPodBuilder(self.name, self.container_image, self.environment, self.volume_mounts,
                                                 self.volumes, self.command_line, self.stdout, self.stderr, self.stdin,
-                                                self.resources)
+                                                self.resources, self.labels)
 
     @patch('calrissian.job.random_tag')
     def test_safe_pod_name(self, mock_random_tag):
@@ -248,12 +250,20 @@ class KubernetesPodBuilderTestCase(TestCase):
         }
         self.assertEqual(expected, resources)
 
+    def test_string_labels(self):
+        self.pod_builder.labels = {'key1': 123}
+        self.assertEqual(self.pod_builder.pod_labels(), {'key1':'123'})
+
     @patch('calrissian.job.random_tag')
     def test_build(self, mock_random_tag):
         mock_random_tag.return_value = 'random'
         expected = {
             'metadata': {
-                'name': 'podname-pod-random'
+                'name': 'podname-pod-random',
+                'labels': {
+                    'key1': 'val1',
+                    'key2': '123',
+                }
             },
             'apiVersion': 'v1',
             'kind':'Pod',
@@ -403,7 +413,8 @@ class CalrissianCommandLineJobTestCase(TestCase):
 
     @patch('calrissian.job.KubernetesPodBuilder')
     @patch('calrissian.job.os')
-    def test_create_kubernetes_runtime(self, mock_os, mock_pod_builder, mock_volume_builder, mock_client):
+    @patch('calrissian.job.read_yaml')
+    def test_create_kubernetes_runtime(self, mock_read_yaml, mock_os, mock_pod_builder, mock_volume_builder, mock_client):
         def realpath(path):
             return '/real' + path
         mock_os.path.realpath = realpath
@@ -433,7 +444,8 @@ class CalrissianCommandLineJobTestCase(TestCase):
             job.stdout,
             job.stderr,
             job.stdin,
-            job.builder.resources
+            job.builder.resources,
+            mock_read_yaml.return_value,
         ))
         # calls builder.build
         # returns that
@@ -537,3 +549,19 @@ class CalrissianCommandLineJobTestCase(TestCase):
         self.assertEqual(job.execute_kubernetes_pod.call_args, call(job.create_kubernetes_runtime.return_value))
         self.assertTrue(job.wait_for_kubernetes_pod.called)
         self.assertEqual(job.finish.call_args, call(job.wait_for_kubernetes_pod.return_value))
+
+    @patch('calrissian.job.read_yaml')
+    def test_get_pod_labels(self, mock_read_yaml, mock_volume_builder, mock_client):
+        expected_labels = {'foo':'bar'}
+        mock_read_yaml.return_value = expected_labels
+        mock_runtime_context = Mock(pod_labels='labels.yaml')
+        job = self.make_job()
+        labels = job.get_pod_labels(mock_runtime_context)
+        self.assertEqual(labels, expected_labels)
+        self.assertEqual(mock_read_yaml.call_args, call('labels.yaml'))
+
+    def test_get_pod_labels_empty(self, mock_volume_builder, mock_client):
+        mock_runtime_context = Mock(pod_labels=None)
+        job = self.make_job()
+        labels = job.get_pod_labels(mock_runtime_context)
+        self.assertEqual(labels, {})

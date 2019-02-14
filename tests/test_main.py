@@ -2,6 +2,7 @@ from unittest import TestCase
 from unittest.mock import patch, call, Mock
 
 from calrissian.main import main, add_arguments, parse_arguments, handle_sigterm, install_signal_handler
+from cwltool.argparser import arg_parser
 
 
 class CalrissianMainTestCase(TestCase):
@@ -10,7 +11,7 @@ class CalrissianMainTestCase(TestCase):
     @patch('calrissian.main.arg_parser')
     @patch('calrissian.main.CalrissianExecutor')
     @patch('calrissian.main.CalrissianLoadingContext')
-    @patch('calrissian.main.RuntimeContext')
+    @patch('calrissian.main.CalrissianRuntimeContext')
     @patch('calrissian.main.version')
     @patch('calrissian.main.parse_arguments')
     @patch('calrissian.main.add_arguments')
@@ -42,7 +43,7 @@ class CalrissianMainTestCase(TestCase):
     def test_add_arguments(self):
         mock_parser = Mock()
         add_arguments(mock_parser)
-        self.assertEqual(mock_parser.add_argument.call_count, 2)
+        self.assertEqual(mock_parser.add_argument.call_count, 3)
 
     @patch('calrissian.main.sys')
     def test_parse_arguments_exits_without_ram_or_cores(self, mock_sys):
