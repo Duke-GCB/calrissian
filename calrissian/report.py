@@ -68,23 +68,8 @@ class Event(object):
     def process(self, processor):
         processor.process(self.report, self.type)
 
-    def __str__(self):
-        return '{} - {} - {}'.format(self.type, self.time, self.report)
 
-
-class EventProcessor(object):
-    """
-    Base class for processing events
-    """
-
-    def process(self, report, event_type):
-        pass
-
-    def result(self):
-        return None
-
-
-class MaxParallelCountProcessor(EventProcessor):
+class MaxParallelCountProcessor(object):
 
     def __init__(self):
         self.count = 0
