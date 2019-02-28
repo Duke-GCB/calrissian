@@ -2,6 +2,7 @@ from kubernetes import client, config, watch
 import threading
 import logging
 import os
+from calrissian.report import TimedResourceReport, TimelineReport
 
 log = logging.getLogger('calrissian.k8s')
 
@@ -82,7 +83,7 @@ class KubernetesClient(object):
         w = watch.Watch()
         for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_field_selector()):
             pod = event['object']
-            status = self.get_first_status_or_none(pod.status.container_statuses)
+            status = self.get_first_or_none(pod.status.container_statuses)
             if status is None:
                 continue
             if self.state_is_running(status.state):
@@ -94,6 +95,11 @@ class KubernetesClient(object):
                     with PodMonitor() as monitor:
                         self.delete_pod_name(pod.metadata.name)
                         monitor.remove(pod)
+                start_time, finish_time = self._extract_start_finish_times(status.state)
+                container = self.get_first_or_none(pod.spec.containers)
+                cpus, ram_megabytes = self._extract_cpu_memory_requests(container)
+                with Reporter() as reporter:
+                    reporter.report(cpus, ram_megabytes, start_time, finish_time)
                 self._clear_pod()
                 # stop watching for events, our pod is done. Causes wait loop to exit
                 w.stop()
@@ -123,20 +129,20 @@ class KubernetesClient(object):
         return state.terminated
 
     @staticmethod
-    def get_first_status_or_none(container_statuses):
+    def get_first_or_none(containers_or_container_statuses):
         """
-        Check the container statuses list. Should be 0 or 1 items. If 0, there's no container yet. If 1, there's a
+        Check the list. Should be 0 or 1 items. If 0, there's no container yet. If 1, there's a
         container. If > 1, there's more than 1 container and that's unexpected behavior
-        :param container_statuses: list of V1ContainerStatus
-        :return: V1ContainerStatus if len of list is 1, None if 0, and raises CalrissianJobException if > 1
+        :param containers_or_container_statuses: list of V1ContainerStatus or V1Container
+        :return: first item if len of list is 1, None if 0, and raises CalrissianJobException if > 1
         """
-        if not container_statuses: # None or empty list
+        if not containers_or_container_statuses: # None or empty list
             return None
-        elif len(container_statuses) > 1:
+        elif len(containers_or_container_statuses) > 1:
             raise CalrissianJobException(
-                'Expected 0 or 1 container statuses, found {}'.format(len(container_statuses), container_statuses))
+                'Expected 0 or 1 containers, found {}'.format(len(containers_or_container_statuses), containers_or_container_statuses))
         else:
-            return container_statuses[0]
+            return containers_or_container_statuses[0]
 
     def _handle_terminated_state(self, state):
         """
@@ -146,6 +152,20 @@ class KubernetesClient(object):
         """
         # Extract the exit code out of the status
         self.process_exit_code = state.terminated.exit_code
+
+    def _extract_cpu_memory_requests(self, container):
+        if container.resources.requests:
+            return (container.resources.requests.cpu, container.resources.requests.memory)
+        else:
+            raise CalrissianJobException('Unable to extract CPU/memory requests, not present')
+
+    def _extract_start_finish_times(self, state):
+        """
+        Extracts the started_at and finished_at timestamps from state.terminated
+        :param state: V1ContainerState
+        :return: (started_at, finished_at)
+        """
+        return (state.terminated.started_at, state.terminated.finished_at,)
 
     def get_pod_for_name(self, pod_name):
         """
@@ -171,6 +191,32 @@ class KubernetesClient(object):
         if not pod_name:
             raise CalrissianJobException("Missing required environment variable ${}".format(POD_NAME_ENV_VARIABLE))
         return self.get_pod_for_name(pod_name)
+
+
+class Reporter(object):
+    timeline_report = TimelineReport()
+    lock = threading.Lock()
+
+    def __enter__(self):
+        Reporter.lock.acquire()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        Reporter.lock.release()
+
+    def report(self, cpus, ram_megabytes, start_time, finish_time):
+        report = TimedResourceReport(
+            cpus=TimedResourceReport.parse_cpu(cpus),
+            ram_megabytes=TimedResourceReport.parse_memory(ram_megabytes),
+            start_time=start_time,
+            finish_time=finish_time
+        )
+        Reporter.timeline_report.add_report(report)
+
+    @staticmethod
+    def get_report():
+        with Reporter() as reporter:
+            return Reporter.timeline_report
 
 
 class PodMonitor(object):

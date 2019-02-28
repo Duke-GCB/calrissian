@@ -39,6 +39,17 @@ class TimedResourceReport(TimedReport):
     usage over the duration of the timed report
     """
 
+    @staticmethod
+    def parse_cpu(self, value):
+        return float(value)
+
+    @staticmethod
+    def parse_memory(self, value):
+        if 'Mi' in value:
+            return float(value.replace('Mi', ''))
+        else:
+            raise ValueError('Only memory values in Mi are supported')
+
     def __init__(self, cpus=0, ram_megabytes=0, *args, **kwargs):
         self.cpus = cpus
         self.ram_megabytes = ram_megabytes
