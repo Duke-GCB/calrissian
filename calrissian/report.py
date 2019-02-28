@@ -1,4 +1,5 @@
 import logging
+import yaml
 from datetime import datetime
 
 log = logging.getLogger("calrissian.report")
@@ -217,7 +218,7 @@ class TimelineReport(TimedReport):
             event.process(processor)
         return processor.result()
 
-    def to_dict(self):
+    def to_yaml(self):
         result = vars(self)
         result['children'] = [vars(x) for x in self.children]
-        return result
+        return yaml.safe_dump(result)

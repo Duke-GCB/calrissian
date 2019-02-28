@@ -223,6 +223,10 @@ class Reporter(object):
         with Reporter():
             return Reporter.timeline_report
 
+def write_report(filename):
+    with open(filename, 'w') as file:
+        file.write(Reporter.get_report().to_yaml())
+
 
 class PodMonitor(object):
     """
