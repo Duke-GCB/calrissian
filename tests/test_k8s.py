@@ -1,6 +1,6 @@
 from unittest import TestCase
 from unittest.mock import Mock, patch, call, PropertyMock
-from calrissian.k8s import load_config_get_namespace, KubernetesClient, CalrissianJobException, PodMonitor, delete_pods
+from calrissian.k8s import load_config_get_namespace, KubernetesClient, CalrissianJobException, PodMonitor, delete_pods, Reporter
 
 @patch('calrissian.k8s.read_file')
 @patch('calrissian.k8s.config')
@@ -117,6 +117,7 @@ class KubernetesClientTestCase(TestCase):
         self.assertIsNone(kc.pod)
         # This is to inspect `with PodMonitor() as monitor`:
         self.assertTrue(mock_podmonitor.return_value.__enter__.return_value.remove.called)
+        self.assertTrue(mock_reporter.return_value.__enter__.return_value.report.called)
 
     @patch('calrissian.k8s.watch')
     @patch('calrissian.k8s.KubernetesClient.should_delete_pod')
@@ -300,3 +301,27 @@ class PodMonitorTestCase(TestCase):
     def test_delete_pods_calls_podmonitor(self, mock_pod_monitor):
         delete_pods()
         self.assertTrue(mock_pod_monitor.cleanup.called)
+
+
+class ReporterTestCase(TestCase):
+
+    def setUp(self):
+        Reporter.clear()
+
+    @patch('calrissian.k8s.Reporter.timeline_report.add_report')
+    def test_report(self, mock_add_report):
+        # def report(self, cpus, ram_megabytes, start_time, finish_time):
+        start_time = Mock()
+        finish_time = Mock()
+        with Reporter() as reporter:
+            reporter.report('1', '1024Mi', start_time, finish_time)
+        added_report = mock_add_report.call_args[0][0]
+        self.assertEqual(added_report.start_time, start_time)
+        self.assertEqual(added_report.finish_time, finish_time)
+        self.assertEqual(added_report.cpus, 1)
+        self.assertEqual(added_report.ram_megabytes, 1024)
+
+    def test_get_report(self):
+        mock_timeline_report = Mock()
+        Reporter.timeline_report = mock_timeline_report
+        self.assertEqual(Reporter.get_report(), mock_timeline_report)

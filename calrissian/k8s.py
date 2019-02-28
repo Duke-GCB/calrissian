@@ -214,8 +214,13 @@ class Reporter(object):
         Reporter.timeline_report.add_report(report)
 
     @staticmethod
+    def clear():
+        with Reporter():
+            Reporter.timeline_report = TimelineReport()
+
+    @staticmethod
     def get_report():
-        with Reporter() as reporter:
+        with Reporter():
             return Reporter.timeline_report
 
 
