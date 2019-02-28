@@ -5,6 +5,8 @@ import datetime
 
 TIME_1000 = datetime.datetime(2000, 1, 1, 10, 0, 0)
 TIME_1015 = datetime.datetime(2000, 1, 1, 10, 15, 0)
+TIME_1030 = datetime.datetime(2000, 1, 1, 10, 30, 0)
+TIME_1045 = datetime.datetime(2000, 1, 1, 10, 45, 0)
 TIME_1100 = datetime.datetime(2000, 1, 1, 11, 0, 0)
 
 
@@ -107,9 +109,33 @@ class ParentReportTestCase(TestCase):
         self.parent.add_report(report2)
         self.assertEqual(self.parent.total_ram_megabyte_hours(), 3072)
 
+    def test_total_tasks(self):
+        report1 = TimedResourceReport()
+        report2 = TimedResourceReport()
+        self.parent.add_report(report1)
+        self.parent.add_report(report2)
+        self.assertEqual(self.parent.total_tasks(), 2)
+
     def test_max_parallel_tasks(self):
-        # TODO: walk through the timeline and see how many tasks stack up
-        pass
+        # Count task parallelism. 3 total tasks, but only 2 at a given time
+        task_1000_1015 = TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1015)
+        task_1030_1100 = TimedResourceReport(start_time=TIME_1030, finish_time=TIME_1100)
+        task_1000_1100 = TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1100)
+        self.parent.add_report(task_1000_1015)
+        self.parent.add_report(task_1030_1100)
+        self.parent.add_report(task_1000_1100)
+        self.assertEqual(self.parent.total_tasks(), 3)
+        self.assertEqual(self.parent.max_parallel_tasks(), 2)
+
+    def test_max_parallel_tasks_handles_start_finish_bounds(self):
+        # If a task finishes at the same time another starts, that is 1parallel task and not 2
+        task_1000_1015 = TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1015)
+        task_1015_1030 = TimedResourceReport(start_time=TIME_1015, finish_time=TIME_1030)
+        self.assertEqual(task_1000_1015.finish_time, task_1015_1030.start_time)
+        self.parent.add_report(task_1000_1015)
+        self.parent.add_report(task_1015_1030)
+        self.assertEqual(self.parent.total_tasks(), 2)
+        self.assertEqual(self.parent.max_parallel_tasks(), 1)
 
     def test_max_parallel_cpus(self):
         # TODO: walk through the timeline and see how many tasks stack up

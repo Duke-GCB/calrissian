@@ -61,6 +61,9 @@ class ParentReport(TimedReport):
     def total_ram_megabyte_hours(self):
         return sum([child.ram_megabyte_hours() for child in self.children])
 
+    def total_tasks(self):
+        return len(self.children)
+
     def max_parallel_tasks(self):
         return None
 
