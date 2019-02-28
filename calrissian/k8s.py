@@ -129,20 +129,20 @@ class KubernetesClient(object):
         return state.terminated
 
     @staticmethod
-    def get_first_or_none(containers_or_container_statuses):
+    def get_first_or_none(container_list):
         """
         Check the list. Should be 0 or 1 items. If 0, there's no container yet. If 1, there's a
         container. If > 1, there's more than 1 container and that's unexpected behavior
         :param containers_or_container_statuses: list of V1ContainerStatus or V1Container
         :return: first item if len of list is 1, None if 0, and raises CalrissianJobException if > 1
         """
-        if not containers_or_container_statuses: # None or empty list
+        if not container_list: # None or empty list
             return None
-        elif len(containers_or_container_statuses) > 1:
+        elif len(container_list) > 1:
             raise CalrissianJobException(
-                'Expected 0 or 1 containers, found {}'.format(len(containers_or_container_statuses), containers_or_container_statuses))
+                'Expected 0 or 1 containers, found {}'.format(len(container_list), container_list))
         else:
-            return containers_or_container_statuses[0]
+            return container_list[0]
 
     def _handle_terminated_state(self, state):
         """

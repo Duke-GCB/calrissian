@@ -40,11 +40,11 @@ class TimedResourceReport(TimedReport):
     """
 
     @staticmethod
-    def parse_cpu(self, value):
+    def parse_cpu(value):
         return float(value)
 
     @staticmethod
-    def parse_memory(self, value):
+    def parse_memory(value):
         if 'Mi' in value:
             return float(value.replace('Mi', ''))
         else:

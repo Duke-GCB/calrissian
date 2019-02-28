@@ -101,8 +101,12 @@ class KubernetesClientTestCase(TestCase):
 
     @patch('calrissian.k8s.watch')
     @patch('calrissian.k8s.PodMonitor')
-    def test_wait_finishes_when_pod_state_is_terminated(self, mock_podmonitor, mock_watch, mock_get_namespace, mock_client):
+    @patch('calrissian.k8s.Reporter')
+    @patch('calrissian.k8s.KubernetesClient._extract_cpu_memory_requests')
+    def test_wait_finishes_when_pod_state_is_terminated(self, mock_cpu_memory, mock_reporter, mock_podmonitor, mock_watch, mock_get_namespace, mock_client):
         mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=None, terminated=Mock(exit_code=123), waiting=None))]))
+        mock_pod.spec = Mock(containers=[])
+        mock_cpu_memory.return_value = ('1', '1Mi')
         self.setup_mock_watch(mock_watch, [mock_pod])
         kc = KubernetesClient()
         kc._set_pod(Mock())
@@ -116,8 +120,11 @@ class KubernetesClientTestCase(TestCase):
 
     @patch('calrissian.k8s.watch')
     @patch('calrissian.k8s.KubernetesClient.should_delete_pod')
-    def test_wait_checks_should_delete_when_pod_state_is_terminated(self, mock_should_delete_pod, mock_watch, mock_get_namespace, mock_client):
+    @patch('calrissian.k8s.KubernetesClient._extract_cpu_memory_requests')
+    def test_wait_checks_should_delete_when_pod_state_is_terminated(self, mock_cpu_memory, mock_should_delete_pod, mock_watch, mock_get_namespace, mock_client):
         mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=None, terminated=Mock(exit_code=123), waiting=None))]))
+        mock_pod.spec = Mock(containers=[])
+        mock_cpu_memory.return_value = ('1', '1Mi')
         mock_should_delete_pod.return_value = False
         self.setup_mock_watch(mock_watch, [mock_pod])
         kc = KubernetesClient()
@@ -242,18 +249,18 @@ class KubernetesClientStatusTestCase(TestCase):
         self.singular_status = [Mock()]
 
     def test_none_statuses(self):
-        self.assertIsNone(KubernetesClient.get_first_status_or_none(self.none_statuses))
-        self.assertIsNone(KubernetesClient.get_first_status_or_none(self.empty_list_statuses))
+        self.assertIsNone(KubernetesClient.get_first_or_none(self.none_statuses))
+        self.assertIsNone(KubernetesClient.get_first_or_none(self.empty_list_statuses))
 
     def test_singular_status(self):
         self.assertEqual(len(self.singular_status), 1)
-        self.assertIsNotNone(KubernetesClient.get_first_status_or_none(self.singular_status))
+        self.assertIsNotNone(KubernetesClient.get_first_or_none(self.singular_status))
 
     def test_multiple_statuses_raises(self):
         self.assertEqual(len(self.multiple_statuses), 2)
         with self.assertRaises(CalrissianJobException) as context:
-            KubernetesClient.get_first_status_or_none(self.multiple_statuses)
-        self.assertIn('Expected 0 or 1 container statuses, found 2', str(context.exception))
+            KubernetesClient.get_first_or_none(self.multiple_statuses)
+        self.assertIn('Expected 0 or 1 containers, found 2', str(context.exception))
 
 
 class PodMonitorTestCase(TestCase):
