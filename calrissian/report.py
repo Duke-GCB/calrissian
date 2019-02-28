@@ -46,11 +46,90 @@ class TimedResourceReport(TimedReport):
         return self.cpus * self.elapsed_hours()
 
 
-class ParentReport(TimedReport):
+class Event(object):
+
+    # These are used to sort finish events before start events if occurring at the same time
+    START = 1
+    FINISH = -1
+
+    def __init__(self, time, type, report):
+        self.time = time
+        self.type = type
+        self.report = report
+
+    @classmethod
+    def start_event(cls, report):
+        return Event(report.start_time, Event.START, report)
+
+    @classmethod
+    def finish_event(cls, report):
+        return Event(report.finish_time, Event.FINISH, report)
+
+    def process(self, processor):
+        processor.process(self.report, self.type)
+
+    def __str__(self):
+        return '{} - {} - {}'.format(self.type, self.time, self.report)
+
+
+class EventProcessor(object):
+    """
+    Base class for processing events
+    """
+
+    def process(self, report, event_type):
+        pass
+
+    def result(self):
+        return None
+
+
+class MaxParallelCountProcessor(EventProcessor):
+
+    def __init__(self):
+        self.count = 0
+        self.max = 0
+
+    def increment(self, report):
+        self.count += 1
+
+    def decrement(self, report):
+        self.count -= 1
+
+    def process(self, report, event_type):
+        if event_type == Event.START:
+            self.increment(report)
+        elif event_type == Event.FINISH:
+            self.decrement(report)
+        self.max = max(self.max, self.count)
+
+    def result(self):
+        return self.max
+
+
+class MaxParallelCPUsProcessor(MaxParallelCountProcessor):
+
+    def increment(self, report):
+        self.count += report.cpus
+
+    def decrement(self, report):
+        self.count -= report.cpus
+
+
+class MaxParallelRAMProcessor(MaxParallelCountProcessor):
+
+    def increment(self, report):
+        self.count += report.ram_megabytes
+
+    def decrement(self, report):
+        self.count -= report.ram_megabytes
+
+
+class TimelineReport(TimedReport):
 
     def __init__(self, *args, **kwargs):
         self.children = []
-        super(ParentReport, self).__init__(*args, **kwargs)
+        super(TimelineReport, self).__init__(*args, **kwargs)
 
     def add_report(self, report):
         self.children.append(report)
@@ -64,11 +143,28 @@ class ParentReport(TimedReport):
     def total_tasks(self):
         return len(self.children)
 
+    def _walk(self, processor):
+        events = []
+        for report in self.children:
+            events.append(Event.start_event(report))
+            events.append(Event.finish_event(report))
+        # Sort the events by their time and type, putting finishes ahead of starts when simultaneous.
+            events = sorted(events , key=lambda x: (x.time, x.type,))
+        for event in events :
+            event.process(processor)
+        return processor.result()
+
     def max_parallel_tasks(self):
-        return None
+        processor = MaxParallelCountProcessor()
+        self._walk(processor)
+        return processor.result()
 
     def max_parallel_cpus(self):
-        return None
+        processor = MaxParallelCPUsProcessor()
+        self._walk(processor)
+        return processor.result()
 
     def max_parallel_ram_megabytes(self):
-        return None
+        processor = MaxParallelRAMProcessor()
+        self._walk(processor)
+        return processor.result()

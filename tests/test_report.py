@@ -1,5 +1,5 @@
 from unittest import TestCase
-from calrissian.report import TimedReport, TimedResourceReport, ParentReport
+from calrissian.report import TimedReport, TimedResourceReport, TimelineReport
 from freezegun import freeze_time
 import datetime
 
@@ -83,64 +83,109 @@ class TimedResourceReportTestCase(TestCase):
         self.assertEqual(self.report.cpus, 0)
 
 
-class ParentReportTestCase(TestCase):
+class TimelineReportTestCase(TestCase):
 
     def setUp(self):
-        self.parent = ParentReport()
+        self.report = TimelineReport()
 
     def test_add_report(self):
         child = TimedResourceReport()
-        self.parent.add_report(child)
-        self.assertIn(child, self.parent.children)
+        self.report.add_report(child)
+        self.assertIn(child, self.report.children)
 
     def test_total_cpu_hours(self):
         # 1 hour at 1 CPU and 15 minutes at 4 cpu should total 2 CPU hours
-        report1 = TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1100, cpus=1)
-        report2 = TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1015, cpus=4)
-        self.parent.add_report(report1)
-        self.parent.add_report(report2)
-        self.assertEqual(self.parent.total_cpu_hours(), 2)
+        self.report.add_report(TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1100, cpus=1))
+        self.report.add_report(TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1015, cpus=4))
+        self.assertEqual(self.report.total_cpu_hours(), 2)
 
     def test_total_ram_megabyte_hours(self):
         # 1 hour at 1024MB and 15 minutes at 8192MB cpu should total 3072 MB/hours
-        report1 = TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1100, ram_megabytes=1024)
-        report2 = TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1015, ram_megabytes=8192)
-        self.parent.add_report(report1)
-        self.parent.add_report(report2)
-        self.assertEqual(self.parent.total_ram_megabyte_hours(), 3072)
+        self.report.add_report(TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1100, ram_megabytes=1024))
+        self.report.add_report(TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1015, ram_megabytes=8192))
+        self.assertEqual(self.report.total_tasks(), 2)
+        self.assertEqual(self.report.total_ram_megabyte_hours(), 3072)
 
     def test_total_tasks(self):
-        report1 = TimedResourceReport()
-        report2 = TimedResourceReport()
-        self.parent.add_report(report1)
-        self.parent.add_report(report2)
-        self.assertEqual(self.parent.total_tasks(), 2)
+        self.report.add_report(TimedResourceReport())
+        self.report.add_report(TimedResourceReport())
+        self.assertEqual(self.report.total_tasks(), 2)
 
     def test_max_parallel_tasks(self):
         # Count task parallelism. 3 total tasks, but only 2 at a given time
-        task_1000_1015 = TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1015)
-        task_1030_1100 = TimedResourceReport(start_time=TIME_1030, finish_time=TIME_1100)
-        task_1000_1100 = TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1100)
-        self.parent.add_report(task_1000_1015)
-        self.parent.add_report(task_1030_1100)
-        self.parent.add_report(task_1000_1100)
-        self.assertEqual(self.parent.total_tasks(), 3)
-        self.assertEqual(self.parent.max_parallel_tasks(), 2)
+        self.report.add_report(TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1015))
+        self.report.add_report(TimedResourceReport(start_time=TIME_1030, finish_time=TIME_1100))
+        self.report.add_report(TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1100))
+        self.assertEqual(self.report.total_tasks(), 3)
+        self.assertEqual(self.report.max_parallel_tasks(), 2)
 
     def test_max_parallel_tasks_handles_start_finish_bounds(self):
-        # If a task finishes at the same time another starts, that is 1parallel task and not 2
+        # If a task finishes at the same time another starts, that is 1 parallel task and not 2
         task_1000_1015 = TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1015)
         task_1015_1030 = TimedResourceReport(start_time=TIME_1015, finish_time=TIME_1030)
         self.assertEqual(task_1000_1015.finish_time, task_1015_1030.start_time)
-        self.parent.add_report(task_1000_1015)
-        self.parent.add_report(task_1015_1030)
-        self.assertEqual(self.parent.total_tasks(), 2)
-        self.assertEqual(self.parent.max_parallel_tasks(), 1)
+        self.report.add_report(task_1000_1015)
+        self.report.add_report(task_1015_1030)
+        self.assertEqual(self.report.total_tasks(), 2)
+        self.assertEqual(self.report.max_parallel_tasks(), 1)
 
-    def test_max_parallel_cpus(self):
-        # TODO: walk through the timeline and see how many tasks stack up
-        pass
+    def test_max_parallel_cpus_discrete(self):
+        # 4 discrete 15 minute intervals of 1 cpu
+        self.report.add_report(TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1015, cpus=1))
+        self.report.add_report(TimedResourceReport(start_time=TIME_1015, finish_time=TIME_1030, cpus=1))
+        self.report.add_report(TimedResourceReport(start_time=TIME_1030, finish_time=TIME_1045, cpus=1))
+        self.report.add_report(TimedResourceReport(start_time=TIME_1045, finish_time=TIME_1100, cpus=1))
+        self.assertEqual(self.report.total_tasks(), 4)
+        self.assertEqual(self.report.total_cpu_hours(), 1)
+        self.assertEqual(self.report.max_parallel_cpus(), 1)
 
-    def test_max_parallel_ram_megabytes(self):
-        # TODO: walk through the timeline and see how many tasks stack up
-        pass
+    def test_max_parallel_cpus_overlap(self):
+        # 1 cpu over 3 30 minute intervals, with the middle interval overlapping the first and last
+        self.report.add_report(TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1030, cpus=1))
+        self.report.add_report(TimedResourceReport(start_time=TIME_1015, finish_time=TIME_1045, cpus=1))
+        self.report.add_report(TimedResourceReport(start_time=TIME_1030, finish_time=TIME_1100, cpus=1))
+        self.assertEqual(self.report.total_tasks(), 3)
+        self.assertEqual(self.report.max_parallel_cpus(), 2)
+
+    def test_max_parallel_cpus_complex(self):
+        # 4 CPUs for a short burst, overlapping with 1 cpu, then a later period of 1 that doesnt overlap
+        self.report.add_report(TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1015, cpus=4))
+        self.report.add_report(TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1045, cpus=1))
+        self.report.add_report(TimedResourceReport(start_time=TIME_1030, finish_time=TIME_1100, cpus=1))
+        self.assertEqual(self.report.total_tasks(), 3)
+        self.assertEqual(self.report.max_parallel_cpus(), 5)
+
+    def test_max_parallel_ram_megabytes_discrete(self):
+        # 4 discrete 15 minute intervals of 1024 MB
+        self.report.add_report(TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1015, ram_megabytes=1024))
+        self.report.add_report(TimedResourceReport(start_time=TIME_1015, finish_time=TIME_1030, ram_megabytes=1024))
+        self.report.add_report(TimedResourceReport(start_time=TIME_1030, finish_time=TIME_1045, ram_megabytes=1024))
+        self.report.add_report(TimedResourceReport(start_time=TIME_1045, finish_time=TIME_1100, ram_megabytes=1024))
+        self.assertEqual(self.report.total_tasks(), 4)
+        self.assertEqual(self.report.total_ram_megabyte_hours(), 1024)
+        self.assertEqual(self.report.max_parallel_ram_megabytes(), 1024)
+
+    def test_max_parallel_ram_megabytes_overlap(self):
+        # 1024 MB over 3 30 minute intervals, with the middle interval overlapping the first and last
+        self.report.add_report(TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1030, ram_megabytes=1024))
+        self.report.add_report(TimedResourceReport(start_time=TIME_1015, finish_time=TIME_1045, ram_megabytes=1024))
+        self.report.add_report(TimedResourceReport(start_time=TIME_1030, finish_time=TIME_1100, ram_megabytes=1024))
+        self.assertEqual(self.report.total_tasks(), 3)
+        self.assertEqual(self.report.total_ram_megabyte_hours(), 1536)
+        self.assertEqual(self.report.max_parallel_ram_megabytes(), 2048)
+
+
+class EventTestCase(TestCase):
+    pass
+
+class EventProcessorTestCase(TestCase):
+    pass
+
+class MaxParallelCountProcessorTestCase(TestCase):
+    pass
+
+class MaxParallelCPUsProcessorTestCase(TestCase):
+    pass
+
+class MaxParallelRAMProcessorTestCase(TestCase):
+    pass
