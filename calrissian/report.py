@@ -213,8 +213,7 @@ class TimelineReport(TimedReport):
             events.append(Event.start_event(report))
             events.append(Event.finish_event(report))
         # Sort the events by their time and type, putting finishes ahead of starts when simultaneous.
-            events = sorted(events , key=lambda x: (x.time, x.type,))
-        for event in events :
+        for event in sorted(events , key=lambda x: (x.time, x.type,)):
             event.process(processor)
         return processor.result()
 
