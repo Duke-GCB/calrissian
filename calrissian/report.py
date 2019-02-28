@@ -217,3 +217,8 @@ class TimelineReport(TimedReport):
         for event in events :
             event.process(processor)
         return processor.result()
+
+    def to_dict(self):
+        result = vars(self)
+        result['children'] = [vars(x) for x in self.children]
+        return result
