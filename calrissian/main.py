@@ -9,9 +9,10 @@ import logging
 import sys
 import signal
 
+log = logging.getLogger("calrissian.main")
 
 def activate_logging():
-    loggers = ['executor','context','tool','job', 'k8s']
+    loggers = ['executor','context','tool','job', 'k8s','main']
     for logger in loggers:
         logging.getLogger('calrissian.{}'.format(logger)).setLevel(logging.DEBUG)
         logging.getLogger('calrissian.{}'.format(logger)).addHandler(logging.StreamHandler())
@@ -41,7 +42,7 @@ def parse_arguments(parser):
 
 
 def handle_sigterm(signum, frame):
-    print('Received signal {}, deleting pods'.format(signum))
+    log.error('Received signal {}, deleting pods'.format(signum))
     delete_pods()
     sys.exit(signum)
 

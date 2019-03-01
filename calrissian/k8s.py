@@ -155,7 +155,7 @@ class KubernetesClient(object):
 
     def _extract_cpu_memory_requests(self, container):
         if container.resources.requests:
-            return (container.resources.requests.cpu, container.resources.requests.memory)
+            return (container.resources.requests[k] for k in ['cpu','memory'])
         else:
             raise CalrissianJobException('Unable to extract CPU/memory requests, not present')
 
@@ -222,6 +222,7 @@ class Reporter(object):
     def get_report():
         with Reporter():
             return Reporter.timeline_report
+
 
 def write_report(filename):
     with open(filename, 'w') as file:

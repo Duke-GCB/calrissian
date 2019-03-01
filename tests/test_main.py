@@ -17,7 +17,8 @@ class CalrissianMainTestCase(TestCase):
     @patch('calrissian.main.add_arguments')
     @patch('calrissian.main.delete_pods')
     @patch('calrissian.main.install_signal_handler')
-    def test_main_calls_cwlmain_returns_exit_code(self, mock_install_signal_handler, mock_delete_pods,
+    @patch('calrissian.main.write_report')
+    def test_main_calls_cwlmain_returns_exit_code(self, mock_write_report, mock_install_signal_handler, mock_delete_pods,
                                                   mock_add_arguments, mock_parse_arguments, mock_version,
                                                   mock_runtime_context, mock_loading_context, mock_executor,
                                                   mock_arg_parser, mock_cwlmain):
@@ -43,7 +44,7 @@ class CalrissianMainTestCase(TestCase):
     def test_add_arguments(self):
         mock_parser = Mock()
         add_arguments(mock_parser)
-        self.assertEqual(mock_parser.add_argument.call_count, 3)
+        self.assertEqual(mock_parser.add_argument.call_count, 4)
 
     @patch('calrissian.main.sys')
     def test_parse_arguments_exits_without_ram_or_cores(self, mock_sys):
