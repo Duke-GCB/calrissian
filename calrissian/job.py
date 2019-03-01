@@ -2,6 +2,7 @@ from cwltool.job import ContainerCommandLineJob, needs_shell_quoting_re
 from cwltool.utils import DEFAULT_TMP_PREFIX
 from cwltool.errors import WorkflowException, UnsupportedRequirement
 from calrissian.k8s import KubernetesClient
+from calrissian.report import Reporter, TimedResourceReport, CPUParser, MemoryParser
 import logging
 import os
 import yaml
@@ -289,6 +290,15 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
     def wait_for_kubernetes_pod(self):
         return self.client.wait_for_completion()
 
+    def report(self, completion_result):
+        """
+        Convert the k8s-specific completion result into a report and submit it
+        :param completion_result: calrissian.k8s.CompletionResult
+        """
+        report = TimedResourceReport.from_completion_result(completion_result)
+        with Reporter() as reporter:
+            reporter.add_report(report)
+
     def finish(self, exit_code):
         if exit_code in self.successCodes:
             status = "success"
@@ -478,8 +488,9 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         self._setup(runtimeContext)
         pod = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
         self.execute_kubernetes_pod(pod) # analogous to _execute()
-        k8s_exit_code = self.wait_for_kubernetes_pod()
-        self.finish(k8s_exit_code)
+        completion_result = self.wait_for_kubernetes_pod()
+        self.report(completion_result)
+        self.finish(completion_result.exit_code)
 
     # Below are concrete implementations of the remaining abstract methods in ContainerCommandLineJob
     # They are not implemented and not expected to be called, so they all raise NotImplementedError

@@ -2,7 +2,6 @@ from kubernetes import client, config, watch
 import threading
 import logging
 import os
-from calrissian.report import TimedResourceReport, TimelineReport, MemoryParser, CPUParser
 
 log = logging.getLogger('calrissian.k8s')
 
@@ -37,6 +36,16 @@ class CalrissianJobException(Exception):
     pass
 
 
+class CompletionResult(object):
+
+    def __init__(self, exit_code, cpus, memory, start_time, finish_time):
+        self.exit_code = exit_code
+        self.cpus = cpus
+        self.memory = memory
+        self.start_time = start_time
+        self.finish_time = finish_time
+
+
 class KubernetesClient(object):
     """
     Instances of this class are created by a `calrissian.job.CalrissianCommandLineJob`,
@@ -50,7 +59,7 @@ class KubernetesClient(object):
     def __init__(self):
         self.pod = None
         # load_config must happen before instantiating client
-        self.process_exit_code = None
+        self.completion_result = None
         self.namespace = load_config_get_namespace()
         self.core_api_instance = client.CoreV1Api()
 
@@ -79,6 +88,25 @@ class KubernetesClient(object):
         except client.rest.ApiException as e:
             raise CalrissianJobException('Error deleting pod named {}'.format(pod_name), e)
 
+    def _handle_completion(self, state, container):
+        """
+        Sets self.completion_result to an object containing exit_code, resources, and timingused
+        :param state: V1ContainerState
+        :param container: V1Container
+        :return: None
+        """
+
+        exit_code = state.terminated.exit_code
+        cpus, memory = self._extract_cpu_memory_requests(container)
+        start_time, finish_time = self._extract_start_finish_times(state)
+        self.completion_result = CompletionResult(
+            exit_code,
+            cpus,
+            memory,
+            start_time,
+            finish_time
+        )
+
     def wait_for_completion(self):
         w = watch.Watch()
         for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_field_selector()):
@@ -90,25 +118,19 @@ class KubernetesClient(object):
                 continue
             elif self.state_is_terminated(status.state):
                 log.info('Handling terminated pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
-                self._handle_terminated_state(status.state)
+                container = self.get_first_or_none(pod.spec.containers)
+                self._handle_completion(status.state, container)
                 if self.should_delete_pod():
                     with PodMonitor() as monitor:
                         self.delete_pod_name(pod.metadata.name)
                         monitor.remove(pod)
-                start_time, finish_time = self._extract_start_finish_times(status.state)
-                container = self.get_first_or_none(pod.spec.containers)
-                k8s_cpu, k8s_memory = self._extract_cpu_memory_requests(container)
-                report_cpus = CPUParser.parse(k8s_cpu)
-                report_ram_megabytes = MemoryParser.parse(k8s_memory) / 1024.0
-                with Reporter() as reporter:
-                    reporter.report(report_cpus, report_ram_megabytes, start_time, finish_time)
                 self._clear_pod()
                 # stop watching for events, our pod is done. Causes wait loop to exit
                 w.stop()
             else:
                 raise CalrissianJobException('Unexpected pod container status', status)
-        log.info('wait_for_completion returning with {}'.format(self.process_exit_code))
-        return self.process_exit_code
+        log.info('wait_for_completion returning with {}'.format(self.completion_result.exit_code))
+        return self.completion_result
 
     def _set_pod(self, pod):
         log.info('k8s pod \'{}\' started'.format(pod.metadata.name))
@@ -145,15 +167,6 @@ class KubernetesClient(object):
                 'Expected 0 or 1 containers, found {}'.format(len(container_list), container_list))
         else:
             return container_list[0]
-
-    def _handle_terminated_state(self, state):
-        """
-        Sets self.process_exit_code to the exit code from a terminated container
-        :param status: V1ContainerState
-        :return: None
-        """
-        # Extract the exit code out of the status
-        self.process_exit_code = state.terminated.exit_code
 
     def _extract_cpu_memory_requests(self, container):
         if container.resources.requests:
@@ -194,41 +207,6 @@ class KubernetesClient(object):
             raise CalrissianJobException("Missing required environment variable ${}".format(POD_NAME_ENV_VARIABLE))
         return self.get_pod_for_name(pod_name)
 
-
-class Reporter(object):
-    timeline_report = TimelineReport()
-    lock = threading.Lock()
-
-    def __enter__(self):
-        Reporter.lock.acquire()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        Reporter.lock.release()
-
-    def report(self, cpus, ram_megabytes, start_time, finish_time):
-        report = TimedResourceReport(
-            cpus=cpus,
-            ram_megabytes=ram_megabytes,
-            start_time=start_time,
-            finish_time=finish_time
-        )
-        Reporter.timeline_report.add_report(report)
-
-    @staticmethod
-    def clear():
-        with Reporter():
-            Reporter.timeline_report = TimelineReport()
-
-    @staticmethod
-    def get_report():
-        with Reporter():
-            return Reporter.timeline_report
-
-
-def write_report(filename):
-    with open(filename, 'w') as file:
-        file.write(Reporter.get_report().to_yaml())
 
 
 class PodMonitor(object):

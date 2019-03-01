@@ -1,6 +1,7 @@
 import logging
 import yaml
 from datetime import datetime
+import threading
 
 log = logging.getLogger("calrissian.report")
 
@@ -75,6 +76,10 @@ class MemoryParser(ResourceParser):
         'Ki': 2**10,
     }
 
+    @classmethod
+    def parse_to_megabytes(cls, value):
+        return cls.parse(value) / 1024
+
 
 class CPUParser(ResourceParser):
     """
@@ -103,6 +108,12 @@ class TimedResourceReport(TimedReport):
 
     def cpu_hours(self):
         return self.cpus * self.elapsed_hours()
+
+    @classmethod
+    def from_completion_result(cls, result):
+        cpus = CPUParser.parse(result.cpus)
+        ram_megabytes = MemoryParser.parse_to_megabytes(result.memory)
+        return cls(start_time=result.start_time, finish_time=result.finish_time, cpus=cpus, ram_megabytes=ram_megabytes)
 
 
 class Event(object):
@@ -264,3 +275,36 @@ class TimelineReport(TimedReport):
         result = vars(self)
         result['children'] = [vars(x) for x in self.children]
         return yaml.safe_dump(result)
+
+
+class Reporter(object):
+    """
+    Singleton thread-safe reporting class
+    """
+    timeline_report = TimelineReport()
+    lock = threading.Lock()
+
+    def __enter__(self):
+        Reporter.lock.acquire()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        Reporter.lock.release()
+
+    def add_report(self, report):
+        Reporter.timeline_report.add_report(report)
+
+    @staticmethod
+    def clear():
+        with Reporter():
+            Reporter.timeline_report = TimelineReport()
+
+    @staticmethod
+    def get_report():
+        with Reporter():
+            return Reporter.timeline_report
+
+
+def write_report(filename):
+    with open(filename, 'w') as file:
+        file.write(Reporter.get_report().to_yaml())
