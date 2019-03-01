@@ -274,7 +274,7 @@ class TimelineReport(TimedReport):
     def to_yaml(self):
         result = vars(self)
         result['children'] = [vars(x) for x in self.children]
-        return yaml.safe_dump(result)
+        return yaml.safe_dump(result, default_flow_style=False)
 
 
 class Reporter(object):
