@@ -1,5 +1,5 @@
 import logging
-import yaml
+import json
 from datetime import datetime
 import threading
 
@@ -33,6 +33,12 @@ class TimedReport(object):
 
     def elapsed_hours(self):
         return self.elapsed_seconds() / SECONDS_PER_HOUR
+
+    def to_dict(self):
+        result = vars(self)
+        result['elapsed_hours'] = self.elapsed_hours()
+        result['elapsed_seconds'] = self.elapsed_seconds()
+        return result
 
 
 class ResourceParser(object):
@@ -109,11 +115,18 @@ class TimedResourceReport(TimedReport):
     def cpu_hours(self):
         return self.cpus * self.elapsed_hours()
 
+    def to_dict(self):
+        result = super(TimedResourceReport, self).to_dict()
+        result['ram_megabyte_hours'] = self.ram_megabyte_hours()
+        result['cpu_hours'] = self.cpu_hours()
+        return result
+
     @classmethod
     def from_completion_result(cls, result):
         cpus = CPUParser.parse(result.cpus)
         ram_megabytes = MemoryParser.parse_to_megabytes(result.memory)
         return cls(start_time=result.start_time, finish_time=result.finish_time, cpus=cpus, ram_megabytes=ram_megabytes)
+
 
 
 class Event(object):
@@ -238,11 +251,6 @@ class TimelineReport(TimedReport):
     def total_tasks(self):
         return len(self.children)
 
-    def max_parallel_tasks(self):
-        processor = MaxParallelCountProcessor()
-        self._walk(processor)
-        return processor.result()
-
     def max_parallel_cpus(self):
         processor = MaxParallelCPUsProcessor()
         self._walk(processor)
@@ -250,6 +258,11 @@ class TimelineReport(TimedReport):
 
     def max_parallel_ram_megabytes(self):
         processor = MaxParallelRAMProcessor()
+        self._walk(processor)
+        return processor.result()
+
+    def max_parallel_tasks(self):
+        processor = MaxParallelCountProcessor()
         self._walk(processor)
         return processor.result()
 
@@ -271,10 +284,16 @@ class TimelineReport(TimedReport):
             event.process(processor)
         return processor.result()
 
-    def to_yaml(self):
-        result = vars(self)
-        result['children'] = [vars(x) for x in self.children]
-        return yaml.safe_dump(result, default_flow_style=False)
+    def to_dict(self):
+        result = super(TimelineReport, self).to_dict()
+        result['total_cpu_hours'] = self.total_cpu_hours()
+        result['total_ram_megabyte_hours'] = self.total_ram_megabyte_hours()
+        result['total_tasks'] = self.total_tasks()
+        result['max_parallel_cpus'] = self.max_parallel_cpus()
+        result['max_parallel_ram_megabytes'] = self.max_parallel_ram_megabytes()
+        result['max_parallel_tasks'] = self.max_parallel_tasks()
+        result['children'] = [x.to_dict() for x in self.children]
+        return result
 
 
 class Reporter(object):
@@ -306,5 +325,5 @@ class Reporter(object):
 
 
 def write_report(filename):
-    with open(filename, 'w') as file:
-        file.write(Reporter.get_report().to_yaml())
+    with open(filename, 'w') as f:
+        json.dump(Reporter.get_report().to_dict(), f, indent=4)
