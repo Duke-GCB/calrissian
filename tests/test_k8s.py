@@ -1,6 +1,9 @@
 from unittest import TestCase
 from unittest.mock import Mock, patch, call, PropertyMock
-from calrissian.k8s import load_config_get_namespace, KubernetesClient, CalrissianJobException, PodMonitor, delete_pods, Reporter
+
+from calrissian.k8s import load_config_get_namespace, KubernetesClient, CalrissianJobException, PodMonitor, delete_pods, \
+    Reporter
+
 
 @patch('calrissian.k8s.read_file')
 @patch('calrissian.k8s.config')
@@ -75,7 +78,8 @@ class KubernetesClientTestCase(TestCase):
         kc._set_pod(mock_pod)
         kc.wait_for_completion()
         mock_stream = mock_watch.Watch.return_value.stream
-        self.assertEqual(mock_stream.call_args, call(kc.core_api_instance.list_namespaced_pod, kc.namespace, field_selector='metadata.name=test123'))
+        self.assertEqual(mock_stream.call_args, call(kc.core_api_instance.list_namespaced_pod, kc.namespace,
+                                                     field_selector='metadata.name=test123'))
 
     @patch('calrissian.k8s.watch')
     def test_wait_skips_pod_when_status_is_none(self, mock_watch, mock_get_namespace, mock_client):
@@ -90,7 +94,8 @@ class KubernetesClientTestCase(TestCase):
 
     @patch('calrissian.k8s.watch')
     def test_wait_skips_pod_when_state_is_running(self, mock_watch, mock_get_namespace, mock_client):
-        mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=Mock(), terminated=None, waiting=None))]))
+        mock_pod = Mock(
+            status=Mock(container_statuses=[Mock(state=Mock(running=Mock(), terminated=None, waiting=None))]))
         self.setup_mock_watch(mock_watch, [mock_pod])
         kc = KubernetesClient()
         kc._set_pod(Mock())
@@ -103,8 +108,13 @@ class KubernetesClientTestCase(TestCase):
     @patch('calrissian.k8s.PodMonitor')
     @patch('calrissian.k8s.Reporter')
     @patch('calrissian.k8s.KubernetesClient._extract_cpu_memory_requests')
-    def test_wait_finishes_when_pod_state_is_terminated(self, mock_cpu_memory, mock_reporter, mock_podmonitor, mock_watch, mock_get_namespace, mock_client):
-        mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=None, terminated=Mock(exit_code=123), waiting=None))]))
+    @patch('calrissian.k8s.CPUParser')
+    @patch('calrissian.k8s.MemoryParser')
+    def test_wait_finishes_when_pod_state_is_terminated(self, mock_memory_parser, mock_cpu_parser, mock_cpu_memory,
+                                                        mock_reporter, mock_podmonitor, mock_watch, mock_get_namespace,
+                                                        mock_client):
+        mock_pod = Mock(status=Mock(
+            container_statuses=[Mock(state=Mock(running=None, terminated=Mock(exit_code=123), waiting=None))]))
         mock_pod.spec = Mock(containers=[])
         mock_cpu_memory.return_value = ('1', '1Mi')
         self.setup_mock_watch(mock_watch, [mock_pod])
@@ -118,12 +128,20 @@ class KubernetesClientTestCase(TestCase):
         # This is to inspect `with PodMonitor() as monitor`:
         self.assertTrue(mock_podmonitor.return_value.__enter__.return_value.remove.called)
         self.assertTrue(mock_reporter.return_value.__enter__.return_value.report.called)
+        # Confirm that cpu and memory values are parsed
+        self.assertEqual(mock_memory_parser.parse.call_args, call('1Mi'))
+        self.assertEqual(mock_cpu_parser.parse.call_args, call('1'))
 
     @patch('calrissian.k8s.watch')
     @patch('calrissian.k8s.KubernetesClient.should_delete_pod')
     @patch('calrissian.k8s.KubernetesClient._extract_cpu_memory_requests')
-    def test_wait_checks_should_delete_when_pod_state_is_terminated(self, mock_cpu_memory, mock_should_delete_pod, mock_watch, mock_get_namespace, mock_client):
-        mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=None, terminated=Mock(exit_code=123), waiting=None))]))
+    @patch('calrissian.k8s.CPUParser')
+    @patch('calrissian.k8s.MemoryParser')
+    def test_wait_checks_should_delete_when_pod_state_is_terminated(self, mock_memory_parser, mock_cpu_parser,
+                                                                    mock_cpu_memory, mock_should_delete_pod, mock_watch,
+                                                                    mock_get_namespace, mock_client):
+        mock_pod = Mock(status=Mock(
+            container_statuses=[Mock(state=Mock(running=None, terminated=Mock(exit_code=123), waiting=None))]))
         mock_pod.spec = Mock(containers=[])
         mock_cpu_memory.return_value = ('1', '1Mi')
         mock_should_delete_pod.return_value = False
@@ -135,6 +153,9 @@ class KubernetesClientTestCase(TestCase):
         self.assertTrue(mock_watch.Watch.return_value.stop.called)
         self.assertFalse(mock_client.CoreV1Api.return_value.delete_namespaced_pod.called)
         self.assertIsNone(kc.pod)
+        # Confirm that cpu and memory values are parsed
+        self.assertEqual(mock_memory_parser.parse.call_args, call('1Mi'))
+        self.assertEqual(mock_cpu_parser.parse.call_args, call('1'))
 
     @patch('calrissian.k8s.watch')
     def test_wait_raises_exception_when_state_is_unexpected(self, mock_watch, mock_get_namespace, mock_client):
@@ -314,7 +335,7 @@ class ReporterTestCase(TestCase):
         start_time = Mock()
         finish_time = Mock()
         with Reporter() as reporter:
-            reporter.report('1', '1024Mi', start_time, finish_time)
+            reporter.report(1, 1024, start_time, finish_time)
         added_report = mock_add_report.call_args[0][0]
         self.assertEqual(added_report.start_time, start_time)
         self.assertEqual(added_report.finish_time, finish_time)
