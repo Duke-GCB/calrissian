@@ -66,6 +66,13 @@ class TimedReportTestCase(TestCase):
         with self.assertRaises(ValueError):
             self.report.elapsed_seconds()
 
+    def test_to_dict(self):
+        self.report.start_time = TIME_1000
+        self.report.finish_time = TIME_1100
+        self.assertEqual(1.0, self.report.elapsed_hours())
+        report_dict = self.report.to_dict()
+        self.assertEqual(report_dict['elapsed_seconds'], 3600.0)
+        self.assertEqual(report_dict['elapsed_hours'], 1.0)
 
 class TimedResourceReportTestCase(TestCase):
 
@@ -93,6 +100,15 @@ class TimedResourceReportTestCase(TestCase):
         self.assertEqual(report.ram_megabyte_hours(), 3000)
         self.assertEqual(report.start_time, TIME_1000)
         self.assertEqual(report.finish_time, TIME_1100)
+
+    def test_to_dict(self):
+        self.report.ram_megabytes = 1024
+        self.report.cpus = 8
+        report_dict = self.report.to_dict()
+        self.assertEqual(report_dict['start_time'], TIME_1000)
+        self.assertEqual(report_dict['finish_time'], TIME_1015)
+        self.assertEqual(report_dict['cpu_hours'], 2)
+        self.assertEqual(report_dict['ram_megabyte_hours'], 256)
 
 
 class TimelineReportTestCase(TestCase):
@@ -203,6 +219,15 @@ class TimelineReportTestCase(TestCase):
         self.assertEqual(self.report.total_tasks(), 3)
         self.assertEqual(self.report.total_ram_megabyte_hours(), 1536)
         self.assertEqual(self.report.max_parallel_ram_megabytes(), 2048)
+
+    def test_to_dict(self):
+        self.report.add_report(TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1030, ram_megabytes=1024))
+        self.report.add_report(TimedResourceReport(start_time=TIME_1015, finish_time=TIME_1045, ram_megabytes=1024))
+        self.report.add_report(TimedResourceReport(start_time=TIME_1030, finish_time=TIME_1100, ram_megabytes=1024))
+        report_dict = self.report.to_dict()
+        self.assertEqual(len(report_dict['children']), 3)
+        self.assertEqual(report_dict['start_time'], TIME_1000)
+        self.assertEqual(report_dict['finish_time'], TIME_1100)
 
 
 class EventTestCase(TestCase):
