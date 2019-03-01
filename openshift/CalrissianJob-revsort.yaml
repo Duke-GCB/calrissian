@@ -22,7 +22,7 @@ spec:
           - "--outdir"
           - "/calrissian/output-data/"
           - "--usage-report"
-          - "/calrissian/output-data/revsort-usage.yaml"
+          - "/calrissian/output-data/revsort-usage.json"
           - "/calrissian/input-data/revsort-array.cwl"
           - "/calrissian/input-data/revsort-array-job.json"
         volumeMounts:
