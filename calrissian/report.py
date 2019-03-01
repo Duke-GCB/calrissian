@@ -35,7 +35,7 @@ class TimedReport(object):
         return self.elapsed_seconds() / SECONDS_PER_HOUR
 
     def to_dict(self):
-        result = vars(self)
+        result = dict(vars(self)) # Make sure we create a copy, otherwise writing to the dict overwrites the object
         result['elapsed_hours'] = self.elapsed_hours()
         result['elapsed_seconds'] = self.elapsed_seconds()
         return result
