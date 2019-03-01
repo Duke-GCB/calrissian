@@ -78,7 +78,7 @@ class MemoryParser(ResourceParser):
 
     @classmethod
     def parse_to_megabytes(cls, value):
-        return cls.parse(value) / 1024
+        return (cls.parse(value) / cls.suffixes['M'])
 
 
 class CPUParser(ResourceParser):

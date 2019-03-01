@@ -2,6 +2,7 @@ from unittest import TestCase
 from calrissian.report import TimedReport, TimedResourceReport, TimelineReport
 from calrissian.report import Event, MaxParallelCountProcessor, MaxParallelCPUsProcessor, MaxParallelRAMProcessor
 from calrissian.report import MemoryParser, CPUParser, Reporter
+from calrissian.k8s import CompletionResult
 from freezegun import freeze_time
 from unittest.mock import Mock, call, patch
 import datetime
@@ -84,6 +85,14 @@ class TimedResourceReportTestCase(TestCase):
     def test_resources_default_zero(self):
         self.assertEqual(self.report.ram_megabytes, 0)
         self.assertEqual(self.report.cpus, 0)
+
+    def test_from_completion_result(self):
+        completion_result = CompletionResult(0, '4', '3G', TIME_1000, TIME_1100)
+        report = TimedResourceReport.from_completion_result(completion_result)
+        self.assertEqual(report.cpu_hours(), 4)
+        self.assertEqual(report.ram_megabyte_hours(), 3000)
+        self.assertEqual(report.start_time, TIME_1000)
+        self.assertEqual(report.finish_time, TIME_1100)
 
 
 class TimelineReportTestCase(TestCase):
@@ -296,13 +305,18 @@ class MaxParallelRAMProcessorTestCase(TestCase):
 
 class MemoryParserTestCase(TestCase):
 
-    def test_parse_memory(self):
+    def test_parse(self):
         self.assertEqual(MemoryParser.parse('200'), 200)
         self.assertEqual(MemoryParser.parse('1Gi'), 1073741824)
         self.assertEqual(MemoryParser.parse('1G'), 1000000000)
         self.assertEqual(MemoryParser.parse('16Mi'), 16777216)
         self.assertEqual(MemoryParser.parse('16M'), 16000000)
         self.assertEqual(MemoryParser.parse('2.5G'), 2500000000)
+
+    def test_parse_to_megabytes(self):
+        self.assertEqual(MemoryParser.parse_to_megabytes('1M'), 1)
+        self.assertEqual(MemoryParser.parse_to_megabytes('1G'), 1000)
+        self.assertEqual(MemoryParser.parse_to_megabytes('1K'), .001)
 
     def test_raises_when_not_string(self):
         with self.assertRaises(ValueError) as context:
@@ -325,7 +339,7 @@ class MemoryParserTestCase(TestCase):
 
 class CPUParserTestCase(TestCase):
 
-    def test_parse_cpus(self):
+    def test_parse(self):
         self.assertEqual(CPUParser.parse('6'), 6)
         self.assertEqual(CPUParser.parse('300m'), 0.3)
         self.assertEqual(CPUParser.parse('0.1'), 0.1)

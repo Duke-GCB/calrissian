@@ -2,6 +2,7 @@ from unittest import TestCase
 from unittest.mock import Mock, patch, call, PropertyMock
 
 from calrissian.k8s import load_config_get_namespace, KubernetesClient, CalrissianJobException, PodMonitor, delete_pods
+from calrissian.k8s import CompletionResult
 
 @patch('calrissian.k8s.read_file')
 @patch('calrissian.k8s.config')
@@ -311,3 +312,20 @@ class PodMonitorTestCase(TestCase):
         delete_pods()
         self.assertTrue(mock_pod_monitor.cleanup.called)
 
+
+class CompletionResultTestCase(TestCase):
+
+    def setUp(self):
+        self.exit_code = Mock()
+        self.cpus = Mock()
+        self.memory = Mock()
+        self.start_time = Mock()
+        self.finish_time = Mock()
+
+    def test_init(self):
+        result = CompletionResult(self.exit_code, self.cpus, self.memory, self.start_time, self.finish_time)
+        self.assertEqual(result.exit_code, self.exit_code)
+        self.assertEqual(result.cpus, self.cpus)
+        self.assertEqual(result.memory, self.memory)
+        self.assertEqual(result.start_time, self.start_time)
+        self.assertEqual(result.finish_time, self.finish_time)
