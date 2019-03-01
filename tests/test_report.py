@@ -1,8 +1,9 @@
 from unittest import TestCase
 from calrissian.report import TimedReport, TimedResourceReport, TimelineReport
 from calrissian.report import Event, MaxParallelCountProcessor, MaxParallelCPUsProcessor, MaxParallelRAMProcessor
+from calrissian.report import MemoryParser, CPUParser
 from freezegun import freeze_time
-from unittest.mock import Mock, patch, call
+from unittest.mock import Mock, call
 import datetime
 
 TIME_1000 = datetime.datetime(2000, 1, 1, 10, 0, 0)
@@ -291,3 +292,58 @@ class MaxParallelRAMProcessorTestCase(TestCase):
         processor = MaxParallelRAMProcessor()
         mock_report = Mock(ram_megabytes=512)
         self.assertEqual(processor.count_unit(mock_report), 512)
+
+
+class MemoryParserTestCase(TestCase):
+
+    def test_parse_memory(self):
+        self.assertEqual(MemoryParser.parse('200'), 200)
+        self.assertEqual(MemoryParser.parse('1Gi'), 1073741824)
+        self.assertEqual(MemoryParser.parse('1G'), 1000000000)
+        self.assertEqual(MemoryParser.parse('16Mi'), 16777216)
+        self.assertEqual(MemoryParser.parse('16M'), 16000000)
+        self.assertEqual(MemoryParser.parse('2.5G'), 2500000000)
+
+    def test_raises_when_not_string(self):
+        with self.assertRaises(ValueError) as context:
+            MemoryParser.parse(100)
+        self.assertIn('Unable to parse \'100\' as memory', str(context.exception))
+        self.assertIn(MemoryParser.url, str(context.exception))
+
+    def test_raises_with_invalid_suffix(self):
+        with self.assertRaises(ValueError) as context:
+            MemoryParser.parse('3GW')
+        self.assertIn('Unable to parse \'3GW\' as memory', str(context.exception))
+        self.assertIn(MemoryParser.url, str(context.exception))
+
+    def test_raises_with_invalid_value(self):
+        with self.assertRaises(ValueError) as context:
+            MemoryParser.parse('FiveGB')
+        self.assertIn('Unable to parse \'FiveGB\' as memory', str(context.exception))
+        self.assertIn(MemoryParser.url, str(context.exception))
+
+
+class CPUParserTestCase(TestCase):
+
+    def test_parse_cpus(self):
+        self.assertEqual(CPUParser.parse('6'), 6)
+        self.assertEqual(CPUParser.parse('300m'), 0.3)
+        self.assertEqual(CPUParser.parse('0.1'), 0.1)
+
+    def test_raises_when_not_string(self):
+        with self.assertRaises(ValueError) as context:
+            CPUParser.parse(10)
+        self.assertIn('Unable to parse \'10\' as cpu', str(context.exception))
+        self.assertIn(CPUParser.url, str(context.exception))
+
+    def test_raises_with_invalid_suffix(self):
+        with self.assertRaises(ValueError) as context:
+            CPUParser.parse('3L')
+        self.assertIn('Unable to parse \'3L\' as cpu', str(context.exception))
+        self.assertIn(CPUParser.url, str(context.exception))
+
+    def test_raises_with_invalid_value(self):
+        with self.assertRaises(ValueError) as context:
+            CPUParser.parse('FiveCores')
+        self.assertIn('Unable to parse \'FiveCores\' as cpu', str(context.exception))
+        self.assertIn(CPUParser.url, str(context.exception))

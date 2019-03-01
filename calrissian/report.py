@@ -34,23 +34,65 @@ class TimedReport(object):
         return self.elapsed_seconds() / SECONDS_PER_HOUR
 
 
+class ResourceParser(object):
+    """
+    Base class for converting Kubernetes resources (memory/CPU) from strings to reportable numbers
+    """
+    kind = None
+    url = None
+    suffixes = None
+
+    @classmethod
+    def parse(cls, value):
+        try:
+            for suffix, factor in cls.suffixes.items():
+                if value.endswith(suffix):
+                    return float(value.replace(suffix, '')) * factor
+            # No suffix, assume raw number
+            return float(value)
+        except Exception:
+            raise ValueError('Unable to parse \'{}\' as {}. See {}'.format(value, cls.kind, cls.url))
+
+
+class MemoryParser(ResourceParser):
+    """
+    Converts Kubernetes memory resource strings (e.g. 1Mi, 1G)to byte quantities
+    """
+    kind = 'memory'
+    url = 'https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-memory'
+    suffixes = {
+        'E': 1e18,
+        'P': 1e15,
+        'T': 1e12,
+        'G': 1e9,
+        'M': 1e6,
+        'K': 1e3,
+        'Ei': 2**60,
+        'Pi': 2**50,
+        'Ti': 2**40,
+        'Gi': 2**30,
+        'Mi': 2**20,
+        'Ki': 2**10,
+    }
+
+
+class CPUParser(ResourceParser):
+    """
+    Converts Kubernetes CPU resource strings (e.g. 2, 200m) to floating point CPU quantities.
+    """
+
+    kind = 'cpu'
+    url = 'https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-cpu'
+    suffixes = {
+        'm': 0.001
+    }
+
+
 class TimedResourceReport(TimedReport):
     """
     Adds CPU and memory usage to TimedReport, in order to calculate resource
     usage over the duration of the timed report
     """
-
-    @staticmethod
-    def parse_cpu(value):
-        return float(value)
-
-    @staticmethod
-    def parse_memory(value):
-        if 'Mi' in value:
-            return float(value.replace('Mi', ''))
-        else:
-            raise ValueError('Only memory values in Mi are supported')
-
     def __init__(self, cpus=0, ram_megabytes=0, *args, **kwargs):
         self.cpus = cpus
         self.ram_megabytes = ram_megabytes
