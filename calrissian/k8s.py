@@ -2,7 +2,7 @@ from kubernetes import client, config, watch
 import threading
 import logging
 import os
-from calrissian.report import TimedResourceReport, TimelineReport
+from calrissian.report import TimedResourceReport, TimelineReport, MemoryParser, CPUParser
 
 log = logging.getLogger('calrissian.k8s')
 
@@ -97,9 +97,11 @@ class KubernetesClient(object):
                         monitor.remove(pod)
                 start_time, finish_time = self._extract_start_finish_times(status.state)
                 container = self.get_first_or_none(pod.spec.containers)
-                cpus, ram_megabytes = self._extract_cpu_memory_requests(container)
+                k8s_cpu, k8s_memory = self._extract_cpu_memory_requests(container)
+                report_cpus = CPUParser.parse(k8s_cpu)
+                report_ram_megabytes = MemoryParser.parse(k8s_memory) / 1024.0
                 with Reporter() as reporter:
-                    reporter.report(cpus, ram_megabytes, start_time, finish_time)
+                    reporter.report(report_cpus, report_ram_megabytes, start_time, finish_time)
                 self._clear_pod()
                 # stop watching for events, our pod is done. Causes wait loop to exit
                 w.stop()
@@ -206,8 +208,8 @@ class Reporter(object):
 
     def report(self, cpus, ram_megabytes, start_time, finish_time):
         report = TimedResourceReport(
-            cpus=TimedResourceReport.parse_cpu(cpus),
-            ram_megabytes=TimedResourceReport.parse_memory(ram_megabytes),
+            cpus=cpus,
+            ram_megabytes=ram_megabytes,
             start_time=start_time,
             finish_time=finish_time
         )
