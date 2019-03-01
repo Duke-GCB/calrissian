@@ -324,6 +324,17 @@ class Reporter(object):
             return Reporter.timeline_report
 
 
+def default_serializer(obj):
+    """
+    Function to handle JSON serialization of objects that cannot be natively serialized
+    :param obj: object to seralize
+    :return: JSON-compatible representation of object
+    """
+    if isinstance(obj, (datetime)):
+        return obj.isoformat()
+    raise TypeError ("Type %s not serializable" % type(obj))
+
+
 def write_report(filename):
     with open(filename, 'w') as f:
-        json.dump(Reporter.get_report().to_dict(), f, indent=4)
+        json.dump(Reporter.get_report().to_dict(), f, indent=4, default=default_serializer)
