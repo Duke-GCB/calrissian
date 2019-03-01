@@ -106,6 +106,7 @@ class KubernetesClient(object):
             start_time,
             finish_time
         )
+        log.info('handling completion with {}'.format(exit_code))
 
     def wait_for_completion(self):
         w = watch.Watch()
@@ -129,7 +130,6 @@ class KubernetesClient(object):
                 w.stop()
             else:
                 raise CalrissianJobException('Unexpected pod container status', status)
-        log.info('wait_for_completion returning with {}'.format(self.completion_result.exit_code))
         return self.completion_result
 
     def _set_pod(self, pod):

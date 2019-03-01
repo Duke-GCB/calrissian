@@ -1,7 +1,8 @@
 from calrissian.executor import CalrissianExecutor
 from calrissian.context import CalrissianLoadingContext, CalrissianRuntimeContext
 from calrissian.version import version
-from calrissian.k8s import delete_pods, write_report
+from calrissian.k8s import delete_pods
+from calrissian.report import write_report
 from cwltool.main import main as cwlmain
 from cwltool.argparser import arg_parser
 from typing_extensions import Text

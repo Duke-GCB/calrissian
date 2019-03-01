@@ -538,6 +538,7 @@ class CalrissianCommandLineJobTestCase(TestCase):
         job.create_kubernetes_runtime = Mock()
         job.execute_kubernetes_pod = Mock()
         job.wait_for_kubernetes_pod = Mock()
+        job.report = Mock()
         job.finish = Mock()
 
         runtimeContext = Mock()
@@ -548,7 +549,8 @@ class CalrissianCommandLineJobTestCase(TestCase):
         self.assertEqual(job.create_kubernetes_runtime.call_args, call(runtimeContext))
         self.assertEqual(job.execute_kubernetes_pod.call_args, call(job.create_kubernetes_runtime.return_value))
         self.assertTrue(job.wait_for_kubernetes_pod.called)
-        self.assertEqual(job.finish.call_args, call(job.wait_for_kubernetes_pod.return_value))
+        self.assertEqual(job.report.call_args, call(job.wait_for_kubernetes_pod.return_value))
+        self.assertEqual(job.finish.call_args, call(job.wait_for_kubernetes_pod.return_value.exit_code))
 
     @patch('calrissian.job.read_yaml')
     def test_get_pod_labels(self, mock_read_yaml, mock_volume_builder, mock_client):

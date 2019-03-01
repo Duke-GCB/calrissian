@@ -1,9 +1,9 @@
 from unittest import TestCase
 from calrissian.report import TimedReport, TimedResourceReport, TimelineReport
 from calrissian.report import Event, MaxParallelCountProcessor, MaxParallelCPUsProcessor, MaxParallelRAMProcessor
-from calrissian.report import MemoryParser, CPUParser
+from calrissian.report import MemoryParser, CPUParser, Reporter
 from freezegun import freeze_time
-from unittest.mock import Mock, call
+from unittest.mock import Mock, call, patch
 import datetime
 
 TIME_1000 = datetime.datetime(2000, 1, 1, 10, 0, 0)
@@ -347,3 +347,20 @@ class CPUParserTestCase(TestCase):
             CPUParser.parse('FiveCores')
         self.assertIn('Unable to parse \'FiveCores\' as cpu', str(context.exception))
         self.assertIn(CPUParser.url, str(context.exception))
+
+
+class ReporterTestCase(TestCase):
+
+    def setUp(self):
+        Reporter.clear()
+
+    def test_add_report(self):
+        mock_report = Mock()
+        with Reporter() as reporter:
+            reporter.add_report(mock_report)
+        self.assertIn(mock_report, reporter.get_report().children)
+
+    def test_get_report(self):
+        mock_timeline_report = Mock()
+        Reporter.timeline_report = mock_timeline_report
+        self.assertEqual(Reporter.get_report(), mock_timeline_report)
