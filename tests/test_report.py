@@ -2,6 +2,7 @@ from unittest import TestCase
 from calrissian.report import TimedReport, TimedResourceReport, TimelineReport
 from calrissian.report import Event, MaxParallelCountProcessor, MaxParallelCPUsProcessor, MaxParallelRAMProcessor
 from calrissian.report import MemoryParser, CPUParser, Reporter
+from calrissian.report import initialize_reporter, write_report, default_serializer
 from calrissian.k8s import CompletionResult
 from freezegun import freeze_time
 from unittest.mock import Mock, call, patch
@@ -412,3 +413,36 @@ class ReporterTestCase(TestCase):
         mock_timeline_report = Mock()
         Reporter.timeline_report = mock_timeline_report
         self.assertEqual(Reporter.get_report(), mock_timeline_report)
+
+
+class ReporterFunctionsTestCase(TestCase):
+
+    def test_initialize_reporter(self):
+        self.assertIsNone(Reporter.get_report())
+        initialize_reporter(0, 0)
+        self.assertIsNotNone(Reporter.get_report())
+
+    def test_write_report_raises_if_not_initialized(self):
+        Reporter.timeline_report = None
+        self.assertIsNone(Reporter.get_report())
+        with self.assertRaises(AttributeError) as context:
+            write_report('filename.out')
+        self.assertIn('NoneType', str(context.exception))
+
+    @patch('builtins.open')
+    @patch('calrissian.report.json')
+    def test_write_report(self, mock_json, mock_open):
+        initialize_reporter(128, 4)
+        Reporter.add_report(TimedResourceReport(cpus=1, ram_megabytes=128, start_time=TIME_1000, finish_time=TIME_1100))
+        write_report('output.json')
+        self.assertEqual(mock_open.call_args, call('output.json', 'w'))
+        self.assertTrue(mock_json.dump.called)
+
+    def test_default_serializer_handles_dates(self):
+        serialized = default_serializer(TIME_1100)
+        self.assertEqual(serialized, '2000-01-01T11:00:00')
+
+    def test_default_serializer_raises_on_other(self):
+        with self.assertRaises(TypeError) as context:
+            default_serializer('other')
+        self.assertIn('not serializable', str(context.exception))
