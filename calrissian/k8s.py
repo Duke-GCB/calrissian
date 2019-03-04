@@ -37,6 +37,10 @@ class CalrissianJobException(Exception):
 
 
 class CompletionResult(object):
+    """
+    Simple structure to hold information about pod execution duration and resources.
+    The CPU and memory values should be in kubernetes units (strings).
+    """
 
     def __init__(self, exit_code, cpus, memory, start_time, finish_time):
         self.exit_code = exit_code
@@ -97,6 +101,8 @@ class KubernetesClient(object):
         """
 
         exit_code = state.terminated.exit_code
+        # We extract resource requests here since requests are used for scheduling. Limits are
+        # not used for scheduling and not specified in our submitted pods
         cpus, memory = self._extract_cpu_memory_requests(container)
         start_time, finish_time = self._extract_start_finish_times(state)
         self.completion_result = CompletionResult(
