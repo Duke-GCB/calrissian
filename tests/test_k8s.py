@@ -1,6 +1,6 @@
 from unittest import TestCase
-from unittest.mock import Mock, patch, call, PropertyMock
-
+from unittest.mock import Mock, patch, call, PropertyMock, create_autospec
+from kubernetes.client.models import V1Pod
 from calrissian.k8s import load_config_get_namespace, KubernetesClient, CalrissianJobException, PodMonitor, delete_pods
 from calrissian.k8s import CompletionResult
 
@@ -93,8 +93,7 @@ class KubernetesClientTestCase(TestCase):
 
     @patch('calrissian.k8s.watch')
     def test_wait_skips_pod_when_state_is_running(self, mock_watch, mock_get_namespace, mock_client):
-        mock_pod = Mock(
-            status=Mock(container_statuses=[Mock(state=Mock(running=Mock(), terminated=None, waiting=None))]))
+        mock_pod = create_autospec(V1Pod)
         self.setup_mock_watch(mock_watch, [mock_pod])
         kc = KubernetesClient()
         kc._set_pod(Mock())
@@ -109,9 +108,8 @@ class KubernetesClientTestCase(TestCase):
     def test_wait_finishes_when_pod_state_is_terminated(self, mock_cpu_memory,
                                                         mock_podmonitor, mock_watch, mock_get_namespace,
                                                         mock_client):
-        mock_pod = Mock(status=Mock(
-            container_statuses=[Mock(state=Mock(running=None, terminated=Mock(exit_code=123), waiting=None))]))
-        mock_pod.spec = Mock(containers=[])
+        mock_pod = create_autospec(V1Pod)
+        mock_pod.status.container_statuses[0].state = Mock(running=None, waiting=None, terminated=Mock(exit_code=123))
         mock_cpu_memory.return_value = ('1', '1Mi')
         self.setup_mock_watch(mock_watch, [mock_pod])
         kc = KubernetesClient()
@@ -130,9 +128,8 @@ class KubernetesClientTestCase(TestCase):
     def test_wait_checks_should_delete_when_pod_state_is_terminated(self,
                                                                     mock_cpu_memory, mock_should_delete_pod, mock_watch,
                                                                     mock_get_namespace, mock_client):
-        mock_pod = Mock(status=Mock(
-            container_statuses=[Mock(state=Mock(running=None, terminated=Mock(exit_code=123), waiting=None))]))
-        mock_pod.spec = Mock(containers=[])
+        mock_pod = create_autospec(V1Pod)
+        mock_pod.status.container_statuses[0].state = Mock(running=None, waiting=None, terminated=Mock(exit_code=123))
         mock_cpu_memory.return_value = ('1', '1Mi')
         mock_should_delete_pod.return_value = False
         self.setup_mock_watch(mock_watch, [mock_pod])
@@ -148,7 +145,8 @@ class KubernetesClientTestCase(TestCase):
 
     @patch('calrissian.k8s.watch')
     def test_wait_raises_exception_when_state_is_unexpected(self, mock_watch, mock_get_namespace, mock_client):
-        mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=None, terminated=None, waiting=None))]))
+        mock_pod = create_autospec(V1Pod)
+        mock_pod.status.container_statuses[0].state = Mock(running=None, waiting=None, terminated=None)
         self.setup_mock_watch(mock_watch, [mock_pod])
         kc = KubernetesClient()
         kc._set_pod(Mock())
