@@ -11,7 +11,7 @@ spec:
         command: ["calrissian"]
         args:
           - "--max-ram"
-          - "1024"
+          - "1G"
           - "--max-cores"
           - "2"
           - "--tmpdir-prefix"

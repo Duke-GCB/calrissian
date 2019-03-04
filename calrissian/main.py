@@ -2,6 +2,7 @@ from calrissian.executor import CalrissianExecutor
 from calrissian.context import CalrissianLoadingContext, CalrissianRuntimeContext
 from calrissian.version import version
 from calrissian.k8s import delete_pods
+from calrissian.report import initialize_reporter, write_report, CPUParser, MemoryParser
 from cwltool.main import main as cwlmain
 from cwltool.argparser import arg_parser
 from typing_extensions import Text
@@ -9,18 +10,20 @@ import logging
 import sys
 import signal
 
+log = logging.getLogger("calrissian.main")
 
 def activate_logging():
-    loggers = ['executor','context','tool','job', 'k8s']
+    loggers = ['executor','context','tool','job', 'k8s','main']
     for logger in loggers:
         logging.getLogger('calrissian.{}'.format(logger)).setLevel(logging.DEBUG)
         logging.getLogger('calrissian.{}'.format(logger)).addHandler(logging.StreamHandler())
 
 
 def add_arguments(parser):
-    parser.add_argument('--max-ram', type=int, help='Maximum amount of RAM in MB to use')
-    parser.add_argument('--max-cores', type=int, help='Maximum number of CPU cores to use')
+    parser.add_argument('--max-ram', type=str, help='Maximum amount of RAM to use, e.g 1048576, 512Mi or 2G. Follows k8s resource conventions')
+    parser.add_argument('--max-cores', type=str, help='Maximum number of CPU cores to use')
     parser.add_argument('--pod-labels', type=Text, nargs='?', help='YAML file of labels to add to Pods submitted')
+    parser.add_argument('--usage-report', type=Text, nargs='?', help='Output JSON file name to record resource usage')
 
 
 def print_version():
@@ -40,7 +43,7 @@ def parse_arguments(parser):
 
 
 def handle_sigterm(signum, frame):
-    print('Received signal {}, deleting pods'.format(signum))
+    log.error('Received signal {}, deleting pods'.format(signum))
     delete_pods()
     sys.exit(signum)
 
@@ -59,7 +62,10 @@ def main():
     parser = arg_parser()
     add_arguments(parser)
     parsed_args = parse_arguments(parser)
-    executor = CalrissianExecutor(parsed_args.max_ram, parsed_args.max_cores)
+    max_ram_megabytes = MemoryParser.parse_to_megabytes(parsed_args.max_ram)
+    max_cores = CPUParser.parse(parsed_args.max_cores)
+    executor = CalrissianExecutor(max_ram_megabytes, max_cores)
+    initialize_reporter(max_ram_megabytes, max_cores)
     runtime_context = CalrissianRuntimeContext(vars(parsed_args))
     runtime_context.select_resources = executor.select_resources
     install_signal_handler()
@@ -73,6 +79,8 @@ def main():
     finally:
         # Always clean up after cwlmain
         delete_pods()
+        if parsed_args.usage_report:
+            write_report(parsed_args.usage_report)
 
     return result
 

@@ -36,6 +36,20 @@ class CalrissianJobException(Exception):
     pass
 
 
+class CompletionResult(object):
+    """
+    Simple structure to hold information about pod execution duration and resources.
+    The CPU and memory values should be in kubernetes units (strings).
+    """
+
+    def __init__(self, exit_code, cpus, memory, start_time, finish_time):
+        self.exit_code = exit_code
+        self.cpus = cpus
+        self.memory = memory
+        self.start_time = start_time
+        self.finish_time = finish_time
+
+
 class KubernetesClient(object):
     """
     Instances of this class are created by a `calrissian.job.CalrissianCommandLineJob`,
@@ -49,7 +63,7 @@ class KubernetesClient(object):
     def __init__(self):
         self.pod = None
         # load_config must happen before instantiating client
-        self.process_exit_code = None
+        self.completion_result = None
         self.namespace = load_config_get_namespace()
         self.core_api_instance = client.CoreV1Api()
 
@@ -78,18 +92,41 @@ class KubernetesClient(object):
         except client.rest.ApiException as e:
             raise CalrissianJobException('Error deleting pod named {}'.format(pod_name), e)
 
+    def _handle_completion(self, state, container):
+        """
+        Sets self.completion_result to an object containing exit_code, resources, and timingused
+        :param state: V1ContainerState
+        :param container: V1Container
+        :return: None
+        """
+
+        exit_code = state.terminated.exit_code
+        # We extract resource requests here since requests are used for scheduling. Limits are
+        # not used for scheduling and not specified in our submitted pods
+        cpus, memory = self._extract_cpu_memory_requests(container)
+        start_time, finish_time = self._extract_start_finish_times(state)
+        self.completion_result = CompletionResult(
+            exit_code,
+            cpus,
+            memory,
+            start_time,
+            finish_time
+        )
+        log.info('handling completion with {}'.format(exit_code))
+
     def wait_for_completion(self):
         w = watch.Watch()
         for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_field_selector()):
             pod = event['object']
-            status = self.get_first_status_or_none(pod.status.container_statuses)
+            status = self.get_first_or_none(pod.status.container_statuses)
             if status is None:
                 continue
             if self.state_is_running(status.state):
                 continue
             elif self.state_is_terminated(status.state):
                 log.info('Handling terminated pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
-                self._handle_terminated_state(status.state)
+                container = self.get_first_or_none(pod.spec.containers)
+                self._handle_completion(status.state, container)
                 if self.should_delete_pod():
                     with PodMonitor() as monitor:
                         self.delete_pod_name(pod.metadata.name)
@@ -99,8 +136,7 @@ class KubernetesClient(object):
                 w.stop()
             else:
                 raise CalrissianJobException('Unexpected pod container status', status)
-        log.info('wait_for_completion returning with {}'.format(self.process_exit_code))
-        return self.process_exit_code
+        return self.completion_result
 
     def _set_pod(self, pod):
         log.info('k8s pod \'{}\' started'.format(pod.metadata.name))
@@ -123,29 +159,34 @@ class KubernetesClient(object):
         return state.terminated
 
     @staticmethod
-    def get_first_status_or_none(container_statuses):
+    def get_first_or_none(container_list):
         """
-        Check the container statuses list. Should be 0 or 1 items. If 0, there's no container yet. If 1, there's a
+        Check the list. Should be 0 or 1 items. If 0, there's no container yet. If 1, there's a
         container. If > 1, there's more than 1 container and that's unexpected behavior
-        :param container_statuses: list of V1ContainerStatus
-        :return: V1ContainerStatus if len of list is 1, None if 0, and raises CalrissianJobException if > 1
+        :param containers_or_container_statuses: list of V1ContainerStatus or V1Container
+        :return: first item if len of list is 1, None if 0, and raises CalrissianJobException if > 1
         """
-        if not container_statuses: # None or empty list
+        if not container_list: # None or empty list
             return None
-        elif len(container_statuses) > 1:
+        elif len(container_list) > 1:
             raise CalrissianJobException(
-                'Expected 0 or 1 container statuses, found {}'.format(len(container_statuses), container_statuses))
+                'Expected 0 or 1 containers, found {}'.format(len(container_list), container_list))
         else:
-            return container_statuses[0]
+            return container_list[0]
 
-    def _handle_terminated_state(self, state):
+    def _extract_cpu_memory_requests(self, container):
+        if container.resources.requests:
+            return (container.resources.requests[k] for k in ['cpu','memory'])
+        else:
+            raise CalrissianJobException('Unable to extract CPU/memory requests, not present')
+
+    def _extract_start_finish_times(self, state):
         """
-        Sets self.process_exit_code to the exit code from a terminated container
-        :param status: V1ContainerState
-        :return: None
+        Extracts the started_at and finished_at timestamps from state.terminated
+        :param state: V1ContainerState
+        :return: (started_at, finished_at)
         """
-        # Extract the exit code out of the status
-        self.process_exit_code = state.terminated.exit_code
+        return (state.terminated.started_at, state.terminated.finished_at,)
 
     def get_pod_for_name(self, pod_name):
         """

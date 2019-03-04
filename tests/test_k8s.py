@@ -1,6 +1,8 @@
 from unittest import TestCase
-from unittest.mock import Mock, patch, call, PropertyMock
+from unittest.mock import Mock, patch, call, PropertyMock, create_autospec
+from kubernetes.client.models import V1Pod
 from calrissian.k8s import load_config_get_namespace, KubernetesClient, CalrissianJobException, PodMonitor, delete_pods
+from calrissian.k8s import CompletionResult
 
 @patch('calrissian.k8s.read_file')
 @patch('calrissian.k8s.config')
@@ -34,7 +36,7 @@ class KubernetesClientTestCase(TestCase):
         self.assertEqual(kc.namespace, mock_get_namespace.return_value)
         self.assertEqual(kc.core_api_instance, mock_client.CoreV1Api.return_value)
         self.assertIsNone(kc.pod)
-        self.assertIsNone(kc.process_exit_code)
+        self.assertIsNone(kc.completion_result)
 
     @patch('calrissian.k8s.PodMonitor')
     def test_submit_pod(self, mock_podmonitor, mock_get_namespace, mock_client):
@@ -65,7 +67,8 @@ class KubernetesClientTestCase(TestCase):
         # Cannot mock name attribute without a propertymock
         name_property = PropertyMock(return_value='test123')
         type(mock_metadata).name = name_property
-        return Mock(metadata=mock_metadata)
+        mock_pod = create_autospec(V1Pod, metadata=mock_metadata)
+        return mock_pod
 
     @patch('calrissian.k8s.watch')
     def test_wait_calls_watch_pod_with_pod_name_field_selector(self, mock_watch, mock_get_namespace, mock_client):
@@ -75,7 +78,8 @@ class KubernetesClientTestCase(TestCase):
         kc._set_pod(mock_pod)
         kc.wait_for_completion()
         mock_stream = mock_watch.Watch.return_value.stream
-        self.assertEqual(mock_stream.call_args, call(kc.core_api_instance.list_namespaced_pod, kc.namespace, field_selector='metadata.name=test123'))
+        self.assertEqual(mock_stream.call_args, call(kc.core_api_instance.list_namespaced_pod, kc.namespace,
+                                                     field_selector='metadata.name=test123'))
 
     @patch('calrissian.k8s.watch')
     def test_wait_skips_pod_when_status_is_none(self, mock_watch, mock_get_namespace, mock_client):
@@ -90,7 +94,7 @@ class KubernetesClientTestCase(TestCase):
 
     @patch('calrissian.k8s.watch')
     def test_wait_skips_pod_when_state_is_running(self, mock_watch, mock_get_namespace, mock_client):
-        mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=Mock(), terminated=None, waiting=None))]))
+        mock_pod = create_autospec(V1Pod)
         self.setup_mock_watch(mock_watch, [mock_pod])
         kc = KubernetesClient()
         kc._set_pod(Mock())
@@ -101,13 +105,18 @@ class KubernetesClientTestCase(TestCase):
 
     @patch('calrissian.k8s.watch')
     @patch('calrissian.k8s.PodMonitor')
-    def test_wait_finishes_when_pod_state_is_terminated(self, mock_podmonitor, mock_watch, mock_get_namespace, mock_client):
-        mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=None, terminated=Mock(exit_code=123), waiting=None))]))
+    @patch('calrissian.k8s.KubernetesClient._extract_cpu_memory_requests')
+    def test_wait_finishes_when_pod_state_is_terminated(self, mock_cpu_memory,
+                                                        mock_podmonitor, mock_watch, mock_get_namespace,
+                                                        mock_client):
+        mock_pod = create_autospec(V1Pod)
+        mock_pod.status.container_statuses[0].state = Mock(running=None, waiting=None, terminated=Mock(exit_code=123))
+        mock_cpu_memory.return_value = ('1', '1Mi')
         self.setup_mock_watch(mock_watch, [mock_pod])
         kc = KubernetesClient()
         kc._set_pod(Mock())
-        exit_code = kc.wait_for_completion()
-        self.assertEqual(exit_code, 123)
+        completion_result = kc.wait_for_completion()
+        self.assertEqual(completion_result.exit_code, 123)
         self.assertTrue(mock_watch.Watch.return_value.stop.called)
         self.assertTrue(mock_client.CoreV1Api.return_value.delete_namespaced_pod.called)
         self.assertIsNone(kc.pod)
@@ -116,21 +125,29 @@ class KubernetesClientTestCase(TestCase):
 
     @patch('calrissian.k8s.watch')
     @patch('calrissian.k8s.KubernetesClient.should_delete_pod')
-    def test_wait_checks_should_delete_when_pod_state_is_terminated(self, mock_should_delete_pod, mock_watch, mock_get_namespace, mock_client):
-        mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=None, terminated=Mock(exit_code=123), waiting=None))]))
+    @patch('calrissian.k8s.KubernetesClient._extract_cpu_memory_requests')
+    def test_wait_checks_should_delete_when_pod_state_is_terminated(self,
+                                                                    mock_cpu_memory, mock_should_delete_pod, mock_watch,
+                                                                    mock_get_namespace, mock_client):
+        mock_pod = create_autospec(V1Pod)
+        mock_pod.status.container_statuses[0].state = Mock(running=None, waiting=None, terminated=Mock(exit_code=123))
+        mock_cpu_memory.return_value = ('1', '1Mi')
         mock_should_delete_pod.return_value = False
         self.setup_mock_watch(mock_watch, [mock_pod])
         kc = KubernetesClient()
         kc._set_pod(Mock())
-        exit_code = kc.wait_for_completion()
-        self.assertEqual(exit_code, 123)
+        completion_result = kc.wait_for_completion()
+        self.assertEqual(completion_result.exit_code, 123)
+        self.assertEqual(completion_result.memory, '1Mi')
+        self.assertEqual(completion_result.cpus, '1')
         self.assertTrue(mock_watch.Watch.return_value.stop.called)
         self.assertFalse(mock_client.CoreV1Api.return_value.delete_namespaced_pod.called)
         self.assertIsNone(kc.pod)
 
     @patch('calrissian.k8s.watch')
     def test_wait_raises_exception_when_state_is_unexpected(self, mock_watch, mock_get_namespace, mock_client):
-        mock_pod = Mock(status=Mock(container_statuses=[Mock(state=Mock(running=None, terminated=None, waiting=None))]))
+        mock_pod = create_autospec(V1Pod)
+        mock_pod.status.container_statuses[0].state = Mock(running=None, waiting=None, terminated=None)
         self.setup_mock_watch(mock_watch, [mock_pod])
         kc = KubernetesClient()
         kc._set_pod(Mock())
@@ -242,18 +259,18 @@ class KubernetesClientStatusTestCase(TestCase):
         self.singular_status = [Mock()]
 
     def test_none_statuses(self):
-        self.assertIsNone(KubernetesClient.get_first_status_or_none(self.none_statuses))
-        self.assertIsNone(KubernetesClient.get_first_status_or_none(self.empty_list_statuses))
+        self.assertIsNone(KubernetesClient.get_first_or_none(self.none_statuses))
+        self.assertIsNone(KubernetesClient.get_first_or_none(self.empty_list_statuses))
 
     def test_singular_status(self):
         self.assertEqual(len(self.singular_status), 1)
-        self.assertIsNotNone(KubernetesClient.get_first_status_or_none(self.singular_status))
+        self.assertIsNotNone(KubernetesClient.get_first_or_none(self.singular_status))
 
     def test_multiple_statuses_raises(self):
         self.assertEqual(len(self.multiple_statuses), 2)
         with self.assertRaises(CalrissianJobException) as context:
-            KubernetesClient.get_first_status_or_none(self.multiple_statuses)
-        self.assertIn('Expected 0 or 1 container statuses, found 2', str(context.exception))
+            KubernetesClient.get_first_or_none(self.multiple_statuses)
+        self.assertIn('Expected 0 or 1 containers, found 2', str(context.exception))
 
 
 class PodMonitorTestCase(TestCase):
@@ -293,3 +310,21 @@ class PodMonitorTestCase(TestCase):
     def test_delete_pods_calls_podmonitor(self, mock_pod_monitor):
         delete_pods()
         self.assertTrue(mock_pod_monitor.cleanup.called)
+
+
+class CompletionResultTestCase(TestCase):
+
+    def setUp(self):
+        self.exit_code = Mock()
+        self.cpus = Mock()
+        self.memory = Mock()
+        self.start_time = Mock()
+        self.finish_time = Mock()
+
+    def test_init(self):
+        result = CompletionResult(self.exit_code, self.cpus, self.memory, self.start_time, self.finish_time)
+        self.assertEqual(result.exit_code, self.exit_code)
+        self.assertEqual(result.cpus, self.cpus)
+        self.assertEqual(result.memory, self.memory)
+        self.assertEqual(result.start_time, self.start_time)
+        self.assertEqual(result.finish_time, self.finish_time)
