@@ -67,7 +67,8 @@ class KubernetesClientTestCase(TestCase):
         # Cannot mock name attribute without a propertymock
         name_property = PropertyMock(return_value='test123')
         type(mock_metadata).name = name_property
-        return Mock(metadata=mock_metadata)
+        mock_pod = create_autospec(V1Pod, metadata=mock_metadata)
+        return mock_pod
 
     @patch('calrissian.k8s.watch')
     def test_wait_calls_watch_pod_with_pod_name_field_selector(self, mock_watch, mock_get_namespace, mock_client):
