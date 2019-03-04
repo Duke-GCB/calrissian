@@ -208,7 +208,6 @@ class KubernetesClient(object):
         return self.get_pod_for_name(pod_name)
 
 
-
 class PodMonitor(object):
     """
     This class is designed to track pods submitted by KubernetesClient across different background threads,
