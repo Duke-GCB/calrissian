@@ -14,7 +14,7 @@ spec:
           - "--default-container"
           - "debian:stretch-slim"
           - "--max-ram"
-          - "16384"
+          - "16G"
           - "--max-cores"
           - "8"
           - "--tmpdir-prefix"
