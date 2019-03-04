@@ -19,7 +19,10 @@ class CalrissianMainTestCase(TestCase):
     @patch('calrissian.main.install_signal_handler')
     @patch('calrissian.main.write_report')
     @patch('calrissian.main.initialize_reporter')
-    def test_main_calls_cwlmain_returns_exit_code(self, mock_initialize_reporter, mock_write_report,
+    @patch('calrissian.main.CPUParser', autospec=True)
+    @patch('calrissian.main.MemoryParser', autospec=True)
+    def test_main_calls_cwlmain_returns_exit_code(self, mock_memory_parser, mock_cpu_parser,
+                                                  mock_initialize_reporter, mock_write_report,
                                                   mock_install_signal_handler, mock_delete_pods,
                                                   mock_add_arguments, mock_parse_arguments, mock_version,
                                                   mock_runtime_context, mock_loading_context, mock_executor,
@@ -30,8 +33,10 @@ class CalrissianMainTestCase(TestCase):
         self.assertTrue(mock_arg_parser.called)
         self.assertEqual(mock_add_arguments.call_args, call(mock_arg_parser.return_value))
         self.assertEqual(mock_parse_arguments.call_args, call(mock_arg_parser.return_value))
+        self.assertEqual(mock_memory_parser.parse_to_megabytes.call_args, call(mock_arg_parser.return_value.max_ram))
+        self.assertEqual(mock_cpu_parser.parse.call_args, call(mock_arg_parser.return_value.max_cores))
         self.assertEqual(mock_executor.call_args,
-                         call(mock_parse_arguments.return_value.max_ram, mock_parse_arguments.return_value.max_cores))
+                         call(mock_memory_parser.parse_to_megabytes.return_value, mock_cpu_parser.parse.return_value))
         self.assertTrue(mock_runtime_context.called)
         self.assertEqual(mock_cwlmain.call_args, call(args=mock_parse_arguments.return_value,
                                                       executor=mock_executor.return_value,
@@ -43,7 +48,7 @@ class CalrissianMainTestCase(TestCase):
         self.assertEqual(result, mock_exit_code)
         self.assertTrue(mock_delete_pods.called)  # called after main()
         self.assertTrue(mock_write_report.called)
-        self.assertTrue(mock_initialize_reporter.called)
+        self.assertEqual(mock_initialize_reporter.call_args, call(mock_memory_parser.parse_to_megabytes.return_value, mock_cpu_parser.parse.return_value))
 
     def test_add_arguments(self):
         mock_parser = Mock()
