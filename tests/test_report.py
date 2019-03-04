@@ -74,6 +74,7 @@ class TimedReportTestCase(TestCase):
         self.assertEqual(report_dict['elapsed_seconds'], 3600.0)
         self.assertEqual(report_dict['elapsed_hours'], 1.0)
 
+
 class TimedResourceReportTestCase(TestCase):
 
     def setUp(self):
@@ -115,6 +116,11 @@ class TimelineReportTestCase(TestCase):
 
     def setUp(self):
         self.report = TimelineReport()
+
+    def test_init(self):
+        report = TimelineReport(cores_allowed=4, ram_mb_allowed=1024)
+        self.assertEqual(report.cores_allowed, 4)
+        self.assertEqual(report.ram_mb_allowed, 1024)
 
     def test_add_report(self):
         child = TimedResourceReport()
@@ -221,6 +227,8 @@ class TimelineReportTestCase(TestCase):
         self.assertEqual(self.report.max_parallel_ram_megabytes(), 2048)
 
     def test_to_dict(self):
+        self.report.cores_allowed = 4
+        self.report.ram_mb_allowed = 4096
         self.report.add_report(TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1030, ram_megabytes=1024))
         self.report.add_report(TimedResourceReport(start_time=TIME_1015, finish_time=TIME_1045, ram_megabytes=1024))
         self.report.add_report(TimedResourceReport(start_time=TIME_1030, finish_time=TIME_1100, ram_megabytes=1024))
@@ -228,6 +236,8 @@ class TimelineReportTestCase(TestCase):
         self.assertEqual(len(report_dict['children']), 3)
         self.assertEqual(report_dict['start_time'], TIME_1000)
         self.assertEqual(report_dict['finish_time'], TIME_1100)
+        self.assertEqual(report_dict['cores_allowed'], 4)
+        self.assertEqual(report_dict['ram_mb_allowed'], 4096)
 
 
 class EventTestCase(TestCase):
@@ -391,13 +401,12 @@ class CPUParserTestCase(TestCase):
 class ReporterTestCase(TestCase):
 
     def setUp(self):
-        Reporter.clear()
+        Reporter.initialize()
 
     def test_add_report(self):
         mock_report = Mock()
-        with Reporter() as reporter:
-            reporter.add_report(mock_report)
-        self.assertIn(mock_report, reporter.get_report().children)
+        Reporter.add_report(mock_report)
+        self.assertIn(mock_report, Reporter.get_report().children)
 
     def test_get_report(self):
         mock_timeline_report = Mock()

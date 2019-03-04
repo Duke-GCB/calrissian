@@ -18,7 +18,9 @@ class CalrissianMainTestCase(TestCase):
     @patch('calrissian.main.delete_pods')
     @patch('calrissian.main.install_signal_handler')
     @patch('calrissian.main.write_report')
-    def test_main_calls_cwlmain_returns_exit_code(self, mock_write_report, mock_install_signal_handler, mock_delete_pods,
+    @patch('calrissian.main.initialize_reporter')
+    def test_main_calls_cwlmain_returns_exit_code(self, mock_initialize_reporter, mock_write_report,
+                                                  mock_install_signal_handler, mock_delete_pods,
                                                   mock_add_arguments, mock_parse_arguments, mock_version,
                                                   mock_runtime_context, mock_loading_context, mock_executor,
                                                   mock_arg_parser, mock_cwlmain):
@@ -40,6 +42,8 @@ class CalrissianMainTestCase(TestCase):
                          mock_executor.return_value.select_resources)
         self.assertEqual(result, mock_exit_code)
         self.assertTrue(mock_delete_pods.called)  # called after main()
+        self.assertTrue(mock_write_report.called)
+        self.assertTrue(mock_initialize_reporter.called)
 
     def test_add_arguments(self):
         mock_parser = Mock()

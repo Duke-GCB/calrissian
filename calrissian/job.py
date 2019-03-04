@@ -296,8 +296,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         :param completion_result: calrissian.k8s.CompletionResult
         """
         report = TimedResourceReport.from_completion_result(completion_result)
-        with Reporter() as reporter:
-            reporter.add_report(report)
+        Reporter.add_report(report)
 
     def finish(self, exit_code):
         if exit_code in self.successCodes:

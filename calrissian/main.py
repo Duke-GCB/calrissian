@@ -2,7 +2,7 @@ from calrissian.executor import CalrissianExecutor
 from calrissian.context import CalrissianLoadingContext, CalrissianRuntimeContext
 from calrissian.version import version
 from calrissian.k8s import delete_pods
-from calrissian.report import write_report
+from calrissian.report import initialize_reporter, write_report
 from cwltool.main import main as cwlmain
 from cwltool.argparser import arg_parser
 from typing_extensions import Text
@@ -63,6 +63,7 @@ def main():
     add_arguments(parser)
     parsed_args = parse_arguments(parser)
     executor = CalrissianExecutor(parsed_args.max_ram, parsed_args.max_cores)
+    initialize_reporter(parsed_args.max_ram, parsed_args.max_cores)
     runtime_context = CalrissianRuntimeContext(vars(parsed_args))
     runtime_context.select_resources = executor.select_resources
     install_signal_handler()

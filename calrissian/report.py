@@ -234,7 +234,9 @@ class TimelineReport(TimedReport):
     Automatically computes start_time and finish_time based on earliest/latest child reports
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, cores_allowed=0, ram_mb_allowed=0, *args, **kwargs):
+        self.cores_allowed = cores_allowed
+        self.ram_mb_allowed = ram_mb_allowed
         self.children = []
         super(TimelineReport, self).__init__(*args, **kwargs)
 
@@ -300,28 +302,25 @@ class Reporter(object):
     """
     Singleton thread-safe reporting class
     """
-    timeline_report = TimelineReport()
+    # Initially None to force initaliziation
+    timeline_report = None
     lock = threading.Lock()
 
-    def __enter__(self):
-        Reporter.lock.acquire()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        Reporter.lock.release()
-
-    def add_report(self, report):
-        Reporter.timeline_report.add_report(report)
+    @staticmethod
+    def initialize(cores_allowed=0, ram_mb_allowed=0):
+        with Reporter.lock:
+            Reporter.timeline_report = TimelineReport(cores_allowed, ram_mb_allowed)
 
     @staticmethod
-    def clear():
-        with Reporter():
-            Reporter.timeline_report = TimelineReport()
+    def add_report(report):
+        with Reporter.lock:
+            Reporter.timeline_report.add_report(report)
 
     @staticmethod
     def get_report():
-        with Reporter():
+        with Reporter.lock:
             return Reporter.timeline_report
+
 
 
 def default_serializer(obj):
@@ -333,6 +332,10 @@ def default_serializer(obj):
     if isinstance(obj, (datetime)):
         return obj.isoformat()
     raise TypeError ("Type %s not serializable" % type(obj))
+
+
+def initialize_reporter(max_ram_mb, max_cores):
+    Reporter.initialize(cores_allowed=max_cores, ram_mb_allowed=max_ram_mb)
 
 
 def write_report(filename):
