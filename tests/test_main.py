@@ -33,8 +33,8 @@ class CalrissianMainTestCase(TestCase):
         self.assertTrue(mock_arg_parser.called)
         self.assertEqual(mock_add_arguments.call_args, call(mock_arg_parser.return_value))
         self.assertEqual(mock_parse_arguments.call_args, call(mock_arg_parser.return_value))
-        self.assertEqual(mock_memory_parser.parse_to_megabytes.call_args, call(mock_arg_parser.return_value.max_ram))
-        self.assertEqual(mock_cpu_parser.parse.call_args, call(mock_arg_parser.return_value.max_cores))
+        self.assertEqual(mock_memory_parser.parse_to_megabytes.call_args, call(mock_parse_arguments.return_value.max_ram))
+        self.assertEqual(mock_cpu_parser.parse.call_args, call(mock_parse_arguments.return_value.max_cores))
         self.assertEqual(mock_executor.call_args,
                          call(mock_memory_parser.parse_to_megabytes.return_value, mock_cpu_parser.parse.return_value))
         self.assertTrue(mock_runtime_context.called)
