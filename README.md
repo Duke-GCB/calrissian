@@ -14,7 +14,7 @@ It is in development and includes a simple workflow (revsort [single](input-data
 
 The `openshift/` directory contains YAML files that demonstrate the basic functionality. To configure Openshift, do the following:
 
-1. Create a project in openshift (e.g. `calrissian-demo`). Note that namespaces must be unique, so if `calrissian-demo-project` is already in use on the cluster, you will need to choose a different name.
+1. Create a project in openshift (e.g. `calrissian-demo-project`). Note that namespaces must be unique, so if `calrissian-demo-project` is already in use on the cluster, you will need to choose a different name.
 
         oc new-project calrissian-demo-project
 
