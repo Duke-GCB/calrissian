@@ -112,7 +112,8 @@ class KubernetesVolumeBuilder(object):
 
     @staticmethod
     def calculate_subpath(source, prefix, parent_sub_path):
-        source_without_prefix = source[len(prefix) + 1:]
+        slashed_prefix = os.path.join(prefix, '')  # add '/' to end of prefix if it is not there already
+        source_without_prefix = source[len(slashed_prefix):]
         if parent_sub_path:
             return '{}/{}'.format(parent_sub_path, source_without_prefix)
         else:

@@ -115,6 +115,10 @@ class KubernetesVolumeBuilderTestCase(TestCase):
         subpath = KubernetesVolumeBuilder.calculate_subpath('/prefix/1/foo', '/prefix/1', 'basedir')
         self.assertEqual('basedir/foo', subpath)
 
+    def test_calculates_subpath_with_parent_subpath_with_trailing_slash(self):
+        subpath = KubernetesVolumeBuilder.calculate_subpath('/prefix/1/foo', '/prefix/1/', 'basedir')
+        self.assertEqual('basedir/foo', subpath)
+
     def test_add_rw_volume_binding(self):
         self.assertEqual(0, len(self.volume_builder.volumes))
         self.volume_builder.add_persistent_volume_entry('/prefix/1', None, 'claim1')
