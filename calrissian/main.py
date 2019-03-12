@@ -9,6 +9,8 @@ from typing_extensions import Text
 import logging
 import sys
 import signal
+import subprocess
+import os
 
 log = logging.getLogger("calrissian.main")
 
@@ -24,6 +26,8 @@ def add_arguments(parser):
     parser.add_argument('--max-cores', type=str, help='Maximum number of CPU cores to use')
     parser.add_argument('--pod-labels', type=Text, nargs='?', help='YAML file of labels to add to Pods submitted')
     parser.add_argument('--usage-report', type=Text, nargs='?', help='Output JSON file name to record resource usage')
+    parser.add_argument('--stdout', type=Text, nargs='?', help='Output file name to tee standard output (CWL output object)')
+    parser.add_argument('--stderr', type=Text, nargs='?', help='Output file name to tee standard error to (includes tool logs)')
 
 
 def print_version():
@@ -57,11 +61,32 @@ def install_signal_handler():
     signal.signal(signal.SIGTERM, handle_sigterm)
 
 
+def install_tees(stdout_path=None, stderr_path=None):
+    """
+    Reconnects stdout/stderr to `tee` processes via subprocess.PIPE that can write to user-supplied files
+    https://stackoverflow.com/a/651718/595085
+    :param stdout_path: optional path of file to tee standard output to
+    :param stderr_path: optional path of file to tee standard error to
+    :return: None
+    """
+
+    if stdout_path:
+        sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+        stdout_tee_process = subprocess.Popen(["tee", stdout_path], stdin=subprocess.PIPE)
+        os.dup2(stdout_tee_process.stdin.fileno(), sys.stdout.fileno())
+
+    if stderr_path:
+        sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
+        stderr_tee_process = subprocess.Popen(["tee", stderr_path], stdin=subprocess.PIPE)
+        os.dup2(stderr_tee_process.stdin.fileno(), sys.stderr.fileno())
+
+
 def main():
     activate_logging()
     parser = arg_parser()
     add_arguments(parser)
     parsed_args = parse_arguments(parser)
+    install_tees(parsed_args.stdout, parsed_args.stderr)
     max_ram_megabytes = MemoryParser.parse_to_megabytes(parsed_args.max_ram)
     max_cores = CPUParser.parse(parsed_args.max_cores)
     executor = CalrissianExecutor(max_ram_megabytes, max_cores)
