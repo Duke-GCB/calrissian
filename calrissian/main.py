@@ -71,12 +71,12 @@ def install_tees(stdout_path=None, stderr_path=None):
     """
 
     if stdout_path:
-        sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+        sys.stdout = os.fdopen(sys.stdout.fileno(), 'wb', 0)
         stdout_tee_process = subprocess.Popen(["tee", stdout_path], stdin=subprocess.PIPE)
         os.dup2(stdout_tee_process.stdin.fileno(), sys.stdout.fileno())
 
     if stderr_path:
-        sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
+        sys.stderr = os.fdopen(sys.stderr.fileno(), 'wb', 0)
         stderr_tee_process = subprocess.Popen(["tee", stderr_path], stdin=subprocess.PIPE)
         os.dup2(stderr_tee_process.stdin.fileno(), sys.stderr.fileno())
 
