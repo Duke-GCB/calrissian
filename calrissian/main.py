@@ -71,14 +71,17 @@ def install_tees(stdout_path=None, stderr_path=None):
     """
 
     if stdout_path:
-        sys.stdout = os.fdopen(sys.stdout.fileno(), 'wb', 0)
         stdout_tee_process = subprocess.Popen(["tee", stdout_path], stdin=subprocess.PIPE)
         os.dup2(stdout_tee_process.stdin.fileno(), sys.stdout.fileno())
 
     if stderr_path:
-        sys.stderr = os.fdopen(sys.stderr.fileno(), 'wb', 0)
         stderr_tee_process = subprocess.Popen(["tee", stderr_path], stdin=subprocess.PIPE)
         os.dup2(stderr_tee_process.stdin.fileno(), sys.stderr.fileno())
+
+
+def flush_tees():
+    sys.stdout.flush()
+    sys.stderr.flush()
 
 
 def main():
@@ -106,6 +109,7 @@ def main():
         delete_pods()
         if parsed_args.usage_report:
             write_report(parsed_args.usage_report)
+        flush_tees()
 
     return result
 
