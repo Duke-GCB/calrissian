@@ -75,7 +75,10 @@ def install_tees(stdout_path=None, stderr_path=None):
         os.dup2(stdout_tee_process.stdin.fileno(), sys.stdout.fileno())
 
     if stderr_path:
-        stderr_tee_process = subprocess.Popen(["tee", stderr_path], stdin=subprocess.PIPE)
+        # stderr must be handled differently. By default, tee sends output to stdout,
+        # so we run it under a shell to redirect that to stderr.
+        # subprocess.STDOUT can be used to redirect stderr to stdout but there's no convenience for the opposite
+        stderr_tee_process = subprocess.Popen(["sh", "-c", "tee >&2 \"{}\"".format(stderr_path)], stdin=subprocess.PIPE)
         os.dup2(stderr_tee_process.stdin.fileno(), sys.stderr.fileno())
 
 
