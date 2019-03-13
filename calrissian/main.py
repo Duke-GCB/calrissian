@@ -11,8 +11,10 @@ import sys
 import signal
 import subprocess
 import os
+import shlex
 
 log = logging.getLogger("calrissian.main")
+
 
 def activate_logging():
     loggers = ['executor','context','tool','job', 'k8s','main']
@@ -76,9 +78,10 @@ def install_tees(stdout_path=None, stderr_path=None):
 
     if stderr_path:
         # stderr must be handled differently. By default, tee sends output to stdout,
-        # so we run it under a shell to redirect that to stderr.
-        # subprocess.STDOUT can be used to redirect stderr to stdout but there's no convenience for the opposite
-        stderr_tee_process = subprocess.Popen(["sh", "-c", "tee >&2 \"{}\"".format(stderr_path)], stdin=subprocess.PIPE)
+        # so we run it under a shell to redirect that to stderr, and use shlex.quote for safety
+        stderr_tee_process = subprocess.Popen(["tee >&2 {}".format(shlex.quote(stderr_path))],
+                                              stdin=subprocess.PIPE,
+                                              shell=True)
         os.dup2(stderr_tee_process.stdin.fileno(), sys.stderr.fileno())
 
 
