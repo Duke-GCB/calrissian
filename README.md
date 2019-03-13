@@ -21,10 +21,12 @@ The `openshift/` directory contains YAML files that demonstrate the basic functi
 2. Create a role in your project to allow managing `Pod`s:
 
         oc create role pod-manager-role --verb=create,delete,list,watch --resource=pods
+        oc create role log-reader-role --verb=get,list --resource=pods/log
 
 3. Bind your project's default service account access to these roles. Calrissian running inside the cluster will use this service account to make Kubernetes API calls.
 
         oc create rolebinding pod-manager-default-binding --role=pod-manager-role --serviceaccount=calrissian-demo-project:default
+        oc create rolebinding log-reader-default-binding --role=log-reader-role --serviceaccount=calrissian-demo-project:default
 
 4. Create the BuildConfig - this allows Openshift to build the source code into a Docker image and starts a build automatically. If you wish to build a different branch or repo, edit this file.
 
