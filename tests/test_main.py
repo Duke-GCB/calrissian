@@ -1,17 +1,16 @@
 from unittest import TestCase
 from unittest.mock import patch, call, Mock
-
-from calrissian.main import main, add_arguments, parse_arguments, handle_sigterm, install_signal_handler
-from cwltool.argparser import arg_parser
+from calrissian.main import main, add_arguments, parse_arguments
+from calrissian.main import handle_sigterm, install_signal_handler, install_tees, flush_tees
 
 
 class CalrissianMainTestCase(TestCase):
 
     @patch('calrissian.main.cwlmain')
     @patch('calrissian.main.arg_parser')
-    @patch('calrissian.main.CalrissianExecutor')
-    @patch('calrissian.main.CalrissianLoadingContext')
-    @patch('calrissian.main.CalrissianRuntimeContext')
+    @patch('calrissian.main.CalrissianExecutor', autospec=True)
+    @patch('calrissian.main.CalrissianLoadingContext', autospec=True)
+    @patch('calrissian.main.CalrissianRuntimeContext', autospec=True)
     @patch('calrissian.main.version')
     @patch('calrissian.main.parse_arguments')
     @patch('calrissian.main.add_arguments')
@@ -21,7 +20,10 @@ class CalrissianMainTestCase(TestCase):
     @patch('calrissian.main.initialize_reporter')
     @patch('calrissian.main.CPUParser', autospec=True)
     @patch('calrissian.main.MemoryParser', autospec=True)
-    def test_main_calls_cwlmain_returns_exit_code(self, mock_memory_parser, mock_cpu_parser,
+    @patch('calrissian.main.install_tees')
+    @patch('calrissian.main.flush_tees')
+    def test_main_calls_cwlmain_returns_exit_code(self, mock_flush_tees, mock_install_tees,
+                                                  mock_memory_parser, mock_cpu_parser,
                                                   mock_initialize_reporter, mock_write_report,
                                                   mock_install_signal_handler, mock_delete_pods,
                                                   mock_add_arguments, mock_parse_arguments, mock_version,
@@ -49,11 +51,13 @@ class CalrissianMainTestCase(TestCase):
         self.assertTrue(mock_delete_pods.called)  # called after main()
         self.assertTrue(mock_write_report.called)
         self.assertEqual(mock_initialize_reporter.call_args, call(mock_memory_parser.parse_to_megabytes.return_value, mock_cpu_parser.parse.return_value))
+        self.assertEqual(mock_install_tees.call_args, call(mock_parse_arguments.return_value.stdout, mock_parse_arguments.return_value.stderr))
+        self.assertTrue(mock_flush_tees.called)
 
     def test_add_arguments(self):
         mock_parser = Mock()
         add_arguments(mock_parser)
-        self.assertEqual(mock_parser.add_argument.call_count, 4)
+        self.assertEqual(mock_parser.add_argument.call_count, 6)
 
     @patch('calrissian.main.sys')
     def test_parse_arguments_exits_without_ram_or_cores(self, mock_sys):
@@ -101,3 +105,44 @@ class CalrissianMainTestCase(TestCase):
     def test_install_signal_handler(self, mock_handle_sigterm, mock_signal):
         install_signal_handler()
         self.assertEqual(mock_signal.signal.call_args, call(mock_signal.SIGTERM, mock_handle_sigterm))
+
+    @patch('calrissian.main.subprocess')
+    @patch('calrissian.main.os')
+    @patch('calrissian.main.sys')
+    def test_install_tees_handles_stdout(self, mock_sys, mock_os, mock_subprocess):
+        install_tees(stdout_path='/stdout.txt')
+        self.assertEqual(mock_subprocess.Popen.call_args, call(['tee','/stdout.txt'], stdin=mock_subprocess.PIPE))
+        self.assertEqual(mock_os.dup2.call_args, call(mock_subprocess.Popen.return_value.stdin.fileno.return_value, mock_sys.stdout.fileno.return_value))
+
+    @patch('calrissian.main.subprocess')
+    @patch('calrissian.main.os')
+    @patch('calrissian.main.sys')
+    def test_install_tees_handles_stderr(self, mock_sys, mock_os, mock_subprocess):
+        install_tees(stderr_path='/stderr.txt')
+        self.assertEqual(mock_subprocess.Popen.call_args, call(['tee >&2 /stderr.txt'], stdin=mock_subprocess.PIPE, shell=True))
+        self.assertEqual(mock_os.dup2.call_args, call(mock_subprocess.Popen.return_value.stdin.fileno.return_value, mock_sys.stderr.fileno.return_value))
+
+    @patch('calrissian.main.subprocess')
+    @patch('calrissian.main.os')
+    @patch('calrissian.main.sys')
+    def test_install_tees_quotes_if_needed(self, mock_sys, mock_os, mock_subprocess):
+        install_tees(stdout_path='/stdout file with spaces.txt', stderr_path='/stderr.txt; ls')
+        self.assertIn(call(['tee', '/stdout file with spaces.txt'], stdin=mock_subprocess.PIPE), mock_subprocess.Popen.mock_calls)
+        self.assertIn(call(['tee >&2 \'/stderr.txt; ls\''], shell=True, stdin=mock_subprocess.PIPE), mock_subprocess.Popen.mock_calls)
+
+    @patch('calrissian.main.subprocess')
+    @patch('calrissian.main.os')
+    @patch('calrissian.main.sys')
+    def test_install_tees_does_nothing_without_files(self, mock_sys, mock_os, mock_subprocess):
+        install_tees()
+        self.assertFalse(mock_subprocess.Popen.called)
+        self.assertFalse(mock_os.dup2.called)
+        self.assertFalse(mock_sys.stdout.fileno.called)
+        self.assertFalse(mock_sys.stderr.fileno.called)
+
+    @patch('calrissian.main.sys')
+    def test_flush_tees(self, mock_sys):
+        flush_tees()
+        self.assertTrue(mock_sys.stdout.flush.called)
+        self.assertTrue(mock_sys.stderr.flush.called)
+
