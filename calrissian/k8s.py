@@ -64,6 +64,7 @@ class KubernetesClient(object):
         self.pod = None
         # load_config must happen before instantiating client
         self.completion_result = None
+        self.logging_thread = None
         self.namespace = load_config_get_namespace()
         self.core_api_instance = client.CoreV1Api()
 
@@ -73,6 +74,7 @@ class KubernetesClient(object):
             log.info('Created k8s pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
             monitor.add(pod)
             self._set_pod(pod)
+            self.stream_logs()
 
     def should_delete_pod(self):
         """
@@ -114,6 +116,18 @@ class KubernetesClient(object):
         )
         log.info('handling completion with {}'.format(exit_code))
 
+    def stream_logs(self):
+        def pod_log_watcher(api_instance, name, namespace):
+            log.info('starting log watcher for {}'.format(name))
+            for line in api_instance.read_namespaced_pod_log(name, namespace, follow=True, _preload_content=False).stream():
+                log.info('{}: {}'.format(name, line))
+            log.info('exiting log watcher for {}'.format(name))
+
+        thread = threading.Thread(target=pod_log_watcher, args=(self.core_api_instance, self.pod.metadata.name, self.namespace))
+        thread.daemon = True
+        self.logging_thread = thread
+        thread.start()
+
     def wait_for_completion(self):
         w = watch.Watch()
         for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_field_selector()):
@@ -136,6 +150,7 @@ class KubernetesClient(object):
                 w.stop()
             else:
                 raise CalrissianJobException('Unexpected pod container status', status)
+        self.logging_thread.wait()
         return self.completion_result
 
     def _set_pod(self, pod):
