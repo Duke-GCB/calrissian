@@ -124,7 +124,7 @@ class KubernetesClient(object):
             log.info('exiting log watcher for {}'.format(name))
 
         thread = threading.Thread(target=pod_log_watcher, args=(self.core_api_instance, self.pod.metadata.name, self.namespace))
-        thread.daemon = True
+        thread.daemon = True # Should not prevent calrissian from exiting otherwise.
         self.logging_thread = thread
         thread.start()
 
@@ -150,7 +150,7 @@ class KubernetesClient(object):
                 w.stop()
             else:
                 raise CalrissianJobException('Unexpected pod container status', status)
-        self.logging_thread.wait()
+        self.logging_thread.join()
         return self.completion_result
 
     def _set_pod(self, pod):
