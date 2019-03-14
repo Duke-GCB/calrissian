@@ -115,10 +115,11 @@ class KubernetesClient(object):
         log.info('handling completion with {}'.format(exit_code))
 
     def follow_logs(self):
-        log.info('starting follow_logs for {}'.format(self.pod.metadata.name))
+        pod_name = self.pod.metadata.name
+        log.info('[{}] follow_logs start'.format(pod_name))
         for line in self.core_api_instance.read_namespaced_pod_log(self.pod.metadata.name, self.namespace, follow=True, _preload_content=False).stream():
-            log.info('{}: {}'.format(name, line))
-        log.info('finishing follow_logs for {}'.format(self.pod.metadata.name))
+            log.debug('[{}] {}'.format(pod_name, line))
+        log.info('[{}] follow_logs end'.format(pod_name))
 
     def wait_for_completion(self):
         w = watch.Watch()
