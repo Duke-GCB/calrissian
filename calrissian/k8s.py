@@ -117,7 +117,14 @@ class KubernetesClient(object):
     def follow_logs(self):
         pod_name = self.pod.metadata.name
         log.info('[{}] follow_logs start'.format(pod_name))
-        for line in self.core_api_instance.read_namespaced_pod_log(self.pod.metadata.name, self.namespace, follow=True, _preload_content=False).stream():
+        for line in self.core_api_instance.read_namespaced_pod_log(self.pod.metadata.name, self.namespace, follow=True,
+                                                                   _preload_content=False, timestamps=True).stream():
+            # .stream() is only available if _preload_content=False
+            # .stream() returns a generator, each iteration yields bytes.
+            # kubernetes-client decodes them as utf-8 when _preload_content is True
+            # https://github.com/kubernetes-client/python/blob/fcda6fe96beb21cd05522c17f7f08c5a7c0e3dc3/kubernetes/client/rest.py#L215-L216
+            # So we do the same here
+            line = line.decode('utf-8').rstrip()
             log.debug('[{}] {}'.format(pod_name, line))
         log.info('[{}] follow_logs end'.format(pod_name))
 
