@@ -422,7 +422,8 @@ class ReporterFunctionsTestCase(TestCase):
         initialize_reporter(0, 0)
         self.assertIsNotNone(Reporter.get_report())
 
-    def test_write_report_raises_if_not_initialized(self):
+    @patch('builtins.open')
+    def test_write_report_raises_if_not_initialized(self, mock_open):
         Reporter.timeline_report = None
         self.assertIsNone(Reporter.get_report())
         with self.assertRaises(AttributeError) as context:
