@@ -117,8 +117,8 @@ class KubernetesClient(object):
     def follow_logs(self):
         pod_name = self.pod.metadata.name
         log.info('[{}] follow_logs start'.format(pod_name))
-        #             elif isinstance(_request_timeout, tuple) and len(_request_timeout) == 2:
-        # _request timeout is either single-value total or (connect, read)
+        # _request timeout can either single-value for urllib3 total timeout or tuple of (connect, read)
+        # Appears that timeout is necessary for following logs to avoid timing out?
         for line in self.core_api_instance.read_namespaced_pod_log(self.pod.metadata.name, self.namespace, follow=True,
                                                                    _preload_content=False, _request_timeout=0, timestamps=True).stream():
             # .stream() is only available if _preload_content=False
