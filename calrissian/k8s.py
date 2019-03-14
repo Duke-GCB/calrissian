@@ -120,7 +120,7 @@ class KubernetesClient(object):
         # _request timeout can either single-value for urllib3 total timeout or tuple of (connect, read)
         # Appears that timeout is necessary for following logs to avoid timing out?
         for line in self.core_api_instance.read_namespaced_pod_log(self.pod.metadata.name, self.namespace, follow=True,
-                                                                   _preload_content=False, _request_timeout=0, timestamps=True).stream():
+                                                                   _preload_content=False, _request_timeout=0).stream():
             # .stream() is only available if _preload_content=False
             # .stream() returns a generator, each iteration yields bytes.
             # kubernetes-client decodes them as utf-8 when _preload_content is True

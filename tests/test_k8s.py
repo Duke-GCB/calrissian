@@ -259,7 +259,7 @@ class KubernetesClientTestCase(TestCase):
         self.assertTrue(mock_read.called)
         self.assertEqual(mock_read.call_args, call('logging-pod-123', 'logging-ns',
                                                    follow=True, _preload_content=False,
-                                                   _request_timeout=0, timestamps=True))
+                                                   _request_timeout=0))
         self.assertEqual(mock_log.debug.mock_calls, [
             call('[logging-pod-123] line1'),
             call('[logging-pod-123] line2')
