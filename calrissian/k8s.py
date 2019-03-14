@@ -117,8 +117,10 @@ class KubernetesClient(object):
     def follow_logs(self):
         pod_name = self.pod.metadata.name
         log.info('[{}] follow_logs start'.format(pod_name))
+        #             elif isinstance(_request_timeout, tuple) and len(_request_timeout) == 2:
+        # _request timeout is either single-value total or (connect, read)
         for line in self.core_api_instance.read_namespaced_pod_log(self.pod.metadata.name, self.namespace, follow=True,
-                                                                   _preload_content=False, timestamps=True).stream():
+                                                                   _preload_content=False, _request_timeout=0, timestamps=True).stream():
             # .stream() is only available if _preload_content=False
             # .stream() returns a generator, each iteration yields bytes.
             # kubernetes-client decodes them as utf-8 when _preload_content is True
