@@ -64,7 +64,6 @@ class KubernetesClient(object):
         self.pod = None
         # load_config must happen before instantiating client
         self.completion_result = None
-        self.logging_thread = None
         self.namespace = load_config_get_namespace()
         self.core_api_instance = client.CoreV1Api()
 
@@ -115,25 +114,11 @@ class KubernetesClient(object):
         )
         log.info('handling completion with {}'.format(exit_code))
 
-    def stream_logs(self):
-        if self.logging_thread:
-            raise CalrissianJobException('Error starting stream_logs: logging thread is already set')
-
-        def stream_pod_logs(api_instance, name, namespace):
-            log.info('starting log watcher for {}'.format(name))
-            for line in api_instance.read_namespaced_pod_log(name, namespace, follow=True, _preload_content=False).stream():
-                log.info('{}: {}'.format(name, line))
-            log.info('exiting log watcher for {}'.format(name))
-
-        self.logging_thread = threading.Thread(target=stream_pod_logs,
-                                               daemon=True,
-                                               args=(self.core_api_instance, self.pod.metadata.name, self.namespace))
-        self.logging_thread.start()
-
-    def wait_for_logs(self):
-        if not self.logging_thread:
-            raise CalrissianJobException('Error waiting for logs: logging_thread is not set')
-        self.logging_thread.join() # block execution until the logging thread exits
+    def follow_logs(self):
+        log.info('starting follow_logs for {}'.format(self.pod.metadata.name))
+        for line in self.core_api_instance.read_namespaced_pod_log(self.pod.metadata.name, self.namespace, follow=True, _preload_content=False).stream():
+            log.info('{}: {}'.format(name, line))
+        log.info('finishing follow_logs for {}'.format(self.pod.metadata.name))
 
     def wait_for_completion(self):
         w = watch.Watch()
@@ -142,9 +127,11 @@ class KubernetesClient(object):
             status = self.get_first_or_none(pod.status.container_statuses)
             if status is None:
                 continue
-            if self.state_is_running(status.state):
+            if self.state_is_waiting(status.state):
+                continue
+            elif self.state_is_running(status.state):
                 # Can only get logs once container is running
-                self.stream_logs()
+                self.follow_logs() # This will not return until pod completes
             elif self.state_is_terminated(status.state):
                 log.info('Handling terminated pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
                 container = self.get_first_or_none(pod.spec.containers)
@@ -158,7 +145,6 @@ class KubernetesClient(object):
                 w.stop()
             else:
                 raise CalrissianJobException('Unexpected pod container status', status)
-        self.wait_for_logs()
         return self.completion_result
 
     def _set_pod(self, pod):
@@ -175,7 +161,11 @@ class KubernetesClient(object):
 
     @staticmethod
     def state_is_running(state):
-        return state.running or state.waiting
+        return state.running
+
+    @staticmethod
+    def state_is_waiting(state):
+        return state.waiting
 
     @staticmethod
     def state_is_terminated(state):
