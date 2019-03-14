@@ -65,7 +65,7 @@ class KubernetesClientTestCase(TestCase):
     def make_mock_pod(self, name):
         mock_metadata = Mock()
         # Cannot mock name attribute without a propertymock
-        name_property = PropertyMock(return_value='test123')
+        name_property = PropertyMock(return_value=name)
         type(mock_metadata).name = name_property
         mock_pod = create_autospec(V1Pod, metadata=mock_metadata)
         return mock_pod
@@ -93,8 +93,9 @@ class KubernetesClientTestCase(TestCase):
         self.assertIsNotNone(kc.pod)
 
     @patch('calrissian.k8s.watch')
-    def test_wait_skips_pod_when_state_is_running(self, mock_watch, mock_get_namespace, mock_client):
+    def test_wait_skips_pod_when_state_is_waiting(self, mock_watch, mock_get_namespace, mock_client):
         mock_pod = create_autospec(V1Pod)
+        mock_pod.status.container_statuses[0].state = Mock(running=None, waiting=True, terminated=None)
         self.setup_mock_watch(mock_watch, [mock_pod])
         kc = KubernetesClient()
         kc._set_pod(Mock())
@@ -102,6 +103,20 @@ class KubernetesClientTestCase(TestCase):
         self.assertFalse(mock_watch.Watch.return_value.stop.called)
         self.assertFalse(mock_client.CoreV1Api.return_value.delete_namespaced_pod.called)
         self.assertIsNotNone(kc.pod)
+
+    @patch('calrissian.k8s.watch')
+    @patch('calrissian.k8s.KubernetesClient.follow_logs')
+    def test_wait_follows_logs_pod_when_state_is_running(self, mock_follow_logs, mock_watch, mock_get_namespace, mock_client):
+        mock_pod = create_autospec(V1Pod)
+        mock_pod.status.container_statuses[0].state = Mock(running=True, waiting=None, terminated=None)
+        self.setup_mock_watch(mock_watch, [mock_pod])
+        kc = KubernetesClient()
+        kc._set_pod(Mock())
+        kc.wait_for_completion()
+        self.assertFalse(mock_watch.Watch.return_value.stop.called)
+        self.assertFalse(mock_client.CoreV1Api.return_value.delete_namespaced_pod.called)
+        self.assertIsNotNone(kc.pod)
+        self.assertTrue(mock_follow_logs.called)
 
     @patch('calrissian.k8s.watch')
     @patch('calrissian.k8s.PodMonitor')
@@ -231,6 +246,28 @@ class KubernetesClientTestCase(TestCase):
             kc.delete_pod_name('pod-123')
         self.assertIn('Error deleting pod named pod-123', str(context.exception))
 
+    @patch('calrissian.k8s.log')
+    def test_follow_logs_streams_to_logging(self, mock_log, mock_get_namespace, mock_client):
+        mock_get_namespace.return_value = 'logging-ns'
+        mock_read = mock_client.CoreV1Api.return_value.read_namespaced_pod_log
+        mock_read.return_value.stream.return_value = [b'line1\n', b'line2\n']
+        mock_pod = self.make_mock_pod('logging-pod-123')
+        kc = KubernetesClient()
+        kc._set_pod(mock_pod)
+        mock_log.reset_mock() # log will have other calls before calling follow_logs()
+        kc.follow_logs()
+        self.assertTrue(mock_read.called)
+        self.assertEqual(mock_read.call_args, call('logging-pod-123', 'logging-ns',
+                                                   follow=True, _preload_content=False))
+        self.assertEqual(mock_log.debug.mock_calls, [
+            call('[logging-pod-123] line1'),
+            call('[logging-pod-123] line2')
+            ])
+        self.assertEqual(mock_log.info.mock_calls, [
+            call('[logging-pod-123] follow_logs start'),
+            call('[logging-pod-123] follow_logs end')
+        ])
+
 
 class KubernetesClientStateTestCase(TestCase):
 
@@ -241,8 +278,13 @@ class KubernetesClientStateTestCase(TestCase):
 
     def test_is_running(self):
         self.assertTrue(KubernetesClient.state_is_running(self.running_state))
-        self.assertTrue(KubernetesClient.state_is_running(self.waiting_state))
+        self.assertFalse(KubernetesClient.state_is_running(self.waiting_state))
         self.assertFalse(KubernetesClient.state_is_running(self.terminated_state))
+
+    def test_is_waiting(self):
+        self.assertFalse(KubernetesClient.state_is_waiting(self.running_state))
+        self.assertTrue(KubernetesClient.state_is_waiting(self.waiting_state))
+        self.assertFalse(KubernetesClient.state_is_waiting(self.terminated_state))
 
     def test_is_terminated(self):
         self.assertFalse(KubernetesClient.state_is_terminated(self.running_state))

@@ -114,6 +114,20 @@ class KubernetesClient(object):
         )
         log.info('handling completion with {}'.format(exit_code))
 
+    def follow_logs(self):
+        pod_name = self.pod.metadata.name
+        log.info('[{}] follow_logs start'.format(pod_name))
+        for line in self.core_api_instance.read_namespaced_pod_log(self.pod.metadata.name, self.namespace, follow=True,
+                                                                   _preload_content=False).stream():
+            # .stream() is only available if _preload_content=False
+            # .stream() returns a generator, each iteration yields bytes.
+            # kubernetes-client decodes them as utf-8 when _preload_content is True
+            # https://github.com/kubernetes-client/python/blob/fcda6fe96beb21cd05522c17f7f08c5a7c0e3dc3/kubernetes/client/rest.py#L215-L216
+            # So we do the same here
+            line = line.decode('utf-8').rstrip()
+            log.debug('[{}] {}'.format(pod_name, line))
+        log.info('[{}] follow_logs end'.format(pod_name))
+
     def wait_for_completion(self):
         w = watch.Watch()
         for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_field_selector()):
@@ -121,8 +135,11 @@ class KubernetesClient(object):
             status = self.get_first_or_none(pod.status.container_statuses)
             if status is None:
                 continue
-            if self.state_is_running(status.state):
+            if self.state_is_waiting(status.state):
                 continue
+            elif self.state_is_running(status.state):
+                # Can only get logs once container is running
+                self.follow_logs() # This will not return until pod completes
             elif self.state_is_terminated(status.state):
                 log.info('Handling terminated pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
                 container = self.get_first_or_none(pod.spec.containers)
@@ -152,7 +169,11 @@ class KubernetesClient(object):
 
     @staticmethod
     def state_is_running(state):
-        return state.running or state.waiting
+        return state.running
+
+    @staticmethod
+    def state_is_waiting(state):
+        return state.waiting
 
     @staticmethod
     def state_is_terminated(state):
