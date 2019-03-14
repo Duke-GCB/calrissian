@@ -18,7 +18,7 @@ The `openshift/` directory contains YAML files that demonstrate the basic functi
 
         oc new-project calrissian-demo-project
 
-2. Create a role in your project to allow managing `Pod`s:
+2. Create a pair of roles in your project to allow managing kubernetes `pods` and `logs`:
 
         oc create role pod-manager-role --verb=create,delete,list,watch --resource=pods
         oc create role log-reader-role --verb=get,list --resource=pods/log
