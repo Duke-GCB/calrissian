@@ -241,8 +241,13 @@ class KubernetesClientStateTestCase(TestCase):
 
     def test_is_running(self):
         self.assertTrue(KubernetesClient.state_is_running(self.running_state))
-        self.assertTrue(KubernetesClient.state_is_running(self.waiting_state))
+        self.assertFalse(KubernetesClient.state_is_running(self.waiting_state))
         self.assertFalse(KubernetesClient.state_is_running(self.terminated_state))
+
+    def test_is_waiting(self):
+        self.assertFalse(KubernetesClient.state_is_waiting(self.running_state))
+        self.assertTrue(KubernetesClient.state_is_waiting(self.waiting_state))
+        self.assertFalse(KubernetesClient.state_is_waiting(self.terminated_state))
 
     def test_is_terminated(self):
         self.assertFalse(KubernetesClient.state_is_terminated(self.running_state))
