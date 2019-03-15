@@ -304,13 +304,12 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
     def wait_for_kubernetes_pod(self):
         return self.client.wait_for_completion()
 
-    def report(self, completion_result, bytes_written):
+    def report(self, completion_result, disk_bytes):
         """
         Convert the k8s-specific completion result into a report and submit it
         :param completion_result: calrissian.k8s.CompletionResult
         """
-        report = TimedResourceReport.from_completion_result(completion_result)
-        report.bytes_written = bytes_written
+        report = TimedResourceReport.from_completion_result(completion_result, disk_bytes)
         Reporter.add_report(report)
 
     def finish(self, completion_result, runtimeContext):
@@ -328,8 +327,8 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         # collect_outputs (and collect_output) is defined in command_line_tool
         outputs = self.collect_outputs(self.outdir)
 
-        bytes_written = total_size(outputs)
-        self.report(completion_result, bytes_written)
+        disk_bytes = total_size(outputs)
+        self.report(completion_result, disk_bytes)
 
         # Invoke the callback with a lock
         with runtimeContext.workflow_eval_lock:

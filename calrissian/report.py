@@ -101,14 +101,14 @@ class CPUParser(ResourceParser):
 
 class TimedResourceReport(TimedReport):
     """
-    Adds CPU and memory values to TimedReport, in order to calculate resource usage over the
+    Adds CPU, memory, and disk values to TimedReport, in order to calculate resource usage over the
     duration of the timed report. These values, by convention, are the kubernetes **requested**
     resources (not limits or actual).
     """
-    def __init__(self, cpus=0, ram_megabytes=0, bytes_written=0, *args, **kwargs):
+    def __init__(self, cpus=0, ram_megabytes=0, disk_megabytes=0, *args, **kwargs):
         self.cpus = cpus
         self.ram_megabytes = ram_megabytes
-        self.bytes_written = 0
+        self.disk_megabytes = disk_megabytes
         super(TimedResourceReport, self).__init__(*args, **kwargs)
 
     def ram_megabyte_hours(self):
@@ -121,14 +121,15 @@ class TimedResourceReport(TimedReport):
         result = super(TimedResourceReport, self).to_dict()
         result['ram_megabyte_hours'] = self.ram_megabyte_hours()
         result['cpu_hours'] = self.cpu_hours()
-        result['bytes_written'] = self.bytes_written
         return result
 
     @classmethod
-    def from_completion_result(cls, result):
+    def from_completion_result(cls, result, disk_bytes):
         cpus = CPUParser.parse(result.cpus)
         ram_megabytes = MemoryParser.parse_to_megabytes(result.memory)
-        return cls(start_time=result.start_time, finish_time=result.finish_time, cpus=cpus, ram_megabytes=ram_megabytes)
+        disk_megabytes = MemoryParser.parse_to_megabytes(str(disk_bytes))
+        return cls(start_time=result.start_time, finish_time=result.finish_time, cpus=cpus,
+                   ram_megabytes=ram_megabytes, disk_megabytes=disk_megabytes)
 
 
 class Event(object):
