@@ -2,7 +2,7 @@ from cwltool.job import ContainerCommandLineJob, needs_shell_quoting_re
 from cwltool.utils import DEFAULT_TMP_PREFIX
 from cwltool.errors import WorkflowException, UnsupportedRequirement
 from calrissian.k8s import KubernetesClient
-from calrissian.report import Reporter, TimedResourceReport, CPUParser, MemoryParser
+from calrissian.report import Reporter, TimedResourceReport
 import logging
 import os
 import yaml
@@ -12,7 +12,7 @@ import random
 import string
 import shellescape
 from cwltool.pathmapper import ensure_writable, ensure_non_writable
-import json
+from cwltool.utils import visit_class
 
 log = logging.getLogger("calrissian.job")
 
@@ -44,6 +44,18 @@ def random_tag(length=8):
 def read_yaml(filename):
     with open(filename) as f:
         return yaml.safe_load(f)
+
+
+def total_size(outputs):
+    """
+    Recursively walk through an output dictionary object, totaling
+    up file size from each dictionary where 'class' == 'File'
+    :param outputs: output dictionary from a CWL job
+    :return: Sum of all 'size' field values found
+    """
+    files = []
+    visit_class(outputs, ("File",), files.append)
+    return sum([f.get('size') for f in files])
 
 
 class KubernetesPodVolumeInspector(object):
@@ -292,15 +304,17 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
     def wait_for_kubernetes_pod(self):
         return self.client.wait_for_completion()
 
-    def report(self, completion_result):
+    def report(self, completion_result, bytes_written):
         """
         Convert the k8s-specific completion result into a report and submit it
         :param completion_result: calrissian.k8s.CompletionResult
         """
         report = TimedResourceReport.from_completion_result(completion_result)
+        report.bytes_written = bytes_written
         Reporter.add_report(report)
 
-    def finish(self, exit_code, runtimeContext):
+    def finish(self, completion_result, runtimeContext):
+        exit_code = completion_result.exit_code
         if exit_code in self.successCodes:
             status = "success"
         elif exit_code in self.temporaryFailCodes:
@@ -313,14 +327,15 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             status = "permanentFail"
         # collect_outputs (and collect_output) is defined in command_line_tool
         outputs = self.collect_outputs(self.outdir)
-        json_outputs = json.dumps(outputs, indent=4)
-        log.debug('{} - collected outputs:\n{}'.format(self.name, json_outputs))
 
-        # report the outputs with workflow lock
+        bytes_written = total_size(outputs)
+        self.report(completion_result, bytes_written)
+
+        # Invoke the callback with a lock
         with runtimeContext.workflow_eval_lock:
             self.output_callback(outputs, status)
 
-        # Required cleanup
+        # Cleanup our stagedir and tmp
         if self.stagedir is not None and os.path.exists(self.stagedir):
             log.debug('shutil.rmtree({}, {})'.format(self.stagedir, True))
             shutil.rmtree(self.stagedir, True)
@@ -504,8 +519,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         pod = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
         self.execute_kubernetes_pod(pod) # analogous to _execute()
         completion_result = self.wait_for_kubernetes_pod()
-        self.report(completion_result)
-        self.finish(completion_result.exit_code, runtimeContext)
+        self.finish(completion_result, runtimeContext)
 
     # Below are concrete implementations of the remaining abstract methods in ContainerCommandLineJob
     # They are not implemented and not expected to be called, so they all raise NotImplementedError
@@ -528,4 +542,3 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
     @staticmethod
     def append_volume(runtime, source, target, writable=False):
         raise NotImplementedError('append_volume')
-
