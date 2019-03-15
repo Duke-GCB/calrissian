@@ -12,6 +12,7 @@ import random
 import string
 import shellescape
 from cwltool.pathmapper import ensure_writable, ensure_non_writable
+import json
 
 log = logging.getLogger("calrissian.job")
 
@@ -299,7 +300,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         report = TimedResourceReport.from_completion_result(completion_result)
         Reporter.add_report(report)
 
-    def finish(self, exit_code):
+    def finish(self, exit_code, runtimeContext):
         if exit_code in self.successCodes:
             status = "success"
         elif exit_code in self.temporaryFailCodes:
@@ -310,9 +311,23 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             status = "success"
         else:
             status = "permanentFail"
-        # collect_outputs (and collect_output) is definied in command_line_tool
+        # collect_outputs (and collect_output) is defined in command_line_tool
         outputs = self.collect_outputs(self.outdir)
-        self.output_callback(outputs, status)
+        json_outputs = json.dumps(outputs, indent=4)
+        log.debug('{} - collected outputs:\n{}'.format(self.name, json_outputs))
+
+        # report the outputs with workflow lock
+        with runtimeContext.workflow_eval_lock:
+            self.output_callback(outputs, status)
+
+        # Required cleanup
+        if self.stagedir is not None and os.path.exists(self.stagedir):
+            log.debug('shutil.rmtree({}, {})'.format(self.stagedir, True))
+            shutil.rmtree(self.stagedir, True)
+
+        if runtimeContext.rm_tmpdir:
+            log.debug('shutil.rmtree({}, {})'.format(self.tmpdir, True))
+            shutil.rmtree(self.tmpdir, True)
 
     # Dictionary of supported features.
     # Not yet complete, only checks features of DockerRequirement
@@ -490,7 +505,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         self.execute_kubernetes_pod(pod) # analogous to _execute()
         completion_result = self.wait_for_kubernetes_pod()
         self.report(completion_result)
-        self.finish(completion_result.exit_code)
+        self.finish(completion_result.exit_code, runtimeContext)
 
     # Below are concrete implementations of the remaining abstract methods in ContainerCommandLineJob
     # They are not implemented and not expected to be called, so they all raise NotImplementedError
