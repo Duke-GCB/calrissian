@@ -79,7 +79,7 @@ class TimedReportTestCase(TestCase):
 class TimedResourceReportTestCase(TestCase):
 
     def setUp(self):
-        self.report = TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1015)
+        self.report = TimedResourceReport(name='timed-resource-report', start_time=TIME_1000, finish_time=TIME_1015)
 
     def test_calculates_ram_hours(self):
         # 1024MB for 15 minutes is 256 MB-hours
@@ -109,12 +109,15 @@ class TimedResourceReportTestCase(TestCase):
 
     def test_to_dict(self):
         self.report.ram_megabytes = 1024
+        self.report.disk_megabytes = 512
         self.report.cpus = 8
         report_dict = self.report.to_dict()
         self.assertEqual(report_dict['start_time'], TIME_1000)
         self.assertEqual(report_dict['finish_time'], TIME_1015)
         self.assertEqual(report_dict['cpu_hours'], 2)
         self.assertEqual(report_dict['ram_megabyte_hours'], 256)
+        self.assertEqual(report_dict['disk_megabytes'], 512)
+        self.assertEqual(report_dict['name'], 'timed-resource-report')
 
 
 class TimelineReportTestCase(TestCase):
