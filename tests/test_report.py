@@ -73,6 +73,10 @@ class TimedReportTestCase(TestCase):
         self.assertEqual(report_dict['elapsed_seconds'], 3600.0)
         self.assertEqual(report_dict['elapsed_hours'], 1.0)
 
+    def test_to_dict_drops_none(self):
+        self.assertIsNone(self.report.name)
+        report_dict = self.report.to_dict()
+        self.assertNotIn('name', report_dict)
 
 class TimedResourceReportTestCase(TestCase):
 

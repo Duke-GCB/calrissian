@@ -43,7 +43,8 @@ class TimedReport(object):
             return None
 
     def to_dict(self):
-        result = dict(vars(self)) # Make sure we create a copy, otherwise writing to the dict overwrites the object
+        # Create a dict of our variables, filtering out None
+        result = dict((k,v) for k,v in vars(self).items() if v is not None)
         result['elapsed_hours'] = self.elapsed_hours()
         result['elapsed_seconds'] = self.elapsed_seconds()
         return result
