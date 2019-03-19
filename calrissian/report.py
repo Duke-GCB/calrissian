@@ -25,6 +25,9 @@ class TimedReport(object):
         self.finish_time = finish_time if finish_time else datetime.now()
 
     def elapsed_seconds(self):
+        if self.start_time is None or self.finish_time is None:
+            # one of the times is None, cannot report
+            return None
         delta = self.finish_time - self.start_time
         total_seconds = delta.total_seconds()
         if total_seconds < 0:
@@ -33,7 +36,11 @@ class TimedReport(object):
             return total_seconds
 
     def elapsed_hours(self):
-        return self.elapsed_seconds() / SECONDS_PER_HOUR
+        elapsed_seconds = self.elapsed_seconds()
+        if elapsed_seconds:
+            return elapsed_seconds / SECONDS_PER_HOUR
+        else:
+            return None
 
     def to_dict(self):
         result = dict(vars(self)) # Make sure we create a copy, otherwise writing to the dict overwrites the object
@@ -113,10 +120,18 @@ class TimedResourceReport(TimedReport):
         super(TimedResourceReport, self).__init__(*args, **kwargs)
 
     def ram_megabyte_hours(self):
-        return self.ram_megabytes * self.elapsed_hours()
+        elapsed_hours = self.elapsed_hours()
+        if elapsed_hours:
+            return self.ram_megabytes * elapsed_hours
+        else:
+            return None
 
     def cpu_hours(self):
-        return self.cpus * self.elapsed_hours()
+        elapsed_hours = self.elapsed_hours()
+        if elapsed_hours:
+            return self.cpus * elapsed_hours
+        else:
+            return None
 
     def to_dict(self):
         result = super(TimedResourceReport, self).to_dict()
@@ -231,6 +246,15 @@ class MaxParallelRAMProcessor(MaxParallelCountProcessor):
         return report.ram_megabytes
 
 
+def sum_ignore_none(iterable):
+    """
+    Sum function that skips None values
+    :param iterable: An iterable to sum, may contain None or False values
+    :return: the sum of the numeric values
+    """
+    return sum([x for x in iterable if x])
+
+
 class TimelineReport(TimedReport):
     """
     A TimedReport that contains children.
@@ -249,13 +273,13 @@ class TimelineReport(TimedReport):
         self._recalculate_times()
 
     def total_cpu_hours(self):
-        return sum([child.cpu_hours() for child in self.children])
+        return sum_ignore_none([child.cpu_hours() for child in self.children])
 
     def total_ram_megabyte_hours(self):
-        return sum([child.ram_megabyte_hours() for child in self.children])
+        return sum_ignore_none([child.ram_megabyte_hours() for child in self.children])
 
     def total_disk_megabytes(self):
-        return sum([child.disk_megabytes for child in self.children])
+        return sum_ignore_none([child.disk_megabytes for child in self.children])
 
     def total_tasks(self):
         return len(self.children)
