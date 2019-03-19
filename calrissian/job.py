@@ -55,7 +55,9 @@ def total_size(outputs):
     """
     files = []
     visit_class(outputs, ("File",), files.append)
-    return sum([f.get('size') for f in files])
+    # Per https://www.commonwl.org/v1.0/CommandLineTool.html#File
+    # size is optional in the class, so default to 0 if not found
+    return sum([f.get('size', 0) for f in files])
 
 
 class KubernetesPodVolumeInspector(object):

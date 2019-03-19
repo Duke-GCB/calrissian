@@ -1,7 +1,7 @@
 from unittest import TestCase
 from unittest.mock import Mock, patch, call, create_autospec
 from calrissian.job import k8s_safe_name, KubernetesVolumeBuilder, VolumeBuilderException, KubernetesPodBuilder, random_tag, read_yaml
-from calrissian.job import CalrissianCommandLineJob, KubernetesPodVolumeInspector, CalrissianCommandLineJobException
+from calrissian.job import CalrissianCommandLineJob, KubernetesPodVolumeInspector, CalrissianCommandLineJobException, total_size
 from cwltool.errors import UnsupportedRequirement
 from calrissian.context import CalrissianRuntimeContext
 from calrissian.k8s import CompletionResult
@@ -583,3 +583,68 @@ class CalrissianCommandLineJobTestCase(TestCase):
         job = self.make_job()
         labels = job.get_pod_labels(mock_runtime_context)
         self.assertEqual(labels, {})
+
+
+class TotalSizeTestCase(TestCase):
+
+    def make_file(self, size=None, path=None):
+        file = {'class':'File'}
+        if size:
+            file['size'] = size
+        if path:
+            file['path'] = path
+        return file
+
+
+    def test_total_size_direct(self):
+        file = self.make_file(100)
+        self.assertEqual(total_size(file), 100)
+
+    def test_total_size_file_objects(self):
+        outputs = {
+            'file1': self.make_file(100, 'file1'),
+            'file2': self.make_file(200, 'file2')
+        }
+        self.assertEqual(total_size(outputs), 300)
+
+    def test_defaults_zero_when_no_size(self):
+        file = self.make_file()
+        self.assertNotIn('size', file)
+        self.assertEqual(total_size(file), 0)
+
+
+    def test_counts_in_array(self):
+        outputs = {
+            'files': [
+                self.make_file(100),
+                self.make_file(200),
+                self.make_file(300)
+            ]
+        }
+        self.assertEqual(total_size(outputs), 600)
+
+    def test_counts_nested(self):
+        outputs = {
+            'files': [
+                self.make_file(100),
+                self.make_file(200),
+                self.make_file(300)
+            ],
+            'things': {
+                'nested_files': [
+                    self.make_file(1000),
+                    self.make_file(2000),
+                    self.make_file(3000)
+                ]
+            }
+        }
+        self.assertEqual(total_size(outputs), 6600)
+
+    def test_counts_secondary_files(self):
+        file = self.make_file(1000)
+        file['secondaryFiles'] = [
+            self.make_file(100),
+            self.make_file(200),
+            self.make_file(300)
+        ]
+        self.assertEqual(total_size(file), 1600)
