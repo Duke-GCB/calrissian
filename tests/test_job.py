@@ -384,7 +384,6 @@ class CalrissianCommandLineJobTestCase(TestCase):
         self.assertTrue(job.collect_outputs.called)
         job.output_callback.assert_called_with(mock_collected_outputs, 'success')
 
-
     @patch('calrissian.job.Reporter')
     def test_finish_looks_up_codes(self, mock_reporter, mock_volume_builder, mock_client):
         job = self.make_job()
@@ -408,6 +407,15 @@ class CalrissianCommandLineJobTestCase(TestCase):
             completion_result = self.make_completion_result(code)
             job.finish(completion_result, self.runtime_context)
             job.output_callback.assert_called_with(mock_collected_outputs, status)
+
+    def test_finish_removes_stagedir(self, mock_volume_builder, mock_client):
+        self.fail('Not implemented')
+
+    def test_finish_removes_tmpdir(self, mock_volume_builder, mock_client):
+        self.fail('Not implemented')
+
+    def test_finish_leaves_tmpdir(self, mock_volume_builder, mock_client):
+        self.fail('Not implemented')
 
     def test__get_container_image_docker_pull(self, mock_volume_builder, mock_client):
         job = self.make_job()
