@@ -1,8 +1,12 @@
 from unittest import TestCase
-from unittest.mock import Mock, patch, call
+from unittest.mock import Mock, patch, call, create_autospec
 from calrissian.job import k8s_safe_name, KubernetesVolumeBuilder, VolumeBuilderException, KubernetesPodBuilder, random_tag, read_yaml
 from calrissian.job import CalrissianCommandLineJob, KubernetesPodVolumeInspector, CalrissianCommandLineJobException
 from cwltool.errors import UnsupportedRequirement
+from calrissian.context import CalrissianRuntimeContext
+from calrissian.k8s import CompletionResult
+import threading
+
 
 class SafeNameTestCase(TestCase):
 
@@ -311,10 +315,15 @@ class CalrissianCommandLineJobTestCase(TestCase):
         self.requirements = [{'class': 'DockerRequirement', 'dockerPull': 'dockerimage:1.0'}]
         self.hints = []
         self.name = 'test-clj'
+        self.runtime_context = CalrissianRuntimeContext({'workflow_eval_lock': threading.Lock()})
 
     def make_job(self):
         return CalrissianCommandLineJob(self.builder, self.joborder, self.make_path_mapper, self.requirements,
                                        self.hints, self.name)
+
+    def make_completion_result(self, exit_code):
+        return create_autospec(CompletionResult, exit_code=exit_code, cpus='1', memory='1', start_time=Mock(),
+                        finish_time=Mock())
 
     def test_constructor_calculates_persistent_volume_entries(self, mock_volume_builder, mock_client):
         job = self.make_job()
@@ -363,17 +372,21 @@ class CalrissianCommandLineJobTestCase(TestCase):
         job.wait_for_kubernetes_pod()
         self.assertTrue(mock_client.return_value.wait_for_completion.called)
 
-    def test_finish_calls_output_callback_with_status(self, mock_volume_builder, mock_client):
+    @patch('calrissian.job.Reporter')
+    def test_finish_calls_output_callback_with_status(self, mock_reporter, mock_volume_builder, mock_client):
         job = self.make_job()
         mock_collected_outputs = Mock()
         job.collect_outputs = Mock()
         job.collect_outputs.return_value = mock_collected_outputs
         job.output_callback = Mock()
-        job.finish(0) # 0 = exit success
+        completion_result = self.make_completion_result(0) # 0 = exit success
+        job.finish(completion_result, self.runtime_context)
         self.assertTrue(job.collect_outputs.called)
         job.output_callback.assert_called_with(mock_collected_outputs, 'success')
 
-    def test_finish_looks_up_codes(self, mock_volume_builder, mock_client):
+
+    @patch('calrissian.job.Reporter')
+    def test_finish_looks_up_codes(self, mock_reporter, mock_volume_builder, mock_client):
         job = self.make_job()
         mock_collected_outputs = Mock()
         job.collect_outputs = Mock()
@@ -392,7 +405,8 @@ class CalrissianCommandLineJobTestCase(TestCase):
             -1: 'permanentFail'
         }
         for code, status in expected_codes.items():
-            job.finish(code)
+            completion_result = self.make_completion_result(code)
+            job.finish(completion_result, self.runtime_context)
             job.output_callback.assert_called_with(mock_collected_outputs, status)
 
     def test__get_container_image_docker_pull(self, mock_volume_builder, mock_client):
@@ -545,16 +559,14 @@ class CalrissianCommandLineJobTestCase(TestCase):
         job.report = Mock()
         job.finish = Mock()
 
-        runtimeContext = Mock()
-        job.run(runtimeContext)
+        job.run(self.runtime_context)
         self.assertTrue(job.make_tmpdir.called)
         self.assertTrue(job.populate_env_vars.called)
-        self.assertEqual(job._setup.call_args, call(runtimeContext))
-        self.assertEqual(job.create_kubernetes_runtime.call_args, call(runtimeContext))
+        self.assertEqual(job._setup.call_args, call(self.runtime_context))
+        self.assertEqual(job.create_kubernetes_runtime.call_args, call(self.runtime_context))
         self.assertEqual(job.execute_kubernetes_pod.call_args, call(job.create_kubernetes_runtime.return_value))
         self.assertTrue(job.wait_for_kubernetes_pod.called)
-        self.assertEqual(job.report.call_args, call(job.wait_for_kubernetes_pod.return_value))
-        self.assertEqual(job.finish.call_args, call(job.wait_for_kubernetes_pod.return_value.exit_code))
+        self.assertEqual(job.finish.call_args, call(job.wait_for_kubernetes_pod.return_value, self.runtime_context))
 
     @patch('calrissian.job.read_yaml')
     def test_get_pod_labels(self, mock_read_yaml, mock_volume_builder, mock_client):
