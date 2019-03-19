@@ -13,7 +13,8 @@ class TimedReport(object):
     Report on operations with a specific start time and finish time.
     """
 
-    def __init__(self, start_time=None, finish_time=None):
+    def __init__(self, name=None, start_time=None, finish_time=None):
+        self.name = None
         self.start_time = start_time
         self.finish_time = finish_time
 
@@ -124,11 +125,11 @@ class TimedResourceReport(TimedReport):
         return result
 
     @classmethod
-    def from_completion_result(cls, result, disk_bytes):
-        cpus = CPUParser.parse(result.cpus)
-        ram_megabytes = MemoryParser.parse_to_megabytes(result.memory)
+    def create(cls, name, completion_result, disk_bytes):
+        cpus = CPUParser.parse(completion_result.cpus)
+        ram_megabytes = MemoryParser.parse_to_megabytes(completion_result.memory)
         disk_megabytes = MemoryParser.parse_to_megabytes(str(disk_bytes))
-        return cls(start_time=result.start_time, finish_time=result.finish_time, cpus=cpus,
+        return cls(name=name, start_time=completion_result.start_time, finish_time=completion_result.finish_time, cpus=cpus,
                    ram_megabytes=ram_megabytes, disk_megabytes=disk_megabytes)
 
 
@@ -253,6 +254,9 @@ class TimelineReport(TimedReport):
     def total_ram_megabyte_hours(self):
         return sum([child.ram_megabyte_hours() for child in self.children])
 
+    def total_disk_megabytes(self):
+        return sum([child.disk_megabytes for child in self.children])
+
     def total_tasks(self):
         return len(self.children)
 
@@ -293,6 +297,7 @@ class TimelineReport(TimedReport):
         result = super(TimelineReport, self).to_dict()
         result['total_cpu_hours'] = self.total_cpu_hours()
         result['total_ram_megabyte_hours'] = self.total_ram_megabyte_hours()
+        result['total_disk_megabytes'] = self.total_disk_megabytes()
         result['total_tasks'] = self.total_tasks()
         result['max_parallel_cpus'] = self.max_parallel_cpus()
         result['max_parallel_ram_megabytes'] = self.max_parallel_ram_megabytes()

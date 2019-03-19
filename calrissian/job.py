@@ -309,7 +309,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         Convert the k8s-specific completion result into a report and submit it
         :param completion_result: calrissian.k8s.CompletionResult
         """
-        report = TimedResourceReport.from_completion_result(completion_result, disk_bytes)
+        report = TimedResourceReport.create(self.name, completion_result, disk_bytes)
         Reporter.add_report(report)
 
     def finish(self, completion_result, runtimeContext):

@@ -95,13 +95,17 @@ class TimedResourceReportTestCase(TestCase):
         self.assertEqual(self.report.ram_megabytes, 0)
         self.assertEqual(self.report.cpus, 0)
 
-    def test_from_completion_result(self):
+    def test_create(self):
         completion_result = CompletionResult(0, '4', '3G', TIME_1000, TIME_1100)
-        report = TimedResourceReport.from_completion_result(completion_result)
+        name = 'test-job'
+        disk_bytes = 10000
+        report = TimedResourceReport.create(name, completion_result, disk_bytes)
         self.assertEqual(report.cpu_hours(), 4)
         self.assertEqual(report.ram_megabyte_hours(), 3000)
         self.assertEqual(report.start_time, TIME_1000)
         self.assertEqual(report.finish_time, TIME_1100)
+        self.assertEqual(report.name, 'test-job')
+        self.assertEqual(report.disk_megabytes, 10)
 
     def test_to_dict(self):
         self.report.ram_megabytes = 1024
