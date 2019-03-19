@@ -14,7 +14,7 @@ class TimedReport(object):
     """
 
     def __init__(self, name=None, start_time=None, finish_time=None):
-        self.name = None
+        self.name = name
         self.start_time = start_time
         self.finish_time = finish_time
 
