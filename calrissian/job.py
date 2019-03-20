@@ -75,6 +75,7 @@ class KubernetesVolumeBuilder(object):
 
     def __init__(self):
         self.persistent_volume_entries = {}
+        self.emptydir_volume_names = []
         self.volume_mounts = []
         self.volumes = []
 
@@ -100,6 +101,14 @@ class KubernetesVolumeBuilder(object):
         }
         self.persistent_volume_entries[prefix] = entry
         self.volumes.append(entry['volume'])
+
+    def add_emptydir_volume(self, name):
+        volume = {
+            'name': name,
+            'emptyDir': {},
+        }
+        self.emptydir_volume_names.append(name)
+        self.volumes.append(volume)
 
     def find_persistent_volume(self, source):
         """
@@ -130,6 +139,16 @@ class KubernetesVolumeBuilder(object):
             'mountPath': target,
             'subPath': self.calculate_subpath(source, pv['prefix'], pv['subPath']),
             'readOnly': not writable
+        }
+        self.volume_mounts.append(volume_mount)
+
+    def add_emptydir_volume_binding(self, name, target):
+        if not name in self.emptydir_volume_names:
+            # fail if the name is not registered
+            raise VolumeBuilderException('Could not find an emptyDir volume named {}'.format(name))
+        volume_mount = {
+            'name': name,
+            'mountPath': target
         }
         self.volume_mounts.append(volume_mount)
 
@@ -267,6 +286,8 @@ class KubernetesPodBuilder(object):
 # create_file_and_add_volume and add_volumes
 class CalrissianCommandLineJob(ContainerCommandLineJob):
 
+    container_tmpdir = '/tmp'
+
     def __init__(self, *args, **kwargs):
         super(CalrissianCommandLineJob, self).__init__(*args, **kwargs)
         self.client = KubernetesClient()
@@ -286,7 +307,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         self.environment["HOME"] = self.builder.outdir
         # cwltool DockerCommandLineJob always sets TMPDIR to /tmp
         # https://github.com/common-workflow-language/cwltool/blob/1.0.20181201184214/cwltool/docker.py#L333
-        self.environment["TMPDIR"] = '/tmp'
+        self.environment["TMPDIR"] = self.container_tmpdir
 
     def wait_for_kubernetes_pod(self):
         return self.client.wait_for_completion()
@@ -357,8 +378,11 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
 
         # Append volume for outdir
         self._add_volume_binding(os.path.realpath(self.outdir), self.builder.outdir, writable=True)
-        # Append volume for tmp
-        self._add_volume_binding(os.path.realpath(self.tmpdir), '/tmp', writable=True)
+        # Use a kubernetes emptyDir: {} volume for /tmp
+        # Note that below add_volumes() may result in other temporary files being mounted
+        # from the calrissian host's tmpdir prefix into an absolute container path, but this will
+        # not conflict with '/tmp' as an emptyDir
+        self._add_emptydir_volume_and_binding('tmpdir', self.container_tmpdir)
 
         # Call the ContainerCommandLineJob add_volumes method
         self.add_volumes(self.pathmapper,
@@ -403,6 +427,10 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
 
     def execute_kubernetes_pod(self, pod):
         self.client.submit_pod(pod)
+
+    def _add_emptydir_volume_and_binding(self, name, target):
+        self.volume_builder.add_emptydir_volume(name)
+        self.volume_builder.add_emptydir_volume_binding(name, target)
 
     def _add_volume_binding(self, source, target, writable=False):
         self.volume_builder.add_volume_binding(source, target, writable)

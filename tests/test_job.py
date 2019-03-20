@@ -4,6 +4,7 @@ from calrissian.job import k8s_safe_name, KubernetesVolumeBuilder, VolumeBuilder
 from calrissian.job import CalrissianCommandLineJob, KubernetesPodVolumeInspector, CalrissianCommandLineJobException
 from cwltool.errors import UnsupportedRequirement
 
+
 class SafeNameTestCase(TestCase):
 
     def setUp(self):
@@ -13,6 +14,7 @@ class SafeNameTestCase(TestCase):
     def test_makes_name_safe(self):
         made_safe = k8s_safe_name(self.unsafe_name)
         self.assertEqual(self.safe_name, made_safe)
+
 
 class RandomTagTestCase(TestCase):
 
@@ -143,6 +145,22 @@ class KubernetesVolumeBuilderTestCase(TestCase):
         with self.assertRaises(VolumeBuilderException) as context:
             self.volume_builder.add_volume_binding('/prefix/2/input2', '/input2-target', False)
         self.assertIn('Could not find a persistent volume', str(context.exception))
+
+    def test_add_emptydir_volume(self):
+        self.assertEqual(0, len(self.volume_builder.emptydir_volume_names))
+        self.volume_builder.add_emptydir_volume('empty-volume')
+        self.assertIn('empty-volume', self.volume_builder.emptydir_volume_names)
+
+    def test_add_emptydir_volume_binding(self):
+        self.volume_builder.add_emptydir_volume('empty-volume')
+        self.volume_builder.add_emptydir_volume_binding('empty-volume', '/path/to/empty')
+        expected = {'name': 'empty-volume', 'mountPath': '/path/to/empty'}
+        self.assertIn(expected, self.volume_builder.volume_mounts)
+
+    def test_add_emptydir_volume_binding_exception_if_not_found(self):
+        self.assertEqual(0, len(self.volume_builder.emptydir_volume_names))
+        with self.assertRaises(VolumeBuilderException) as context:
+            self.volume_builder.add_emptydir_volume_binding('empty-volume', '/path/to/empty')
 
     @patch('calrissian.job.KubernetesPodVolumeInspector')
     def test_add_persistent_volume_entries_from_pod(self, mock_kubernetes_pod_inspector):
@@ -423,7 +441,11 @@ class CalrissianCommandLineJobTestCase(TestCase):
             return '/real' + path
         mock_os.path.realpath = realpath
         mock_add_volume_binding = Mock()
+        mock_add_emptydir_volume = Mock()
+        mock_add_emptydir_volume_binding = Mock()
         mock_volume_builder.return_value.add_volume_binding = mock_add_volume_binding
+        mock_volume_builder.return_value.add_emptydir_volume = mock_add_emptydir_volume
+        mock_volume_builder.return_value.add_emptydir_volume_binding = mock_add_emptydir_volume_binding
 
         mock_pod_builder.return_value.build.return_value = '<built pod>'
         job = self.make_job()
@@ -432,10 +454,10 @@ class CalrissianCommandLineJobTestCase(TestCase):
         mock_runtime_context = Mock(tmpdir_prefix='TP')
         built = job.create_kubernetes_runtime(mock_runtime_context)
         # Adds volume binding for outdir
-        # Adds volume binding for /tmp
-        self.assertEqual(mock_add_volume_binding.call_args_list,
-                         [call('/real/outdir', '/out', True),
-                          call('/real/tmpdir', '/tmp', True)])
+        self.assertEqual(mock_add_volume_binding.call_args, call('/real/outdir', '/out', True))
+        # Adds emptydir binding for tmpdir
+        self.assertEqual(mock_add_emptydir_volume.call_args, call('tmpdir'))
+        self.assertEqual(mock_add_emptydir_volume_binding.call_args, call('tmpdir', '/tmp'))
         # looks at generatemapper
         # creates a KubernetesPodBuilder
         self.assertEqual(mock_pod_builder.call_args, call(
