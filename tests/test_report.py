@@ -2,7 +2,7 @@ from unittest import TestCase
 from calrissian.report import TimedReport, TimedResourceReport, TimelineReport
 from calrissian.report import Event, MaxParallelCountProcessor, MaxParallelCPUsProcessor, MaxParallelRAMProcessor
 from calrissian.report import MemoryParser, CPUParser, Reporter
-from calrissian.report import initialize_reporter, write_report, default_serializer
+from calrissian.report import initialize_reporter, write_report, default_serializer, sum_ignore_none
 from calrissian.k8s import CompletionResult
 from freezegun import freeze_time
 from unittest.mock import Mock, call, patch
@@ -50,16 +50,14 @@ class TimedReportTestCase(TestCase):
         self.report.finish_time = TIME_1100
         self.assertEqual(1.0, self.report.elapsed_hours())
 
-    def test_elapsed_raises_if_not_started(self):
-        self.assertEqual(self.report.start_time, None)
-        with self.assertRaises(TypeError):
-            self.report.elapsed_seconds()
+    def test_elapsed_is_none_if_not_started(self):
+        self.assertIsNone(self.report.start_time)
+        self.assertIsNone(self.report.elapsed_seconds())
 
-    def test_elapsed_raises_if_not_finished(self):
+    def test_elapsed_is_none_if_not_finished(self):
         self.report.start()
-        self.assertEqual(self.report.finish_time, None)
-        with self.assertRaises(TypeError):
-            self.report.elapsed_seconds()
+        self.assertIsNone(self.report.finish_time)
+        self.assertIsNone(self.report.elapsed_seconds())
 
     def test_elapsed_raises_if_negative(self):
         self.report.start_time = TIME_1100
@@ -75,11 +73,15 @@ class TimedReportTestCase(TestCase):
         self.assertEqual(report_dict['elapsed_seconds'], 3600.0)
         self.assertEqual(report_dict['elapsed_hours'], 1.0)
 
+    def test_to_dict_drops_none(self):
+        self.assertIsNone(self.report.name)
+        report_dict = self.report.to_dict()
+        self.assertNotIn('name', report_dict)
 
 class TimedResourceReportTestCase(TestCase):
 
     def setUp(self):
-        self.report = TimedResourceReport(start_time=TIME_1000, finish_time=TIME_1015)
+        self.report = TimedResourceReport(name='timed-resource-report', start_time=TIME_1000, finish_time=TIME_1015)
 
     def test_calculates_ram_hours(self):
         # 1024MB for 15 minutes is 256 MB-hours
@@ -95,22 +97,29 @@ class TimedResourceReportTestCase(TestCase):
         self.assertEqual(self.report.ram_megabytes, 0)
         self.assertEqual(self.report.cpus, 0)
 
-    def test_from_completion_result(self):
+    def test_create(self):
         completion_result = CompletionResult(0, '4', '3G', TIME_1000, TIME_1100)
-        report = TimedResourceReport.from_completion_result(completion_result)
+        name = 'test-job'
+        disk_bytes = 10000000
+        report = TimedResourceReport.create(name, completion_result, disk_bytes)
         self.assertEqual(report.cpu_hours(), 4)
         self.assertEqual(report.ram_megabyte_hours(), 3000)
         self.assertEqual(report.start_time, TIME_1000)
         self.assertEqual(report.finish_time, TIME_1100)
+        self.assertEqual(report.name, 'test-job')
+        self.assertEqual(report.disk_megabytes, 10)
 
     def test_to_dict(self):
         self.report.ram_megabytes = 1024
+        self.report.disk_megabytes = 512
         self.report.cpus = 8
         report_dict = self.report.to_dict()
         self.assertEqual(report_dict['start_time'], TIME_1000)
         self.assertEqual(report_dict['finish_time'], TIME_1015)
         self.assertEqual(report_dict['cpu_hours'], 2)
         self.assertEqual(report_dict['ram_megabyte_hours'], 256)
+        self.assertEqual(report_dict['disk_megabytes'], 512)
+        self.assertEqual(report_dict['name'], 'timed-resource-report')
 
 
 class TimelineReportTestCase(TestCase):
@@ -160,9 +169,8 @@ class TimelineReportTestCase(TestCase):
         self.report.add_report(TimedResourceReport(start_time=TIME_1045, finish_time=TIME_1100))
         self.assertEqual(self.report.elapsed_hours(), 1.0)
 
-    def test_elapsed_raises_with_no_tasks(self):
-        with self.assertRaises(TypeError):
-            self.report.elapsed_seconds()
+    def test_elapsed_is_none_with_no_tasks(self):
+        self.assertIsNone(self.report.elapsed_seconds())
 
     def test_max_parallel_tasks(self):
         # Count task parallelism. 3 total tasks, but only 2 at a given time
@@ -447,3 +455,24 @@ class ReporterFunctionsTestCase(TestCase):
         with self.assertRaises(TypeError) as context:
             default_serializer('other')
         self.assertIn('not serializable', str(context.exception))
+
+    @patch('builtins.open')
+    @patch('calrissian.report.json')
+    def test_write_report_recovers(self, mock_json, mock_open):
+        initialize_reporter(128, 4)
+        Reporter.add_report(TimedResourceReport(cpus=1, ram_megabytes=128))
+        write_report('output.json')
+        self.assertEqual(mock_open.call_args, call('output.json', 'w'))
+        self.assertTrue(mock_json.dump.called)
+
+
+class SumIgnoreNoneTestCase(TestCase):
+
+    def test_sum(self):
+        self.assertEqual(sum_ignore_none([1,2,3]), 6)
+
+    def test_drops_none(self):
+        self.assertEqual(sum_ignore_none([1,2,None]), 3)
+
+    def test_nones_become_zero(self):
+        self.assertEqual(sum_ignore_none([None,None,False]), 0)

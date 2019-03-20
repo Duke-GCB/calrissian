@@ -13,7 +13,8 @@ class TimedReport(object):
     Report on operations with a specific start time and finish time.
     """
 
-    def __init__(self, start_time=None, finish_time=None):
+    def __init__(self, name=None, start_time=None, finish_time=None):
+        self.name = name
         self.start_time = start_time
         self.finish_time = finish_time
 
@@ -24,6 +25,9 @@ class TimedReport(object):
         self.finish_time = finish_time if finish_time else datetime.now()
 
     def elapsed_seconds(self):
+        if self.start_time is None or self.finish_time is None:
+            # one of the times is None, cannot report
+            return None
         delta = self.finish_time - self.start_time
         total_seconds = delta.total_seconds()
         if total_seconds < 0:
@@ -32,10 +36,15 @@ class TimedReport(object):
             return total_seconds
 
     def elapsed_hours(self):
-        return self.elapsed_seconds() / SECONDS_PER_HOUR
+        elapsed_seconds = self.elapsed_seconds()
+        if elapsed_seconds:
+            return elapsed_seconds / SECONDS_PER_HOUR
+        else:
+            return None
 
     def to_dict(self):
-        result = dict(vars(self)) # Make sure we create a copy, otherwise writing to the dict overwrites the object
+        # Create a dict of our variables, filtering out None
+        result = dict((k,v) for k,v in vars(self).items() if v is not None)
         result['elapsed_hours'] = self.elapsed_hours()
         result['elapsed_seconds'] = self.elapsed_seconds()
         return result
@@ -101,20 +110,29 @@ class CPUParser(ResourceParser):
 
 class TimedResourceReport(TimedReport):
     """
-    Adds CPU and memory values to TimedReport, in order to calculate resource usage over the
+    Adds CPU, memory, and disk values to TimedReport, in order to calculate resource usage over the
     duration of the timed report. These values, by convention, are the kubernetes **requested**
     resources (not limits or actual).
     """
-    def __init__(self, cpus=0, ram_megabytes=0, *args, **kwargs):
+    def __init__(self, cpus=0, ram_megabytes=0, disk_megabytes=0, *args, **kwargs):
         self.cpus = cpus
         self.ram_megabytes = ram_megabytes
+        self.disk_megabytes = disk_megabytes
         super(TimedResourceReport, self).__init__(*args, **kwargs)
 
     def ram_megabyte_hours(self):
-        return self.ram_megabytes * self.elapsed_hours()
+        elapsed_hours = self.elapsed_hours()
+        if elapsed_hours:
+            return self.ram_megabytes * elapsed_hours
+        else:
+            return None
 
     def cpu_hours(self):
-        return self.cpus * self.elapsed_hours()
+        elapsed_hours = self.elapsed_hours()
+        if elapsed_hours:
+            return self.cpus * elapsed_hours
+        else:
+            return None
 
     def to_dict(self):
         result = super(TimedResourceReport, self).to_dict()
@@ -123,10 +141,12 @@ class TimedResourceReport(TimedReport):
         return result
 
     @classmethod
-    def from_completion_result(cls, result):
-        cpus = CPUParser.parse(result.cpus)
-        ram_megabytes = MemoryParser.parse_to_megabytes(result.memory)
-        return cls(start_time=result.start_time, finish_time=result.finish_time, cpus=cpus, ram_megabytes=ram_megabytes)
+    def create(cls, name, completion_result, disk_bytes):
+        cpus = CPUParser.parse(completion_result.cpus)
+        ram_megabytes = MemoryParser.parse_to_megabytes(completion_result.memory)
+        disk_megabytes = MemoryParser.parse_to_megabytes(str(disk_bytes))
+        return cls(name=name, start_time=completion_result.start_time, finish_time=completion_result.finish_time, cpus=cpus,
+                   ram_megabytes=ram_megabytes, disk_megabytes=disk_megabytes)
 
 
 class Event(object):
@@ -227,6 +247,15 @@ class MaxParallelRAMProcessor(MaxParallelCountProcessor):
         return report.ram_megabytes
 
 
+def sum_ignore_none(iterable):
+    """
+    Sum function that skips None values
+    :param iterable: An iterable to sum, may contain None or False values
+    :return: the sum of the numeric values
+    """
+    return sum([x for x in iterable if x])
+
+
 class TimelineReport(TimedReport):
     """
     A TimedReport that contains children.
@@ -245,10 +274,13 @@ class TimelineReport(TimedReport):
         self._recalculate_times()
 
     def total_cpu_hours(self):
-        return sum([child.cpu_hours() for child in self.children])
+        return sum_ignore_none([child.cpu_hours() for child in self.children])
 
     def total_ram_megabyte_hours(self):
-        return sum([child.ram_megabyte_hours() for child in self.children])
+        return sum_ignore_none([child.ram_megabyte_hours() for child in self.children])
+
+    def total_disk_megabytes(self):
+        return sum_ignore_none([child.disk_megabytes for child in self.children])
 
     def total_tasks(self):
         return len(self.children)
@@ -290,6 +322,7 @@ class TimelineReport(TimedReport):
         result = super(TimelineReport, self).to_dict()
         result['total_cpu_hours'] = self.total_cpu_hours()
         result['total_ram_megabyte_hours'] = self.total_ram_megabyte_hours()
+        result['total_disk_megabytes'] = self.total_disk_megabytes()
         result['total_tasks'] = self.total_tasks()
         result['max_parallel_cpus'] = self.max_parallel_cpus()
         result['max_parallel_ram_megabytes'] = self.max_parallel_ram_megabytes()
