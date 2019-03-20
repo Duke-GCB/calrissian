@@ -14,8 +14,6 @@ spec:
           - "1G"
           - "--max-cores"
           - "2"
-          - "--tmpdir-prefix"
-          - "/calrissian/tmptmp/"
           - "--tmp-outdir-prefix"
           - "/calrissian/tmpout/"
           - "--outdir"
@@ -27,8 +25,6 @@ spec:
           name: calrissian-input-data
         - mountPath: /calrissian/tmpout
           name: calrissian-tmpout
-        - mountPath: /calrissian/tmptmp
-          name: calrissian-tmp
         - mountPath: /calrissian/output-data
           name: calrissian-output-data
         env:
@@ -44,9 +40,6 @@ spec:
       - name: calrissian-tmpout
         persistentVolumeClaim:
           claimName: calrissian-tmpout
-      - name: calrissian-tmp
-        persistentVolumeClaim:
-          claimName: calrissian-tmp
       - name: calrissian-output-data
         persistentVolumeClaim:
           claimName: calrissian-output-data
