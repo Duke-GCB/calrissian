@@ -14,7 +14,7 @@ spec:
           - "--stdout"
           - "/calrissian/output-data/revsort-output.json"
           - "--stderr"
-         - "/calrissian/output-data/revsort-stderr.log"
+          - "/calrissian/output-data/revsort-stderr.log"
           - "--max-ram"
           - "16G"
           - "--max-cores"
