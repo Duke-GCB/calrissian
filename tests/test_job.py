@@ -318,15 +318,20 @@ class CalrissianCommandLineJobTestCase(TestCase):
         self.runtime_context = CalrissianRuntimeContext({'workflow_eval_lock': threading.Lock()})
 
     def make_job(self):
-        return CalrissianCommandLineJob(self.builder, self.joborder, self.make_path_mapper, self.requirements,
+        job = CalrissianCommandLineJob(self.builder, self.joborder, self.make_path_mapper, self.requirements,
                                        self.hints, self.name)
+        mock_collected_outputs = Mock()
+        job.collect_outputs = Mock()
+        job.collect_outputs.return_value = mock_collected_outputs
+        job.output_callback = Mock()
+        return job
 
     def make_completion_result(self, exit_code):
         return create_autospec(CompletionResult, exit_code=exit_code, cpus='1', memory='1', start_time=Mock(),
                         finish_time=Mock())
 
     def test_constructor_calculates_persistent_volume_entries(self, mock_volume_builder, mock_client):
-        job = self.make_job()
+        self.make_job()
         mock_volume_builder.return_value.add_persistent_volume_entries_from_pod.assert_called_with(
             mock_client.return_value.get_current_pod.return_value
         )
@@ -375,23 +380,14 @@ class CalrissianCommandLineJobTestCase(TestCase):
     @patch('calrissian.job.Reporter')
     def test_finish_calls_output_callback_with_status(self, mock_reporter, mock_volume_builder, mock_client):
         job = self.make_job()
-        mock_collected_outputs = Mock()
-        job.collect_outputs = Mock()
-        job.collect_outputs.return_value = mock_collected_outputs
-        job.output_callback = Mock()
         completion_result = self.make_completion_result(0) # 0 = exit success
         job.finish(completion_result, self.runtime_context)
         self.assertTrue(job.collect_outputs.called)
-        job.output_callback.assert_called_with(mock_collected_outputs, 'success')
+        job.output_callback.assert_called_with(job.collect_outputs.return_value, 'success')
 
     @patch('calrissian.job.Reporter')
     def test_finish_looks_up_codes(self, mock_reporter, mock_volume_builder, mock_client):
         job = self.make_job()
-        mock_collected_outputs = Mock()
-        job.collect_outputs = Mock()
-        job.collect_outputs.return_value = mock_collected_outputs
-        job.output_callback = Mock()
-
         job.successCodes = [1,] # Also 0
         job.temporaryFailCodes = [2,]
         job.permanentFailCodes = [3,] # also anything not covered
@@ -406,16 +402,39 @@ class CalrissianCommandLineJobTestCase(TestCase):
         for code, status in expected_codes.items():
             completion_result = self.make_completion_result(code)
             job.finish(completion_result, self.runtime_context)
-            job.output_callback.assert_called_with(mock_collected_outputs, status)
+            job.output_callback.assert_called_with(job.collect_outputs.return_value, status)
 
-    def test_finish_removes_stagedir(self, mock_volume_builder, mock_client):
-        self.fail('Not implemented')
+    @patch('calrissian.job.Reporter')
+    @patch('calrissian.job.os')
+    @patch('calrissian.job.shutil')
+    def test_finish_removes_stagedir(self, mock_shutil, mock_os, mock_reporter, mock_volume_builder, mock_client):
+        mock_os.path.exists.return_value = True
+        job = self.make_job()
+        job.stagedir = 'stagedir'
+        completion_result = self.make_completion_result(0)
+        job.finish(completion_result, self.runtime_context)
+        self.assertIn(call('stagedir', True), mock_shutil.rmtree.mock_calls)
+        self.assertEqual(mock_os.path.exists.call_args, call('stagedir'))
 
-    def test_finish_removes_tmpdir(self, mock_volume_builder, mock_client):
-        self.fail('Not implemented')
+    @patch('calrissian.job.Reporter')
+    @patch('calrissian.job.shutil')
+    def test_finish_removes_tmpdir(self, mock_shutil, mock_reporter, mock_volume_builder, mock_client):
+        job = self.make_job()
+        job.tmpdir = 'tmpdir'
+        self.runtime_context.rm_tmpdir = True
+        completion_result = self.make_completion_result(0)
+        job.finish(completion_result, self.runtime_context)
+        self.assertIn(call('tmpdir', True), mock_shutil.rmtree.mock_calls)
 
-    def test_finish_leaves_tmpdir(self, mock_volume_builder, mock_client):
-        self.fail('Not implemented')
+    @patch('calrissian.job.Reporter')
+    @patch('calrissian.job.shutil')
+    def test_finish_leaves_tmpdir(self,  mock_shutil, mock_reporter, mock_volume_builder, mock_client):
+        job = self.make_job()
+        job.tmpdir = 'tmpdir'
+        self.runtime_context.rm_tmpdir = False
+        completion_result = self.make_completion_result(0)
+        job.finish(completion_result, self.runtime_context)
+        self.assertNotIn(call('tmpdir', True), mock_shutil.rmtree.mock_calls)
 
     def test__get_container_image_docker_pull(self, mock_volume_builder, mock_client):
         job = self.make_job()
