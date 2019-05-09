@@ -32,6 +32,7 @@ setup(
     author_email='dan.leehr@duke.edu',
     description='CWL runner for Kubernetes',
     install_requires=[
+        'urllib3<1.25,>=1.24.2',
         'kubernetes==8.0.1',
         'cwltool==1.0.20181217162649',
     ],
