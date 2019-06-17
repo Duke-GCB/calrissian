@@ -4,7 +4,8 @@ metadata:
   name: calrissian-input-data
 spec:
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
+    - ReadOnlyMany
   resources:
     requests:
       storage: 1Gi
