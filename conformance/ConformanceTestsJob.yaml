@@ -1,3 +1,15 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: conformance-output-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -5,6 +17,13 @@ metadata:
 spec:
   template:
     spec:
+      initContainers:
+      - name: conformance-prep
+        image: alpine:3.10
+        command: ["chmod", "777", "/output"]
+        volumeMounts:
+        - mountPath: /output
+          name: conformance-output-data
       containers:
       - name: conformance-tests
         image: dleehr/calrissian:0.5.0-conformance
@@ -20,12 +39,19 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
+        - name: TMPDIR
+          value: "/output"
         volumeMounts:
         - mountPath: /conformance
           name: conformance-test-data
           readOnly: true
+        - mountPath: /output
+          name: conformance-output-data
       restartPolicy: OnFailure
       volumes:
       - name: conformance-test-data
         persistentVolumeClaim:
           claimName: conformance-test-data
+      - name: conformance-output-data
+        persistentVolumeClaim:
+          claimName: conformance-output-data
