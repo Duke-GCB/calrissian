@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: conformance-tests
+spec:
+  template:
+    spec:
+      containers:
+      - name: conformance-tests
+        image: dleehr/calrissian:0.5.0-conformance
+        workingDir: "/conformance/cwltool-master/cwltool/schemas"
+        command: ["./run_test.sh"]
+        args:
+        - "RUNNER=calrissian"
+        - "-n1"
+        - "--verbose"
+        volumeMounts:
+        - mountPath: /conformance
+          name: conformance-test-data
+          readOnly: true
+      restartPolicy: OnFailure
+      volumes:
+      - name: conformance-test-data
+        persistentVolumeClaim:
+          claimName: conformance-test-data
