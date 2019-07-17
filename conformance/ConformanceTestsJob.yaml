@@ -11,10 +11,15 @@ spec:
         workingDir: "/conformance/cwltool-1.0.20181201184214/cwltool/schemas"
         command: ["./run_test.sh"]
         args:
-        - "RUNNER=cwltool"
+        - "RUNNER=calrissian"
         - "-n1"
         - "--verbose"
-        - "EXTRA=--no-container"
+        - "EXTRA=--max-ram 8G --max-cores 4"
+        env:
+        - name: CALRISSIAN_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
         volumeMounts:
         - mountPath: /conformance
           name: conformance-test-data
