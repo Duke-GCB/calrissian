@@ -1,0 +1,35 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: conformance-test-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+    - ReadOnlyMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: stage-conformance-test-data
+spec:
+  template:
+    spec:
+      containers:
+      - name: stage-conformance-test-data
+        image: alpine:3.10
+        command:
+        - "sh"
+        - "-c"
+        - "mkdir /conformance;cd /conformance; wget https://github.com/common-workflow-language/cwltool/archive/master.zip; unzip master.zip; rm master.zip; chmod -R a+rx /conformance"
+        volumeMounts:
+        - mountPath: /conformance
+          name: conformance-test-data
+      restartPolicy: OnFailure
+      volumes:
+      - name: conformance-test-data
+        persistentVolumeClaim:
+          claimName: conformance-test-data
