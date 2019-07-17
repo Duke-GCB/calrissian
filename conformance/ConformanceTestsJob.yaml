@@ -14,6 +14,7 @@ spec:
         - "RUNNER=cwltool"
         - "-n1"
         - "--verbose"
+        - "EXTRA=--no-container"
         volumeMounts:
         - mountPath: /conformance
           name: conformance-test-data
