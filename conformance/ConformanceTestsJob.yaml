@@ -8,10 +8,10 @@ spec:
       containers:
       - name: conformance-tests
         image: dleehr/calrissian:0.5.0-conformance
-        workingDir: "/conformance/cwltool-master/cwltool/schemas"
+        workingDir: "/conformance/cwltool-1.0.20181201184214/cwltool/schemas"
         command: ["./run_test.sh"]
         args:
-        - "RUNNER=calrissian"
+        - "RUNNER=cwltool"
         - "-n1"
         - "--verbose"
         volumeMounts:

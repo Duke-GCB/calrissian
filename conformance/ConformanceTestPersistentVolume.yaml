@@ -24,7 +24,7 @@ spec:
         command:
         - "sh"
         - "-c"
-        - "mkdir /conformance;cd /conformance; wget https://github.com/common-workflow-language/cwltool/archive/master.zip; unzip master.zip; rm master.zip; chmod -R a+rx /conformance"
+        - "mkdir /conformance;cd /conformance; wget https://github.com/common-workflow-language/cwltool/archive/1.0.20181201184214.zip; unzip 1.0.20181201184214.zip; rm 1.0.20181201184214.zip; chmod -R a+rx /conformance; ls -l /conformance/"
         volumeMounts:
         - mountPath: /conformance
           name: conformance-test-data
