@@ -16,9 +16,9 @@ Note that for real workloads, you'll want a real cluster. For these examples, lo
 
 ## Cluster Preparation
 
-### Namespace, Roles and Volumes
+### Creating Namespace and Roles
 
-Calrissian executes CWL workflows by running steps as Pods in your cluster. To support this requirement, we create a role with the necessary privileges and bind it to a service account. We will also create some volume claims to house the data used and generated when running a workflow.
+Calrissian executes CWL workflows by running steps as Pods in your cluster. To support this requirement, we create a role with the necessary privileges and bind it to a service account.
 
 Please choose the instructions that match your cluster - you don't need to run both.
 
@@ -35,7 +35,6 @@ kubectl --namespace="$NAMESPACE_NAME" create rolebinding pod-manager-default-bin
   --role=pod-manager-role --serviceaccount=${NAMESPACE_NAME}:default
 kubectl --namespace="$NAMESPACE_NAME" create rolebinding log-reader-default-binding \
   --role=log-reader-role --serviceaccount=${NAMESPACE_NAME}:default
-kubectl --namespace="$NAMESPACE_NAME" create -f VolumeClaims.yaml
 ```
 
 #### Openshift
@@ -48,6 +47,21 @@ oc create rolebinding pod-manager-default-binding --role=pod-manager-role \
   --serviceaccount=calrissian-demo-project:default
 oc create rolebinding log-reader-default-binding --role=log-reader-role \
   --serviceaccount=calrissian-demo-project:default
+```
+
+### Creating Volumes
+
+We will also create some volume claims to house the data used and generated when running a workflow.
+
+#### Kubernetes
+
+```
+kubectl --namespace="$NAMESPACE_NAME" create -f VolumeClaims.yaml
+```
+
+#### Openshift
+
+```
 oc create -f VolumeClaims.yaml
 ```
 
