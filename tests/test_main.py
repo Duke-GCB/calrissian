@@ -2,7 +2,7 @@ from unittest import TestCase
 from unittest.mock import patch, call, Mock
 from calrissian.main import main, add_arguments, parse_arguments
 from calrissian.main import handle_sigterm, install_signal_handler, install_tees, flush_tees
-from calrissian.main import activate_logging, get_log_level
+from calrissian.main import activate_logging, get_log_level, print_version
 import logging
 
 class CalrissianMainTestCase(TestCase):
@@ -172,3 +172,9 @@ class CalrissianMainTestCase(TestCase):
         self.assertEqual(get_log_level(args_verbose), logging.INFO)
         self.assertEqual(get_log_level(args_debug), logging.DEBUG)
         self.assertEqual(get_log_level(args_default), logging.WARNING)
+
+    @patch('calrissian.main.version')
+    @patch('builtins.print')
+    def test_print_version(self, mock_print, mock_version):
+        print_version()
+        self.assertEqual(mock_print.call_args, call(mock_version.return_value))
