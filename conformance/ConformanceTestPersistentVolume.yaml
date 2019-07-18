@@ -28,8 +28,9 @@ spec:
         volumeMounts:
         - mountPath: /conformance
           name: conformance-test-data
-      restartPolicy: OnFailure
+      restartPolicy: Never
       volumes:
       - name: conformance-test-data
         persistentVolumeClaim:
           claimName: conformance-test-data
+  backOffLimit: 0
