@@ -43,4 +43,3 @@ spec:
       - name: calrissian-output-data
         persistentVolumeClaim:
           claimName: calrissian-output-data
-  backOffLimit: 0
