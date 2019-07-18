@@ -7,7 +7,7 @@ spec:
     spec:
       containers:
       - name: stage-input-data
-        image: dukegcb/calrissian:0.5.0
+        image: dukegcb/calrissian:latest
         command:
         - "sh"
         - "-c"

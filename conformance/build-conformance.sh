@@ -1,5 +1,3 @@
 #!/bin/bash
 
-cd ..
-
-docker build -t calrissian:conformance -f Dockerfile.conformance .
+docker build -t calrissian:conformance -f Dockerfile.conformance ..
