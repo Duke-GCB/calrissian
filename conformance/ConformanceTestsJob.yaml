@@ -32,7 +32,7 @@ spec:
         args:
         - "RUNNER=calrissian"
         - "--verbose"
-        - "EXTRA=--max-ram 8G --max-cores 4"
+        - "EXTRA=--max-ram 8G --max-cores 4 --default-container debian:stretch-slim"
         env:
         - name: CALRISSIAN_POD_NAME
           valueFrom:
