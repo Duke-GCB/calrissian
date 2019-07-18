@@ -87,7 +87,7 @@ oc create -f openshift/StageInputDataJob.yaml
 
 [CalrissianJob-revsort.yaml](CalrissianJob-revsort.yaml) runs a workflow using Calrissian in a [Kubernetes Job](https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/). The workflow, [revsort-array.cwl](../input-data/revsort-array.cwl)), is simple, but easily parallelizable. It reverses the contents of 5 text files, sorts each of them individually, and places the results in the `calrissian-output-data` volume. It also produces a report of resource usage.
 
-The below commands will create the job and follow its logs once it starts. Use `Ctrl+C` to exit after the job completes.
+The below commands will create the job and follow its logs once it starts.
 
 #### Kubernetes
 
@@ -98,6 +98,8 @@ kubectl --namespace="$NAMESPACE_NAME" wait pod --for=condition=Ready \
 kubectl --namespace="$NAMESPACE_NAME" logs -f jobs/calrissian-revsort-array
 ```
 
+Use `Ctrl+C` to exit after the job completes.
+
 #### Openshift
 
 ```
@@ -106,22 +108,47 @@ oc wait --for=condition=Ready --selector=job-name=calrissian-revsort-array
 oc logs -f jobs/calrissian-revsort-array
 ```
 
+Use `Ctrl+C` to exit after the job completes.
+
 ### Viewing Results
 
-TBD
-
-### Job Cleanup
-
-Calrissian will delete completed pods for individual steps, but you may delete the `calrissian-revsort-array` job after running it. The data and any redirected logs will remain in the persistent volume.
+Calrissian will print the CWL Job output JSON to the logs, but output files, logs, and reports are stored on the output volume. Run [ViewResultsJob.yaml](ViewResultsJob.yaml) to see them
 
 #### Kubernetes
 
 ```
+kubectl --namespace="$NAMESPACE_NAME" create -f ViewResultsJob.yaml
+kubectl --namespace="$NAMESPACE_NAME" wait pod --for=condition=Ready \
+  --selector=job-name=view-results
+kubectl --namespace="$NAMESPACE_NAME" logs -f jobs/view-results
+```
+
+Use `Ctrl+C` to exit after the job completes.
+
+#### Openshift
+
+```
+oc create -f ViewResultsJob.yaml
+oc wait --for=condition=Ready --selector=job-name=view-results
+oc logs -f jobs/view-results
+```
+
+### Job Cleanup
+
+Calrissian will delete completed pods for individual steps, but you may want to delete the  jobs after running them. The data and any redirected logs will remain in the persistent volume.
+
+#### Kubernetes
+
+```
+kubectl --namespace="$NAMESPACE_NAME" delete -f StageInputDataJob.yaml
 kubectl --namespace="$NAMESPACE_NAME" delete -f CalrissianJob-revsort.yaml
+kubectl --namespace="$NAMESPACE_NAME" delete -f ViewResultsJob.yaml
 ```
 
 #### Openshift
 
 ```
+oc delete -f StageInputDataJob.yaml
 oc delete -f CalrissianJob-revsort.yaml
+oc delete -f ViewResultsJob.yaml
 ```

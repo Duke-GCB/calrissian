@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: view-results
+spec:
+  template:
+    spec:
+      containers:
+      - name: view-results
+        image: dukegcb/calrissian:latest
+        command:
+        - "sh"
+        - "-c"
+        - "more /calrissian/output-data/* | cat"
+        volumeMounts:
+        - mountPath: /calrissian/output-data
+          name: calrissian-output-data
+          readOnly: true
+      restartPolicy: OnFailure
+      volumes:
+      - name: calrissian-output-data
+        persistentVolumeClaim:
+          claimName: calrissian-output-data
