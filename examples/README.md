@@ -79,7 +79,8 @@ The below commands will create the job and follow its logs once it starts. Use `
 
 ```
 kubectl --namespace="$NAMESPACE_NAME" create -f CalrissianJob-revsort.yaml
-kubectl --namespace="$NAMESPACE_NAME" wait --for=condition=Ready --selector=job-name=calrissian-revsort-array
+kubectl --namespace="$NAMESPACE_NAME" wait pod --for=condition=Ready \
+  --selector=job-name=calrissian-revsort-array
 kubectl --namespace="$NAMESPACE_NAME" logs -f jobs/calrissian-revsort-array
 ```
 
