@@ -31,7 +31,6 @@ spec:
         command: ["./run_test.sh"]
         args:
         - "RUNNER=calrissian"
-        - "-n1"
         - "--verbose"
         - "EXTRA=--max-ram 8G --max-cores 4"
         env:
