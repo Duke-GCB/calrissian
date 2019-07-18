@@ -15,5 +15,3 @@ Calrissian leverages [cwltool](https://github.com/common-workflow-language/cwlto
 ## Setup
 
 Please see [examples](examples) for installation and setup instructions.
-
-
