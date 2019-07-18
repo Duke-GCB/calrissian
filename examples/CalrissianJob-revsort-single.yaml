@@ -2,19 +2,15 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: calrissian-revsort-array
+  name: calrissian-revsort-single
 spec:
   template:
     spec:
       containers:
       - name: calrissian
-        image: calrissian:latest
+        image: dukegcb/calrissian:0.5.0
         command: ["calrissian"]
         args:
-          - "--stdout"
-          - "/calrissian/output-data/revsort-output.json"
-          - "--stderr"
-          - "/calrissian/output-data/revsort-stderr.log"
           - "--max-ram"
           - "16G"
           - "--max-cores"
@@ -23,10 +19,8 @@ spec:
           - "/calrissian/tmpout/"
           - "--outdir"
           - "/calrissian/output-data/"
-          - "--usage-report"
-          - "/calrissian/output-data/revsort-usage.json"
-          - "/calrissian/input-data/revsort-array.cwl"
-          - "/calrissian/input-data/revsort-array-job.json"
+          - "/calrissian/input-data/revsort-single.cwl"
+          - "/calrissian/input-data/revsort-single-job.json"
         volumeMounts:
         - mountPath: /calrissian/input-data
           name: calrissian-input-data

@@ -2,15 +2,17 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: calrissian-revsort-single
+  name: calrissian-revsort-single-default-container
 spec:
   template:
     spec:
       containers:
       - name: calrissian
-        image: calrissian:latest
+        image: dukegcb/calrissian:0.5.0
         command: ["calrissian"]
         args:
+          - "--default-container"
+          - "debian:stretch-slim"
           - "--max-ram"
           - "16G"
           - "--max-cores"
@@ -19,7 +21,7 @@ spec:
           - "/calrissian/tmpout/"
           - "--outdir"
           - "/calrissian/output-data/"
-          - "/calrissian/input-data/revsort-single.cwl"
+          - "/calrissian/input-data/revsort-single-no-docker.cwl"
           - "/calrissian/input-data/revsort-single-job.json"
         volumeMounts:
         - mountPath: /calrissian/input-data

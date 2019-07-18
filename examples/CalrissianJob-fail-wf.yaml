@@ -7,7 +7,7 @@ spec:
     spec:
       containers:
       - name: calrissian
-        image: calrissian:latest
+        image: dukegcb/calrissian:0.5.0
         command: ["calrissian"]
         args:
           - "--max-ram"
