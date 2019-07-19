@@ -80,7 +80,7 @@ kubectl --namespace="$NAMESPACE_NAME" create -f StageInputDataJob.yaml
 #### Openshift
 
 ```
-oc create -f openshift/StageInputDataJob.yaml
+oc create -f StageInputDataJob.yaml
 ```
 
 ### Running a Workflow
@@ -93,8 +93,7 @@ The below commands will create the job and follow its logs once it starts.
 
 ```
 kubectl --namespace="$NAMESPACE_NAME" create -f CalrissianJob-revsort.yaml
-kubectl --namespace="$NAMESPACE_NAME" wait pod --for=condition=Ready \
-  --selector=job-name=calrissian-revsort-array
+# Wait for job to start ...
 kubectl --namespace="$NAMESPACE_NAME" logs -f jobs/calrissian-revsort-array
 ```
 
@@ -104,7 +103,7 @@ Use `Ctrl+C` to exit after the job completes.
 
 ```
 oc create -f CalrissianJob-revsort.yaml
-oc wait --for=condition=Ready --selector=job-name=calrissian-revsort-array
+# Wait for job to start ...
 oc logs -f jobs/calrissian-revsort-array
 ```
 
@@ -118,8 +117,7 @@ Calrissian will print the CWL Job output JSON to the logs, but output files, log
 
 ```
 kubectl --namespace="$NAMESPACE_NAME" create -f ViewResultsJob.yaml
-kubectl --namespace="$NAMESPACE_NAME" wait pod --for=condition=Ready \
-  --selector=job-name=view-results
+# Wait for job to start ...
 kubectl --namespace="$NAMESPACE_NAME" logs -f jobs/view-results
 ```
 
@@ -129,7 +127,7 @@ Use `Ctrl+C` to exit after the job completes.
 
 ```
 oc create -f ViewResultsJob.yaml
-oc wait --for=condition=Ready --selector=job-name=view-results
+# Wait for job to start ...
 oc logs -f jobs/view-results
 ```
 
