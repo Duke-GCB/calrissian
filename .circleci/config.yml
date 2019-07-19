@@ -1,12 +1,7 @@
 orbs:
   kube-orb: circleci/kubernetes@0.3.0
-workflows:
-  version: 2.1
-  conformance:
-    jobs:
-      - conformance
 jobs:
-  conformance:
+  build:
     environment: CHANGE_MINIKUBE_NONE_USER=true
     machine:
       image: 'circleci/classic:201808-01'
