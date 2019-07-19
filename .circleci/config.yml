@@ -22,7 +22,7 @@ jobs:
       - kube-orb/create-or-update-resource:
           get-rollout-status: true
           resource-file-path: conformance/StageConformanceTestsData.yaml
-          resource_name: job/stage-conformance-test-data
+          resource-name: job/stage-conformance-test-data
           show-kubectl-command: true
       - kube-orb/create-or-update-resource:
           get-rollout-status: true
