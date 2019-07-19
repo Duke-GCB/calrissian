@@ -158,9 +158,8 @@ class KubernetesVolumeBuilderTestCase(TestCase):
 
     def test_volume_binding_exception_if_not_found(self):
         self.assertEqual(0, len(self.volume_builder.volumes))
-        with self.assertRaises(VolumeBuilderException) as context:
+        with self.assertRaisesRegex(VolumeBuilderException, 'Could not find a persistent volume'):
             self.volume_builder.add_volume_binding('/prefix/2/input2', '/input2-target', False)
-        self.assertIn('Could not find a persistent volume', str(context.exception))
 
     def test_add_emptydir_volume(self):
         self.assertEqual(0, len(self.volume_builder.emptydir_volume_names))
@@ -175,7 +174,7 @@ class KubernetesVolumeBuilderTestCase(TestCase):
 
     def test_add_emptydir_volume_binding_exception_if_not_found(self):
         self.assertEqual(0, len(self.volume_builder.emptydir_volume_names))
-        with self.assertRaises(VolumeBuilderException) as context:
+        with self.assertRaises(VolumeBuilderException):
             self.volume_builder.add_emptydir_volume_binding('empty-volume', '/path/to/empty')
 
     @patch('calrissian.job.KubernetesPodVolumeInspector')
@@ -369,9 +368,8 @@ class CalrissianCommandLineJobTestCase(TestCase):
     def test_check_requirements_raises_with_docker_build(self, mock_volume_builder, mock_client):
         self.requirements = [{'class': 'DockerRequirement', 'dockerBuild': 'FROM ubuntu:latest\n'}]
         job = self.make_job()
-        with self.assertRaises(UnsupportedRequirement) as context:
+        with self.assertRaisesRegex(UnsupportedRequirement, 'DockerRequirement.dockerBuild is not supported'):
             job.check_requirements()
-        self.assertIn('DockerRequirement.dockerBuild is not supported', str(context.exception))
 
     def test_check_requirements_ok_with_empty_requirements(self, mock_volume_builder, mock_client):
         self.requirements = []
@@ -482,9 +480,8 @@ class CalrissianCommandLineJobTestCase(TestCase):
         self.requirements = [] # Clear out the dockerimage:1.0 from our requirements
         self.builder.find_default_container.return_value = None
         job = self.make_job()
-        with self.assertRaises(CalrissianCommandLineJobException) as context:
-            image = job._get_container_image()
-        self.assertIn('Please ensure tool has a DockerRequirement with dockerPull', str(context.exception))
+        with self.assertRaisesRegex(CalrissianCommandLineJobException, 'Please ensure tool has a DockerRequirement with dockerPull'):
+            job._get_container_image()
 
     @patch('calrissian.job.KubernetesPodBuilder')
     @patch('calrissian.job.os')
@@ -644,6 +641,20 @@ class CalrissianCommandLineJobTestCase(TestCase):
         job = self.make_job()
         labels = job.get_pod_labels(mock_runtime_context)
         self.assertEqual(labels, {})
+
+    def test_get_from_requirements_raises_not_implemented(self,  mock_volume_builder, mock_client):
+        job = self.make_job()
+        with self.assertRaisesRegex(NotImplementedError, 'get_from_requirements'):
+            job.get_from_requirements(Mock(), Mock())
+
+    def test_create_runtime_raises_not_implemented(self,  mock_volume_builder, mock_client):
+        job = self.make_job()
+        with self.assertRaisesRegex(NotImplementedError, 'create_runtime'):
+            job.create_runtime(Mock(), Mock())
+
+    def test_append_volume_raises_not_implemented(self, mock_volume_builder, mock_client):
+        with self.assertRaisesRegex(NotImplementedError, 'append_volume'):
+            CalrissianCommandLineJob.append_volume(Mock(), Mock(), Mock())
 
 
 class TotalSizeTestCase(TestCase):
