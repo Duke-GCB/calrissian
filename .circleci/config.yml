@@ -1,6 +1,10 @@
-version: 2.1
 orbs:
   kube-orb: circleci/kubernetes@0.3.0
+workflows:
+  version: 2.1
+  conformance:
+    jobs:
+      - conformance
 jobs:
   conformance:
     environment: CHANGE_MINIKUBE_NONE_USER=true
