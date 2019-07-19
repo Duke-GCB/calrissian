@@ -30,8 +30,8 @@ jobs:
           resource-name: job/conformance-tests
           show-kubectl-command: true
       - run:
-        command: >
-          sleep 5 && kubectl logs jobs/conformance-tests
+         command: >
+           sleep 5 && kubectl logs jobs/conformance-tests
       - kube-orb/delete-resource:
           now: true
           resource-names: job/conformance-tests,job/stage-conformance-test-data
