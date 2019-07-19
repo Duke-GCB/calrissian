@@ -1,82 +1,37 @@
-version: 2
+version: 2.1
+orbs:
+  kube-orb: circleci/kubernetes@1.0.0
 jobs:
-  build:
-    docker:
-      - image: circleci/python:3.6
-    working_directory: ~/calrissian
+  conformance:
+    environment: CHANGE_MINIKUBE_NONE_USER=true
+    machine:
+      image: 'circleci/classic:201808-01'
     steps:
       - checkout
-      - restore_cache:
-          key: v1-dependency-cache-{{ checksum "requirements.txt" }}
+      - kube-orb/install
       - run:
-          name: install python dependencies
-          command: |
-            python3 -m venv venv
-            . venv/bin/activate
-            pip install -r requirements.txt
-      - save_cache:
-          key: v1-dependency-cache-{{ checksum "requirements.txt" }}
-          paths:
-            - "venv"
-      - run:
-          name: run tests
-          command: |
-            . venv/bin/activate
-            nose2
-  deploy:
-    docker:
-      - image: circleci/python:3.6
-    steps:
-      - checkout
-      - restore_cache:
-          key: v1-setup-cache-{{ checksum "setup.py" }}
-      - run:
-          name: install python dependencies
-          command: |
-            python3 -m venv venv
-            . venv/bin/activate
-            python setup.py install
-            pip install twine
-            pip install wheel
-      - save_cache:
-          key: v1-setup-cache-{{ checksum "setup.py" }}
-          paths:
-            - "venv"
-      - run:
-          name: verify git tag vs. version
-          command: |
-            python3 -m venv venv
-            . venv/bin/activate
-            python setup.py verify
-      - run:
-          name: create packages
-          command: |
-            . venv/bin/activate
-            python setup.py bdist_wheel --universal
-      - run:
-          name: init .pypirc
-          command: |
-            echo -e "[pypi]" >> ~/.pypirc
-            echo -e "username = $PYPI_USER" >> ~/.pypirc
-            echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
-      - run:
-          name: upload to pypi
-          command: |
-            . venv/bin/activate
-            twine upload dist/*
-workflows:
-  version: 2
-  build_and_deploy:
-    jobs:
-      - build:
-          filters:
-            tags:
-              only: /.*/
-      - deploy:
-          requires:
-            - build
-          filters:
-            tags:
-              only: /[0-9]+(\.[0-9]+)*/
-            branches:
-              ignore: /.*/
+          command: >
+            curl -Lo minikube
+            https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+            \
+              && chmod +x minikube
+            sudo cp minikube /usr/local/bin && rm minikube
+
+            sudo -E minikube start --vm-driver=none --cpus 2 --memory 2048
+          name: Start minikube
+      - kube-orb/create-or-update-resource:
+          get-rollout-status: true
+          resource-file-path: conformance/StageConformanceTestsData.yaml
+          resource_name: job/stage-conformance-test-data
+          show-kubectl-command: true
+      - kube-orb/create-or-update-resource:
+          get-rollout-status: true
+          resource-file-path: conformance/ConformanceTestsJob.yaml
+          resource-name: job/conformance-tests
+          show-kubectl-command: true
+          wait: true
+      - kube-orb/delete-resource:
+          now: true
+          resource-names: job/conformance-tests,job/stage-conformance-test-data
+          resource-types: jobs
+          wait: true
