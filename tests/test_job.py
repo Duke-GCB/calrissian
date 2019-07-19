@@ -8,7 +8,6 @@ from calrissian.k8s import CompletionResult
 import threading
 
 
-
 class SafeNameTestCase(TestCase):
 
     def setUp(self):
@@ -27,6 +26,19 @@ class RandomTagTestCase(TestCase):
         self.assertEqual(len(tag1), 10)
         self.assertEqual(len(tag2), 10)
         self.assertNotEqual(tag1, tag2)
+
+
+class ReadYamlTestCase(TestCase):
+
+    @patch('builtins.open')
+    @patch('calrissian.job.yaml')
+    def test_read_yaml(self, mock_yaml, mock_open):
+        mock_result = Mock()
+        mock_yaml.safe_load.return_value = mock_result
+        result = read_yaml('filename.yaml')
+        self.assertEqual(result, mock_result)
+        self.assertEqual(mock_open.call_args, call('filename.yaml'))
+        self.assertEqual(mock_yaml.safe_load.call_args, call(mock_open.return_value.__enter__.return_value))
 
 
 class KubernetesPodVolumeInspectorTestCase(TestCase):
