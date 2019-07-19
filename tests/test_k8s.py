@@ -2,7 +2,19 @@ from unittest import TestCase
 from unittest.mock import Mock, patch, call, PropertyMock, create_autospec
 from kubernetes.client.models import V1Pod
 from calrissian.k8s import load_config_get_namespace, KubernetesClient, CalrissianJobException, PodMonitor, delete_pods
-from calrissian.k8s import CompletionResult
+from calrissian.k8s import CompletionResult, read_file
+
+
+class ReadFileTestCase(TestCase):
+
+    @patch('builtins.open')
+    def test_read_file(self, mock_open):
+        mock_result = Mock()
+        mock_open.return_value.read.return_value = mock_result
+        result = read_file('filename.txt')
+        self.assertEqual(result, mock_result)
+        self.assertEqual(mock_open.call_args, call('filename.txt'))
+
 
 @patch('calrissian.k8s.read_file')
 @patch('calrissian.k8s.config')
