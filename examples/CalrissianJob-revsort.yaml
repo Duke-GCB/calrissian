@@ -30,6 +30,7 @@ spec:
         volumeMounts:
         - mountPath: /calrissian/input-data
           name: calrissian-input-data
+          readOnly: true
         - mountPath: /calrissian/tmpout
           name: calrissian-tmpout
         - mountPath: /calrissian/output-data
@@ -44,6 +45,7 @@ spec:
       - name: calrissian-input-data
         persistentVolumeClaim:
           claimName: calrissian-input-data
+          readOnly: true
       - name: calrissian-tmpout
         persistentVolumeClaim:
           claimName: calrissian-tmpout
