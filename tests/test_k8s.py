@@ -10,7 +10,7 @@ class ReadFileTestCase(TestCase):
     @patch('builtins.open')
     def test_read_file(self, mock_open):
         mock_result = Mock()
-        mock_open.return_value.read.return_value = mock_result
+        mock_open.return_value.__enter__.return_value.read.return_value = mock_result
         result = read_file('filename.txt')
         self.assertEqual(result, mock_result)
         self.assertEqual(mock_open.call_args, call('filename.txt'))
