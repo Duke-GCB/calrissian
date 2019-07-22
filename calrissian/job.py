@@ -75,7 +75,7 @@ class KubernetesPodVolumeInspector(object):
         for pod_volume in self.pod.spec.volumes:
             if pod_volume.persistent_volume_claim:
                 claim_name = pod_volume.persistent_volume_claim.claim_name
-                read_only = pod_volume.persistent_volume_claim.read_only
+                read_only = pod_volume.persistent_volume_claim.read_only or False
                 persistent_volumes[pod_volume.name] = (claim_name, read_only)
         return persistent_volumes
 
