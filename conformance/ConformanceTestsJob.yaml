@@ -51,6 +51,7 @@ spec:
       - name: conformance-test-data
         persistentVolumeClaim:
           claimName: conformance-test-data
+          readOnly: true
       - name: conformance-output-data
         persistentVolumeClaim:
           claimName: conformance-output-data
