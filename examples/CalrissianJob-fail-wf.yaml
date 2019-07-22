@@ -7,7 +7,7 @@ spec:
     spec:
       containers:
       - name: calrissian
-        image: calrissian:latest
+        image: dukegcb/calrissian:latest
         command: ["calrissian"]
         args:
           - "--max-ram"
@@ -43,4 +43,3 @@ spec:
       - name: calrissian-output-data
         persistentVolumeClaim:
           claimName: calrissian-output-data
-  backOffLimit: 0

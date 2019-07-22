@@ -11,10 +11,14 @@ import tempfile
 import random
 import string
 import shellescape
+import re
 from cwltool.pathmapper import ensure_writable, ensure_non_writable
 from cwltool.utils import visit_class
 
 log = logging.getLogger("calrissian.job")
+
+
+K8S_UNSAFE_REGEX = re.compile('[^-a-z0-9]')
 
 
 class VolumeBuilderException(WorkflowException):
@@ -27,14 +31,16 @@ class CalrissianCommandLineJobException(WorkflowException):
 
 def k8s_safe_name(name):
     """
-    Kubernetes does not allow underscores
-    DNS-1123 subdomain must consist of lower case alphanumeric characters, '-' or '.',
-    and must start and end with an alphanumeric character (e.g. 'example.com', regex used
-    for validation is '[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*'),
+    Kubernetes does not allow underscores, and in some names/labels no '.'
+    DNS-1123 label must consist of lower case alphanumeric characters or '-',
+    and must start and end with an alphanumeric character
+    regex used for validation is '[a-z0-9]([-a-z0-9]*[a-z0-9])?'
+
     :param name:
     :return: a safe name
     """
-    return name.lower().replace('_', '-')
+    # Ensure lowercase and replace unsafe characters with '-'
+    return K8S_UNSAFE_REGEX.sub('-', name.lower())
 
 
 def random_tag(length=8):

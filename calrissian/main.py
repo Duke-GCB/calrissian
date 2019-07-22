@@ -16,10 +16,21 @@ import shlex
 log = logging.getLogger("calrissian.main")
 
 
-def activate_logging():
+def get_log_level(parsed_args):
+    level = logging.WARNING
+    if parsed_args.quiet:
+        level = logging.CRITICAL
+    elif parsed_args.verbose:
+        level = logging.INFO
+    elif parsed_args.debug:
+        level = logging.DEBUG
+    return level
+
+
+def activate_logging(level):
     loggers = ['executor','context','tool','job', 'k8s','main']
     for logger in loggers:
-        logging.getLogger('calrissian.{}'.format(logger)).setLevel(logging.DEBUG)
+        logging.getLogger('calrissian.{}'.format(logger)).setLevel(level)
         logging.getLogger('calrissian.{}'.format(logger)).addHandler(logging.StreamHandler())
 
 
@@ -91,10 +102,11 @@ def flush_tees():
 
 
 def main():
-    activate_logging()
     parser = arg_parser()
     add_arguments(parser)
     parsed_args = parse_arguments(parser)
+    level = get_log_level(parsed_args)
+    activate_logging(level)
     install_tees(parsed_args.stdout, parsed_args.stderr)
     max_ram_megabytes = MemoryParser.parse_to_megabytes(parsed_args.max_ram)
     max_cores = CPUParser.parse(parsed_args.max_cores)

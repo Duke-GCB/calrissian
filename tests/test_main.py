@@ -2,7 +2,8 @@ from unittest import TestCase
 from unittest.mock import patch, call, Mock
 from calrissian.main import main, add_arguments, parse_arguments
 from calrissian.main import handle_sigterm, install_signal_handler, install_tees, flush_tees
-
+from calrissian.main import activate_logging, get_log_level, print_version
+import logging
 
 class CalrissianMainTestCase(TestCase):
 
@@ -22,7 +23,10 @@ class CalrissianMainTestCase(TestCase):
     @patch('calrissian.main.MemoryParser', autospec=True)
     @patch('calrissian.main.install_tees')
     @patch('calrissian.main.flush_tees')
-    def test_main_calls_cwlmain_returns_exit_code(self, mock_flush_tees, mock_install_tees,
+    @patch('calrissian.main.get_log_level')
+    @patch('calrissian.main.activate_logging')
+    def test_main_calls_cwlmain_returns_exit_code(self, mock_activate_logging, mock_get_log_level,
+                                                  mock_flush_tees, mock_install_tees,
                                                   mock_memory_parser, mock_cpu_parser,
                                                   mock_initialize_reporter, mock_write_report,
                                                   mock_install_signal_handler, mock_delete_pods,
@@ -35,6 +39,8 @@ class CalrissianMainTestCase(TestCase):
         self.assertTrue(mock_arg_parser.called)
         self.assertEqual(mock_add_arguments.call_args, call(mock_arg_parser.return_value))
         self.assertEqual(mock_parse_arguments.call_args, call(mock_arg_parser.return_value))
+        self.assertEqual(mock_get_log_level.call_args, call(mock_parse_arguments.return_value))
+        self.assertEqual(mock_activate_logging.call_args, call(mock_get_log_level.return_value))
         self.assertEqual(mock_memory_parser.parse_to_megabytes.call_args, call(mock_parse_arguments.return_value.max_ram))
         self.assertEqual(mock_cpu_parser.parse.call_args, call(mock_parse_arguments.return_value.max_cores))
         self.assertEqual(mock_executor.call_args,
@@ -146,3 +152,29 @@ class CalrissianMainTestCase(TestCase):
         self.assertTrue(mock_sys.stdout.flush.called)
         self.assertTrue(mock_sys.stderr.flush.called)
 
+    @patch('calrissian.main.logging')
+    def test_activate_logging(self, mock_logging):
+        mock_level = Mock()
+        activate_logging(mock_level)
+        self.assertEqual(mock_logging.getLogger.call_count, 12) #
+        #  setLevel should be called 6 times
+        self.assertEqual([call(mock_level)] * 6, mock_logging.getLogger.return_value.setLevel.mock_calls)
+        # addHandler should be called 6 times
+        mock_streamhandler = mock_logging.StreamHandler.return_value
+        self.assertEqual([call(mock_streamhandler)] * 6, mock_logging.getLogger.return_value.addHandler.mock_calls)
+
+    def test_get_log_level(self):
+        args_quiet = Mock(quiet=True, verbose=False, debug=False)
+        args_verbose = Mock(quiet=False, verbose=True, debug=False)
+        args_debug = Mock(quiet=False, verbose=False, debug=True)
+        args_default = Mock(quiet=False, verbose=False, debug=False)
+        self.assertEqual(get_log_level(args_quiet), logging.CRITICAL)
+        self.assertEqual(get_log_level(args_verbose), logging.INFO)
+        self.assertEqual(get_log_level(args_debug), logging.DEBUG)
+        self.assertEqual(get_log_level(args_default), logging.WARNING)
+
+    @patch('calrissian.main.version')
+    @patch('builtins.print')
+    def test_print_version(self, mock_print, mock_version):
+        print_version()
+        self.assertEqual(mock_print.call_args, call(mock_version.return_value))

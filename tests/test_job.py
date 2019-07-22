@@ -12,8 +12,8 @@ import threading
 class SafeNameTestCase(TestCase):
 
     def setUp(self):
-        self.unsafe_name = 'Wine_1234'
-        self.safe_name = 'wine-1234'
+        self.unsafe_name = 'Wine_1234.foo'
+        self.safe_name = 'wine-1234-foo'
 
     def test_makes_name_safe(self):
         made_safe = k8s_safe_name(self.unsafe_name)
