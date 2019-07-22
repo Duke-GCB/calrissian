@@ -2,13 +2,13 @@
 
 These examples demonstrate how to run a CWL workflow in a Kubernetes cluster using Calrissian.
 
-## Cluster Requirements
+## Requirements
 
-See the [top-level README](../README.md) for details, but you must have
+See the [top-level README](../README.md) for Cluster Requirements. To run these examples specifically but you must have:
 
 1. `kubectl` installed and configured to access your cluster (or `oc` if you're using Openshift and prefer `oc`).
-2. Ability to create namespaces (if using Kubernetes) or projects (if using Openshift)
-2.  A cluster able to provision [PersistentVolumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/) with the `ReadWriteMany` access mode.
+2. Ability to create and use namespaces (if using Kubernetes) or projects (if using Openshift)
+3. A cluster able to provision [PersistentVolumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/) with the `ReadWriteMany` access mode.
 
 [Minikube](https://github.com/kubernetes/minikube), [Minishift](https://github.com/minishift/minishift), and [Docker Desktop Kubernetes](https://www.docker.com/products/docker-desktop) support `ReadWriteMany` by default. "Real" clusters may require configuring a StorageClass with NFS, GlusterFS, or another `ReadWriteMany` option listed here [here](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes).
 
