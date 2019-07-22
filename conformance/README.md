@@ -21,7 +21,7 @@ kubectl --namespace="$NAMESPACE_NAME" create -f StageConformanceTestsData.yaml
 Calrissian does not include cwltest, so build a container that installs it.
 
 ```
-./build-confrmance.sh
+./build-conformance.sh
 ```
 
 This will build `calrissian:conformance` from the current source tree. You may need to tag that differently if pushing to a registry. If so, update the `image: ` in [ConformanceTestsJob.yaml](ConformanceTestsJob.yaml)
