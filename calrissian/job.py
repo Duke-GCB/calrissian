@@ -74,8 +74,9 @@ class KubernetesPodVolumeInspector(object):
         persistent_volumes = {}
         for pod_volume in self.pod.spec.volumes:
             if pod_volume.persistent_volume_claim:
-                pvc_name = pod_volume.persistent_volume_claim.claim_name
-                persistent_volumes[pod_volume.name] = pvc_name
+                claim_name = pod_volume.persistent_volume_claim.claim_name
+                read_only = pod_volume.persistent_volume_claim.read_only
+                persistent_volumes[pod_volume.name] = (claim_name, read_only)
         return persistent_volumes
 
     def get_first_container(self):
@@ -85,10 +86,11 @@ class KubernetesPodVolumeInspector(object):
         mounted_persistent_volumes = []
         persistent_volumes = self.get_persistent_volumes_dict()
         for volume_mount in self.get_first_container().volume_mounts:
-            pvc_name = persistent_volumes.get(volume_mount.name)
-            if pvc_name:
+            volume = persistent_volumes.get(volume_mount.name)
+            if volume:
+                claim_name, read_only = volume
                 mounted_persistent_volumes.append(
-                    (volume_mount.mount_path, volume_mount.sub_path, pvc_name))
+                    (volume_mount.mount_path, volume_mount.sub_path, claim_name, read_only))
         return mounted_persistent_volumes
 
 
@@ -106,17 +108,18 @@ class KubernetesVolumeBuilder(object):
         :param pod: V1Pod
         """
         inspector = KubernetesPodVolumeInspector(pod)
-        for mount_path, sub_path, pvc_name in inspector.get_mounted_persistent_volumes():
-            self.add_persistent_volume_entry(mount_path, sub_path, pvc_name)
+        for mount_path, sub_path, claim_name, read_only in inspector.get_mounted_persistent_volumes():
+            self.add_persistent_volume_entry(mount_path, sub_path, claim_name, read_only)
 
-    def add_persistent_volume_entry(self, prefix, sub_path, claim_name):
+    def add_persistent_volume_entry(self, prefix, sub_path, claim_name, read_only):
         entry = {
             'prefix': prefix,
             'subPath': sub_path,
             'volume': {
                 'name': claim_name,
                 'persistentVolumeClaim': {
-                    'claimName': claim_name
+                    'claimName': claim_name,
+                    'readOnly': read_only
                 }
             }
         }
