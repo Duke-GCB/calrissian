@@ -12,7 +12,7 @@ Calrissian is a [CWL](https://www.commonwl.org) implementation designed to run i
 
 Calrissian requires a [Kubernetes](https://kubernetes.io) or [Openshift](https://www.openshift.com)/[OKD](https://www.okd.io) cluster, configured to provision [PersistentVolumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/) with the `ReadWriteMany` access mode. Kubernetes installers and cloud providers don't usually include this type of storage, so it may require additional configuration.
 
-Calrissian has been tested with NFS using the [nfs-client-provisioner](https://github.com/kubernetes-incubator/external-storage/tree/master/nfs-client) and with GlusterFS using [OKD Containerized GlusterFS](https://docs.okd.io/3.11/install_config/persistent_storage/persistent_storage_glusterfs.html). We recommend NFS.
+Calrissian has been tested with NFS using the [nfs-client-provisioner](https://github.com/kubernetes-incubator/external-storage/tree/master/nfs-client) and with GlusterFS using [OKD Containerized GlusterFS](https://docs.okd.io/3.11/install_config/persistent_storage/persistent_storage_glusterfs.html). Many cloud providers have an NFS offering, which integrates easily using the nfs-client-provisioner.
 
 ## Scalability / Resource Requirements
 
