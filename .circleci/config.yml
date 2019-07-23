@@ -26,5 +26,15 @@ jobs:
             kubectl create -f conformance/StageConformanceTestsData.yaml;
             kubectl wait --for=condition=complete --timeout 180s job/stage-conformance-test-data;
             kubectl logs job/stage-conformance-test-data
+      # Create roles/bindings to grant API access
+      - run:
+          command: >
+            kubectl create role pod-manager-role --verb=create,patch,delete,list,watch --resource=pods;
+            kubectl create role log-reader-role --verb=get,list --resource=pods/log;
+            kubectl create rolebinding pod-manager-default-binding--role=pod-manager-role --serviceaccount=default;
+            kubectl create rolebinding log-reader-default-binding --role=log-reader-role --serviceaccount=default;
       - run:
           command: ./conformance/run-conformance.sh
+      # Cleanup
+      - run:
+          command: kubectl delete -f conformance/StageConformanceTestsData.yaml
