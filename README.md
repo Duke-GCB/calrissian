@@ -22,7 +22,7 @@ When running `calrissian`, you must provide a limit the the number of CPU cores 
 
 ## CWL Conformance
 
-Calrissian leverages [cwltool](https://github.com/common-workflow-language/cwltool) heavily and currently passes 122 of 128 conformance tests for CWL v1.0. Please see [conformance](conformance) for further details and processes.
+Calrissian leverages [cwltool](https://github.com/common-workflow-language/cwltool) heavily and most conformance tests for CWL v1.0. Please see [conformance](conformance) for further details and processes.
 
 To view open issues related to conformance, see the [conformance](https://github.com/Duke-GCB/calrissian/issues?q=is%3Aopen+is%3Aissue+label%3Aconformance) label on the issue tracker.
 
