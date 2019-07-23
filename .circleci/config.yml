@@ -9,6 +9,8 @@ jobs:
     steps:
       - checkout
       - kube-orb/install
+      # build the conformance-testing image
+      - run: docker build -t calrissian:conformance -f conformance/Dockerfile.conformance .
       - run:
           command: >
             curl -Lo minikube
