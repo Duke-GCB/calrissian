@@ -15,6 +15,7 @@ kind: Job
 metadata:
   name: conformance-tests
 spec:
+  backoffLimit: 0
   template:
     spec:
       initContainers:
@@ -27,7 +28,7 @@ spec:
       containers:
       - name: conformance-tests
         image: calrissian:conformance
-        workingDir: "/conformance/common-workflow-language-1.0.1"
+        workingDir: "/conformance/common-workflow-language-1.0.2"
         command: ["./run_test.sh"]
         args:
         - "RUNNER=calrissian"
@@ -46,7 +47,7 @@ spec:
           readOnly: true
         - mountPath: /output
           name: conformance-output-data
-      restartPolicy: OnFailure
+      restartPolicy: Never
       volumes:
       - name: conformance-test-data
         persistentVolumeClaim:
