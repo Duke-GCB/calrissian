@@ -9,7 +9,7 @@ kubectl run -i --rm --tty conformance-tests --overrides='
         "image": "calrissian:conformance",
         "workingDir": "/conformance/common-workflow-language-1.0.2",
         "command": ["./run_test.sh"],
-        "args": ["RUNNER=calrissian", "--verbose", "EXTRA=--max-ram 8G --max-cores 4 --default-container debian:stretch-slim"],
+        "args": ["RUNNER=calrissian", "-n1", "--verbose", "EXTRA=--max-ram 8G --max-cores 4 --default-container debian:stretch-slim"],
         "stdin": true,
         "stdinOnce": true,
         "tty": true,
@@ -25,8 +25,8 @@ kubectl run -i --rm --tty conformance-tests --overrides='
     ],
     "restartPolicy": "Never",
     "volumes": [
-    { "name": "conformance-test-data", "persistentVolumeClaim": {"claimName":"conformance-test-data", "readOnly": true } },
-    { "name": "conformance-output-data", "persistentVolmeClaim": {"claimName": "conformance-output-data" } }
+      { "name": "conformance-test-data", "persistentVolumeClaim": {"claimName":"conformance-test-data", "readOnly": true } },
+      { "name": "conformance-output-data", "persistentVolumeClaim": {"claimName": "conformance-output-data" } }
     ]
   }
 }
