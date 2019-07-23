@@ -24,7 +24,12 @@ spec:
         command:
         - "sh"
         - "-c"
-        - "mkdir /conformance;cd /conformance; wget https://github.com/common-workflow-language/cwltool/archive/1.0.20181201184214.zip; unzip 1.0.20181201184214.zip; rm 1.0.20181201184214.zip; chmod -R a+rx /conformance; ls -l /conformance/"
+        - "cd /conformance; wget -q ${CWL_ARCHIVE_BASE}/${CWL_ARCHIVE_FILE}; unzip -q ${CWL_ARCHIVE_FILE}; rm ${CWL_ARCHIVE_FILE}; chmod -R a+rx *; ls -l"
+        env:
+        - name: CWL_ARCHIVE_BASE
+          value: "https://github.com/common-workflow-language/common-workflow-language/archive"
+        - name: CWL_ARCHIVE_FILE
+          value: "v1.0.2.zip"
         volumeMounts:
         - mountPath: /conformance
           name: conformance-test-data
@@ -33,4 +38,3 @@ spec:
       - name: conformance-test-data
         persistentVolumeClaim:
           claimName: conformance-test-data
-  backOffLimit: 0

@@ -19,7 +19,8 @@ K8S_FALLBACK_NAMESPACE = 'default'
 
 
 def read_file(path):
-    return open(path).read()
+    with open(path) as f:
+        return f.read()
 
 
 def load_config_get_namespace():
