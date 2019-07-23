@@ -21,11 +21,11 @@ jobs:
           name: Start minikube
       - run:
           command: >
-            kubectl create -f conformance/StageConformanceTestsData.yaml
-            kubectl wait --for=condition=complete --timeout 180s job/stage-conformance-test-data
+            kubectl create -f conformance/StageConformanceTestsData.yaml;
+            kubectl wait --for=condition=complete --timeout 180s job/stage-conformance-test-data;
             kubectl logs job/stage-conformance-test-data
       - run:
           command: >
-            kubectl create -f conformance/ConformanceTestsJob.yaml
-            kubectl wait --for=condition=running --selector=job-name=conformance-tests pods
+            kubectl create -f conformance/ConformanceTestsJob.yaml;
+            kubectl wait --for=condition=running --selector=job-name=conformance-tests pods;
             kubectl logs -f job/conformance-tests
