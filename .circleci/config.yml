@@ -19,21 +19,13 @@ jobs:
 
             sudo -E minikube start --vm-driver=none --cpus 2 --memory 2048
           name: Start minikube
-      - kube-orb/create-or-update-resource:
-          get-rollout-status: true
-          resource-file-path: conformance/StageConformanceTestsData.yaml
-          resource-name: job/stage-conformance-test-data
-          show-kubectl-command: true
-      - kube-orb/create-or-update-resource:
-          get-rollout-status: true
-          resource-file-path: conformance/ConformanceTestsJob.yaml
-          resource-name: job/conformance-tests
-          show-kubectl-command: true
       - run:
-         command: >
-           sleep 5 && kubectl logs jobs/conformance-tests
-      - kube-orb/delete-resource:
-          now: true
-          resource-names: job/conformance-tests,job/stage-conformance-test-data
-          resource-types: jobs
-          wait: true
+          command: >
+            kubectl create -f conformance/StageConformanceTestsData.yaml
+            kubectl wait --for=condition=complete --timeout 180s job/stage-conformance-test-data
+            kubectl logs job/stage-conformance-test-data
+      - run:
+          command: >
+            kubectl create -f conformance/ConformanceTestsJob.yaml
+            kubectl wait --for=condition=running --selector=job-name=conformance-tests pods
+            kubectl logs -f job/conformance-tests
