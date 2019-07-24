@@ -2,7 +2,6 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  creationTimestamp: null
   name: pod-manager-role
 rules:
 - apiGroups:
@@ -19,7 +18,6 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  creationTimestamp: null
   name: log-reader-role
 rules:
 - apiGroups:
@@ -33,7 +31,6 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  creationTimestamp: null
   name: pod-manager-default-binding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -47,7 +44,6 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  creationTimestamp: null
   name: log-reader-default-binding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
