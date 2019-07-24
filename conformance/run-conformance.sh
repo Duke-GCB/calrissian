@@ -1,6 +1,6 @@
 #!/bin/bash
 
-kubectl run -i --rm --tty conformance-tests --overrides='
+kubectl run --rm -i conformance-tests --overrides='
 {
   "spec": {
     "containers": [
