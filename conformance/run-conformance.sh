@@ -2,7 +2,7 @@
 
 set -eo pipefail
 
-kubectl run --attach=true --wait conformance-tests --overrides='
+kubectl run --attach=true -i conformance-tests --overrides='
 {
   "spec": {
     "containers": [
