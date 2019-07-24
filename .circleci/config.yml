@@ -33,6 +33,10 @@ jobs:
           command: kubectl create -f conformance/Roles.yaml
       - run:
           command: ./conformance/run-conformance.sh
+      # Store artifacts
+      - store_artifacts:
+          path: calrissian-conformance.xml
+          destination: calrissian-conformance
       # Cleanup
       - run:
           command: >
