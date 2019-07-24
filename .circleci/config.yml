@@ -19,7 +19,7 @@ jobs:
               && chmod +x minikube
             sudo cp minikube /usr/local/bin && rm minikube
 
-            sudo -E minikube start --vm-driver=none --cpus 2 --memory 2048
+            sudo -E minikube start --vm-driver=none --cpus 4 --memory 8192
           name: Start minikube
       - run:
           command: >
