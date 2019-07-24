@@ -23,18 +23,25 @@ jobs:
           name: Start minikube
       - run:
           command: >
-            kubectl create -f conformance/StageConformanceTestsData.yaml;
-            kubectl wait --for=condition=complete --timeout 180s job/stage-conformance-test-data;
+            kubectl create -f conformance/StageConformanceTestsData.yaml
+
+            kubectl wait --for=condition=complete --timeout 180s job/stage-conformance-test-data
+
             kubectl logs job/stage-conformance-test-data
       # Create roles/bindings to grant API access
       - run:
-          command: >
-            kubectl create role pod-manager-role --verb=create,patch,delete,list,watch --resource=pods;
-            kubectl create role log-reader-role --verb=get,list --resource=pods/log;
-            kubectl create rolebinding pod-manager-default-binding--role=pod-manager-role --serviceaccount=default;
-            kubectl create rolebinding log-reader-default-binding --role=log-reader-role --serviceaccount=default;
+          command: kubectl create -f conformance/Roles.yaml
       - run:
           command: ./conformance/run-conformance.sh
       # Cleanup
       - run:
-          command: kubectl delete -f conformance/StageConformanceTestsData.yaml
+          command: >
+            kubectl delete -f conformance/StageConformanceTestsData.yaml
+
+            kubectl delete -f conformance/Roles.yaml
+      # Stop Minikube
+      - run:
+          command: >
+            sudo -E minikube stop
+
+            sudo -E minikube delete
