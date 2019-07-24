@@ -9,7 +9,7 @@ kubectl run --rm -i conformance-tests --overrides='
         "image": "calrissian:conformance",
         "workingDir": "/conformance/common-workflow-language-1.0.2",
         "command": ["./run_test.sh"],
-        "args": ["RUNNER=calrissian", "-n1", "--verbose", "EXTRA=--max-ram 8G --max-cores 4 --default-container debian:stretch-slim"],
+        "args": ["--junit-xml=calrissian-conformance.xml", "--classname=calrissian", "RUNNER=calrissian", "-n1", "--verbose", "EXTRA=--max-ram 2G --max-cores 2 --default-container debian:stretch-slim"],
         "stdin": true,
         "stdinOnce": true,
         "tty": true,
