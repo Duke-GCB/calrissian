@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eo pipefail
+
 kubectl run --attach=true --wait conformance-tests --overrides='
 {
   "spec": {
@@ -9,7 +11,7 @@ kubectl run --attach=true --wait conformance-tests --overrides='
         "image": "calrissian:conformance",
         "workingDir": "/conformance/common-workflow-language-1.0.2",
         "command": ["./run_test.sh"],
-        "args": ["--junit-xml=/output/calrissian-conformance.xml", "--classname=calrissian", "RUNNER=calrissian", "-n1", "--verbose", "EXTRA=--max-ram 2G --max-cores 4 --default-container debian:stretch-slim"],
+        "args": ["--junit-xml=/output/calrissian-conformance.xml", "--classname=calrissian", "RUNNER=calrissian", "-n1", "--verbose", "EXTRA=--max-ram 8G --max-cores 4 --default-container debian:stretch-slim"],
         "stdin": true,
         "stdinOnce": true,
         "tty": true,
