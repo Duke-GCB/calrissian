@@ -1,6 +1,6 @@
 #!/bin/bash
 
-kubectl run --attach=true conformance-tests --overrides='
+kubectl run --attach=true --wait conformance-tests --overrides='
 {
   "spec": {
     "containers": [
