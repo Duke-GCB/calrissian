@@ -33,6 +33,11 @@ jobs:
           command: kubectl create -f conformance/Roles.yaml
       - run:
           command: ./conformance/run-conformance.sh
+      # Copy junit file out of pod
+      - run:
+          command: >
+            kubectl cp conformance-tests:/output/calrissian-conformance.xml calrissian-conformance.xml
+
       # Store artifacts
       - store_artifacts:
           path: calrissian-conformance.xml
@@ -40,6 +45,8 @@ jobs:
       # Cleanup
       - run:
           command: >
+            kubectl delete pod conformance-tests
+
             kubectl delete -f conformance/StageConformanceTestsData.yaml
 
             kubectl delete -f conformance/Roles.yaml
