@@ -281,27 +281,6 @@ Test [89/197] Test writable staged files.
 
 Test [90/197] Test file literal as input
 
-Got workflow error
-Traceback (most recent call last):
-  File "/usr/local/lib/python3.6/site-packages/cwltool/executors.py", line 264, in runner
-    job.run(runtime_context)
-  File "/usr/local/lib/python3.6/site-packages/calrissian/job.py", line 557, in run
-    pod = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
-  File "/usr/local/lib/python3.6/site-packages/calrissian/job.py", line 432, in create_kubernetes_runtime
-    any_path_okay=True)
-  File "/usr/local/lib/python3.6/site-packages/cwltool/job.py", line 575, in add_volumes
-    runtime, vol, host_outdir_tgt, secret_store, tmpdir_prefix)
-  File "/usr/local/lib/python3.6/site-packages/cwltool/job.py", line 537, in create_file_and_add_volume
-    writable=writable)
-  File "/usr/local/lib/python3.6/site-packages/calrissian/job.py", line 582, in append_volume
-    raise NotImplementedError('append_volume')
-NotImplementedError: append_volume
-Workflow error, try again with --debug for more information:
-append_volume
-Test 90 failed: /usr/local/bin/calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpc8grp8u7 --quiet v1.0/cat3-tool.cwl v1.0/file-literal.yml
-Test file literal as input
-Returned non-zero
-
 Test [91/197] Test expression in InitialWorkDir listing
 
 Test [92/197] Test nameroot/nameext expression in arguments, stdout
@@ -356,10 +335,10 @@ Test [110/197] Test compound workflow document
 Test [111/197] Test that nameroot and nameext are generated from basename at execution time by the runner
 
 Workflow checker warning:
-v1.0/basename-fields-test.cwl:33:7: 'tool' is not an input parameter of
+v1.0/basename-fields-test.cwl:26:7: 'tool' is not an input parameter of
                                     file:///conformance/common-workflow-language-1.0.2/v1.0/v1.0/echo-file-tool.cwl,
                                     expected in
-v1.0/basename-fields-test.cwl:26:7: 'tool' is not an input parameter of
+v1.0/basename-fields-test.cwl:33:7: 'tool' is not an input parameter of
                                     file:///conformance/common-workflow-language-1.0.2/v1.0/v1.0/echo-file-tool.cwl,
                                     expected in
 Test [112/197] Test that file path in $(inputs) for initialworkdir is in $(outdir).
@@ -379,27 +358,6 @@ Test [118/197] Test empty writable dir with InitialWorkDirRequirement inside Doc
 Test [119/197] Test dynamic resource reqs referencing inputs
 
 Test [120/197] Test file literal as input without Docker
-
-Got workflow error
-Traceback (most recent call last):
-  File "/usr/local/lib/python3.6/site-packages/cwltool/executors.py", line 264, in runner
-    job.run(runtime_context)
-  File "/usr/local/lib/python3.6/site-packages/calrissian/job.py", line 557, in run
-    pod = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
-  File "/usr/local/lib/python3.6/site-packages/calrissian/job.py", line 432, in create_kubernetes_runtime
-    any_path_okay=True)
-  File "/usr/local/lib/python3.6/site-packages/cwltool/job.py", line 575, in add_volumes
-    runtime, vol, host_outdir_tgt, secret_store, tmpdir_prefix)
-  File "/usr/local/lib/python3.6/site-packages/cwltool/job.py", line 537, in create_file_and_add_volume
-    writable=writable)
-  File "/usr/local/lib/python3.6/site-packages/calrissian/job.py", line 582, in append_volume
-    raise NotImplementedError('append_volume')
-NotImplementedError: append_volume
-Workflow error, try again with --debug for more information:
-append_volume
-Test 120 failed: /usr/local/bin/calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpmwr7nx1h --quiet v1.0/cat3-nodocker.cwl v1.0/file-literal.yml
-Test file literal as input without Docker
-Returned non-zero
 
 Test [121/197] Test that OutputBinding.glob is sorted as specified by POSIX
 
@@ -554,7 +512,7 @@ v1.0/docker-run-cmd.cwl:14:7: Did not find output file with glob pattern: '['cow
 Workflow error, try again with --debug for more information:
 Error collecting output for parameter 'cow':
 v1.0/docker-run-cmd.cwl:14:7: Did not find output file with glob pattern: '['cow']'
-Test 173 failed: /usr/local/bin/calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp8yz5b99m --quiet v1.0/docker-run-cmd.cwl v1.0/empty.json
+Test 173 failed: /usr/local/bin/calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp6dvxq45o --quiet v1.0/docker-run-cmd.cwl v1.0/empty.json
 Test Docker ENTRYPOINT usage
 Returned non-zero
 
@@ -617,49 +575,7 @@ Test [189/197] Pipe to stdin from user provided local File via a Directory liter
 
 Test [190/197] Pipe to stdin from literal File via a Directory literal
 
-Got workflow error
-Traceback (most recent call last):
-  File "/usr/local/lib/python3.6/site-packages/cwltool/executors.py", line 264, in runner
-    job.run(runtime_context)
-  File "/usr/local/lib/python3.6/site-packages/calrissian/job.py", line 557, in run
-    pod = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
-  File "/usr/local/lib/python3.6/site-packages/calrissian/job.py", line 432, in create_kubernetes_runtime
-    any_path_okay=True)
-  File "/usr/local/lib/python3.6/site-packages/cwltool/job.py", line 575, in add_volumes
-    runtime, vol, host_outdir_tgt, secret_store, tmpdir_prefix)
-  File "/usr/local/lib/python3.6/site-packages/cwltool/job.py", line 537, in create_file_and_add_volume
-    writable=writable)
-  File "/usr/local/lib/python3.6/site-packages/calrissian/job.py", line 582, in append_volume
-    raise NotImplementedError('append_volume')
-NotImplementedError: append_volume
-Workflow error, try again with --debug for more information:
-append_volume
-Test 190 failed: /usr/local/bin/calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp_24h8dry --quiet v1.0/cat-from-dir.cwl v1.0/cat-from-dir-with-literal-file.yaml
-Pipe to stdin from literal File via a Directory literal
-Returned non-zero
-
 Test [191/197] Test non-stdin reference to literal File via a Directory literal
-
-Got workflow error
-Traceback (most recent call last):
-  File "/usr/local/lib/python3.6/site-packages/cwltool/executors.py", line 264, in runner
-    job.run(runtime_context)
-  File "/usr/local/lib/python3.6/site-packages/calrissian/job.py", line 557, in run
-    pod = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
-  File "/usr/local/lib/python3.6/site-packages/calrissian/job.py", line 432, in create_kubernetes_runtime
-    any_path_okay=True)
-  File "/usr/local/lib/python3.6/site-packages/cwltool/job.py", line 575, in add_volumes
-    runtime, vol, host_outdir_tgt, secret_store, tmpdir_prefix)
-  File "/usr/local/lib/python3.6/site-packages/cwltool/job.py", line 537, in create_file_and_add_volume
-    writable=writable)
-  File "/usr/local/lib/python3.6/site-packages/calrissian/job.py", line 582, in append_volume
-    raise NotImplementedError('append_volume')
-NotImplementedError: append_volume
-Workflow error, try again with --debug for more information:
-append_volume
-Test 191 failed: /usr/local/bin/calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpxglemrq2 --quiet v1.0/cat3-from-dir.cwl v1.0/cat-from-dir-with-literal-file.yaml
-Test non-stdin reference to literal File via a Directory literal
-Returned non-zero
 
 Test [192/197] Test CommandLineTool without inputs
 
@@ -673,6 +589,6 @@ Test [196/197] Test an anonymous enum inside an array inside a record
 
 Test [197/197] Test an anonymous enum inside an array inside a record, SchemaDefRequirement
 
-191 tests passed, 5 failures, 1 unsupported features
+195 tests passed, 1 failures, 1 unsupported features
 
 1 tool tests failed
