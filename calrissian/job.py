@@ -577,6 +577,9 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         # expected to return runtime list and cid string
         raise NotImplementedError('create_runtime')
 
-    @staticmethod
-    def append_volume(runtime, source, target, writable=False):
-        raise NotImplementedError('append_volume')
+    def append_volume(self, runtime, source, target, writable=False):
+        """Add volume binding to the arguments list.
+        This is called by the base class for file literals after they've been created.
+        We already have a similar function, so we just call that.
+        """
+        self._add_volume_binding(source, target, writable)
