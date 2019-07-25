@@ -184,10 +184,10 @@ class KubernetesVolumeBuilder(object):
 
 class KubernetesPodBuilder(object):
 
-    def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, resources, labels):
+    def __init__(self, name, container_image, init_container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, resources, labels):
         self.name = name
         self.container_image = container_image
-        self.init_container_image = 'alpine:3.10' # TODO: Use default container
+        self.init_container_image = init_container_image
         self.environment = environment
         self.volume_mounts = volume_mounts
         self.volumes = volumes
@@ -421,16 +421,21 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
                     if not field in self.supported_features[feature]:
                         raise UnsupportedRequirement('Error: feature {}.{} is not supported'.format(feature, field))
 
-    def _get_container_image(self):
-        docker_requirement, _ = self.get_requirement('DockerRequirement')
-        if docker_requirement:
-            container_image = docker_requirement['dockerPull']
-        else:
-            # No dockerRequirement, use the default container
-            container_image = self.builder.find_default_container()
+    def _get_default_container_image(self):
+        container_image = self.builder.find_default_container()
         if not container_image:
             raise CalrissianCommandLineJobException('Unable to create Job - Please ensure tool has a DockerRequirement with dockerPull or specify a default_container')
         return container_image
+
+    def _get_container_image(self):
+        docker_requirement, _ = self.get_requirement('DockerRequirement')
+        if docker_requirement:
+            return docker_requirement['dockerPull']
+        else:
+            return self._get_default_container_image()
+
+    def _get_init_container_image(self):
+        return self._get_default_container_image()
 
     def quoted_command_line(self):
         return quoted_arg_list(self.command_line)
@@ -479,6 +484,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         k8s_builder = KubernetesPodBuilder(
             self.name,
             self._get_container_image(),
+            self._get_init_container_image(),
             self.environment,
             self.volume_builder.volume_mounts,
             self.volume_builder.volumes,
