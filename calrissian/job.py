@@ -52,6 +52,11 @@ def read_yaml(filename):
         return yaml.safe_load(f)
 
 
+def quoted_arg_list(arg_list):
+        shouldquote = needs_shell_quoting_re.search
+        return [shellescape.quote(arg) if shouldquote(arg) else arg for arg in arg_list]
+
+
 def total_size(outputs):
     """
     Recursively walk through an output dictionary object, totaling
@@ -182,6 +187,7 @@ class KubernetesPodBuilder(object):
     def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, resources, labels):
         self.name = name
         self.container_image = container_image
+        self.init_container_image = 'alpine:3.10' # TODO: Use default container
         self.environment = environment
         self.volume_mounts = volume_mounts
         self.volumes = volumes
@@ -198,6 +204,9 @@ class KubernetesPodBuilder(object):
 
     def container_name(self):
         return k8s_safe_name('{}-container'.format(self.name))
+
+    def init_container_name(self):
+        return k8s_safe_name('{}-init'.format(self.name))
 
     # To provide the CWL command-line to kubernetes, we must wrap it in 'sh -c <command string>'
     # Otherwise we can't do things like redirecting stdout.
@@ -217,6 +226,24 @@ class KubernetesPodBuilder(object):
         # and passed as an argument to sh -c. Otherwise we cannot redirect STDIN/OUT/ERR inside a kubernetes container
         # Join everything into a single string and then return a single args list
         return [' '.join(pod_command)]
+
+    # If redirecting to stdout or stderr, we may need to make intermediate directories first
+    # This can only happen inside the pod, so we use an initContainer to `mkdir -p` for any directories
+    # that need to exist.
+    def init_containers(self):
+        containers = []
+        dirs_to_create = [os.path.dirname(p) for p in [self.stdout, self.stderr] if p]
+        quoted_dirs_to_create = quoted_arg_list(dirs_to_create)
+        command_list = ['mkdir -p \"{}\";'.format(d) for d in quoted_dirs_to_create]
+        if command_list:
+            containers.append({
+                'name': self.init_container_name(),
+                'image': self.init_container_image,
+                'command': ['/bin/sh', '-c', ' '.join(command_list)],
+                'workingDir': self.container_workingdir(),
+                'volumeMounts': self.volume_mounts,
+            })
+        return containers
 
     def container_environment(self):
         """
@@ -288,6 +315,7 @@ class KubernetesPodBuilder(object):
             'apiVersion': 'v1',
             'kind':'Pod',
                 'spec': {
+                    'initContainers': self.init_containers(),
                     'containers': [
                         {
                             'name': self.container_name(),
@@ -401,8 +429,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         return container_image
 
     def quoted_command_line(self):
-        shouldquote = needs_shell_quoting_re.search
-        return [shellescape.quote(arg) if shouldquote(arg) else arg for arg in self.command_line]
+        return quoted_arg_list(self.command_line)
 
     def get_pod_labels(self, runtimeContext):
         if runtimeContext.pod_labels:
