@@ -697,9 +697,11 @@ class CalrissianCommandLineJobTestCase(TestCase):
         with self.assertRaisesRegex(NotImplementedError, 'create_runtime'):
             job.create_runtime(Mock(), Mock())
 
-    def test_append_volume_raises_not_implemented(self, mock_volume_builder, mock_client):
-        with self.assertRaisesRegex(NotImplementedError, 'append_volume'):
-            CalrissianCommandLineJob.append_volume(Mock(), Mock(), Mock())
+    @patch('calrissian.job.CalrissianCommandLineJob._add_volume_binding')
+    def test_append_volume(self, mock_add_volume_binding, mock_volume_builder, mock_client):
+        job = self.make_job()
+        job.append_volume([], 'source', 'target', True)
+        self.assertEqual(mock_add_volume_binding.call_args, call('source','target',True))
 
 
 class TotalSizeTestCase(TestCase):
