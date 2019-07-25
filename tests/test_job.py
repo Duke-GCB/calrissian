@@ -287,18 +287,15 @@ class KubernetesPodBuilderTestCase(TestCase):
     def test_safe_container_name(self):
         self.assertEqual('podname-container', self.pod_builder.container_name())
 
-    def test_container_command(self):
-        self.assertEqual(['/bin/sh', '-c'], self.pod_builder.container_command())
-
     def test_container_args_without_redirects(self):
         # container_args returns a list with a single item since it is passed to 'sh', '-c'
         self.pod_builder.stdout = None
         self.pod_builder.stderr = None
         self.pod_builder.stdin = None
-        self.assertEqual(['cat'], self.pod_builder.container_args())
+        self.assertEqual(['/bin/sh', '-c', 'cat'], self.pod_builder.container_args())
 
     def test_container_args_with_redirects(self):
-        self.assertEqual(['cat > stdout.txt 2> stderr.txt < stdin.txt'], self.pod_builder.container_args())
+        self.assertEqual(['/bin/sh', '-c', 'cat > stdout.txt 2> stderr.txt < stdin.txt'], self.pod_builder.container_args())
 
     def test_container_environment(self):
         environment = self.pod_builder.container_environment()
@@ -354,8 +351,7 @@ class KubernetesPodBuilderTestCase(TestCase):
                     {
                         'name': 'podname-container',
                         'image': 'dockerimage:1.0',
-                        'command': ['/bin/sh', '-c'],
-                        'args': ['cat > stdout.txt 2> stderr.txt < stdin.txt'],
+                        'args': ['/bin/sh', '-c', 'cat > stdout.txt 2> stderr.txt < stdin.txt'],
                         'env': [
                             {'name': 'HOME', 'value': '/homedir'},
                             {'name': 'K1', 'value': 'V1'},
