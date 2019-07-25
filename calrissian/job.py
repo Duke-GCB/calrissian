@@ -232,9 +232,13 @@ class KubernetesPodBuilder(object):
     # that need to exist.
     def init_containers(self):
         containers = []
+        # get dirname for any actual paths
         dirs_to_create = [os.path.dirname(p) for p in [self.stdout, self.stderr] if p]
-        quoted_dirs_to_create = quoted_arg_list(dirs_to_create)
-        command_list = ['mkdir -p \"{}\";'.format(d) for d in quoted_dirs_to_create]
+        # Remove empty strings
+        dirs_to_create = [d for d in dirs_to_create if d]
+        # Quote if necessary
+        dirs_to_create = quoted_arg_list(dirs_to_create)
+        command_list = ['mkdir -p {};'.format(d) for d in dirs_to_create]
         if command_list:
             containers.append({
                 'name': self.init_container_name(),
