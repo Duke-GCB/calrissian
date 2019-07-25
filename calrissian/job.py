@@ -202,8 +202,10 @@ class KubernetesPodBuilder(object):
     # To provide the CWL command-line to kubernetes, we must wrap it in 'sh -c <command string>'
     # Otherwise we can't do things like redirecting stdout.
 
-    def container_command(self):
-        return ['/bin/sh', '-c']
+    # https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#notes
+    # Docker 'Entrypoint' is equivalent to Kubernetes container 'command',
+    # and Docker 'Cmd' is equivalent to Kubernetes container 'args'
+    # Since Docker images may have an 'Entrypoint', we avoid overriding 'command' and do everything in 'args'
 
     def container_args(self):
         pod_command = self.command_line.copy()
@@ -215,8 +217,8 @@ class KubernetesPodBuilder(object):
             pod_command.extend(['<', self.stdin])
         # pod_command is a list of strings. Needs to be turned into a single string
         # and passed as an argument to sh -c. Otherwise we cannot redirect STDIN/OUT/ERR inside a kubernetes container
-        # Join everything into a single string and then return a single args list
-        return [' '.join(pod_command)]
+        # Join pod_command into a single string and then return a single args list
+        return ['/bin/sh', '-c', ' '.join(pod_command)]
 
     def container_environment(self):
         """
@@ -292,7 +294,6 @@ class KubernetesPodBuilder(object):
                         {
                             'name': self.container_name(),
                             'image': self.container_image,
-                            'command': self.container_command(),
                             'args': self.container_args(),
                             'env': self.container_environment(),
                             'resources': self.container_resources(),
