@@ -273,6 +273,7 @@ class KubernetesPodBuilderTestCase(TestCase):
     def setUp(self):
         self.name = 'PodName'
         self.container_image = 'dockerimage:1.0'
+        self.init_container_image = 'init-image:2.0'
         self.environment = {'K1':'V1', 'K2':'V2', 'HOME': '/homedir'}
         self.volume_mounts = [Mock(), Mock()]
         self.volumes = [Mock()]
@@ -282,7 +283,8 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.stdin = 'stdin.txt'
         self.resources = {'cores': 1, 'ram': 1024}
         self.labels = {'key1': 'val1', 'key2': 123}
-        self.pod_builder = KubernetesPodBuilder(self.name, self.container_image, self.environment, self.volume_mounts,
+        self.pod_builder = KubernetesPodBuilder(self.name, self.container_image, self.init_container_image,
+                                                self.environment, self.volume_mounts,
                                                 self.volumes, self.command_line, self.stdout, self.stderr, self.stdin,
                                                 self.resources, self.labels)
 
@@ -593,6 +595,7 @@ class CalrissianCommandLineJobTestCase(TestCase):
         self.assertEqual(mock_pod_builder.call_args, call(
             job.name,
             job._get_container_image(),
+            job._get_init_container_image(),
             job.environment,
             job.volume_builder.volume_mounts,
             job.volume_builder.volumes,
