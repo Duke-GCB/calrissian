@@ -2,6 +2,7 @@ from unittest import TestCase
 from unittest.mock import Mock, patch, call, create_autospec
 from calrissian.job import k8s_safe_name, KubernetesVolumeBuilder, VolumeBuilderException, KubernetesPodBuilder, random_tag, read_yaml
 from calrissian.job import CalrissianCommandLineJob, KubernetesPodVolumeInspector, CalrissianCommandLineJobException, total_size, quoted_arg_list
+from calrissian.job import INIT_IMAGE_ENV_VARIABLE, DEFAULT_INIT_IMAGE
 from cwltool.errors import UnsupportedRequirement
 from calrissian.context import CalrissianRuntimeContext
 from calrissian.k8s import CompletionResult
@@ -359,16 +360,25 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.assertEqual(len(self.pod_builder.init_containers()), 0)
 
     def test_init_containers_when_stdout_has_path(self):
+        # mock_os.environ = {}
         self.pod_builder.stdout = 'out/to/stdout.txt'
         self.pod_builder.stderr = 'err/to/stderr.txt'
-        self.pod_builder.init_container_image = 'init-image:2.0'
         init_containers = self.pod_builder.init_containers()
         self.assertEqual(len(init_containers), 1)
         container = init_containers[0]
         self.assertEqual(container['name'], 'podname-init')
-        self.assertEqual(container['image'], 'init-image:2.0')
+        self.assertEqual(container['image'], DEFAULT_INIT_IMAGE)
         self.assertEqual(container['command'], ['/bin/sh','-c','mkdir -p out/to; mkdir -p err/to;'])
         self.assertEqual(container['volumeMounts'], self.pod_builder.volume_mounts)
+
+    @patch('calrissian.job.os')
+    def test_init_container_name_default(self, mock_os):
+        mock_os.environ = {INIT_IMAGE_ENV_VARIABLE: 'custom-init:1.0'}
+        self.pod_builder.stdout = 'out/to/stdout.txt'
+        self.pod_builder.stderr = 'err/to/stderr.txt'
+        init_containers = self.pod_builder.init_containers()
+        container = init_containers[0]
+        self.assertEqual(container['image'], 'custom-init:1.0')
 
     @patch('calrissian.job.random_tag')
     def test_build(self, mock_random_tag):

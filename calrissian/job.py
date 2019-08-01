@@ -20,6 +20,10 @@ log = logging.getLogger("calrissian.job")
 
 K8S_UNSAFE_REGEX = re.compile('[^-a-z0-9]')
 
+# Environment variable used to override image name used for initContainers
+INIT_IMAGE_ENV_VARIABLE = 'CALRISSIAN_INIT_IMAGE'
+DEFAULT_INIT_IMAGE = 'alpine:3.10'
+
 
 class VolumeBuilderException(WorkflowException):
     pass
@@ -187,7 +191,6 @@ class KubernetesPodBuilder(object):
     def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, resources, labels):
         self.name = name
         self.container_image = container_image
-        self.init_container_image = 'alpine:3.10' # TODO: Use default container
         self.environment = environment
         self.volume_mounts = volume_mounts
         self.volumes = volumes
@@ -242,7 +245,7 @@ class KubernetesPodBuilder(object):
         if command_list:
             containers.append({
                 'name': self.init_container_name(),
-                'image': self.init_container_image,
+                'image':  os.environ.get(INIT_IMAGE_ENV_VARIABLE, DEFAULT_INIT_IMAGE),
                 'command': ['/bin/sh', '-c', ' '.join(command_list)],
                 'workingDir': self.container_workingdir(),
                 'volumeMounts': self.volume_mounts,
