@@ -28,7 +28,7 @@ spec:
       containers:
       - name: conformance-tests
         image: calrissian:conformance
-        workingDir: "/conformance/common-workflow-language-1.0.2"
+        workingDir: "/conformance/cwl-v1.1-1.1.0"
         command: ["./run_test.sh"]
         args:
         - "RUNNER=calrissian"
