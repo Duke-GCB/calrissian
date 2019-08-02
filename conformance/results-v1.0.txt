@@ -311,9 +311,9 @@ Got workflow error
 Traceback (most recent call last):
   File "/usr/local/lib/python3.6/site-packages/cwltool/executors.py", line 264, in runner
     job.run(runtime_context)
-  File "/usr/local/lib/python3.6/site-packages/calrissian/job.py", line 553, in run
+  File "/usr/local/lib/python3.6/site-packages/calrissian/job.py", line 587, in run
     self.check_requirements()
-  File "/usr/local/lib/python3.6/site-packages/calrissian/job.py", line 390, in check_requirements
+  File "/usr/local/lib/python3.6/site-packages/calrissian/job.py", line 425, in check_requirements
     raise UnsupportedRequirement('Error: feature {}.{} is not supported'.format(feature, field))
 cwltool.errors.UnsupportedRequirement: Error: feature DockerRequirement.dockerOutputDirectory is not supported
 Workflow or tool uses unsupported feature:
@@ -499,9 +499,9 @@ During handling of the above exception, another exception occurred:
 Traceback (most recent call last):
   File "/usr/local/lib/python3.6/site-packages/cwltool/executors.py", line 264, in runner
     job.run(runtime_context)
-  File "/usr/local/lib/python3.6/site-packages/calrissian/job.py", line 560, in run
+  File "/usr/local/lib/python3.6/site-packages/calrissian/job.py", line 594, in run
     self.finish(completion_result, runtimeContext)
-  File "/usr/local/lib/python3.6/site-packages/calrissian/job.py", line 360, in finish
+  File "/usr/local/lib/python3.6/site-packages/calrissian/job.py", line 395, in finish
     outputs = self.collect_outputs(self.outdir)
   File "/usr/local/lib/python3.6/site-packages/cwltool/command_line_tool.py", line 612, in collect_output_ports
     compute_checksum=compute_checksum)
@@ -512,7 +512,7 @@ v1.0/docker-run-cmd.cwl:14:7: Did not find output file with glob pattern: '['cow
 Workflow error, try again with --debug for more information:
 Error collecting output for parameter 'cow':
 v1.0/docker-run-cmd.cwl:14:7: Did not find output file with glob pattern: '['cow']'
-Test 173 failed: /usr/local/bin/calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp6dvxq45o --quiet v1.0/docker-run-cmd.cwl v1.0/empty.json
+Test 173 failed: /usr/local/bin/calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpfl2wnt7j --quiet v1.0/docker-run-cmd.cwl v1.0/empty.json
 Test Docker ENTRYPOINT usage
 Returned non-zero
 
