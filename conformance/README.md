@@ -39,7 +39,6 @@ kubectl --namespace="$NAMESPACE_NAME" logs -f jobs/conformance-tests
 
 ### Notes:
 
-- Conformance tests use cwltool-1.0.20181201184214 as that's the nearest version to calrissian's dependency.
 - Calrissian requires specifying an envelope of RAM and CPU resources to use in the cluster, so these are provided as `--max-ram` and `--max-cores`
 - Since kubernetes is entirely container-based, CWL Tools that do not specify a Docker image will not run unless Calrissian is run with `--default-container`
 - This job uses an `initContainer` to guarantee the output volume is writable by the calrissian container. The calrissian image runs as a non-root user.
