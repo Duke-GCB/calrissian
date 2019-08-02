@@ -27,9 +27,9 @@ spec:
         - "cd /conformance; wget -q ${CWL_ARCHIVE_BASE}/${CWL_ARCHIVE_FILE}; unzip -q ${CWL_ARCHIVE_FILE}; rm ${CWL_ARCHIVE_FILE}; chmod -R a+rx *; ls -l"
         env:
         - name: CWL_ARCHIVE_BASE
-          value: "https://github.com/common-workflow-language/common-workflow-language/archive"
+          value: "https://github.com/common-workflow-language/cwl-v1.1/archive"
         - name: CWL_ARCHIVE_FILE
-          value: "v1.0.2.zip"
+          value: "v1.1.0.zip"
         volumeMounts:
         - mountPath: /conformance
           name: conformance-test-data
