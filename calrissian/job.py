@@ -392,7 +392,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         else:
             status = "permanentFail"
         # collect_outputs (and collect_output) is defined in command_line_tool
-        outputs = self.collect_outputs(self.outdir)
+        outputs = self.collect_outputs(self.outdir, exit_code)
 
         disk_bytes = total_size(outputs)
         self.report(completion_result, disk_bytes)

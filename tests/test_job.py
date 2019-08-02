@@ -500,7 +500,7 @@ class CalrissianCommandLineJobTestCase(TestCase):
         job = self.make_job()
         completion_result = self.make_completion_result(0) # 0 = exit success
         job.finish(completion_result, self.runtime_context)
-        self.assertTrue(job.collect_outputs.called)
+        self.assertEqual(job.collect_outputs.call_args, call(job.outdir, 0))
         job.output_callback.assert_called_with(job.collect_outputs.return_value, 'success')
 
     @patch('calrissian.job.Reporter')
