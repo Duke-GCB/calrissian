@@ -583,9 +583,13 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
                     shutil.copytree(volume.resolved, host_outdir_tgt)
                 ensure_writable(host_outdir_tgt or new_dir)
 
-    def run(self, runtimeContext):
+    def run(self, runtimeContext, tmpdir_lock=None):
         self.check_requirements()
-        self.make_tmpdir()
+        if tmpdir_lock:
+            with tmpdir_lock:
+                self.make_tmpdir()
+        else:
+            self.make_tmpdir()
         self.populate_env_vars()
         self._setup(runtimeContext)
         pod = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
