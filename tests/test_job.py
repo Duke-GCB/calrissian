@@ -1,7 +1,8 @@
 from unittest import TestCase
 from unittest.mock import Mock, patch, call, create_autospec
 from calrissian.job import k8s_safe_name, KubernetesVolumeBuilder, VolumeBuilderException, KubernetesPodBuilder, random_tag, read_yaml
-from calrissian.job import CalrissianCommandLineJob, KubernetesPodVolumeInspector, CalrissianCommandLineJobException, total_size
+from calrissian.job import CalrissianCommandLineJob, KubernetesPodVolumeInspector, CalrissianCommandLineJobException, total_size, quoted_arg_list
+from calrissian.job import INIT_IMAGE_ENV_VARIABLE, DEFAULT_INIT_IMAGE
 from cwltool.errors import UnsupportedRequirement
 from calrissian.context import CalrissianRuntimeContext
 from calrissian.k8s import CompletionResult
@@ -39,6 +40,13 @@ class ReadYamlTestCase(TestCase):
         self.assertEqual(result, mock_result)
         self.assertEqual(mock_open.call_args, call('filename.yaml'))
         self.assertEqual(mock_yaml.safe_load.call_args, call(mock_open.return_value.__enter__.return_value))
+
+
+class QuotedArgListTestCase(TestCase):
+
+    def test_quoted_arg_list(self):
+        arg_list = ['ls', '@foo']
+        self.assertEqual(quoted_arg_list(arg_list), ['ls', '\'@foo\''])
 
 
 class KubernetesPodVolumeInspectorTestCase(TestCase):
@@ -336,6 +344,42 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.pod_builder.labels = {'key1': 123}
         self.assertEqual(self.pod_builder.pod_labels(), {'key1':'123'})
 
+    def test_init_containers_empty_when_no_stdout_or_stderr(self):
+        self.pod_builder.stdout = None
+        self.pod_builder.stderr = None
+        self.assertEqual(len(self.pod_builder.init_containers()), 0)
+
+    def test_init_containers_empty_when_stdout_is_local_file(self):
+        self.pod_builder.stdout = 'stdout.txt'
+        self.pod_builder.stderr = None
+        self.assertEqual(len(self.pod_builder.init_containers()), 0)
+
+    def test_init_containers_empty_when_stderr_is_local_file(self):
+        self.pod_builder.stdout = None
+        self.pod_builder.stderr = 'stderr.txt'
+        self.assertEqual(len(self.pod_builder.init_containers()), 0)
+
+    def test_init_containers_when_stdout_has_path(self):
+        self.pod_builder.stdout = 'out/to/stdout.txt'
+        self.pod_builder.stderr = 'err/to/stderr.txt'
+        init_containers = self.pod_builder.init_containers()
+        self.assertEqual(len(init_containers), 1)
+        container = init_containers[0]
+        self.assertEqual(container['name'], 'podname-init')
+        self.assertEqual(container['image'], DEFAULT_INIT_IMAGE)
+        self.assertEqual(container['command'], ['/bin/sh','-c','mkdir -p out/to; mkdir -p err/to;'])
+        self.assertEqual(container['volumeMounts'], self.pod_builder.volume_mounts)
+
+    @patch('calrissian.job.os.environ.get')
+    def test_init_container_name_default(self, mock_environ_get):
+        mock_environ_get.return_value = 'custom-init:1.0'
+        self.pod_builder.stdout = 'out/to/stdout.txt'
+        self.pod_builder.stderr = 'err/to/stderr.txt'
+        init_containers = self.pod_builder.init_containers()
+        container = init_containers[0]
+        self.assertEqual(container['image'], 'custom-init:1.0')
+        self.assertEqual(mock_environ_get.call_args, call(INIT_IMAGE_ENV_VARIABLE, DEFAULT_INIT_IMAGE))
+
     @patch('calrissian.job.random_tag')
     def test_build(self, mock_random_tag):
         mock_random_tag.return_value = 'random'
@@ -350,6 +394,7 @@ class KubernetesPodBuilderTestCase(TestCase):
             'apiVersion': 'v1',
             'kind':'Pod',
             'spec': {
+                'initContainers': [],
                 'containers': [
                     {
                         'name': 'podname-container',
@@ -646,10 +691,12 @@ class CalrissianCommandLineJobTestCase(TestCase):
         # and can be tested later
         pass
 
-    def test_quoted_command_line(self, mock_volume_builder, mock_client):
+    @patch('calrissian.job.quoted_arg_list')
+    def test_quoted_command_line(self, mock_quoted_arg_list, mock_volume_builder, mock_client):
         job = self.make_job()
-        job.command_line = ['ls', '@foo']
-        self.assertEqual(job.quoted_command_line(), ['ls', '\'@foo\''])
+        result = job.quoted_command_line()
+        self.assertEqual(mock_quoted_arg_list.return_value, result)
+        self.assertEqual(mock_quoted_arg_list.call_args, call(job.command_line))
 
     def test_run(self, mock_volume_builder, mock_client):
         job = self.make_job()
