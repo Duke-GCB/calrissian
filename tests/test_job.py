@@ -719,8 +719,11 @@ class CalrissianCommandLineJobTestCase(TestCase):
         self.assertEqual(job.finish.call_args, call(job.wait_for_kubernetes_pod.return_value, self.runtime_context))
 
     def test_run_uses_tmpdir_lock(self, mock_volume_builder, mock_client):
+        mock_make_tmpdir = Mock()
+        mock_enter = Mock()
+        mock_exit = Mock()
         job = self.make_job()
-        job.make_tmpdir = Mock()
+        job.make_tmpdir = mock_make_tmpdir
         job.populate_env_vars = Mock()
         job._setup = Mock()
         job.create_kubernetes_runtime = Mock()
@@ -728,13 +731,18 @@ class CalrissianCommandLineJobTestCase(TestCase):
         job.wait_for_kubernetes_pod = Mock()
         job.finish = Mock()
 
-        mock_tmpdir_lock = Mock()
-        mock_tmpdir_lock.__enter__ = Mock()
-        mock_tmpdir_lock.__exit__ = Mock()
+        mock_tmpdir_lock = Mock(__enter__=mock_enter, __exit__=mock_exit)
+        manager = Mock()
+        manager.attach_mock(mock_enter, 'enter')
+        manager.attach_mock(mock_exit, 'exit')
+        manager.attach_mock(mock_make_tmpdir, 'make_tmpdir')
         job.run(self.runtime_context, mock_tmpdir_lock)
-        self.assertTrue(mock_tmpdir_lock.__enter__.called)
-        self.assertTrue(mock_tmpdir_lock.__exit__.called)
-        self.assertTrue(job.make_tmpdir.called)
+        expected_calls = [
+            call.enter(),
+            call.make_tmpdir(),
+            call.exit(None, None, None)
+            ]
+        self.assertEqual(expected_calls, manager.mock_calls)
 
     @patch('calrissian.job.read_yaml')
     def test_get_pod_labels(self, mock_read_yaml, mock_volume_builder, mock_client):
