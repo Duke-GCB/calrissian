@@ -718,6 +718,24 @@ class CalrissianCommandLineJobTestCase(TestCase):
         self.assertTrue(job.wait_for_kubernetes_pod.called)
         self.assertEqual(job.finish.call_args, call(job.wait_for_kubernetes_pod.return_value, self.runtime_context))
 
+    def test_run_uses_tmpdir_lock(self, mock_volume_builder, mock_client):
+        job = self.make_job()
+        job.make_tmpdir = Mock()
+        job.populate_env_vars = Mock()
+        job._setup = Mock()
+        job.create_kubernetes_runtime = Mock()
+        job.execute_kubernetes_pod = Mock()
+        job.wait_for_kubernetes_pod = Mock()
+        job.finish = Mock()
+
+        mock_tmpdir_lock = Mock()
+        mock_tmpdir_lock.__enter__ = Mock()
+        mock_tmpdir_lock.__exit__ = Mock()
+        job.run(self.runtime_context, mock_tmpdir_lock)
+        self.assertTrue(mock_tmpdir_lock.__enter__.called)
+        self.assertTrue(mock_tmpdir_lock.__exit__.called)
+        self.assertTrue(job.make_tmpdir.called)
+
     @patch('calrissian.job.read_yaml')
     def test_get_pod_labels(self, mock_read_yaml, mock_volume_builder, mock_client):
         expected_labels = {'foo':'bar'}
