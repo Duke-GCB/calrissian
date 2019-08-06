@@ -392,7 +392,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         else:
             status = "permanentFail"
         # collect_outputs (and collect_output) is defined in command_line_tool
-        outputs = self.collect_outputs(self.outdir)
+        outputs = self.collect_outputs(self.outdir, exit_code)
 
         disk_bytes = total_size(outputs)
         self.report(completion_result, disk_bytes)
@@ -583,9 +583,13 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
                     shutil.copytree(volume.resolved, host_outdir_tgt)
                 ensure_writable(host_outdir_tgt or new_dir)
 
-    def run(self, runtimeContext):
+    def run(self, runtimeContext, tmpdir_lock=None):
         self.check_requirements()
-        self.make_tmpdir()
+        if tmpdir_lock:
+            with tmpdir_lock:
+                self.make_tmpdir()
+        else:
+            self.make_tmpdir()
         self.populate_env_vars()
         self._setup(runtimeContext)
         pod = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()

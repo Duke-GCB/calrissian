@@ -1,5 +1,5 @@
 --- Running conformance test v1.0 on /usr/local/bin/calrissian ---
-calrissian 0.6.0 (cwltool 1.0.20181217162649)
+calrissian 0.7.0 (cwltool 1.0.20190621234233)
 cwltest --tool /usr/local/bin/calrissian 	     --test=conformance_test_v1.0.yaml   	     --verbose      	     --basedir /conformance/common-workflow-language-1.0.2/v1.0   -- --max-ram 8G --max-cores 4 --default-container debian:stretch-slim
 Test [1/197] General test of command line generation
 
@@ -13,45 +13,45 @@ Test [5/197] Test command line with optional input (provided)
 
 Test [6/197] Test InitialWorkDirRequirement ExpressionEngineRequirement.engineConfig feature
 
-v1.0/template-tool.cwl:7:9: JSHINT:       exports = module.exports = _;
+[1;30mWARNING[0m [33mv1.0/template-tool.cwl:7:9: JSHINT:       exports = module.exports = _;
 v1.0/template-tool.cwl:7:9: JSHINT:       ^
-v1.0/template-tool.cwl:7:9: JSHINT: W117: 'exports' is not defined.
-v1.0/template-tool.cwl:7:9: JSHINT:     exports._ = _;
+v1.0/template-tool.cwl:7:9: JSHINT: W117: 'exports' is not defined.[0m
+[1;30mWARNING[0m [33mv1.0/template-tool.cwl:7:9: JSHINT:     exports._ = _;
 v1.0/template-tool.cwl:7:9: JSHINT:     ^
-v1.0/template-tool.cwl:7:9: JSHINT: W117: 'exports' is not defined.
-v1.0/template-tool.cwl:7:9: JSHINT:     if (typeof module !== 'undefined' && module.exports) {
+v1.0/template-tool.cwl:7:9: JSHINT: W117: 'exports' is not defined.[0m
+[1;30mWARNING[0m [33mv1.0/template-tool.cwl:7:9: JSHINT:     if (typeof module !== 'undefined' && module.exports) {
 v1.0/template-tool.cwl:7:9: JSHINT:                                          ^
-v1.0/template-tool.cwl:7:9: JSHINT: W117: 'module' is not defined.
-v1.0/template-tool.cwl:7:9: JSHINT:       exports = module.exports = _;
+v1.0/template-tool.cwl:7:9: JSHINT: W117: 'module' is not defined.[0m
+[1;30mWARNING[0m [33mv1.0/template-tool.cwl:7:9: JSHINT:       exports = module.exports = _;
 v1.0/template-tool.cwl:7:9: JSHINT:                 ^
-v1.0/template-tool.cwl:7:9: JSHINT: W117: 'module' is not defined.
-v1.0/template-tool.cwl:7:9: JSHINT:     return setTimeout(function(){
+v1.0/template-tool.cwl:7:9: JSHINT: W117: 'module' is not defined.[0m
+[1;30mWARNING[0m [33mv1.0/template-tool.cwl:7:9: JSHINT:     return setTimeout(function(){
 v1.0/template-tool.cwl:7:9: JSHINT:            ^
-v1.0/template-tool.cwl:7:9: JSHINT: W117: 'setTimeout' is not defined.
-v1.0/template-tool.cwl:7:9: JSHINT:         timeout = setTimeout(later, remaining);
+v1.0/template-tool.cwl:7:9: JSHINT: W117: 'setTimeout' is not defined.[0m
+[1;30mWARNING[0m [33mv1.0/template-tool.cwl:7:9: JSHINT:         timeout = setTimeout(later, remaining);
 v1.0/template-tool.cwl:7:9: JSHINT:                   ^
-v1.0/template-tool.cwl:7:9: JSHINT: W117: 'setTimeout' is not defined.
-v1.0/template-tool.cwl:7:9: JSHINT:         timeout = setTimeout(later, wait - last);
+v1.0/template-tool.cwl:7:9: JSHINT: W117: 'setTimeout' is not defined.[0m
+[1;30mWARNING[0m [33mv1.0/template-tool.cwl:7:9: JSHINT:         timeout = setTimeout(later, wait - last);
 v1.0/template-tool.cwl:7:9: JSHINT:                   ^
-v1.0/template-tool.cwl:7:9: JSHINT: W117: 'setTimeout' is not defined.
-v1.0/template-tool.cwl:7:9: JSHINT:       if (!timeout) timeout = setTimeout(later, wait);
+v1.0/template-tool.cwl:7:9: JSHINT: W117: 'setTimeout' is not defined.[0m
+[1;30mWARNING[0m [33mv1.0/template-tool.cwl:7:9: JSHINT:       if (!timeout) timeout = setTimeout(later, wait);
 v1.0/template-tool.cwl:7:9: JSHINT:                               ^
-v1.0/template-tool.cwl:7:9: JSHINT: W117: 'setTimeout' is not defined.
-v1.0/template-tool.cwl:7:9: JSHINT:         clearTimeout(timeout);
+v1.0/template-tool.cwl:7:9: JSHINT: W117: 'setTimeout' is not defined.[0m
+[1;30mWARNING[0m [33mv1.0/template-tool.cwl:7:9: JSHINT:         clearTimeout(timeout);
 v1.0/template-tool.cwl:7:9: JSHINT:         ^
-v1.0/template-tool.cwl:7:9: JSHINT: W117: 'clearTimeout' is not defined.
-v1.0/template-tool.cwl:7:9: JSHINT:     root._ = previousUnderscore;
+v1.0/template-tool.cwl:7:9: JSHINT: W117: 'clearTimeout' is not defined.[0m
+[1;30mWARNING[0m [33mv1.0/template-tool.cwl:7:9: JSHINT:     root._ = previousUnderscore;
 v1.0/template-tool.cwl:7:9: JSHINT:              ^
-v1.0/template-tool.cwl:7:9: JSHINT: W117: 'previousUnderscore' is not defined.
-v1.0/template-tool.cwl:7:9: JSHINT:   if (typeof define === 'function' && define.amd) {
+v1.0/template-tool.cwl:7:9: JSHINT: W117: 'previousUnderscore' is not defined.[0m
+[1;30mWARNING[0m [33mv1.0/template-tool.cwl:7:9: JSHINT:   if (typeof define === 'function' && define.amd) {
 v1.0/template-tool.cwl:7:9: JSHINT:                                       ^
-v1.0/template-tool.cwl:7:9: JSHINT: W117: 'define' is not defined.
-v1.0/template-tool.cwl:7:9: JSHINT:     define('underscore', [], function() {
+v1.0/template-tool.cwl:7:9: JSHINT: W117: 'define' is not defined.[0m
+[1;30mWARNING[0m [33mv1.0/template-tool.cwl:7:9: JSHINT:     define('underscore', [], function() {
 v1.0/template-tool.cwl:7:9: JSHINT:     ^
-v1.0/template-tool.cwl:7:9: JSHINT: W117: 'define' is not defined.
-v1.0/template-tool.cwl:8:9: JSHINT: var t = function(s) { return _.template(s, {variable: 'data'})({'inputs': inputs}); };
+v1.0/template-tool.cwl:7:9: JSHINT: W117: 'define' is not defined.[0m
+[1;30mWARNING[0m [33mv1.0/template-tool.cwl:8:9: JSHINT: var t = function(s) { return _.template(s, {variable: 'data'})({'inputs': inputs}); };
 v1.0/template-tool.cwl:8:9: JSHINT:                              ^
-v1.0/template-tool.cwl:8:9: JSHINT: W117: '_' is not defined.
+v1.0/template-tool.cwl:8:9: JSHINT: W117: '_' is not defined.[0m
 Test [7/197] Test command execution in Docker with stdout redirection
 
 Test [8/197] Test command execution in Docker with shortcut stdout redirection
@@ -74,14 +74,14 @@ Test [16/197] Testing the string 'null' does not trip up an Any with a default v
 
 Test [17/197] Test Any without defaults cannot be unspecified.
 
-Workflow error, try again with --debug for more information:
+[1;30mERROR[0m [31mWorkflow error, try again with --debug for more information:
 Invalid job input record:
-v1.0/null-expression2-tool.cwl:9:3: Missing required input parameter 'i1'
+v1.0/null-expression2-tool.cwl:9:3: Missing required input parameter 'i1'[0m
 Test [18/197] Test explicitly passing null to Any type without a default value.
 
-Workflow error, try again with --debug for more information:
+[1;30mERROR[0m [31mWorkflow error, try again with --debug for more information:
 Invalid job input record:
-v1.0/null-expression2-tool.cwl:9:3: Missing required input parameter 'i1'
+v1.0/null-expression2-tool.cwl:9:3: Missing required input parameter 'i1'[0m
 Test [19/197] Testing the string 'null' does not trip up an Any without a default value.
 
 Test [20/197] Testing Any type compatibility in outputSource
@@ -124,19 +124,19 @@ Test [38/197] Test workflow scatter with two scatter parameters and dotproduct j
 
 Test [39/197] Test workflow scatter with single empty list parameter
 
-[job step step1] Notice: scattering over empty input in 'echo_in'.  All outputs will be empty.
+[1;30mWARNING[0m [33m[job step step1] Notice: scattering over empty input in 'echo_in'.  All outputs will be empty.[0m
 Test [40/197] Test workflow scatter with two scatter parameters and nested_crossproduct join method with second list empty
 
-[job step step1] Notice: scattering over empty input in 'echo_in2'.  All outputs will be empty.
+[1;30mWARNING[0m [33m[job step step1] Notice: scattering over empty input in 'echo_in2'.  All outputs will be empty.[0m
 Test [41/197] Test workflow scatter with two scatter parameters and nested_crossproduct join method with first list empty
 
-[job step step1] Notice: scattering over empty input in 'echo_in1'.  All outputs will be empty.
+[1;30mWARNING[0m [33m[job step step1] Notice: scattering over empty input in 'echo_in1'.  All outputs will be empty.[0m
 Test [42/197] Test workflow scatter with two scatter parameters, one of which is empty and flat_crossproduct join method
 
-[job step step1] Notice: scattering over empty input in 'echo_in2'.  All outputs will be empty.
+[1;30mWARNING[0m [33m[job step step1] Notice: scattering over empty input in 'echo_in2'.  All outputs will be empty.[0m
 Test [43/197] Test workflow scatter with two empty scatter parameters and dotproduct join method
 
-[job step step1] Notice: scattering over empty input in 'echo_in1', 'echo_in2'.  All outputs will be empty.
+[1;30mWARNING[0m [33m[job step step1] Notice: scattering over empty input in 'echo_in1', 'echo_in2'.  All outputs will be empty.[0m
 Test [44/197] Test Any type input parameter
 
 Test [45/197] Test nested workflow
@@ -151,19 +151,19 @@ Test [49/197] Test default value on step input parameter
 
 Test [50/197] Test use default value on step input parameter with empty source
 
-Workflow checker warning:
+[1;30mWARNING[0m [33mWorkflow checker warning:
 v1.0/count-lines11-wf.cwl:6:3:  Source 'file1' of type ["null", "File"] may be incompatible
-v1.0/count-lines11-wf.cwl:17:7:   with sink 'file1' of type "File"
+v1.0/count-lines11-wf.cwl:17:7:   with sink 'file1' of type "File"[0m
 Test [51/197] Test use default value on step input parameter with null source
 
-Workflow checker warning:
+[1;30mWARNING[0m [33mWorkflow checker warning:
 v1.0/count-lines11-wf.cwl:6:3:  Source 'file1' of type ["null", "File"] may be incompatible
-v1.0/count-lines11-wf.cwl:17:7:   with sink 'file1' of type "File"
+v1.0/count-lines11-wf.cwl:17:7:   with sink 'file1' of type "File"[0m
 Test [52/197] Test default value on step input parameter overridden by provided source
 
-Workflow checker warning:
+[1;30mWARNING[0m [33mWorkflow checker warning:
 v1.0/count-lines11-wf.cwl:6:3:  Source 'file1' of type ["null", "File"] may be incompatible
-v1.0/count-lines11-wf.cwl:17:7:   with sink 'file1' of type "File"
+v1.0/count-lines11-wf.cwl:17:7:   with sink 'file1' of type "File"[0m
 Test [53/197] Test simple workflow
 
 Test [54/197] Test unknown hints are ignored.
@@ -172,21 +172,13 @@ v1.0/cat5-tool.cwl:12:3:   checking item
 v1.0/cat5-tool.cwl:12:3:     Field `class` contains undefined reference to `http://example.com/BlibberBlubberFakeRequirement`
 Test [55/197] Test InitialWorkDirRequirement linking input files and capturing secondaryFiles on input and output. Also tests the use of a variety of parameter references and expressions in the secondaryFiles field.
 
-Workflow checker warning:
-v1.0/search.cwl:112:9:  Sink 'file'
-v1.0/search.cwl:61:7:     expects secondaryFiles: ['.idx1', '^.idx2', '$(self.basename).idx3',
-                          '${ return self.basename+".idx4"; }',
-                          '$(self.nameroot).idx6$(self.nameext)', '${ return
-                          [self.basename+".idx7"]; }', '_idx8'] but
-v1.0/search.cwl:107:13:   source 'result' has secondaryFiles ['.idx1', '^.idx2',
-                          '$(self.basename).idx3', '${ return self.basename+".idx4"; }',
-                          '$({"path": self.path+".idx5", "class": "File"})',
-                          '$(self.nameroot).idx6$(self.nameext)', '${ return
-                          [self.basename+".idx7", inputs.secondfile]; }', '_idx8'].
-                          To fix, add secondaryFiles: ['.idx1', '^.idx2', '$(self.basename).idx3',
-                          '${ return self.basename+".idx4"; }',
-                          '$(self.nameroot).idx6$(self.nameext)', '${ return [self.basename+".idx7"];
-                          }', '_idx8'] to definition of 'result'.
+[1;30mWARNING[0m [33mWorkflow checker warning:
+v1.0/search.cwl:112:9:  Parameter 'file' requires secondaryFiles ['${ return
+                        [self.basename+".idx7"]; }'] but
+v1.0/search.cwl:107:13:   source 'result' does not provide those secondaryFiles.
+v1.0/search.cwl:36:7:     To resolve, add missing secondaryFiles patterns to definition of
+                          'result' or
+v1.0/search.cwl:61:7:     mark missing secondaryFiles in definition of 'file' as optional.[0m
 Test [56/197] Test InitialWorkDirRequirement with expression in filename.
 
 Test [57/197] Test if trailing newline is present in file entry in InitialWorkDir
@@ -205,13 +197,10 @@ Test [63/197] Test metadata
 
 Test [64/197] Test simple format checking.
 
-URI prefix 'edam' of 'edam:format_2330' not recognized, are you missing a $namespaces section?
 Test [65/197] Test format checking against ontology using subclassOf.
 
-URI prefix 'edam' of 'edam:format_1929' not recognized, are you missing a $namespaces section?
 Test [66/197] Test format checking against ontology using equivalentClass.
 
-URI prefix 'edam' of 'edam:format_1929' not recognized, are you missing a $namespaces section?
 Test [67/197] Test optional output file and optional secondaryFile on output.
 
 Test [68/197] Test that valueFrom is ignored when the parameter is null
@@ -224,7 +213,7 @@ Test [71/197] Test valueFrom on workflow step with multiple sources
 
 Test [72/197] Test valueFrom on workflow step referencing other inputs
 
-Workflow checker warning:
+[1;30mWARNING[0m [33mWorkflow checker warning:
 v1.0/step-valuefrom3-wf.cwl:37:7: 'a' is not an input parameter of ordereddict([('id',
                                   'file:///conformance/common-workflow-language-1.0.2/v1.0/v1.0/step-valuefrom3-wf.cwl#step1/echo'),
                                   ('class', 'CommandLineTool'), ('inputs', [ordereddict([('type',
@@ -244,7 +233,7 @@ v1.0/step-valuefrom3-wf.cwl:38:7: 'b' is not an input parameter of ordereddict([
                                   ordereddict([('glob', 'step1_out'), ('loadContents', True),
                                   ('outputEval', '$(self[0].contents)')])), ('id',
                                   'file:///conformance/common-workflow-language-1.0.2/v1.0/v1.0/step-valuefrom3-wf.cwl#step1/echo/echo_out')])]),
-                                  ('baseCommand', 'echo'), ('stdout', 'step1_out')]), expected c
+                                  ('baseCommand', 'echo'), ('stdout', 'step1_out')]), expected c[0m
 Test [73/197] Test record type output binding.
 
 Test [74/197] Test support for reading cwl.output.json when running in a Docker container and just 'path' is provided.
@@ -307,17 +296,17 @@ Test [102/197] Test file literal output created by ExpressionTool
 
 Test [103/197] Test dockerOutputDirectory
 
-Got workflow error
+[1;30mERROR[0m [31mGot workflow error[0m
 Traceback (most recent call last):
-  File "/usr/local/lib/python3.6/site-packages/cwltool/executors.py", line 264, in runner
-    job.run(runtime_context)
+  File "/usr/local/lib/python3.6/site-packages/cwltool/executors.py", line 241, in _runner
+    job.run(runtime_context, TMPDIR_LOCK)
   File "/usr/local/lib/python3.6/site-packages/calrissian/job.py", line 587, in run
     self.check_requirements()
   File "/usr/local/lib/python3.6/site-packages/calrissian/job.py", line 425, in check_requirements
     raise UnsupportedRequirement('Error: feature {}.{} is not supported'.format(feature, field))
 cwltool.errors.UnsupportedRequirement: Error: feature DockerRequirement.dockerOutputDirectory is not supported
-Workflow or tool uses unsupported feature:
-Error: feature DockerRequirement.dockerOutputDirectory is not supported
+[1;30mERROR[0m [31mWorkflow or tool uses unsupported feature:
+Error: feature DockerRequirement.dockerOutputDirectory is not supported[0m
 Test [104/197] Test hints with $import
 
 Test [105/197] Test warning instead of error when default path is not found
@@ -334,13 +323,13 @@ Test [110/197] Test compound workflow document
 
 Test [111/197] Test that nameroot and nameext are generated from basename at execution time by the runner
 
-Workflow checker warning:
-v1.0/basename-fields-test.cwl:26:7: 'tool' is not an input parameter of
-                                    file:///conformance/common-workflow-language-1.0.2/v1.0/v1.0/echo-file-tool.cwl,
-                                    expected in
+[1;30mWARNING[0m [33mWorkflow checker warning:
 v1.0/basename-fields-test.cwl:33:7: 'tool' is not an input parameter of
                                     file:///conformance/common-workflow-language-1.0.2/v1.0/v1.0/echo-file-tool.cwl,
                                     expected in
+v1.0/basename-fields-test.cwl:26:7: 'tool' is not an input parameter of
+                                    file:///conformance/common-workflow-language-1.0.2/v1.0/v1.0/echo-file-tool.cwl,
+                                    expected in[0m
 Test [112/197] Test that file path in $(inputs) for initialworkdir is in $(outdir).
 
 Test [113/197] Test single step workflow with Scatter step and two data links connected to same input, flattened merge behavior. Workflow inputs are set as list
@@ -381,20 +370,20 @@ Test [130/197] Test dynamic resource reqs referencing the size of Files inside a
 
 Test [131/197] Test that it is not an error to connect a parameter to a workflow step, even if the parameter doesn't appear in the `run` process inputs.
 
-Workflow checker warning:
+[1;30mWARNING[0m [33mWorkflow checker warning:
 v1.0/pass-unconnected.cwl:18:7: 'in2' is not an input parameter of
                                 file:///conformance/common-workflow-language-1.0.2/v1.0/v1.0/echo-tool.cwl,
-                                expected in
+                                expected in[0m
 Test [132/197] Test that parameters that don't appear in the `run` process inputs are not present in the input object used to run the tool.
 
-Workflow checker warning:
+[1;30mWARNING[0m [33mWorkflow checker warning:
 v1.0/fail-unconnected.cwl:18:7: 'in2' is not an input parameter of
                                 file:///conformance/common-workflow-language-1.0.2/v1.0/v1.0/fail-unspecified-input.cwl,
-                                expected in
-Exception on step 'step1'
-[step step1] Cannot make job: v1.0/fail-unspecified-input.cwl:16:33: Expression evaluation error:
-v1.0/fail-unspecified-input.cwl:16:33: Syntax error in parameter reference 'inputs.in2': inputs does not contain key 'in2'. This could be due to using Javascript code without specifying InlineJavascriptRequirement.
-Final process status is permanentFail
+                                expected in[0m
+[1;30mERROR[0m [31mException on step 'step1'[0m
+[1;30mERROR[0m [31m[step step1] Cannot make job: v1.0/fail-unspecified-input.cwl:16:33: Expression evaluation error:
+v1.0/fail-unspecified-input.cwl:16:33: Syntax error in parameter reference 'inputs.in2': inputs does not contain key 'in2'. This could be due to using Javascript code without specifying InlineJavascriptRequirement.[0m
+[1;30mWARNING[0m [33mFinal process status is permanentFail[0m
 Test [133/197] Test $HOME and $TMPDIR are set correctly in Docker without using return code
 
 Test [134/197] Test workflow scatter with single scatter parameter and two valueFrom using $inputs (first and current el)
@@ -477,42 +466,48 @@ Test [172/197] Test output arrays in a workflow (with Files).
 
 Test [173/197] Test Docker ENTRYPOINT usage
 
-Got workflow error
+[1;30mERROR[0m [31mGot workflow error[0m
 Traceback (most recent call last):
-  File "/usr/local/lib/python3.6/site-packages/cwltool/command_line_tool.py", line 733, in collect_output
+  File "/usr/local/lib/python3.6/site-packages/cwltool/command_line_tool.py", line 777, in collect_output
     raise WorkflowException("Did not find output file with glob pattern: '{}'".format(globpatterns))
 cwltool.errors.WorkflowException: Did not find output file with glob pattern: '['cow']'
 
-During handling of the above exception, another exception occurred:
+The above exception was the direct cause of the following exception:
 
 Traceback (most recent call last):
-  File "/usr/local/lib/python3.6/site-packages/cwltool/command_line_tool.py", line 612, in collect_output_ports
+  File "/usr/local/lib/python3.6/site-packages/cwltool/command_line_tool.py", line 657, in collect_output_ports
     compute_checksum=compute_checksum)
-  File "/usr/local/lib/python3.6/site-packages/cwltool/command_line_tool.py", line 733, in collect_output
+  File "/usr/local/lib/python3.6/site-packages/cwltool/command_line_tool.py", line 777, in collect_output
     raise WorkflowException("Did not find output file with glob pattern: '{}'".format(globpatterns))
-  File "/usr/local/lib/python3.6/site-packages/schema_salad/sourceline.py", line 168, in __exit__
-    raise self.makeError(six.text_type(exc_value))
+  File "/usr/local/lib/python3.6/site-packages/schema_salad/sourceline.py", line 252, in __exit__
+    raise_from(self.makeError(six.text_type(exc_value)), exc_value)
+  File "/usr/local/lib/python3.6/site-packages/future/utils/__init__.py", line 400, in raise_from
+    exec(execstr, myglobals, mylocals)
+  File "<string>", line 1, in <module>
 cwltool.errors.WorkflowException: v1.0/docker-run-cmd.cwl:14:7: Did not find output file with glob pattern: '['cow']'
 
-During handling of the above exception, another exception occurred:
+The above exception was the direct cause of the following exception:
 
 Traceback (most recent call last):
-  File "/usr/local/lib/python3.6/site-packages/cwltool/executors.py", line 264, in runner
-    job.run(runtime_context)
-  File "/usr/local/lib/python3.6/site-packages/calrissian/job.py", line 594, in run
+  File "/usr/local/lib/python3.6/site-packages/cwltool/executors.py", line 241, in _runner
+    job.run(runtime_context, TMPDIR_LOCK)
+  File "/usr/local/lib/python3.6/site-packages/calrissian/job.py", line 598, in run
     self.finish(completion_result, runtimeContext)
   File "/usr/local/lib/python3.6/site-packages/calrissian/job.py", line 395, in finish
-    outputs = self.collect_outputs(self.outdir)
-  File "/usr/local/lib/python3.6/site-packages/cwltool/command_line_tool.py", line 612, in collect_output_ports
+    outputs = self.collect_outputs(self.outdir, exit_code)
+  File "/usr/local/lib/python3.6/site-packages/cwltool/command_line_tool.py", line 657, in collect_output_ports
     compute_checksum=compute_checksum)
-  File "/usr/local/lib/python3.6/site-packages/schema_salad/sourceline.py", line 168, in __exit__
-    raise self.makeError(six.text_type(exc_value))
+  File "/usr/local/lib/python3.6/site-packages/schema_salad/sourceline.py", line 252, in __exit__
+    raise_from(self.makeError(six.text_type(exc_value)), exc_value)
+  File "/usr/local/lib/python3.6/site-packages/future/utils/__init__.py", line 400, in raise_from
+    exec(execstr, myglobals, mylocals)
+  File "<string>", line 1, in <module>
 cwltool.errors.WorkflowException: Error collecting output for parameter 'cow':
 v1.0/docker-run-cmd.cwl:14:7: Did not find output file with glob pattern: '['cow']'
-Workflow error, try again with --debug for more information:
+[1;30mERROR[0m [31mWorkflow error, try again with --debug for more information:
 Error collecting output for parameter 'cow':
-v1.0/docker-run-cmd.cwl:14:7: Did not find output file with glob pattern: '['cow']'
-Test 173 failed: /usr/local/bin/calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpfl2wnt7j --quiet v1.0/docker-run-cmd.cwl v1.0/empty.json
+v1.0/docker-run-cmd.cwl:14:7: Did not find output file with glob pattern: '['cow']'[0m
+Test 173 failed: /usr/local/bin/calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp43j9fnwf --quiet v1.0/docker-run-cmd.cwl v1.0/empty.json
 Test Docker ENTRYPOINT usage
 Returned non-zero
 
@@ -522,51 +517,51 @@ Test [175/197] Test use of size in expressions for a few files
 
 Test [176/197] Test Any without defaults, unspecified, should fail.
 
-Workflow error, try again with --debug for more information:
+[1;30mERROR[0m [31mWorkflow error, try again with --debug for more information:
 Invalid job input record:
-v1.0/echo-tool.cwl:9:3: Missing required input parameter 'in'
+v1.0/echo-tool.cwl:9:3: Missing required input parameter 'in'[0m
 Test [177/197] Test Any without defaults, specified, should fail.
 
-Workflow error, try again with --debug for more information:
+[1;30mERROR[0m [31mWorkflow error, try again with --debug for more information:
 Invalid job input record:
-v1.0/echo-tool.cwl:9:3: Missing required input parameter 'in'
+v1.0/echo-tool.cwl:9:3: Missing required input parameter 'in'[0m
 Test [178/197] Test default value on step input parameter, no ExpressionTool
 
 Test [179/197] Test default value on step input parameter overridden by provided source, no ExpressionTool
 
-Workflow checker warning:
+[1;30mWARNING[0m [33mWorkflow checker warning:
 v1.0/count-lines11-wf-noET.cwl:6:3:  Source 'file1' of type ["null", "File"] may be incompatible
-v1.0/count-lines11-wf-noET.cwl:17:7:   with sink 'file1' of type "File"
+v1.0/count-lines11-wf-noET.cwl:17:7:   with sink 'file1' of type "File"[0m
 Test [180/197] Test nested workflow, without ExpressionTool
 
 Test [181/197] Test step input with multiple sources with multiple types, without ExpressionTool
 
 Test [182/197] Within a workflow, test accessing the size attribute of an optional input File as part of a CommandLineTool's ResourceRequirement calculation. The CommandLineTool input has a default value (a local file) and the workflow nor the workflow step does not provide any value for this input.
 
-Workflow checker warning:
+[1;30mWARNING[0m [33mWorkflow checker warning:
 v1.0/dynresreq-workflow-tooldefault.cwl:6:3:  Source 'special_file' of type ["null", "File"] may be
                                               incompatible
-v1.0/dynresreq-workflow-tooldefault.cwl:15:7:   with sink 'special_file' of type "File"
+v1.0/dynresreq-workflow-tooldefault.cwl:15:7:   with sink 'special_file' of type "File"[0m
 Test [183/197] Within a workflow, test accessing the size attribute of an optional input File as part of a CommandLineTool's ResourceRequirement calculation. The workflow step provides a default value (a local file) for this input and the workflow itself does not provide any value for this input.
 
-Workflow checker warning:
+[1;30mWARNING[0m [33mWorkflow checker warning:
 v1.0/dynresreq-workflow-stepdefault.cwl:6:3:  Source 'special_file' of type ["null", "File"] may be
                                               incompatible
-v1.0/dynresreq-workflow-stepdefault.cwl:15:7:   with sink 'special_file' of type "File"
+v1.0/dynresreq-workflow-stepdefault.cwl:15:7:   with sink 'special_file' of type "File"[0m
 Test [184/197] Within a workflow, test accessing the size attribute of an optional input File as part of a CommandLineTool's ResourceRequirement calculation. The workflow itelf provides a default value (a local file) for this input.
 
 Test [185/197] Test default value on step input parameter overridden by provided source. With passthrough first step
 
-Workflow checker warning:
+[1;30mWARNING[0m [33mWorkflow checker warning:
 v1.0/count-lines11-extra-step-wf.cwl:6:3:  Source 'file1' of type ["null", "File"] may be
                                            incompatible
-v1.0/count-lines11-extra-step-wf.cwl:17:7:   with sink 'file1' of type "File"
+v1.0/count-lines11-extra-step-wf.cwl:17:7:   with sink 'file1' of type "File"[0m
 Test [186/197] Test default value on step input parameter overridden by provided source. With passthrough first step and no ExpressionTool
 
-Workflow checker warning:
+[1;30mWARNING[0m [33mWorkflow checker warning:
 v1.0/count-lines11-extra-step-wf-noET.cwl:6:3:  Source 'file1' of type ["null", "File"] may be
                                                 incompatible
-v1.0/count-lines11-extra-step-wf-noET.cwl:17:7:   with sink 'file1' of type "File"
+v1.0/count-lines11-extra-step-wf-noET.cwl:17:7:   with sink 'file1' of type "File"[0m
 Test [187/197] Test default value on step input parameter overridden by provided source. With null producing first step
 
 Test [188/197] Test default value on step input parameter overridden by provided source. With null producing first step and no ExpressionTool

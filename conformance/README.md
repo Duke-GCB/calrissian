@@ -24,17 +24,17 @@ Calrissian does not include cwltest, so build a container that installs it.
 ./build-conformance.sh
 ```
 
-This will build `calrissian:conformance` from the current source tree. You may need to tag that differently if pushing to a registry. If so, update the `image: ` in [ConformanceTestsJob.yaml](ConformanceTestsJob.yaml)
+This will build `calrissian:conformance` from the current source tree. You may need to tag that differently if pushing to a registry. If so, update the `image: ` in [ConformanceTestsJob-1.1.yaml](ConformanceTestsJob-1-1.yaml)
 
 ### Running Conformance Tests
 
-[ConformanceTestsJob.yaml](ConformanceTestsJob.yaml) uses `run_test.sh` from cwltool to run conformance tests with `RUNNER=calrissian` and Calrissian's required arguments in `EXTRA`.
+[ConformanceTestsJob-1-1.yaml](ConformanceTestsJob-1-1.yaml) uses `run_test.sh` from cwltool to run conformance tests with `RUNNER=calrissian` and Calrissian's required arguments in `EXTRA`.
 
 ```
-kubectl --namespace="$NAMESPACE_NAME" create -f ConformanceTestsJob.yaml
+kubectl --namespace="$NAMESPACE_NAME" create -f ConformanceTestsJob-1.1.yaml
 kubectl --namespace="$NAMESPACE_NAME" wait --for=condition=Ready\
-   --selector=job-name=conformance-tests pods
-kubectl --namespace="$NAMESPACE_NAME" logs -f jobs/conformance-tests
+   --selector=job-name=conformance-tests-1-1 pods
+kubectl --namespace="$NAMESPACE_NAME" logs -f jobs/conformance-tests-1-1
 ```
 
 ### Notes:

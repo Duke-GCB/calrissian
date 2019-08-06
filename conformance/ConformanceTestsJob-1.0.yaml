@@ -1,0 +1,58 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: conformance-output-data-1-0
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: conformance-tests-1-0
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      initContainers:
+      - name: prep-1-0
+        image: alpine:3.10
+        command: ["chmod", "777", "/output"]
+        volumeMounts:
+        - mountPath: /output
+          name: conformance-output-data-1-0
+      containers:
+      - name: tests-1-0
+        image: calrissian:conformance
+        workingDir: "/conformance/common-workflow-language-1.0.2"
+        command: ["./run_test.sh"]
+        args:
+        - "RUNNER=calrissian"
+        - "--verbose"
+        - "EXTRA=--max-ram 8G --max-cores 4 --default-container debian:stretch-slim"
+        env:
+        - name: CALRISSIAN_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: TMPDIR
+          value: "/output"
+        volumeMounts:
+        - mountPath: /conformance
+          name: conformance-test-data-1-0
+          readOnly: true
+        - mountPath: /output
+          name: conformance-output-data-1-0
+      restartPolicy: Never
+      volumes:
+      - name: conformance-test-data-1-0
+        persistentVolumeClaim:
+          claimName: conformance-test-data-1-0
+          readOnly: true
+      - name: conformance-output-data-1-0
+        persistentVolumeClaim:
+          claimName: conformance-output-data-1-0
