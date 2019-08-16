@@ -33,7 +33,7 @@ setup(
     description='CWL runner for Kubernetes',
     install_requires=[
         'urllib3<1.25,>=1.24.2',
-        'kubernetes==8.0.1',
+        'kubernetes==10.0.1',
         'cwltool==1.0.20190621234233',
     ],
     test_suite='nose2.collector.collector',
