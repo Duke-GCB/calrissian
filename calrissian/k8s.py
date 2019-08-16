@@ -1,4 +1,5 @@
 from kubernetes import client, config, watch
+from tenacity import retry, retry_if_exception_type, stop_after_delay, wait_fixed
 import threading
 import logging
 import os
@@ -16,6 +17,9 @@ POD_NAME_ENV_VARIABLE = 'CALRISSIAN_POD_NAME'
 
 # Namespace to use if not running in cluster
 K8S_FALLBACK_NAMESPACE = 'default'
+
+K8s_PROTOCOL_EXCEPTION_RETRY_TOTAL_WAIT = 600  # Give up after 5 minutes
+K8s_PROTOCOL_EXCEPTION_RETRY_SLEEP = 2
 
 
 def read_file(path):
@@ -129,6 +133,10 @@ class KubernetesClient(object):
             log.debug('[{}] {}'.format(pod_name, line))
         log.info('[{}] follow_logs end'.format(pod_name))
 
+    @retry(retry=retry_if_exception_type(urllib3.exceptions.ProtocolError),
+           stop=stop_after_delay(K8s_PROTOCOL_EXCEPTION_RETRY_TOTAL_WAIT),
+           wait=wait_fixed(K8s_PROTOCOL_EXCEPTION_RETRY_SLEEP),
+           reraise=True)
     def wait_for_completion(self):
         w = watch.Watch()
         for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_field_selector()):

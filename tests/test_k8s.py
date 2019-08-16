@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch, call, PropertyMock, create_autospec
 from kubernetes.client.models import V1Pod
 from calrissian.k8s import load_config_get_namespace, KubernetesClient, CalrissianJobException, PodMonitor, delete_pods
 from calrissian.k8s import CompletionResult, read_file
+import urllib3
 
 
 class ReadFileTestCase(TestCase):
@@ -279,6 +280,18 @@ class KubernetesClientTestCase(TestCase):
             call('[logging-pod-123] follow_logs start'),
             call('[logging-pod-123] follow_logs end')
         ])
+
+    @patch('calrissian.k8s.watch')
+    def test_wait_for_completion_retries_after_protocol_error(self, mock_watch, mock_get_namespace, mock_client):
+        mock_watch.Watch.return_value.stream.side_effect = [
+            urllib3.exceptions.ProtocolError("K8s Master Upgraded"),
+            []
+        ]
+        mock_pod = self.make_mock_pod('test123')
+        kc = KubernetesClient()
+        kc._set_pod(mock_pod)
+        kc.wait_for_completion()
+        self.assertEqual(mock_watch.Watch.return_value.stream.call_count, 2)
 
 
 class KubernetesClientStateTestCase(TestCase):
