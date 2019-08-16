@@ -18,7 +18,7 @@ POD_NAME_ENV_VARIABLE = 'CALRISSIAN_POD_NAME'
 # Namespace to use if not running in cluster
 K8S_FALLBACK_NAMESPACE = 'default'
 
-K8s_PROTOCOL_EXCEPTION_RETRY_TOTAL_WAIT = 600  # Give up after 5 minutes
+K8s_PROTOCOL_EXCEPTION_RETRY_TOTAL_WAIT = 600  # Give up after 10 minutes
 K8s_PROTOCOL_EXCEPTION_RETRY_SLEEP = 2
 
 
