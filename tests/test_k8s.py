@@ -365,6 +365,16 @@ class PodMonitorTestCase(TestCase):
         delete_pods()
         self.assertTrue(mock_pod_monitor.cleanup.called)
 
+    @patch('calrissian.k8s.KubernetesClient')
+    def test_remove_after_cleanup(self, mock_client):
+        # Depending upon timing cleanup may get called before we receive a remove pod event
+        pod = self.make_mock_pod('pod-123')
+        with PodMonitor() as monitor:
+            monitor.add(pod)
+        PodMonitor.cleanup()
+        with PodMonitor() as monitor:
+            monitor.remove(pod)
+
 
 class CompletionResultTestCase(TestCase):
 
