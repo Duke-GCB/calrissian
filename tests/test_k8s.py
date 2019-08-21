@@ -39,7 +39,7 @@ class LoadConfigTestCase(TestCase):
         self.assertTrue(mock_config.load_kube_config.called)
 
 
-@patch('calrissian.k8s.client')
+@patch('calrissian.k8s.client', autospec=True)
 @patch('calrissian.k8s.load_config_get_namespace')
 class KubernetesClientTestCase(TestCase):
 
