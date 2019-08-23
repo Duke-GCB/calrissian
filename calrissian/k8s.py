@@ -263,9 +263,12 @@ class PodMonitor(object):
         PodMonitor.pod_names.append(pod.metadata.name)
 
     def remove(self, pod):
-        log.info('PodMonitor removing {}'.format(pod.metadata.name))
         # This has to look up the pod by something unique
-        PodMonitor.pod_names.remove(pod.metadata.name)
+        if pod.metadata.name in PodMonitor.pod_names:
+            log.info('PodMonitor removing {}'.format(pod.metadata.name))
+            PodMonitor.pod_names.remove(pod.metadata.name)
+        else:
+            log.warning('PodMonitor {} has already been removed'.format(pod.metadata.name))
 
     @staticmethod
     def cleanup():
