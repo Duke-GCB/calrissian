@@ -10,6 +10,9 @@ class JobAlreadyExistsException(Exception):
 
 class Resources(object):
 
+    RAM = 'ram'
+    CPU = 'cpu'
+
     def __init__(self, ram=0, cpu=0):
         self.ram = ram
         self.cpu = cpu
@@ -36,13 +39,19 @@ class Resources(object):
     def __eq__(self, other):
         return self.ram == other.ram and self.cpu == other.cpu
 
+    def __ge__(self, other):
+        return self > other or self == other
+
+    def __le__(self, other):
+        return self < other or self == other
+
     def __str__(self):
         return 'ram: {}, cpu: {}'.format(self.ram, self.cpu)
 
     @classmethod
     def from_job(cls, job):
-        ram = job.builder.resources.get('ram', 0)
-        cpu = job.builder.resources.get('cpu', 0)
+        ram = job.builder.resources.get(cls.RAM, 0)
+        cpu = job.builder.resources.get(cls.CPU, 0)
         return cls(ram, cpu)
 
 
@@ -68,7 +77,7 @@ class JobResourceQueue(object):
         if job:
             self.jobs[job] = Resources.from_job(job)
 
-    def pop_runnable_jobs(self, resource_limit):
+    def pop_runnable_jobs(self, resource_limit, priority=Resources.RAM, descending=False):
         """
         Collect a set of jobs within the specified limit and return them.
         May return an empty set if nothing fits in the resource limit
@@ -76,8 +85,8 @@ class JobResourceQueue(object):
         :return:
         """
         runnable_jobs = set()
-        for job, resource in self.jobs.items():
-            if resource_limit - resource > Resources.EMPTY:
+        for job, resource in sorted(self.jobs.items(), key=lambda item: getattr(item[1], priority), reverse=descending):
+            if resource_limit - resource >= Resources.EMPTY:
                 runnable_jobs.add(job)
                 resource_limit = resource_limit - resource
         for job in runnable_jobs:
