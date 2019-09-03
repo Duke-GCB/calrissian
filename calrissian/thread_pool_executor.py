@@ -1,12 +1,99 @@
 from cwltool.executors import *
 from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
+from queue import Queue
 import time
 
+
+class JobAlreadyExistsException(Exception):
+    pass
+
+
+class Resources(object):
+
+    def __init__(self, ram=0, cpu=0):
+        self.ram = ram
+        self.cpu = cpu
+
+    def __sub__(self, other):
+        ram = self.ram - other.ram
+        cpu = self.cpu - other.cpu
+        return Resources(ram, cpu)
+
+    def __add__(self, other):
+        ram = self.ram + other.ram
+        cpu = self.cpu + other.cpu
+        return Resources(ram, cpu)
+
+    def __neg__(self):
+        return Resources(-self.ram, -self.cpu)
+
+    def __lt__(self, other):
+        return self.ram < other.ram and self.cpu < other.cpu
+
+    def __gt__(self, other):
+        return self.ram > other.ram and self.cpu > other.cpu
+
+    def __eq__(self, other):
+        return self.ram == other.ram and self.cpu == other.cpu
+
+    def __str__(self):
+        return 'ram: {}, cpu: {}'.format(self.ram, self.cpu)
+
+    @classmethod
+    def from_job(cls, job):
+        ram = job.builder.resources.get('ram', 0)
+        cpu = job.builder.resources.get('cpu', 0)
+        return cls(ram, cpu)
+
+
+Resources.EMPTY = Resources(0,0)
+
+
+class JobResourceQueue(object):
+    """
+    Contains a dictionary of jobs, mapping to their resources
+    """
+
+    def __init__(self):
+        self.jobs = dict()
+
+    def add(self, job):
+        """
+        Add the job and extract its resources
+        :param job:
+        :return:
+        """
+        if job in self.jobs:
+            raise JobAlreadyExistsException('Job already exists')
+        if job:
+            self.jobs[job] = Resources.from_job(job)
+
+    def pop_runnable_jobs(self, resource_limit):
+        """
+        Collect a set of jobs within the specified limit and return them.
+        May return an empty set if nothing fits in the resource limit
+        :param resource_limit: A Resource object
+        :return:
+        """
+        runnable_jobs = set()
+        for job, resource in self.jobs.items():
+            if resource_limit - resource > Resources.EMPTY:
+                runnable_jobs.add(job)
+                resource_limit = resource_limit - resource
+        for job in runnable_jobs:
+            self.jobs.pop(job)
+        return runnable_jobs
+
+
 class ThreadPoolJobExecutor(JobExecutor):
-    def __init__(self, max_workers=None):
+
+    def __init__(self, total_ram, total_cpu, max_workers=None):
         super(ThreadPoolJobExecutor, self).__init__()
         self.pool_executor = ThreadPoolExecutor(max_workers=max_workers)
         # self.futures = set()
+        self.job_queue = JobResourceQueue()
+        self.total_resources = Resources(total_ram, total_cpu)
+        self.allocated_resources = Resources()
 
     def run_job(self, job, runtime_context):
         # This could return a context or a lock
@@ -23,6 +110,17 @@ class ThreadPoolJobExecutor(JobExecutor):
         with runtime_context.workflow_eval_lock:
             print('Update allocations')
 
+    def process_queue(self):
+        # pull the first thing off the queue
+        # See if it fits. if not keep looking
+        # submit it as a future
+        # return
+        runnable_jobs = self.job_queue.pop_runnable_jobs()
+
+        future = self.pool_executor.submit(self.run_job, job, runtime_context)
+        future.add_done_callback(self.job_callback)
+        futures.add(future)  # happens with lock
+
     def run_jobs(self, process, job_order_object, logger, runtime_context):
         lock = runtime_context.workflow_eval_lock
         jobs = process.job(job_order_object, self.output_callback, runtime_context)
@@ -31,11 +129,11 @@ class ThreadPoolJobExecutor(JobExecutor):
         futures = set()
         with lock:
             print('have lock in run_jobs')
+            # put the job in the queue
             for job in jobs:
-                future = self.pool_executor.submit(self.run_job, job, runtime_context)
-                future.add_done_callback(self.job_callback)
-                futures.add(future) # happens with lock
-            # Produce a future for each job
+                self.job_queue.add(job) # May be none if nothing to do
+                self.process_queue()
+                # Produce a future for each job
         print('releasing lock in run_jobs')
         # wait for a job to complete
         while True:
@@ -51,10 +149,18 @@ class ThreadPoolJobExecutor(JobExecutor):
         print('exiting')
 
 
+class Builder(object):
+
+    def __init__(self):
+        self.resources = {'cpu': 1, 'ram': 1000}
+
+
 class Job(object):
 
     def __init__(self, id):
         self.id = id
+        self.builder = Builder()
+
 
     def run(self, runtime_context):
         print('started', self.id)
@@ -67,11 +173,11 @@ class Job(object):
 class Process(object):
 
     def __init__(self):
-        self.jobs = [Job('1'),
-                     Job('2'),
-                     Job('3'),
+        self.jobs = [Job(1),
+                     Job(1),
+                     Job(2),
                      None,
-                     Job('4')]
+                     Job(4)]
 
     def job(self, job_order_object, output_callback, runtime_context):
         for j in self.jobs:
@@ -85,11 +191,10 @@ class RuntimeContext(object):
 
 
 def main():
-    executor = ThreadPoolJobExecutor(max_workers=3)
+    executor = ThreadPoolJobExecutor(total_cpu=2, total_ram=4000, max_workers=3)
     runtime_context = RuntimeContext()
     process = Process()
     job_order_object = {}
-
     executor.run_jobs(process, job_order_object, None, runtime_context)
 
 if __name__ == '__main__':
