@@ -106,6 +106,7 @@ class ThreadPoolJobExecutor(JobExecutor):
         self.futures = set()
         self.total_resources = Resources(total_ram, total_cpu)
         self.allocated_resources = Resources()
+        self.exceptions = []
 
     @property
     def available_resources(self):
@@ -116,13 +117,20 @@ class ThreadPoolJobExecutor(JobExecutor):
         if job:
             job.run(runtime_context)
 
+    def job_callback(self, rsc, lock, future):
+        self.restore(rsc, lock)
+        # Check the provided future for exceptions
+        ex = future.exception()
+        if ex:
+            self.exceptions.append(ex)
+
     def allocate(self, rsc, lock):
         # Must be called with the lock but its recursive so that should be fine
         with lock:
             print('allocate lock', rsc)
             self.total_resources = self.total_resources - rsc
 
-    def restore(self, rsc, lock, future):
+    def restore(self, rsc, lock):
         # Must be called with the lock but its recursive so that should be fine
         with lock:
             print('restore lock', rsc)
@@ -134,16 +142,19 @@ class ThreadPoolJobExecutor(JobExecutor):
         runs those jobs using the pool executor, and returns
         :return: None
         """
-        runnable_jobs = self.jrq.pop_runnable_jobs(self.available_resources) # Removes jobs from the queue
-        for job, rsc in runnable_jobs.items():
-            self.allocate(rsc, runtime_context.workflow_eval_lock)
-            future = self.pool_executor.submit(self.run_job, job, runtime_context, rsc)
-            restore_callback = functools.partial(self.restore, rsc, runtime_context.workflow_eval_lock)
-            future.add_done_callback(restore_callback)
-            futures.add(future)
+        with runtime_context.workflow_eval_lock:
+            runnable_jobs = self.jrq.pop_runnable_jobs(self.available_resources) # Removes jobs from the queue
+            for job, rsc in runnable_jobs.items():
+                self.allocate(rsc, runtime_context.workflow_eval_lock)
+                future = self.pool_executor.submit(self.run_job, job, runtime_context, rsc)
+                callback = functools.partial(self.job_callback, rsc, runtime_context.workflow_eval_lock)
+                future.add_done_callback(callback)
+                futures.add(future)
 
     def run_jobs(self, process, job_order_object, logger, runtime_context):
+        print('initial available', self.available_resources)
         jobs = process.job(job_order_object, self.output_callback, runtime_context)
+        futures = set()
         if runtime_context.workflow_eval_lock is None:
             raise WorkflowException("runtimeContext.workflow_eval_lock must not be None")
         with runtime_context.workflow_eval_lock:
@@ -151,11 +162,14 @@ class ThreadPoolJobExecutor(JobExecutor):
             # put the job in the queue
             for job in jobs:
                 self.jrq.add(job) # May be none if nothing to do
+                # Start processing immediately
+                self.process_queue(runtime_context, futures)
             # After jobs iterator is exhausted, all jobs will have been queued
+            # Need to start the queue
+
         print('releasing lock in run_jobs')
         print('queue size is', len(self.jrq.jobs))
         # wait for a job to complete
-        futures = set()
         while True:
             with runtime_context.workflow_eval_lock:
                 self.process_queue(runtime_context, futures)  # Populates futures
@@ -171,23 +185,30 @@ class ThreadPoolJobExecutor(JobExecutor):
                 if not futures and self.jrq.is_empty():
                     break
         print('exiting')
+        if self.exceptions:
+            print('finished with exceptions')
+            for ex in self.exceptions:
+                print(ex)
+        print('final available', self.available_resources)
 
 
 class Builder(object):
 
-    def __init__(self):
-        self.resources = {'cpu': 1, 'ram': 1000}
+    def __init__(self, cpu, ram):
+        self.resources = {'cpu': cpu, 'ram': ram}
 
 
 class Job(object):
 
-    def __init__(self, id):
+    def __init__(self, id, cpu, ram):
         self.id = id
-        self.builder = Builder()
+        self.builder = Builder(cpu, ram)
 
     def run(self, runtime_context):
         print('started', self.id)
         time.sleep(1)
+        if self.id == 86:
+            raise Exception('Fail')
         # Finish by acquiring lock
         with runtime_context.workflow_eval_lock:
             print('finished with lock', self.id)
@@ -195,12 +216,15 @@ class Job(object):
 
 class Process(object):
 
+    # TODO: Make later jobs dependent on earlier jobs
     def __init__(self):
-        self.jobs = [Job(1),
-                     Job(3),
-                     Job(2),
+        self.jobs = [Job(1, 8, 100),
+                     Job(3, 2, 200),
+                     Job(2, 4, 200),
                      None,
-                     Job(4)]
+                     # Job(86, 7, 100),
+                     Job(4, 16, 800),
+                     ]
 
     def job(self, job_order_object, output_callback, runtime_context):
         for j in self.jobs:
@@ -214,7 +238,7 @@ class RuntimeContext(object):
 
 
 def main():
-    executor = ThreadPoolJobExecutor(total_cpu=10, total_ram=10000, max_workers=5)
+    executor = ThreadPoolJobExecutor(total_cpu=16, total_ram=800, max_workers=10)
     runtime_context = RuntimeContext()
     process = Process()
     job_order_object = {}
