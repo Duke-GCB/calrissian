@@ -214,7 +214,7 @@ class RuntimeContext(object):
 
 
 def main():
-    executor = ThreadPoolJobExecutor(total_cpu=2, total_ram=4000, max_workers=3)
+    executor = ThreadPoolJobExecutor(total_cpu=10, total_ram=10000, max_workers=5)
     runtime_context = RuntimeContext()
     process = Process()
     job_order_object = {}
