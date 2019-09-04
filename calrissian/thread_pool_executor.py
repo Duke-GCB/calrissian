@@ -1,6 +1,6 @@
 from cwltool.executors import *
 from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
-from queue import Queue
+import functools
 import time
 
 
@@ -77,17 +77,20 @@ class JobResourceQueue(object):
         if job:
             self.jobs[job] = Resources.from_job(job)
 
+    def is_empty(self):
+        return len(self.jobs) == 0
+
     def pop_runnable_jobs(self, resource_limit, priority=Resources.RAM, descending=False):
         """
-        Collect a set of jobs within the specified limit and return them.
-        May return an empty set if nothing fits in the resource limit
+        Collect a dictionary of jobs and resources within the specified limit and return them.
+        May return an empty dictionary if nothing fits in the resource limit
         :param resource_limit: A Resource object
-        :return:
+        :return: Dictionary where jobs are keys and their resources are values
         """
-        runnable_jobs = set()
+        runnable_jobs = {}
         for job, resource in sorted(self.jobs.items(), key=lambda item: getattr(item[1], priority), reverse=descending):
             if resource_limit - resource >= Resources.EMPTY:
-                runnable_jobs.add(job)
+                runnable_jobs[job] = resource
                 resource_limit = resource_limit - resource
         for job in runnable_jobs:
             self.jobs.pop(job)
@@ -99,61 +102,73 @@ class ThreadPoolJobExecutor(JobExecutor):
     def __init__(self, total_ram, total_cpu, max_workers=None):
         super(ThreadPoolJobExecutor, self).__init__()
         self.pool_executor = ThreadPoolExecutor(max_workers=max_workers)
-        # self.futures = set()
-        self.job_queue = JobResourceQueue()
+        self.jrq = JobResourceQueue()
+        self.futures = set()
         self.total_resources = Resources(total_ram, total_cpu)
         self.allocated_resources = Resources()
 
-    def run_job(self, job, runtime_context):
-        # This could return a context or a lock
+    @property
+    def available_resources(self):
+        return self.total_resources - self.allocated_resources
+
+    def run_job(self, job, runtime_context, rsc):
         print('run job', getattr(job,'id',None))
         if job:
-            # TODO: Check for available resources
             job.run(runtime_context)
-        return runtime_context
 
-    def job_callback(self, future):
-        # called on the thread that added the callback
-        # Should be able to acquire the lock here.
-        runtime_context = future.result()
-        with runtime_context.workflow_eval_lock:
-            print('Update allocations')
+    def allocate(self, rsc, lock):
+        # Must be called with the lock but its recursive so that should be fine
+        with lock:
+            print('allocate lock', rsc)
+            self.total_resources = self.total_resources - rsc
 
-    def process_queue(self):
-        # pull the first thing off the queue
-        # See if it fits. if not keep looking
-        # submit it as a future
-        # return
-        runnable_jobs = self.job_queue.pop_runnable_jobs()
+    def restore(self, rsc, lock, future):
+        # Must be called with the lock but its recursive so that should be fine
+        with lock:
+            print('restore lock', rsc)
+            self.total_resources = self.total_resources + rsc
 
-        future = self.pool_executor.submit(self.run_job, job, runtime_context)
-        future.add_done_callback(self.job_callback)
-        futures.add(future)  # happens with lock
+    def process_queue(self, runtime_context, futures):
+        """
+        Asks the queue for jobs that can run in the currently available resources,
+        runs those jobs using the pool executor, and returns
+        :return: None
+        """
+        runnable_jobs = self.jrq.pop_runnable_jobs(self.available_resources) # Removes jobs from the queue
+        for job, rsc in runnable_jobs.items():
+            self.allocate(rsc, runtime_context.workflow_eval_lock)
+            future = self.pool_executor.submit(self.run_job, job, runtime_context, rsc)
+            restore_callback = functools.partial(self.restore, rsc, runtime_context.workflow_eval_lock)
+            future.add_done_callback(restore_callback)
+            futures.add(future)
 
     def run_jobs(self, process, job_order_object, logger, runtime_context):
-        lock = runtime_context.workflow_eval_lock
         jobs = process.job(job_order_object, self.output_callback, runtime_context)
-        if lock is None:
+        if runtime_context.workflow_eval_lock is None:
             raise WorkflowException("runtimeContext.workflow_eval_lock must not be None")
-        futures = set()
-        with lock:
+        with runtime_context.workflow_eval_lock:
             print('have lock in run_jobs')
             # put the job in the queue
             for job in jobs:
-                self.job_queue.add(job) # May be none if nothing to do
-                self.process_queue()
-                # Produce a future for each job
+                self.jrq.add(job) # May be none if nothing to do
+            # After jobs iterator is exhausted, all jobs will have been queued
         print('releasing lock in run_jobs')
+        print('queue size is', len(self.jrq.jobs))
         # wait for a job to complete
+        futures = set()
         while True:
+            with runtime_context.workflow_eval_lock:
+                self.process_queue(runtime_context, futures)  # Populates futures
+
+            # Wait for one to complete
             wait_results = wait(futures, return_when=FIRST_COMPLETED)
-            # waiting here for something to finish
+
             # a job finished
-            with lock:
-                print('run_jobs has lock')
+            with runtime_context.workflow_eval_lock:
                 if wait_results.done:
                     futures = futures - wait_results.done
-                if not futures:
+                # Check if we're done with pending jobs and submitted jobs
+                if not futures and self.jrq.is_empty():
                     break
         print('exiting')
 
@@ -170,7 +185,6 @@ class Job(object):
         self.id = id
         self.builder = Builder()
 
-
     def run(self, runtime_context):
         print('started', self.id)
         time.sleep(1)
@@ -183,7 +197,7 @@ class Process(object):
 
     def __init__(self):
         self.jobs = [Job(1),
-                     Job(1),
+                     Job(3),
                      Job(2),
                      None,
                      Job(4)]
