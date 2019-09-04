@@ -1,7 +1,11 @@
-from cwltool.executors import *
+from cwltool.executors import JobExecutor
+from cwltool.errors import WorkflowException
 from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 import functools
 import time
+import logging
+
+log = logging.getLogger("calrissian.executor")
 
 
 class JobAlreadyExistsException(Exception):
@@ -113,7 +117,7 @@ class ThreadPoolJobExecutor(JobExecutor):
         return self.total_resources - self.allocated_resources
 
     def run_job(self, job, runtime_context, rsc):
-        print('run job', getattr(job,'id',None))
+        log.debug('run job {}'.format(job))
         if job:
             job.run(runtime_context)
 
@@ -127,13 +131,13 @@ class ThreadPoolJobExecutor(JobExecutor):
     def allocate(self, rsc, lock):
         # Must be called with the lock but its recursive so that should be fine
         with lock:
-            print('allocate lock', rsc)
+            log.debug('allocate {}'.format(rsc))
             self.total_resources = self.total_resources - rsc
 
     def restore(self, rsc, lock):
         # Must be called with the lock but its recursive so that should be fine
         with lock:
-            print('restore lock', rsc)
+            log.debug('restore {}'.format(rsc))
             self.total_resources = self.total_resources + rsc
 
     def process_queue(self, runtime_context, futures):
@@ -145,6 +149,10 @@ class ThreadPoolJobExecutor(JobExecutor):
         with runtime_context.workflow_eval_lock:
             runnable_jobs = self.jrq.pop_runnable_jobs(self.available_resources) # Removes jobs from the queue
             for job, rsc in runnable_jobs.items():
+                if runtime_context.builder is not None:
+                    job.builder = runtime_context.builder
+                if job.outdir is not None:
+                    self.output_dirs.add(job.outdir)
                 self.allocate(rsc, runtime_context.workflow_eval_lock)
                 future = self.pool_executor.submit(self.run_job, job, runtime_context, rsc)
                 callback = functools.partial(self.job_callback, rsc, runtime_context.workflow_eval_lock)
@@ -152,31 +160,35 @@ class ThreadPoolJobExecutor(JobExecutor):
                 futures.add(future)
 
     def run_jobs(self, process, job_order_object, logger, runtime_context):
-        print('initial available', self.available_resources)
-        jobs = process.job(job_order_object, self.output_callback, runtime_context)
-        futures = set()
         if runtime_context.workflow_eval_lock is None:
             raise WorkflowException("runtimeContext.workflow_eval_lock must not be None")
-        with runtime_context.workflow_eval_lock:
-            print('have lock in run_jobs')
-            # put the job in the queue
-            for job in jobs:
-                self.jrq.add(job) # May be none if nothing to do
-                # Start processing immediately
-                self.process_queue(runtime_context, futures)
-            # After jobs iterator is exhausted, all jobs will have been queued
-            # Need to start the queue
+        log.info('initial available {}'.format(self.available_resources))
+        job_iterator = process.job(job_order_object, self.output_callback, runtime_context)
+        futures = set()
 
-        print('releasing lock in run_jobs')
-        print('queue size is', len(self.jrq.jobs))
-        # wait for a job to complete
+        # Phase 1: loop over the job iterator, adding jobs to the queue
+        with runtime_context.workflow_eval_lock:
+            # put the job in the queue
+            for job in job_iterator:
+                if job is not None:
+                    # Set up builder here before adding to queue, which will get job's resource needs
+                    if runtime_context.builder is not None:
+                        job.builder = runtime_context.builder
+                    if job.outdir is not None:
+                        self.output_dirs.add(job.outdir)
+                    self.jrq.add(job)
+                else:
+                    # start processing if iterator yields None
+                    self.process_queue(runtime_context, futures)
+                    log.debug('Job iterator yielded no job this iteration')
+
+        # At this point, we have exhausted the job iterator, and every job has been queued (or run)
+        # so work the job queue until it is empty and all futures have completed
         while True:
             with runtime_context.workflow_eval_lock:
-                self.process_queue(runtime_context, futures)  # Populates futures
-
+                self.process_queue(runtime_context, futures)  # submits jobs as futures
             # Wait for one to complete
             wait_results = wait(futures, return_when=FIRST_COMPLETED)
-
             # a job finished
             with runtime_context.workflow_eval_lock:
                 if wait_results.done:
@@ -184,12 +196,12 @@ class ThreadPoolJobExecutor(JobExecutor):
                 # Check if we're done with pending jobs and submitted jobs
                 if not futures and self.jrq.is_empty():
                     break
-        print('exiting')
+        log.info('exiting')
         if self.exceptions:
-            print('finished with exceptions')
+            log.error('finished with exceptions')
             for ex in self.exceptions:
-                print(ex)
-        print('final available', self.available_resources)
+                log.error(ex)
+        log.info('final available {}'.format(self.available_resources))
 
 
 class Builder(object):
@@ -203,15 +215,19 @@ class Job(object):
     def __init__(self, id, cpu, ram):
         self.id = id
         self.builder = Builder(cpu, ram)
+        self.outdir = None
+
+    def __str__(self):
+        return 'id: {}'.format(self.id)
 
     def run(self, runtime_context):
-        print('started', self.id)
+        log.debug('started {}'.format(self.id))
         time.sleep(1)
         if self.id == 86:
             raise Exception('Fail')
         # Finish by acquiring lock
         with runtime_context.workflow_eval_lock:
-            print('finished with lock', self.id)
+            log.debug('finished {}'.format(self.id))
 
 
 class Process(object):
@@ -230,14 +246,18 @@ class Process(object):
         for j in self.jobs:
             yield j
 
+import threading
 
 class RuntimeContext(object):
 
     def __init__(self):
         self.workflow_eval_lock = threading.Condition(threading.RLock())
+        self.builder = None
 
 
 def main():
+    logging.getLogger('calrissian.executor'.format(log)).setLevel(logging.DEBUG)
+    logging.getLogger('calrissian.executor'.format(log)).addHandler(logging.StreamHandler())
     executor = ThreadPoolJobExecutor(total_cpu=16, total_ram=800, max_workers=10)
     runtime_context = RuntimeContext()
     process = Process()
