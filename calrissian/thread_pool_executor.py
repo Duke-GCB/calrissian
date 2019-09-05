@@ -212,7 +212,7 @@ class ThreadPoolJobExecutor(JobExecutor):
             log.info('restored {}, available {}'.format(rsc, self.available_resources))
 
 
-    def process_queue(self, runtime_context, futures):
+    def process_queue(self, runtime_context, futures, raise_on_unavalable=False):
         """
         Asks the queue for jobs that can run in the currently available resources,
         runs those jobs using the pool executor, and returns
@@ -220,7 +220,11 @@ class ThreadPoolJobExecutor(JobExecutor):
         """
         raise_if_not_main()
         log.info('processing queue')
+        # TODO: Move sort strategy to jrq initializer. Actually don't need to check envelope here because it should be checked on adding to queue
         runnable_jobs = self.jrq.pop_runnable_jobs(self.available_resources) # Removes jobs from the queue
+        if raise_on_unavalable and not runnable_jobs and not self.jrq.is_empty():
+            # Queue is not empty and we have no runnable jobs
+            raise WorkflowException('Not enough available resources {} to run a job'.format(self.available_resources))
         for job, rsc in runnable_jobs.items():
             if runtime_context.builder is not None:
                 job.builder = runtime_context.builder
@@ -259,12 +263,12 @@ class ThreadPoolJobExecutor(JobExecutor):
                     job.builder = runtime_context.builder
                 if job.outdir is not None:
                     self.output_dirs.add(job.outdir)
+                # TODO: Checkk that job fits in entire envelope
                 self.jrq.add(job)
             else:
                 # The job iterator yielded None. That means we're not done with the workflow but a dependency has
                 # not yet finished
-                # TODO: Fail the workflow here if we couldn't start any futures. That suggests we don't have enough resources
-                self.process_queue(runtime_context, futures)
+                self.process_queue(runtime_context, futures, raise_on_unavalable=True)
                 runtime_context.workflow_eval_lock.release()
                 # This currently deadlocks because we have the lock but the finishing job can't finish
                 self.wait_for_completion(futures)
@@ -319,7 +323,6 @@ class Job(object):
 
 class Process(object):
 
-    # TODO: Make later jobs dependent on earlier jobs
     def __init__(self):
         self.jobs = [Job(1, 8, 100),
                      Job(6, 1, 100),
@@ -347,7 +350,7 @@ class RuntimeContext(object):
 def main():
     logging.getLogger('calrissian.executor'.format(log)).setLevel(logging.DEBUG)
     logging.getLogger('calrissian.executor'.format(log)).addHandler(logging.StreamHandler())
-    executor = ThreadPoolJobExecutor(total_cpu=16, total_ram=800, max_workers=5)
+    executor = ThreadPoolJobExecutor(total_cpu=1, total_ram=100, max_workers=5)
     runtime_context = RuntimeContext()
     process = Process()
     job_order_object = {}
