@@ -318,7 +318,7 @@ class Process(object):
     # TODO: Make later jobs dependent on earlier jobs
     def __init__(self):
         self.jobs = [Job(1, 8, 100),
-                     Job(86, 1, 100),
+                     Job(6, 1, 100),
                      Job(3, 2, 200),
                      Job(2, 4, 200),
                      None,
