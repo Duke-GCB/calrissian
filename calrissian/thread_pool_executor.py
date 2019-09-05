@@ -250,23 +250,27 @@ class ThreadPoolJobExecutor(JobExecutor):
 
         # Phase 1: loop over the job iterator, adding jobs to the queue
         # We take the lock because we are modifying the job and processing the queue, which will consume resources
-        with runtime_context.workflow_eval_lock:
-            # put the job in the queue
-            for job in job_iterator:
-                if job is not None:
-                    # Set up builder here before adding to queue, which will get job's resource needs
-                    if runtime_context.builder is not None:
-                        job.builder = runtime_context.builder
-                    if job.outdir is not None:
-                        self.output_dirs.add(job.outdir)
-                    self.jrq.add(job)
-                else:
-                    # The job iterator yielded None. That means we're not done with the workflow but a dependency has
-                    # not yet finished
-                    # TODO: Fail the workflow here if we couldn't start any futures. That suggests we don't have enough resources
-                    self.process_queue(runtime_context, futures)
-                    self.wait_for_completion(futures)
-                    log.debug('Job iterator yielded no job this iteration')
+        runtime_context.workflow_eval_lock.acquire()
+        # put the job in the queue
+        for job in job_iterator:
+            if job is not None:
+                # Set up builder here before adding to queue, which will get job's resource needs
+                if runtime_context.builder is not None:
+                    job.builder = runtime_context.builder
+                if job.outdir is not None:
+                    self.output_dirs.add(job.outdir)
+                self.jrq.add(job)
+            else:
+                # The job iterator yielded None. That means we're not done with the workflow but a dependency has
+                # not yet finished
+                # TODO: Fail the workflow here if we couldn't start any futures. That suggests we don't have enough resources
+                self.process_queue(runtime_context, futures)
+                runtime_context.workflow_eval_lock.release()
+                # This currently deadlocks because we have the lock but the finishing job can't finish
+                self.wait_for_completion(futures)
+                runtime_context.workflow_eval_lock.acquire()
+                log.debug('Job iterator yielded no job this iteration')
+        runtime_context.workflow_eval_lock.release()
 
         # At this point, we have exhausted the job iterator, and every job has been queued (or run)
         # so work the job queue until it is empty and all futures have completed
@@ -341,7 +345,7 @@ class RuntimeContext(object):
 
 
 def main():
-    logging.getLogger('calrissian.executor'.format(log)).setLevel(logging.INFO)
+    logging.getLogger('calrissian.executor'.format(log)).setLevel(logging.DEBUG)
     logging.getLogger('calrissian.executor'.format(log)).addHandler(logging.StreamHandler())
     executor = ThreadPoolJobExecutor(total_cpu=16, total_ram=800, max_workers=5)
     runtime_context = RuntimeContext()
