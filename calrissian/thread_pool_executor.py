@@ -4,16 +4,14 @@ from schema_salad.validate import ValidationException
 from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 from queue import Queue
 import functools
-import time
 import logging
+import threading
 
 log = logging.getLogger("calrissian.executor")
 
 
 class JobAlreadyExistsException(Exception):
     pass
-
-import threading
 
 
 def tname(msg):
@@ -311,69 +309,3 @@ class ThreadPoolJobExecutor(JobExecutor):
         log.info('final available {}'.format(self.available_resources))
 
 
-class Builder(object):
-
-    def __init__(self, cpu, ram):
-        self.resources = {'cpu': cpu, 'ram': ram}
-
-paused = False
-
-class Job(object):
-
-    def __init__(self, id, cpu, ram):
-        self.id = id
-        self.builder = Builder(cpu, ram)
-        self.outdir = None
-
-    def __str__(self):
-        return 'id: {}'.format(self.id)
-
-    def run(self, runtime_context):
-        log.debug('started {}'.format(self.id))
-        tname('run {}'.format(self.id))
-        time.sleep(5)
-        if self.id == 86:
-            raise Exception('Fail')
-        # Finish by acquiring lock
-        with runtime_context.workflow_eval_lock:
-            log.debug('finishing {}'.format(self.id))
-            time.sleep(3)
-
-
-class Process(object):
-
-    def __init__(self):
-        self.jobs = [Job(1, 8, 100),
-                     Job(6, 1, 100),
-                     Job(3, 2, 200),
-                     Job(2, 4, 200),
-                     None,
-                     None,
-                     None,
-                     Job(4, 16, 800),
-                     ]
-
-    def job(self, job_order_object, output_callback, runtime_context):
-        raise_if_not_main()
-        for j in self.jobs:
-            yield j
-
-
-class RuntimeContext(object):
-
-    def __init__(self):
-        self.workflow_eval_lock = threading.Condition(threading.RLock())
-        self.builder = None
-
-
-def main():
-    logging.getLogger('calrissian.executor'.format(log)).setLevel(logging.DEBUG)
-    logging.getLogger('calrissian.executor'.format(log)).addHandler(logging.StreamHandler())
-    executor = ThreadPoolJobExecutor(total_cpu=8, total_ram=100, max_workers=5)
-    runtime_context = RuntimeContext()
-    process = Process()
-    job_order_object = {}
-    executor.run_jobs(process, job_order_object, None, runtime_context)
-
-if __name__ == '__main__':
-    main()
