@@ -71,7 +71,7 @@ class JobResourceQueueTestCase(TestCase):
         self.jrq = JobResourceQueue()
         self.job100_4 = make_mock_job(100, 4)   # 100 RAM, 2 CPU
         self.job200_2 = make_mock_job(200, 2)   # 200 RAM, 4 CPU
-        self.jobs = set((self.job100_4, self.job200_2))
+        self.jobs = {self.job100_4: Resources(100, 4), self.job200_2: Resources(200,2)}
 
     def add_jobs(self):
         for j in self.jobs:
@@ -100,13 +100,13 @@ class JobResourceQueueTestCase(TestCase):
         limit = Resources(99, 10)
         self.add_jobs()
         runnable = self.jrq.pop_runnable_jobs(limit)
-        self.assertEqual(runnable, set())
+        self.assertEqual(len(runnable), 0)
 
     def test_pop_runnable_jobs_none_fit_cpu_too_small(self):
         limit = Resources(1000, 1)
         self.add_jobs()
         runnable = self.jrq.pop_runnable_jobs(limit)
-        self.assertEqual(runnable, set())
+        self.assertEqual(len(runnable), 0)
 
     def test_pop_runnable_jobs_one_fits(self):
         limit = Resources(250, 3)
@@ -126,31 +126,39 @@ class JobResourceQueueTestCase(TestCase):
         runnable = self.jrq.pop_runnable_jobs(limit)
         self.assertEqual(len(runnable), 0)
 
-    def test_pop_runnable_job_smallest_cpu_first(self):
+    def test_smallest_cpu_first(self):
+        self.jrq.priority = Resources.CPU
+        self.jrq.descending = False
         limit = Resources(250, 5)
         self.add_jobs()
-        runnable = self.jrq.pop_runnable_jobs(limit, Resources.CPU, descending=False)
+        runnable = self.jrq.pop_runnable_jobs(limit)
         self.assertEqual(len(runnable), 1)
         self.assertIn(self.job200_2, runnable)
 
     def test_pop_runnable_job_largest_cpu_first(self):
+        self.jrq.priority = Resources.CPU
+        self.jrq.descending = True
         limit = Resources(250, 5)
         self.add_jobs()
-        runnable = self.jrq.pop_runnable_jobs(limit, Resources.CPU, descending=True)
+        runnable = self.jrq.pop_runnable_jobs(limit)
         self.assertEqual(len(runnable), 1)
         self.assertIn(self.job100_4, runnable)
 
     def test_pop_runnable_job_smallest_ram_first(self):
+        self.jrq.priority = Resources.RAM
+        self.jrq.descending = False
         limit = Resources(250, 5)
         self.add_jobs()
-        runnable = self.jrq.pop_runnable_jobs(limit, Resources.RAM, descending=False)
+        runnable = self.jrq.pop_runnable_jobs(limit)
         self.assertEqual(len(runnable), 1)
         self.assertIn(self.job100_4, runnable)
 
     def test_pop_runnable_job_largest_ram_first(self):
+        self.jrq.priority = Resources.RAM
+        self.jrq.descending = True
         limit = Resources(250, 5)
         self.add_jobs()
-        runnable = self.jrq.pop_runnable_jobs(limit, Resources.RAM, descending=True)
+        runnable = self.jrq.pop_runnable_jobs(limit)
         self.assertEqual(len(runnable), 1)
         self.assertIn(self.job200_2, runnable)
 
