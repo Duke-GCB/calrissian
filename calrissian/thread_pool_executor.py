@@ -11,11 +11,22 @@ from schema_salad.validate import ValidationException
 log = logging.getLogger("calrissian.executor")
 
 
-class JobAlreadyExistsException(Exception):
+class DuplicateJobException(Exception):
+    pass
+
+
+class OversizedJobException(Exception):
+    pass
+
+
+class InconsistentResourcesException(Exception):
     pass
 
 
 class Resources(object):
+    """
+    Class to encapsulate compute resources and provide arithmetic operations and comparisons
+    """
     RAM = 'ram'
     CPU = 'cpu'
 
@@ -66,54 +77,84 @@ Resources.EMPTY = Resources(0, 0)
 
 class JobResourceQueue(object):
     """
-    Contains a dictionary of jobs, mapping to their resources
+    Contains a dictionary of jobs, mapped to their resources.
+    Provides an interface for getting a subset of jobs that fit within a resource limit
     """
 
     def __init__(self, priority=Resources.RAM, descending=False):
+        """
+        Create a JobResourceQueue
+        :param priority: Resources.RAM or Resources.CPU - Used as a sort key when de-queuing jobs
+        :param descending: boolean: When True, the jobs requesting the most resource will be de-queued first.
+        """
         self.jobs = dict()
         self.priority = priority
         self.descending = descending
 
-    def add(self, job):
+    def enqueue(self, job):
         """
-        Add the job and extract its resources
-        :param job:
-        :return:
+        Add a job to the queue. Raises if job already exists in the queue
+        :param job: A job to add to the queue
         """
         if job in self.jobs:
-            raise JobAlreadyExistsException('Job already exists')
+            raise DuplicateJobException('Job already exists')
         if job:
             self.jobs[job] = Resources.from_job(job)
 
     def is_empty(self):
+        """
+        Is the queue empty
+        :return: True if the queue is empty, False otherwise
+        """
         return len(self.jobs) == 0
 
     def sorted_jobs(self):
+        """
+        Produces a list of the jobs in the queue, ordered by self.priority (RAM or CPU) and ascending or descending
+        :return:
+        """
         return sorted(self.jobs.items(), key=lambda item: getattr(item[1], self.priority), reverse=self.descending)
 
-    def pop_runnable_jobs(self, resource_limit):
+    def dequeue(self, resource_limit):
         """
-        Collect a dictionary of jobs and resources within the specified limit and return them.
-        May return an empty dictionary if nothing fits in the resource limit
+        Collects jobs from the sorted list that fit together within the specified resource limit.
+        Removes (pop) collected jobs from the queue (pop).
+        May return an empty dictionary if queue is empty or no jobs fit.imit
         :param resource_limit: A Resource object
-        :return: Dictionary where jobs are keys and their resources are values
+        :return: Dictionary of {Job:Resources}
         """
-        runnable_jobs = {}
+        jobs = {}
         for job, resource in self.sorted_jobs():
             if resource_limit - resource >= Resources.EMPTY:
-                runnable_jobs[job] = resource
+                jobs[job] = resource
                 resource_limit = resource_limit - resource
-        for job in runnable_jobs:
+        for job in jobs:
             self.jobs.pop(job)
-        return runnable_jobs
+        return jobs
 
     def __str__(self):
         return ' '.join([str(j) for j in self.jobs.keys()])
 
 
 class ThreadPoolJobExecutor(JobExecutor):
+    """
+    A cwltool JobExecutor subclass that uses concurrent.futures.ThreadPoolExecutor
+
+    concurrent.futures was introduced in Python 3.2 and provides high-level interfaces (Executor, Future) for launching
+    and managing asynchronous and parallel tasks. The ThreadPoolExecutor maintains a pool of reusable threads to execute
+    tasks, reducing the overall number of threads that are created in the cwltool process.
+
+    Relevant: https://github.com/common-workflow-language/cwltool/issues/888
+    """
 
     def __init__(self, total_ram, total_cpu, max_workers=None):
+        """
+        Initialize a ThreadPoolJobExecutor
+        :param total_ram: RAM limit in megabytes for concurrent jobs
+        :param total_cpu: CPU core count limit for concurrent jobs
+        :param max_workers: Number of worker threads to use (may limit number of parallel tasks,
+        but setting too low can cause deadlocks)
+        """
         super(ThreadPoolJobExecutor, self).__init__()
         self.pool_executor = ThreadPoolExecutor(max_workers=max_workers)
         self.jrq = JobResourceQueue()
@@ -129,33 +170,35 @@ class ThreadPoolJobExecutor(JobExecutor):
         with self.resources_lock:
             return self.total_resources - self.allocated_resources
 
-    def run_job(self, job, runtime_context):
-        if job:
-            job.run(runtime_context)
+    def job_done_callback(self, rsc, future):
+        """
+        Callback to run after a job is finished to restore reserved resources and check for exceptions.
+        Expected to be called as part of the Future.add_done_callback(). The callback is invoked on a background
+        thread. If the callback itself raises an Exception, that Exception is logged and ignored, so we instead
+        queue exceptions and re-raise from the main thread.
 
-    def job_callback(self, rsc, future):
-        # Note that job callbacks are invoked on a thread belonging to the process that added them
-        # So it's not the main thread. If the callback itself raises an Exception, that Exception is logged and ignored
-        # If we want to stop executing because of an exception we do have some other cleanup to do
-        # The done_callback is invoked on a background thread.
-        self.restore(rsc)  # Always restore the resources
+        :param rsc: Resources used by the job to return to our available resources.
+        :param future: A concurrent.futures.Future representing the finished task. May be in cancelled or done states
+        """
 
-        # Exit now if the future was cancelled. If we call result() or exception() on a cancelled future, that call
-        # will raise a CancelledError
+        # Always restore the resources
+        self.restore(rsc)
+
+        # if the future was cancelled, there is no more work to do. Bail out now because calling result() or
+        # exception() on a cancelled future would raise a CancelledError in this scope.
         if future.cancelled():
             return
 
-        ex = future.exception()  # raises a CancelledError if future was cancelled
-        if ex:
+        # Check if the future raised an exception - may return None
+        if future.exception():
             # The Queue is thread safe so we dont need a lock, even though we're running on a background thread
-            self.exceptions.put(ex)
+            self.exceptions.put(future.exception())
 
-    def handle_queued_exceptions(self, pending_futures):
+    def raise_queued_exceptions(self, pending_futures):
         """
-        Check if we have any queued exceptions after futures finished. If so, cancel pending futures and raise the
-        exception
-        :param pending_futures: A set() of futures that should be cancelled if an exception occurred
-        :return: None
+        Method to run on the main thread that will raise a queued exception added by job_done_callback and
+        cancel any outstanding futures
+        :param pending_futures: set of any futures that should be cancelled if we're about to raise an exception
         """
         # Code translated from SingleJobExecutor.run_jobs
         # It raises WorkflowExceptions and ValidationException directly.
@@ -166,6 +209,7 @@ class ThreadPoolJobExecutor(JobExecutor):
             # the first place. Once the function starts running it cannot be cancelled.
             for f in pending_futures:
                 f.cancel()
+            # TODO: Do we need to wait for cancellations to process?
             ex = self.exceptions.get()
             try:
                 raise ex
@@ -175,27 +219,39 @@ class ThreadPoolJobExecutor(JobExecutor):
                 log.exception("Got workflow error")
                 raise WorkflowException(str(err)) from err
 
-    def raise_if_too_big(self, job):
+    def raise_if_oversized(self, job):
         """
-        Raise an exception if a job is too big to fit in the entire available resources
-
-        :param job:
-        :return:
+        Raise an exception if a job does not fit within total_resources
+        :param job: Job to check resources
         """
         rsc = Resources.from_job(job)
         if not rsc <= self.total_resources:
-            raise WorkflowException('Job {} requires resources {} that exceed total resources {}'.
-                                    format(job, rsc, self.total_resources))
+            raise OversizedJobException('Job {} requires resources {} that exceed total resources {}'.
+                                        format(job, rsc, self.total_resources))
 
     def allocate(self, rsc):
+        """
+        Reserve resources from the total. Raises InconsistentResourcesException if available becomes negative
+        :param rsc: A Resources object to reserve from the total.
+        """
         with self.resources_lock:
             self.allocated_resources += rsc
             log.debug('allocated {}, available {}'.format(rsc, self.available_resources))
+            if self.available_resources <= Resources.EMPTY:
+                raise InconsistentResourcesException(str(self.available_resources))
 
     def restore(self, rsc):
+        """
+        Restore resources to the total. Raises InconsistentResourcesException if available becomes negative
+        :param rsc: A Resources object to restore to the total
+        """
         with self.resources_lock:
             self.allocated_resources -= rsc
             log.debug('restored {}, available {}'.format(rsc, self.available_resources))
+            if self.available_resources <= Resources.EMPTY:
+                raise InconsistentResourcesException(str(self.available_resources))
+
+    # TODO: PICK UP HERE
 
     def process_queue(self, runtime_context, futures, raise_on_unavalable=False):
         """
@@ -203,7 +259,7 @@ class ThreadPoolJobExecutor(JobExecutor):
         runs those jobs using the pool executor, and returns
         :return: None
         """
-        runnable_jobs = self.jrq.pop_runnable_jobs(self.available_resources)  # Removes jobs from the queue
+        runnable_jobs = self.jrq.dequeue(self.available_resources)  # Removes jobs from the queue
         if raise_on_unavalable and not runnable_jobs and not self.jrq.is_empty():
             # Queue is not empty and we have no runnable jobs
             raise WorkflowException(
@@ -215,9 +271,8 @@ class ThreadPoolJobExecutor(JobExecutor):
             if job.outdir is not None:
                 self.output_dirs.add(job.outdir)
             self.allocate(rsc)
-            future = self.pool_executor.submit(self.run_job, job, runtime_context)
-            callback = functools.partial(self.job_callback, rsc)
-
+            future = self.pool_executor.submit(job.run, runtime_context)
+            callback = functools.partial(self.job_done_callback, rsc)
             # Done callbacks are called in a thread on the process that executed them (but not the thread that called them)
             future.add_done_callback(callback)
             futures.add(future)
@@ -226,7 +281,7 @@ class ThreadPoolJobExecutor(JobExecutor):
         log.debug('wait_for_future_completion with {} futures'.format(len(futures)))
         wait_results = wait(futures, return_when=FIRST_COMPLETED)
         [futures.remove(finished) for finished in wait_results.done]
-        self.handle_queued_exceptions(wait_results.not_done)
+        self.raise_queued_exceptions(wait_results.not_done)
 
     def run_jobs(self, process, job_order_object, logger, runtime_context):
         if runtime_context.workflow_eval_lock is None:
@@ -245,8 +300,8 @@ class ThreadPoolJobExecutor(JobExecutor):
                     job.builder = runtime_context.builder
                 if job.outdir is not None:
                     self.output_dirs.add(job.outdir)
-                self.raise_if_too_big(job)
-                self.jrq.add(job)
+                self.raise_if_oversized(job)
+                self.jrq.enqueue(job)
             else:
                 # The job iterator yielded None. That means we're not done with the workflow but a dependency has
                 # not yet finished
