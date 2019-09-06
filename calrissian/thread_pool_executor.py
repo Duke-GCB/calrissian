@@ -70,13 +70,13 @@ class Resources(object):
         return self.ram == other.ram and self.cpu == other.cpu
 
     def __ge__(self, other):
-        return self > other or self == other
+        return self.ram >= other.ram and self.cpu >= other.cpu
 
     def __le__(self, other):
-        return self < other or self == other
+        return self.ram <= other.ram and self.cpu <= other.cpu
 
     def __str__(self):
-        return 'ram: {}, cpu: {}'.format(self.ram, self.cpu)
+        return '[ram: {}, cpu: {}]'.format(self.ram, self.cpu)
 
     @classmethod
     def from_job(cls, job):
@@ -93,9 +93,11 @@ class JobResourceQueue(object):
     Contains a dictionary of jobs, mapping to their resources
     """
 
-    def __init__(self):
+    def __init__(self, priority=Resources.RAM, descending=False):
         raise_if_not_main()
         self.jobs = dict()
+        self.priority = priority
+        self.descending = descending
 
     def add(self, job):
         raise_if_not_main()
@@ -113,7 +115,10 @@ class JobResourceQueue(object):
         raise_if_not_main()
         return len(self.jobs) == 0
 
-    def pop_runnable_jobs(self, resource_limit, priority=Resources.RAM, descending=False):
+    def sorted_jobs(self):
+        return sorted(self.jobs.items(), key=lambda item: getattr(item[1], self.priority), reverse=self.descending)
+
+    def pop_runnable_jobs(self, resource_limit):
         raise_if_not_main()
         """
         Collect a dictionary of jobs and resources within the specified limit and return them.
@@ -122,13 +127,16 @@ class JobResourceQueue(object):
         :return: Dictionary where jobs are keys and their resources are values
         """
         runnable_jobs = {}
-        for job, resource in sorted(self.jobs.items(), key=lambda item: getattr(item[1], priority), reverse=descending):
+        for job, resource in self.sorted_jobs():
             if resource_limit - resource >= Resources.EMPTY:
                 runnable_jobs[job] = resource
                 resource_limit = resource_limit - resource
         for job in runnable_jobs:
             self.jobs.pop(job)
         return runnable_jobs
+
+    def __str__(self):
+        return ' '.join([str(j) for j in self.jobs.keys()])
 
 
 class ThreadPoolJobExecutor(JobExecutor):
@@ -201,16 +209,28 @@ class ThreadPoolJobExecutor(JobExecutor):
                 log.exception("Got workflow error")
                 raise WorkflowException(str(err)) from err
 
+    def raise_if_too_big(self, job):
+        """
+        Raise an exception if a job is too big to fit in the entire available resources
+
+        :param job:
+        :return:
+        """
+        rsc = Resources.from_job(job)
+        tname('raise if too big {} {}'.format(rsc, self.total_resources))
+        if not rsc <= self.total_resources:
+            raise WorkflowException('Job {} requires resources {} that exceed total resources {}'.
+                                    format(job, rsc, self.total_resources))
+
     def allocate(self, rsc):
         with self.resources_lock:
-            self.total_resources = self.total_resources - rsc
+            self.allocated_resources += rsc
             log.info('allocated {}, available {}'.format(rsc, self.available_resources))
 
     def restore(self, rsc):
         with self.resources_lock:
-            self.total_resources = self.total_resources + rsc
+            self.allocated_resources -= rsc
             log.info('restored {}, available {}'.format(rsc, self.available_resources))
-
 
     def process_queue(self, runtime_context, futures, raise_on_unavalable=False):
         """
@@ -220,11 +240,10 @@ class ThreadPoolJobExecutor(JobExecutor):
         """
         raise_if_not_main()
         log.info('processing queue')
-        # TODO: Move sort strategy to jrq initializer. Actually don't need to check envelope here because it should be checked on adding to queue
         runnable_jobs = self.jrq.pop_runnable_jobs(self.available_resources) # Removes jobs from the queue
         if raise_on_unavalable and not runnable_jobs and not self.jrq.is_empty():
             # Queue is not empty and we have no runnable jobs
-            raise WorkflowException('Not enough available resources {} to run a job'.format(self.available_resources))
+            raise WorkflowException('Jobs queued but resources available {} cannot run any queued job: {}'.format(self.available_resources, self.jrq))
         for job, rsc in runnable_jobs.items():
             if runtime_context.builder is not None:
                 job.builder = runtime_context.builder
@@ -263,7 +282,7 @@ class ThreadPoolJobExecutor(JobExecutor):
                     job.builder = runtime_context.builder
                 if job.outdir is not None:
                     self.output_dirs.add(job.outdir)
-                # TODO: Checkk that job fits in entire envelope
+                self.raise_if_too_big(job)
                 self.jrq.add(job)
             else:
                 # The job iterator yielded None. That means we're not done with the workflow but a dependency has
@@ -350,7 +369,7 @@ class RuntimeContext(object):
 def main():
     logging.getLogger('calrissian.executor'.format(log)).setLevel(logging.DEBUG)
     logging.getLogger('calrissian.executor'.format(log)).addHandler(logging.StreamHandler())
-    executor = ThreadPoolJobExecutor(total_cpu=1, total_ram=100, max_workers=5)
+    executor = ThreadPoolJobExecutor(total_cpu=8, total_ram=100, max_workers=5)
     runtime_context = RuntimeContext()
     process = Process()
     job_order_object = {}
