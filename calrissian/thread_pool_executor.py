@@ -122,6 +122,7 @@ class ThreadPoolJobExecutor(JobExecutor):
         self.total_resources = Resources(total_ram, total_cpu)
         self.allocated_resources = Resources()
         self.resources_lock = threading.RLock()
+        log.debug('initialize ThreadPoolJobExecutor: total_resources={}, max_workers={}'.format(self.total_resources, max_workers))
 
     @property
     def available_resources(self):
@@ -129,7 +130,6 @@ class ThreadPoolJobExecutor(JobExecutor):
             return self.total_resources - self.allocated_resources
 
     def run_job(self, job, runtime_context):
-        log.debug('run job {}'.format(job))
         if job:
             job.run(runtime_context)
 
@@ -190,12 +190,12 @@ class ThreadPoolJobExecutor(JobExecutor):
     def allocate(self, rsc):
         with self.resources_lock:
             self.allocated_resources += rsc
-            log.info('allocated {}, available {}'.format(rsc, self.available_resources))
+            log.debug('allocated {}, available {}'.format(rsc, self.available_resources))
 
     def restore(self, rsc):
         with self.resources_lock:
             self.allocated_resources -= rsc
-            log.info('restored {}, available {}'.format(rsc, self.available_resources))
+            log.debug('restored {}, available {}'.format(rsc, self.available_resources))
 
     def process_queue(self, runtime_context, futures, raise_on_unavalable=False):
         """
@@ -203,7 +203,6 @@ class ThreadPoolJobExecutor(JobExecutor):
         runs those jobs using the pool executor, and returns
         :return: None
         """
-        log.info('processing queue')
         runnable_jobs = self.jrq.pop_runnable_jobs(self.available_resources)  # Removes jobs from the queue
         if raise_on_unavalable and not runnable_jobs and not self.jrq.is_empty():
             # Queue is not empty and we have no runnable jobs
@@ -223,8 +222,8 @@ class ThreadPoolJobExecutor(JobExecutor):
             future.add_done_callback(callback)
             futures.add(future)
 
-    def wait_for_completion(self, futures):
-        log.info('wait with {} futures'.format(len(futures)))
+    def wait_for_future_completion(self, futures):
+        log.debug('wait_for_future_completion with {} futures'.format(len(futures)))
         wait_results = wait(futures, return_when=FIRST_COMPLETED)
         [futures.remove(finished) for finished in wait_results.done]
         self.handle_queued_exceptions(wait_results.not_done)
@@ -232,7 +231,6 @@ class ThreadPoolJobExecutor(JobExecutor):
     def run_jobs(self, process, job_order_object, logger, runtime_context):
         if runtime_context.workflow_eval_lock is None:
             raise WorkflowException("runtimeContext.workflow_eval_lock must not be None")
-        log.info('initial available {}'.format(self.available_resources))
         job_iterator = process.job(job_order_object, self.output_callback, runtime_context)
         futures = set()
 
@@ -255,9 +253,9 @@ class ThreadPoolJobExecutor(JobExecutor):
                 self.process_queue(runtime_context, futures, raise_on_unavalable=True)
                 runtime_context.workflow_eval_lock.release()
                 # This currently deadlocks because we have the lock but the finishing job can't finish
-                self.wait_for_completion(futures)
+                self.wait_for_future_completion(futures)
                 runtime_context.workflow_eval_lock.acquire()
-                log.debug('Job iterator yielded no job this iteration')
+                log.debug('Job iterator yielded None this iteration')
         runtime_context.workflow_eval_lock.release()
 
         # At this point, we have exhausted the job iterator, and every job has been queued (or run)
@@ -267,10 +265,9 @@ class ThreadPoolJobExecutor(JobExecutor):
                 # Taking the lock to process the queue
                 self.process_queue(runtime_context, futures)  # submits jobs as futures
             # Wait for one to complete
-            self.wait_for_completion(futures)
+            self.wait_for_future_completion(futures)
             with runtime_context.workflow_eval_lock:  # Why do we need the lock here?
                 # Check if we're done with pending jobs and submitted jobs
                 if not futures and self.jrq.is_empty():
                     break
-        log.info('exiting')
-        log.info('final available {}'.format(self.available_resources))
+

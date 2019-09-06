@@ -24,14 +24,15 @@ class Job(object):
         return 'id: {}'.format(self.id)
 
     def run(self, runtime_context):
-        log.debug('started {}'.format(self.id))
+        log.debug('starting Job.run() with id={}'.format(self.id))
         time.sleep(5)
         if self.id == 86:
+            log.debug('Job id is 86, so fail')
             raise Exception('Fail')
         # Finish by acquiring lock
         with runtime_context.workflow_eval_lock:
-            log.debug('finishing {}'.format(self.id))
             time.sleep(3)
+            log.debug('exiting Job.run() with id={} [HAVE LOCK]'.format(self.id))
 
 
 class Process(object):
