@@ -1,11 +1,12 @@
-from cwltool.executors import JobExecutor
-from cwltool.errors import WorkflowException
-from schema_salad.validate import ValidationException
-from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
-from queue import Queue
 import functools
 import logging
 import threading
+from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
+from queue import Queue
+
+from cwltool.errors import WorkflowException
+from cwltool.executors import JobExecutor
+from schema_salad.validate import ValidationException
 
 log = logging.getLogger("calrissian.executor")
 
@@ -15,7 +16,6 @@ class JobAlreadyExistsException(Exception):
 
 
 class Resources(object):
-
     RAM = 'ram'
     CPU = 'cpu'
 
@@ -61,7 +61,7 @@ class Resources(object):
         return cls(ram, cpu)
 
 
-Resources.EMPTY = Resources(0,0)
+Resources.EMPTY = Resources(0, 0)
 
 
 class JobResourceQueue(object):
@@ -138,14 +138,14 @@ class ThreadPoolJobExecutor(JobExecutor):
         # So it's not the main thread. If the callback itself raises an Exception, that Exception is logged and ignored
         # If we want to stop executing because of an exception we do have some other cleanup to do
         # The done_callback is invoked on a background thread.
-        self.restore(rsc) # Always restore the resources
+        self.restore(rsc)  # Always restore the resources
 
         # Exit now if the future was cancelled. If we call result() or exception() on a cancelled future, that call
         # will raise a CancelledError
         if future.cancelled():
             return
 
-        ex = future.exception() # raises a CancelledError if future was cancelled
+        ex = future.exception()  # raises a CancelledError if future was cancelled
         if ex:
             # The Queue is thread safe so we dont need a lock, even though we're running on a background thread
             self.exceptions.put(ex)
@@ -204,10 +204,12 @@ class ThreadPoolJobExecutor(JobExecutor):
         :return: None
         """
         log.info('processing queue')
-        runnable_jobs = self.jrq.pop_runnable_jobs(self.available_resources) # Removes jobs from the queue
+        runnable_jobs = self.jrq.pop_runnable_jobs(self.available_resources)  # Removes jobs from the queue
         if raise_on_unavalable and not runnable_jobs and not self.jrq.is_empty():
             # Queue is not empty and we have no runnable jobs
-            raise WorkflowException('Jobs queued but resources available {} cannot run any queued job: {}'.format(self.available_resources, self.jrq))
+            raise WorkflowException(
+                'Jobs queued but resources available {} cannot run any queued job: {}'.format(self.available_resources,
+                                                                                              self.jrq))
         for job, rsc in runnable_jobs.items():
             if runtime_context.builder is not None:
                 job.builder = runtime_context.builder
@@ -268,9 +270,7 @@ class ThreadPoolJobExecutor(JobExecutor):
             self.wait_for_completion(futures)
             with runtime_context.workflow_eval_lock:  # Why do we need the lock here?
                 # Check if we're done with pending jobs and submitted jobs
-                    if not futures and self.jrq.is_empty():
-                        break
+                if not futures and self.jrq.is_empty():
+                    break
         log.info('exiting')
         log.info('final available {}'.format(self.available_resources))
-
-
