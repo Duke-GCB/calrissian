@@ -65,6 +65,9 @@ class Resources(object):
     def __str__(self):
         return '[ram: {}, cpu: {}]'.format(self.ram, self.cpu)
 
+    def is_negative(self):
+        return self.ram < 0 or self.cpu < 0
+
     @classmethod
     def from_job(cls, job):
         ram = job.builder.resources.get(cls.RAM, 0)
@@ -239,8 +242,8 @@ class ThreadPoolJobExecutor(JobExecutor):
         """
         with self.resources_lock:
             self.allocated_resources += rsc
-            log.debug('allocated {}, available {}'.format(rsc, self.available_resources))
-            if self.available_resources <= Resources.EMPTY:
+            log.debug('allocate {}, available {}'.format(rsc, self.available_resources))
+            if self.available_resources.is_negative():
                 raise InconsistentResourcesException(str(self.available_resources))
 
     def restore(self, rsc):
@@ -250,8 +253,8 @@ class ThreadPoolJobExecutor(JobExecutor):
         """
         with self.resources_lock:
             self.allocated_resources -= rsc
-            log.debug('restored {}, available {}'.format(rsc, self.available_resources))
-            if self.available_resources <= Resources.EMPTY:
+            log.debug('restore {}, available {}'.format(rsc, self.available_resources))
+            if self.available_resources.is_negative():
                 raise InconsistentResourcesException(str(self.available_resources))
 
     def process_queue(self, pool_executor, runtime_context, raise_on_unavalable=False):
@@ -292,7 +295,7 @@ class ThreadPoolJobExecutor(JobExecutor):
         :param futures: set: A set of futures on which to wait
         :return: The set of futures that is not yet done
         """
-        log.debug('wait_for_future_completion with {} futures'.format(len(futures)))
+        log.debug('wait_for_completion with {} futures'.format(len(futures)))
         wait_results = wait(futures, return_when=FIRST_COMPLETED)
         # wait returns a NamedTuple of done and not_done.
         return wait_results.not_done
