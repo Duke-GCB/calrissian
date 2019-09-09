@@ -67,7 +67,7 @@ def main():
     runtime_context = RuntimeContext()
     process = Process()
     job_order_object = {}
-    executor.run_jobs(process, job_order_object, None, runtime_context)
+    executor.run_jobs(process, job_order_object, log, runtime_context)
 
 if __name__ == '__main__':
     main()
