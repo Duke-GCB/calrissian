@@ -152,11 +152,13 @@ class ThreadPoolJobExecutor(JobExecutor):
         Initialize a ThreadPoolJobExecutor
         :param total_ram: RAM limit in megabytes for concurrent jobs
         :param total_cpu: CPU core count limit for concurrent jobs
-        :param max_workers: Number of worker threads to use (may limit number of parallel tasks,
-        but setting too low can cause deadlocks)
+        :param max_workers: Number of worker threads to create. Set to None to use Python's default of 5xCPU count, which
+        should be sufficient. Setting max_workers too low can cause deadlocks.
+
+        See https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor
         """
         super(ThreadPoolJobExecutor, self).__init__()
-        self.pool_executor = ThreadPoolExecutor(max_workers=max_workers)
+        self.max_workers = max_workers
         self.jrq = JobResourceQueue()
         self.exceptions = Queue()
         self.futures = set()
@@ -251,12 +253,15 @@ class ThreadPoolJobExecutor(JobExecutor):
             if self.available_resources <= Resources.EMPTY:
                 raise InconsistentResourcesException(str(self.available_resources))
 
-    # TODO: PICK UP HERE
-
-    def process_queue(self, runtime_context, futures, raise_on_unavalable=False):
+    def process_queue(self, pool_executor, runtime_context, futures, raise_on_unavalable=False):
         """
-        Asks the queue for jobs that can run in the currently available resources,
-        runs those jobs using the pool executor, and returns
+        Pulls jobs off the queue in groups that fit in currently available resources, allocates resources, and submits
+        jobs to the pool_executor as Futures. Attaches a callback to each future to clean up (e.g. check
+        for execptions, restore allocated resources)
+        :param pool_executor: concurrent.futures.Executor: where job callables shall be submitted
+        :param runtime_context: cwltool RuntimeContext: to provide to the job
+        :param futures: set: set to add submitted futures to (refactor this)
+        :param raise_on_unavalable: Boolean: If True, raise an exception if no jobs can be run.
         :return: None
         """
         runnable_jobs = self.jrq.dequeue(self.available_resources)  # Removes jobs from the queue
@@ -271,58 +276,82 @@ class ThreadPoolJobExecutor(JobExecutor):
             if job.outdir is not None:
                 self.output_dirs.add(job.outdir)
             self.allocate(rsc)
-            future = self.pool_executor.submit(job.run, runtime_context)
+            future = pool_executor.submit(job.run, runtime_context)
             callback = functools.partial(self.job_done_callback, rsc)
-            # Done callbacks are called in a thread on the process that executed them (but not the thread that called them)
+            # Callback will be invoked in a thread on the submitting process (but not the thread that submitted, this
+            # clarification is mostly for process pool executors)
             future.add_done_callback(callback)
             futures.add(future)
 
     def wait_for_future_completion(self, futures):
+        """
+        Using concurrent.futures.wait, wait for one of the futures in the set to complete, remove finished futures from
+        the set, and check if any exceptions occurred.
+        :param futures: set: A set of futures on which to wait
+        :return: None
+        """
         log.debug('wait_for_future_completion with {} futures'.format(len(futures)))
         wait_results = wait(futures, return_when=FIRST_COMPLETED)
-        [futures.remove(finished) for finished in wait_results.done]
+        # wait returns a NamedTuple (done, not_done).
+        [futures.remove(done) for done in wait_results.done]
+        # Check for queued exceptions and provide the not_done futures to be cancelled if exceptions occurred
         self.raise_queued_exceptions(wait_results.not_done)
 
     def run_jobs(self, process, job_order_object, logger, runtime_context):
-        if runtime_context.workflow_eval_lock is None:
-            raise WorkflowException("runtimeContext.workflow_eval_lock must not be None")
-        job_iterator = process.job(job_order_object, self.output_callback, runtime_context)
-        futures = set()
+        """
+        Concrete implementation of JobExecutor.run_jobs, the primary entry point for this class. Runs in two phases:
 
-        # Phase 1: loop over the job iterator, adding jobs to the queue
-        # We take the lock because we are modifying the job and processing the queue, which will consume resources
-        runtime_context.workflow_eval_lock.acquire()
-        # put the job in the queue
-        for job in job_iterator:
-            if job is not None:
-                # Set up builder here before adding to queue, which will get job's resource needs
-                if runtime_context.builder is not None:
-                    job.builder = runtime_context.builder
-                if job.outdir is not None:
-                    self.output_dirs.add(job.outdir)
-                self.raise_if_oversized(job)
-                self.jrq.enqueue(job)
-            else:
-                # The job iterator yielded None. That means we're not done with the workflow but a dependency has
-                # not yet finished
-                self.process_queue(runtime_context, futures, raise_on_unavalable=True)
-                runtime_context.workflow_eval_lock.release()
-                # This currently deadlocks because we have the lock but the finishing job can't finish
+        1. Adds jobs to the queue by looping over process.job() to generate them. If the generator returns None
+        (instead of a Job), some previous job must complete before future jobs can be generated. When this happens,
+        start executing jobs (process_queue). Phase 1 is complete when process.job() is exhausted.
+
+        2. Loop until the queue is empty and all submitted jobs have completed.
+        :param process: cwltool.process.Process: The process object on which to call .job() yielding jobs
+        :param job_order_object: dict: The CWL job order
+        :param logger: logger where messages shall be logged
+        :param runtime_context: cwltool RuntimeContext: to provide to the job
+        :return: None
+        """
+        # Wrap in an Executor context. This ensures that the executor waits for tasks to finish,
+        # then shuts down cleaning up resources
+        with ThreadPoolExecutor(max_workers=self.max_workers) as pool_executor:
+            if runtime_context.workflow_eval_lock is None:
+                raise WorkflowException("runtimeContext.workflow_eval_lock must not be None")
+            job_iterator = process.job(job_order_object, self.output_callback, runtime_context)
+            futures = set()
+
+            # Phase 1: loop over the job iterator, adding jobs to the queue
+            # We take the lock because we are modifying the job and processing the queue, which will consume resources
+            runtime_context.workflow_eval_lock.acquire()
+            # put the job in the queue
+            for job in job_iterator:
+                if job is not None:
+                    # Set up builder here before adding to queue, which will get job's resource needs
+                    if runtime_context.builder is not None:
+                        job.builder = runtime_context.builder
+                    if job.outdir is not None:
+                        self.output_dirs.add(job.outdir)
+                    self.raise_if_oversized(job)
+                    self.jrq.enqueue(job)
+                else:
+                    # The job iterator yielded None. That means we're not done with the workflow but a dependency has
+                    # not yet finished
+                    self.process_queue(pool_executor, runtime_context, futures, raise_on_unavalable=True)
+                    runtime_context.workflow_eval_lock.release()
+                    # This currently deadlocks because we have the lock but the finishing job can't finish
+                    self.wait_for_future_completion(futures)
+                    runtime_context.workflow_eval_lock.acquire()
+            runtime_context.workflow_eval_lock.release()
+
+            # Phase 2: process the queue and wait for all jobs to copmlete
+            while True:
+                with runtime_context.workflow_eval_lock:
+                    # Taking the lock to process the queue
+                    self.process_queue(pool_executor, runtime_context, futures)  # submits jobs as futures
+                # Wait for one to complete
                 self.wait_for_future_completion(futures)
-                runtime_context.workflow_eval_lock.acquire()
-                log.debug('Job iterator yielded None this iteration')
-        runtime_context.workflow_eval_lock.release()
-
-        # At this point, we have exhausted the job iterator, and every job has been queued (or run)
-        # so work the job queue until it is empty and all futures have completed
-        while True:
-            with runtime_context.workflow_eval_lock:
-                # Taking the lock to process the queue
-                self.process_queue(runtime_context, futures)  # submits jobs as futures
-            # Wait for one to complete
-            self.wait_for_future_completion(futures)
-            with runtime_context.workflow_eval_lock:  # Why do we need the lock here?
-                # Check if we're done with pending jobs and submitted jobs
-                if not futures and self.jrq.is_empty():
-                    break
+                with runtime_context.workflow_eval_lock:  # Why do we need the lock here?
+                    # Check if we're done with pending jobs and submitted jobs
+                    if not futures and self.jrq.is_empty():
+                        break
 

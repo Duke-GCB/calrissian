@@ -73,65 +73,65 @@ class JobResourceQueueTestCase(TestCase):
         self.job200_2 = make_mock_job(200, 2)   # 200 RAM, 4 CPU
         self.jobs = {self.job100_4: Resources(100, 4), self.job200_2: Resources(200,2)}
 
-    def add_jobs(self):
+    def queue_jobs(self):
         for j in self.jobs:
-            self.jrq.add(j)
+            self.jrq.enqueue(j)
 
     def test_init(self):
         self.assertIsNotNone(self.jrq)
 
     def test_add(self):
         self.assertNotIn(self.job100_4, self.jrq.jobs)
-        self.jrq.add(self.job100_4)
+        self.jrq.enqueue(self.job100_4)
         self.assertIn(self.job100_4, self.jrq.jobs)
 
     def test_add_raises_if_exists(self):
-        self.jrq.add(self.job100_4)
-        with self.assertRaisesRegex(JobAlreadyExistsException, 'Job already exists'):
-            self.jrq.add(self.job100_4)
+        self.jrq.enqueue(self.job100_4)
+        with self.assertRaisesRegex(DuplicateJobException, 'Job already exists'):
+            self.jrq.enqueue(self.job100_4)
 
-    def test_pop_runnable_jobs_all_fit(self):
+    def test_dequeue_all_fit(self):
         limit = Resources(1000, 10)
-        self.add_jobs()
-        runnable = self.jrq.pop_runnable_jobs(limit)
+        self.queue_jobs()
+        runnable = self.jrq.dequeue(limit)
         self.assertEqual(runnable, self.jobs)
 
-    def test_pop_runnable_jobs_none_fit_ram_too_small(self):
+    def test_dequeue_none_fit_ram_too_small(self):
         limit = Resources(99, 10)
-        self.add_jobs()
-        runnable = self.jrq.pop_runnable_jobs(limit)
+        self.queue_jobs()
+        runnable = self.jrq.dequeue(limit)
         self.assertEqual(len(runnable), 0)
 
-    def test_pop_runnable_jobs_none_fit_cpu_too_small(self):
+    def test_dequeue_none_fit_cpu_too_small(self):
         limit = Resources(1000, 1)
-        self.add_jobs()
-        runnable = self.jrq.pop_runnable_jobs(limit)
+        self.queue_jobs()
+        runnable = self.jrq.dequeue(limit)
         self.assertEqual(len(runnable), 0)
 
-    def test_pop_runnable_jobs_one_fits(self):
+    def test_dequeue_one_fits(self):
         limit = Resources(250, 3)
-        self.add_jobs()
-        runnable = self.jrq.pop_runnable_jobs(limit)
+        self.queue_jobs()
+        runnable = self.jrq.dequeue(limit)
         self.assertIn(self.job200_2, runnable)
-        runnable = self.jrq.pop_runnable_jobs(limit)
+        runnable = self.jrq.dequeue(limit)
         self.assertEqual(len(runnable), 0)
 
-    def test_pop_runnable_jobs_one_at_a_time(self):
+    def test_dequeue_one_at_a_time(self):
         limit = Resources(250, 5)
-        self.add_jobs()
-        runnable = self.jrq.pop_runnable_jobs(limit)
+        self.queue_jobs()
+        runnable = self.jrq.dequeue(limit)
         self.assertEqual(len(runnable), 1)
-        runnable = self.jrq.pop_runnable_jobs(limit)
+        runnable = self.jrq.dequeue(limit)
         self.assertEqual(len(runnable), 1)
-        runnable = self.jrq.pop_runnable_jobs(limit)
+        runnable = self.jrq.dequeue(limit)
         self.assertEqual(len(runnable), 0)
 
     def test_smallest_cpu_first(self):
         self.jrq.priority = Resources.CPU
         self.jrq.descending = False
         limit = Resources(250, 5)
-        self.add_jobs()
-        runnable = self.jrq.pop_runnable_jobs(limit)
+        self.queue_jobs()
+        runnable = self.jrq.dequeue(limit)
         self.assertEqual(len(runnable), 1)
         self.assertIn(self.job200_2, runnable)
 
@@ -139,8 +139,8 @@ class JobResourceQueueTestCase(TestCase):
         self.jrq.priority = Resources.CPU
         self.jrq.descending = True
         limit = Resources(250, 5)
-        self.add_jobs()
-        runnable = self.jrq.pop_runnable_jobs(limit)
+        self.queue_jobs()
+        runnable = self.jrq.dequeue(limit)
         self.assertEqual(len(runnable), 1)
         self.assertIn(self.job100_4, runnable)
 
@@ -148,8 +148,8 @@ class JobResourceQueueTestCase(TestCase):
         self.jrq.priority = Resources.RAM
         self.jrq.descending = False
         limit = Resources(250, 5)
-        self.add_jobs()
-        runnable = self.jrq.pop_runnable_jobs(limit)
+        self.queue_jobs()
+        runnable = self.jrq.dequeue(limit)
         self.assertEqual(len(runnable), 1)
         self.assertIn(self.job100_4, runnable)
 
@@ -157,13 +157,13 @@ class JobResourceQueueTestCase(TestCase):
         self.jrq.priority = Resources.RAM
         self.jrq.descending = True
         limit = Resources(250, 5)
-        self.add_jobs()
-        runnable = self.jrq.pop_runnable_jobs(limit)
+        self.queue_jobs()
+        runnable = self.jrq.dequeue(limit)
         self.assertEqual(len(runnable), 1)
         self.assertIn(self.job200_2, runnable)
 
     def test_pop_runnable_exact_fit(self):
         limit = Resources(300, 6)
-        self.add_jobs()
-        runnable = self.jrq.pop_runnable_jobs(limit)
+        self.queue_jobs()
+        runnable = self.jrq.dequeue(limit)
         self.assertEqual(runnable, self.jobs)
