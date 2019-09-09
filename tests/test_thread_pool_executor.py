@@ -14,6 +14,7 @@ class ResourcesTestCase(TestCase):
         self.resource22 = Resources(2,2)
         self.resource33 = Resources(3,3)
         self.resource21 = Resources(2,1)
+        self.resource_neg = Resources(-1,0)
 
     def test_init(self):
         self.assertEqual(self.resource11.cpu, 1)
@@ -59,6 +60,10 @@ class ResourcesTestCase(TestCase):
         result = Resources.from_job(mock_job)
         self.assertEqual(result.ram, 4)
         self.assertEqual(result.cpu, 2)
+
+    def test_is_negative(self):
+        self.assertFalse(self.resource11.is_negative())
+        self.assertTrue(self.resource_neg.is_negative())
 
     def test_empty(self):
         self.assertEqual(Resources.EMPTY.ram, 0)
