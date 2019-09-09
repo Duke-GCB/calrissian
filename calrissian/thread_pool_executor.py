@@ -218,6 +218,7 @@ class ThreadPoolJobExecutor(JobExecutor):
             logger.error('Waiting for canceled futures to finish')
             wait(futures, return_when=ALL_COMPLETED)
             ex = self.exceptions.get()
+            # TODO: What if more than one exception exists?
             try:
                 raise ex
             except (WorkflowException, ValidationException):
