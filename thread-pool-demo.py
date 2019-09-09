@@ -1,4 +1,4 @@
-from thread_pool_executor import ThreadPoolJobExecutor
+from calrissian.thread_pool_executor import ThreadPoolJobExecutor
 import logging
 import time
 import threading
@@ -63,7 +63,7 @@ class RuntimeContext(object):
 def main():
     logging.getLogger('calrissian.executor'.format(log)).setLevel(logging.DEBUG)
     logging.getLogger('calrissian.executor'.format(log)).addHandler(logging.StreamHandler())
-    executor = ThreadPoolJobExecutor(total_cpu=16, total_ram=800, max_workers=5)
+    executor = ThreadPoolJobExecutor(total_cpu=16, total_ram=800)
     runtime_context = RuntimeContext()
     process = Process()
     job_order_object = {}
