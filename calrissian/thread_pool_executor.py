@@ -1,7 +1,7 @@
 import functools
 import logging
 import threading
-from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
+from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED, ALL_COMPLETED
 from queue import Queue
 
 from cwltool.errors import WorkflowException
@@ -196,11 +196,11 @@ class ThreadPoolJobExecutor(JobExecutor):
             # The Queue is thread safe so we dont need a lock, even though we're running on a background thread
             self.exceptions.put(future.exception())
 
-    def raise_queued_exceptions(self, pending_futures):
+    def raise_if_exception_queued(self, futures):
         """
         Method to run on the main thread that will raise a queued exception added by job_done_callback and
         cancel any outstanding futures
-        :param pending_futures: set of any futures that should be cancelled if we're about to raise an exception
+        :param futures: set of any futures that should be cancelled if we're about to raise an exception
         """
         # Code translated from SingleJobExecutor.run_jobs
         # It raises WorkflowExceptions and ValidationException directly.
@@ -209,9 +209,10 @@ class ThreadPoolJobExecutor(JobExecutor):
             # There's at least one exception, cancel all pending jobs
             # Note that cancel will only matter if there aren't enough available threads to start processing the job in
             # the first place. Once the function starts running it cannot be cancelled.
-            for f in pending_futures:
+            for f in futures:
                 f.cancel()
-            # TODO: Do we need to wait for cancellations to process?
+            # Wait for outstanding futures to finish up so that cleanup can happen
+            wait(futures, return_when=ALL_COMPLETED)
             ex = self.exceptions.get()
             try:
                 raise ex
@@ -253,16 +254,15 @@ class ThreadPoolJobExecutor(JobExecutor):
             if self.available_resources <= Resources.EMPTY:
                 raise InconsistentResourcesException(str(self.available_resources))
 
-    def process_queue(self, pool_executor, runtime_context, futures, raise_on_unavalable=False):
+    def process_queue(self, pool_executor, runtime_context, raise_on_unavalable=False):
         """
         Pulls jobs off the queue in groups that fit in currently available resources, allocates resources, and submits
         jobs to the pool_executor as Futures. Attaches a callback to each future to clean up (e.g. check
         for execptions, restore allocated resources)
         :param pool_executor: concurrent.futures.Executor: where job callables shall be submitted
         :param runtime_context: cwltool RuntimeContext: to provide to the job
-        :param futures: set: set to add submitted futures to (refactor this)
         :param raise_on_unavalable: Boolean: If True, raise an exception if no jobs can be run.
-        :return: None
+        :return: set: futures that were submitted on this invocation
         """
         runnable_jobs = self.jrq.dequeue(self.available_resources)  # Removes jobs from the queue
         if raise_on_unavalable and not runnable_jobs and not self.jrq.is_empty():
@@ -270,6 +270,7 @@ class ThreadPoolJobExecutor(JobExecutor):
             raise WorkflowException(
                 'Jobs queued but resources available {} cannot run any queued job: {}'.format(self.available_resources,
                                                                                               self.jrq))
+        submitted_futures = set()
         for job, rsc in runnable_jobs.items():
             if runtime_context.builder is not None:
                 job.builder = runtime_context.builder
@@ -281,21 +282,20 @@ class ThreadPoolJobExecutor(JobExecutor):
             # Callback will be invoked in a thread on the submitting process (but not the thread that submitted, this
             # clarification is mostly for process pool executors)
             future.add_done_callback(callback)
-            futures.add(future)
+            submitted_futures.add(future)
+        return submitted_futures
 
-    def wait_for_future_completion(self, futures):
+    def wait_for_completion(self, futures):
         """
         Using concurrent.futures.wait, wait for one of the futures in the set to complete, remove finished futures from
         the set, and check if any exceptions occurred.
         :param futures: set: A set of futures on which to wait
-        :return: None
+        :return: The set of futures that is not yet done
         """
         log.debug('wait_for_future_completion with {} futures'.format(len(futures)))
         wait_results = wait(futures, return_when=FIRST_COMPLETED)
-        # wait returns a NamedTuple (done, not_done).
-        [futures.remove(done) for done in wait_results.done]
-        # Check for queued exceptions and provide the not_done futures to be cancelled if exceptions occurred
-        self.raise_queued_exceptions(wait_results.not_done)
+        # wait returns a NamedTuple of done and not_done.
+        return wait_results.not_done
 
     def run_jobs(self, process, job_order_object, logger, runtime_context):
         """
@@ -336,10 +336,14 @@ class ThreadPoolJobExecutor(JobExecutor):
                 else:
                     # The job iterator yielded None. That means we're not done with the workflow but a dependency has
                     # not yet finished
-                    self.process_queue(pool_executor, runtime_context, futures, raise_on_unavalable=True)
+                    # TODO: If this raises, the lock will not be released
+                    submitted = self.process_queue(pool_executor, runtime_context, raise_on_unavalable=True)
+                    futures.update(submitted)
+                    # Release the lock, because jobs will need it to complete.
                     runtime_context.workflow_eval_lock.release()
-                    # This currently deadlocks because we have the lock but the finishing job can't finish
-                    self.wait_for_future_completion(futures)
+                    futures = self.wait_for_completion(futures)
+                    self.raise_if_exception_queued(futures)
+                    # Re-acquire the lock for the next loop cycle
                     runtime_context.workflow_eval_lock.acquire()
             runtime_context.workflow_eval_lock.release()
 
@@ -347,9 +351,10 @@ class ThreadPoolJobExecutor(JobExecutor):
             while True:
                 with runtime_context.workflow_eval_lock:
                     # Taking the lock to process the queue
-                    self.process_queue(pool_executor, runtime_context, futures)  # submits jobs as futures
+                    submitted = self.process_queue(pool_executor, runtime_context)  # submits jobs as futures
+                    futures.update(submitted)
                 # Wait for one to complete
-                self.wait_for_future_completion(futures)
+                futures = self.wait_for_completion(futures)
                 with runtime_context.workflow_eval_lock:  # Why do we need the lock here?
                     # Check if we're done with pending jobs and submitted jobs
                     if not futures and self.jrq.is_empty():
