@@ -1,20 +1,22 @@
+from concurrent.futures import Future
 from unittest import TestCase
-from calrissian.thread_pool_executor import *
 from unittest.mock import patch, call, Mock
 
+from calrissian.thread_pool_executor import *
 
-def make_mock_job(ram, cpu):
-    return Mock(builder=Mock(resources={'ram': ram, 'cpu': cpu}))
+
+def make_mock_job(resources):
+    return Mock(builder=Mock(resources={'ram': resources.ram, 'cpu': resources.cpu}))
 
 
 class ResourcesTestCase(TestCase):
 
     def setUp(self):
-        self.resource11 = Resources(1,1)
-        self.resource22 = Resources(2,2)
-        self.resource33 = Resources(3,3)
-        self.resource21 = Resources(2,1)
-        self.resource_neg = Resources(-1,0)
+        self.resource11 = Resources(1, 1)
+        self.resource22 = Resources(2, 2)
+        self.resource33 = Resources(3, 3)
+        self.resource21 = Resources(2, 1)
+        self.resource_neg = Resources(-1, 0)
 
     def test_init(self):
         self.assertEqual(self.resource11.cpu, 1)
@@ -52,11 +54,11 @@ class ResourcesTestCase(TestCase):
         self.assertFalse(self.resource21 > self.resource11)
 
     def test_eq(self):
-        other = Resources(1,1)
+        other = Resources(1, 1)
         self.assertEqual(self.resource11, other)
 
     def test_from_job(self):
-        mock_job = make_mock_job(4, 2)
+        mock_job = make_mock_job(Resources(4, 2))
         result = Resources.from_job(mock_job)
         self.assertEqual(result.ram, 4)
         self.assertEqual(result.cpu, 2)
@@ -64,6 +66,11 @@ class ResourcesTestCase(TestCase):
     def test_is_negative(self):
         self.assertFalse(self.resource11.is_negative())
         self.assertTrue(self.resource_neg.is_negative())
+
+    def test_exceeds(self):
+        self.assertTrue(self.resource21.exceeds(self.resource11))
+        self.assertFalse(self.resource11.exceeds(self.resource21))
+        self.assertFalse(self.resource21.exceeds(self.resource21))
 
     def test_empty(self):
         self.assertEqual(Resources.EMPTY.ram, 0)
@@ -74,9 +81,11 @@ class JobResourceQueueTestCase(TestCase):
 
     def setUp(self):
         self.jrq = JobResourceQueue()
-        self.job100_4 = make_mock_job(100, 4)   # 100 RAM, 2 CPU
-        self.job200_2 = make_mock_job(200, 2)   # 200 RAM, 4 CPU
-        self.jobs = {self.job100_4: Resources(100, 4), self.job200_2: Resources(200,2)}
+        r100_4 = Resources(100, 4)
+        r200_2 = Resources(200, 2)
+        self.job100_4 = make_mock_job(r100_4)  # 100 RAM, 2 CPU
+        self.job200_2 = make_mock_job(r200_2)  # 200 RAM, 4 CPU
+        self.jobs = {self.job100_4: r100_4, self.job200_2: r200_2}
 
     def queue_jobs(self):
         for j in self.jobs:
@@ -172,3 +181,116 @@ class JobResourceQueueTestCase(TestCase):
         self.queue_jobs()
         runnable = self.jrq.dequeue(limit)
         self.assertEqual(runnable, self.jobs)
+
+
+class ThreadPoolJobExecutorTestCase(TestCase):
+
+    def setUp(self):
+        self.executor = ThreadPoolJobExecutor(1000, 2)
+        self.workflow_exception = WorkflowException('workflow exception')
+        self.logger = Mock()
+
+    def test_init(self):
+        expected_resources = Resources(1000, 2)
+        self.assertEqual(self.executor.total_resources, expected_resources)
+        self.assertEqual(self.executor.available_resources, expected_resources)
+        self.assertIsNone(self.executor.max_workers)
+        self.assertIsNotNone(self.executor.jrq)
+        self.assertIsNotNone(self.executor.exceptions)
+        self.assertIsNotNone(self.executor.resources_lock)
+
+    def test_allocate(self):
+        resource = Resources(200, 1)
+        self.executor.allocate(resource, self.logger)
+        self.assertEqual(self.executor.available_resources, Resources(800, 1))
+
+    def test_restore(self):
+        resource = Resources(200, 1)
+        self.executor.available_resources = Resources(800, 1)
+        self.executor.restore(resource, self.logger)
+        self.assertEqual(self.executor.available_resources, self.executor.total_resources)
+
+    def test_allocate_too_much_raises(self):
+        resource = Resources(10000, 1)
+        self.assertTrue(resource.exceeds(self.executor.available_resources))
+        self.assertEqual(self.executor.available_resources, self.executor.total_resources)
+        with self.assertRaisesRegex(InconsistentResourcesException, 'Available resources are negative'):
+            self.executor.allocate(resource, self.logger)
+
+    def test_restore_over_total_raises(self):
+        self.assertEqual(self.executor.available_resources, self.executor.total_resources)
+        with self.assertRaisesRegex(InconsistentResourcesException, 'Available resources exceeds total'):
+            self.executor.restore(Resources(200, 1), self.logger)
+
+    def test_restore_only_cpu_over_total_raises(self):
+        with self.assertRaisesRegex(InconsistentResourcesException, 'Available resources exceeds total'):
+            self.executor.restore(Resources(0, 1), self.logger)
+
+    @patch('calrissian.thread_pool_executor.wait')
+    def test_raise_if_exception_queued_raises_and_waits(self, mock_wait):
+        futures = {}
+        self.executor.exceptions.put(self.workflow_exception)
+        with self.assertRaisesRegex(WorkflowException, 'workflow exception'):
+            self.executor.raise_if_exception_queued(futures, self.logger)
+        self.assertTrue(mock_wait.called)
+
+    @patch('calrissian.thread_pool_executor.wait')
+    def test_raise_if_exception_queued_does_nothing_when_no_exceptions(self, mock_wait):
+        futures = {}
+        self.assertTrue(self.executor.exceptions.empty())
+        self.executor.raise_if_exception_queued(futures, self.logger)
+        self.assertFalse(mock_wait.called)  # wait should only be called to wait for outstanding futures
+
+    def test_raise_if_oversized_raises_with_oversized(self):
+        rsc = Resources(100, 4)
+        self.assertTrue(rsc.exceeds(self.executor.total_resources))
+        job = make_mock_job(rsc)
+        with self.assertRaisesRegex(OversizedJobException, 'exceed total'):
+            self.executor.raise_if_oversized(job)
+
+    def test_raise_if_oversized_does_nothing(self):
+        rsc = Resources(100, 1)
+        self.assertFalse(rsc.exceeds(self.executor.total_resources))
+        job = make_mock_job(rsc)
+        self.executor.raise_if_oversized(job)
+
+    def test_restore_raises(self):
+        large_resource = Resources(2000, 4)
+        self.assertTrue(large_resource > self.executor.total_resources)
+        # self.executor.restore(large_resource, self.logger)
+        # self.assertTrue(self.executor.available_resources < Resources.EMPTY)
+
+    @patch('calrissian.thread_pool_executor.ThreadPoolJobExecutor.restore')
+    def test_job_done_callback_extracts_future_exception(self, mock_restore):
+        future = Future()
+        future.set_exception(self.workflow_exception)
+        rsc = Mock()
+        self.executor.job_done_callback(rsc, self.logger, future)
+        self.assertEqual(self.workflow_exception, self.executor.exceptions.get())
+        self.assertEqual(mock_restore.call_args, call(rsc, self.logger))
+
+    @patch('calrissian.thread_pool_executor.ThreadPoolJobExecutor.restore')
+    def test_job_done_callback_bails_out_if_canceled(self, mock_restore):
+        future = Future()
+        future.cancel()
+        self.assertTrue(future.cancelled())
+        rsc = Mock()
+        self.executor.job_done_callback(rsc, self.logger, future)
+        self.assertEqual(mock_restore.call_args, call(rsc, self.logger))
+        self.assertTrue(self.executor.exceptions.empty())
+
+    @patch('calrissian.thread_pool_executor.ThreadPoolJobExecutor.restore')
+    def test_job_done_callback_catches_restore_exception(self, mock_restore):
+        exception = InconsistentResourcesException('inconsistent resources')
+        mock_restore.side_effect = exception
+        self.executor.job_done_callback(Resources(1, 1), self.logger, Mock())
+        self.assertEqual(exception, self.executor.exceptions.get())
+
+    def test_process_queue(self):
+        pass
+
+    def test_wait_for_completion(self):
+        pass
+
+    def test_run_jobs(self):
+        pass

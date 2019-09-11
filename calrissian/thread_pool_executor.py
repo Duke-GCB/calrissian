@@ -66,6 +66,9 @@ class Resources(object):
     def is_negative(self):
         return self.ram < 0 or self.cpu < 0
 
+    def exceeds(self, other):
+        return self.ram > other.ram or self.cpu > other.cpu
+
     @classmethod
     def from_job(cls, job):
         ram = job.builder.resources.get(cls.RAM, 0)
@@ -162,15 +165,9 @@ class ThreadPoolJobExecutor(JobExecutor):
         self.max_workers = max_workers
         self.jrq = JobResourceQueue()
         self.exceptions = Queue()
-        self.futures = set()
         self.total_resources = Resources(total_ram, total_cpu)
-        self.allocated_resources = Resources()
+        self.available_resources = Resources(total_ram, total_cpu) # start with entire pool available
         self.resources_lock = threading.RLock()
-
-    @property
-    def available_resources(self):
-        with self.resources_lock:
-            return self.total_resources - self.allocated_resources
 
     def job_done_callback(self, rsc, logger, future):
         """
@@ -184,8 +181,11 @@ class ThreadPoolJobExecutor(JobExecutor):
         :param future: A concurrent.futures.Future representing the finished task. May be in cancelled or done states
         """
 
-        # Always restore the resources
-        self.restore(rsc, logger)
+        # Always restore the resources.
+        try:
+            self.restore(rsc, logger)
+        except Exception as ex:
+            self.exceptions.put(ex)
 
         # if the future was cancelled, there is no more work to do. Bail out now because calling result() or
         # exception() on a cancelled future would raise a CancelledError in this scope.
@@ -233,9 +233,20 @@ class ThreadPoolJobExecutor(JobExecutor):
         :param job: Job to check resources
         """
         rsc = Resources.from_job(job)
-        if not rsc <= self.total_resources:
-            raise OversizedJobException('Job {} requires resources {} that exceed total resources {}'.
+        if rsc.exceeds(self.total_resources):
+            raise OversizedJobException('Job {} resources {} exceed total resources {}'.
                                         format(job, rsc, self.total_resources))
+
+    def _account(self, rsc):
+        with self.resources_lock:
+            self.available_resources += rsc
+            # Check if overallocated
+            if self.available_resources.is_negative():
+                raise InconsistentResourcesException('Available resources are negative: {}'.
+                                                     format(self.available_resources))
+            elif self.available_resources.exceeds(self.total_resources):
+                raise InconsistentResourcesException('Available resources exceeds total. Available: {}, Total: {}'.
+                                                     format(self.available_resources, self.total_resources))
 
     def allocate(self, rsc, logger):
         """
@@ -243,11 +254,8 @@ class ThreadPoolJobExecutor(JobExecutor):
         :param rsc: A Resources object to reserve from the total.
         :param logger: logger where messages shall be logged
         """
-        with self.resources_lock:
-            self.allocated_resources += rsc
-            logger.debug('allocate {}, available {}'.format(rsc, self.available_resources))
-            if self.available_resources.is_negative():
-                raise InconsistentResourcesException(str(self.available_resources))
+        logger.debug('allocate {} from available {}'.format(rsc, self.available_resources))
+        self._account(-rsc)
 
     def restore(self, rsc, logger):
         """
@@ -255,11 +263,8 @@ class ThreadPoolJobExecutor(JobExecutor):
         :param rsc: A Resources object to restore to the total
         :param logger: logger where messages shall be logged
         """
-        with self.resources_lock:
-            self.allocated_resources -= rsc
-            logger.debug('restore {}, available {}'.format(rsc, self.available_resources))
-            if self.available_resources.is_negative():
-                raise InconsistentResourcesException(str(self.available_resources))
+        logger.debug('restore {} to available {}'.format(rsc, self.available_resources))
+        self._account(rsc)
 
     def process_queue(self, pool_executor, logger, runtime_context, raise_on_unavalable=False):
         """
