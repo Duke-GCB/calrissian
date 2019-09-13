@@ -228,18 +228,33 @@ class ThreadPoolJobExecutorTestCase(TestCase):
 
     @patch('calrissian.thread_pool_executor.wait')
     def test_raise_if_exception_queued_raises_and_waits(self, mock_wait):
-        futures = {}
         self.executor.exceptions.put(self.workflow_exception)
         with self.assertRaisesRegex(WorkflowException, 'workflow exception'):
-            self.executor.raise_if_exception_queued(futures, self.logger)
+            self.executor.raise_if_exception_queued({}, self.logger)
+        self.assertTrue(mock_wait.called)
+
+    @patch('calrissian.thread_pool_executor.wait')
+    def test_raise_if_exception_queued_casts_to_workflow_exception(self, mock_wait):
+        self.executor.exceptions.put(Exception('generic exception'))
+        with self.assertRaisesRegex(WorkflowException, 'generic exception'):
+            self.executor.raise_if_exception_queued({}, self.logger)
         self.assertTrue(mock_wait.called)
 
     @patch('calrissian.thread_pool_executor.wait')
     def test_raise_if_exception_queued_does_nothing_when_no_exceptions(self, mock_wait):
-        futures = {}
         self.assertTrue(self.executor.exceptions.empty())
-        self.executor.raise_if_exception_queued(futures, self.logger)
+        self.executor.raise_if_exception_queued({}, self.logger)
         self.assertFalse(mock_wait.called)  # wait should only be called to wait for outstanding futures
+
+    @patch('calrissian.thread_pool_executor.wait')
+    def test_raise_if_exception_queued_cancels_futures(self, mock_wait):
+        future = Future()
+        self.assertFalse(future.cancelled()) # not initially cancelled
+        self.executor.exceptions.put(self.workflow_exception)
+        with self.assertRaisesRegex(WorkflowException, 'workflow exception'):
+            self.executor.raise_if_exception_queued({future}, self.logger)
+        self.assertTrue(mock_wait.called)
+        self.assertTrue(future.cancelled()) # cancelled after exception called
 
     def test_raise_if_oversized_raises_with_oversized(self):
         rsc = Resources(100, 4)
