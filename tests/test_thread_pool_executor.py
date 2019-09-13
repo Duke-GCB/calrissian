@@ -301,11 +301,19 @@ class ThreadPoolJobExecutorTestCase(TestCase):
         self.executor.job_done_callback(Resources(1, 1), self.logger, Mock())
         self.assertEqual(exception, self.executor.exceptions.get())
 
-    def test_process_queue(self):
+    def test_start_queued_jobs(self):
+        # calls dequeue
+        # adds builder and outptu_dirs
+        # allocates resources
+        # submits a future
+        # returns set of submitted futures
         pass
 
     def test_wait_for_completion(self):
+        # calls wait
+        # returns not_done
         pass
 
-    def test_run_jobs(self):
+    def test_enqueue_jobs_from_iterator(self):
+        #TODO: Pick up here.
         pass
