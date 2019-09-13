@@ -182,6 +182,13 @@ class JobResourceQueueTestCase(TestCase):
         runnable = self.jrq.dequeue(limit)
         self.assertEqual(runnable, self.jobs)
 
+    def test_is_empty(self):
+        self.assertTrue(self.jrq.is_empty())
+        self.queue_jobs()
+        self.assertFalse(self.jrq.is_empty())
+        self.jrq.dequeue(Resources(300, 6))
+        self.assertTrue(self.jrq.is_empty())
+
 
 class ThreadPoolJobExecutorTestCase(TestCase):
 
@@ -301,19 +308,42 @@ class ThreadPoolJobExecutorTestCase(TestCase):
         self.executor.job_done_callback(Resources(1, 1), self.logger, Mock())
         self.assertEqual(exception, self.executor.exceptions.get())
 
-    def test_start_queued_jobs(self):
-        # calls dequeue
-        # adds builder and outptu_dirs
-        # allocates resources
-        # submits a future
-        # returns set of submitted futures
-        pass
+    @patch('calrissian.thread_pool_executor.JobResourceQueue.dequeue')
+    @patch('calrissian.thread_pool_executor.ThreadPoolJobExecutor.allocate')
+    def test_start_queued_jobs(self, mock_allocate, mock_dequeue):
+        job_resources = [Resources(100,1), Resources(200,2)]
+        mock_runnable_jobs = { make_mock_job(r): r for r in job_resources }
+        mock_dequeue.return_value = mock_runnable_jobs
+        pool_executor = Mock()
+        mock_future = Mock()
+        pool_executor.submit.return_value = mock_future
+        mock_runtime_context = Mock(builder=Mock())
+        result = self.executor.start_queued_jobs(pool_executor, self.logger, mock_runtime_context )
+        self.assertEqual(mock_dequeue.call_args, call(self.executor.available_resources))
 
-    def test_wait_for_completion(self):
-        # calls wait
-        # returns not_done
-        pass
+        # allocates resources
+        self.assertEqual(mock_allocate.call_args_list, [
+            call(job_resources[0], self.logger),
+            call(job_resources[1], self.logger)
+        ])
+        # connects builder and output_dirs
+        self.assertTrue(all([j.builder == mock_runtime_context.builder for j in mock_runnable_jobs]))
+        self.assertEqual(self.executor.output_dirs, {j.outdir for j in mock_runnable_jobs})
+
+        # submits a future
+        self.assertEqual(pool_executor.submit.call_args_list, [
+            call(j.run, mock_runtime_context) for j in mock_runnable_jobs
+        ])
+        # returns set of submitted futures
+        self.assertIn(mock_future, result)
+
+    @patch('calrissian.thread_pool_executor.wait')
+    @patch('calrissian.thread_pool_executor.FIRST_COMPLETED')
+    def test_wait_for_completion(self, mock_first_completed, mock_wait):
+        mock_futures = {Mock()}
+        result = self.executor.wait_for_completion(mock_futures, self.logger)
+        self.assertEqual(result, mock_wait.return_value.not_done)
+        self.assertEqual(mock_wait.call_args, call(mock_futures, return_when=mock_first_completed))
 
     def test_enqueue_jobs_from_iterator(self):
-        #TODO: Pick up here.
         pass
