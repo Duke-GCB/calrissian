@@ -40,7 +40,7 @@ class LoadConfigTestCase(TestCase):
 
 
 @patch('calrissian.k8s.client', autospec=True)
-@patch('calrissian.k8s.load_config_get_namespace')
+@patch('calrissian.k8s.load_config_get_namespace', autospec=True)
 class KubernetesClientTestCase(TestCase):
 
     def test_init(self, mock_get_namespace, mock_client):
@@ -82,7 +82,7 @@ class KubernetesClientTestCase(TestCase):
         mock_pod = create_autospec(V1Pod, metadata=mock_metadata)
         return mock_pod
 
-    @patch('calrissian.k8s.watch')
+    @patch('calrissian.k8s.watch', autospec=True)
     def test_wait_calls_watch_pod_with_pod_name_field_selector(self, mock_watch, mock_get_namespace, mock_client):
         self.setup_mock_watch(mock_watch)
         mock_pod = self.make_mock_pod('test123')
@@ -93,7 +93,7 @@ class KubernetesClientTestCase(TestCase):
         self.assertEqual(mock_stream.call_args, call(kc.core_api_instance.list_namespaced_pod, kc.namespace,
                                                      field_selector='metadata.name=test123'))
 
-    @patch('calrissian.k8s.watch')
+    @patch('calrissian.k8s.watch', autospec=True)
     def test_wait_skips_pod_when_status_is_none(self, mock_watch, mock_get_namespace, mock_client):
         mock_pod = Mock(status=Mock(container_statuses=None))
         self.setup_mock_watch(mock_watch, [mock_pod])
@@ -104,7 +104,7 @@ class KubernetesClientTestCase(TestCase):
         self.assertFalse(mock_client.CoreV1Api.return_value.delete_namespaced_pod.called)
         self.assertIsNotNone(kc.pod)
 
-    @patch('calrissian.k8s.watch')
+    @patch('calrissian.k8s.watch', autospec=True)
     def test_wait_skips_pod_when_state_is_waiting(self, mock_watch, mock_get_namespace, mock_client):
         mock_pod = create_autospec(V1Pod)
         mock_pod.status.container_statuses[0].state = Mock(running=None, waiting=True, terminated=None)
@@ -116,7 +116,7 @@ class KubernetesClientTestCase(TestCase):
         self.assertFalse(mock_client.CoreV1Api.return_value.delete_namespaced_pod.called)
         self.assertIsNotNone(kc.pod)
 
-    @patch('calrissian.k8s.watch')
+    @patch('calrissian.k8s.watch', autospec=True)
     @patch('calrissian.k8s.KubernetesClient.follow_logs')
     def test_wait_follows_logs_pod_when_state_is_running(self, mock_follow_logs, mock_watch, mock_get_namespace, mock_client):
         mock_pod = create_autospec(V1Pod)
@@ -130,7 +130,7 @@ class KubernetesClientTestCase(TestCase):
         self.assertIsNotNone(kc.pod)
         self.assertTrue(mock_follow_logs.called)
 
-    @patch('calrissian.k8s.watch')
+    @patch('calrissian.k8s.watch', autospec=True)
     @patch('calrissian.k8s.PodMonitor')
     @patch('calrissian.k8s.KubernetesClient._extract_cpu_memory_requests')
     def test_wait_finishes_when_pod_state_is_terminated(self, mock_cpu_memory,
@@ -150,7 +150,7 @@ class KubernetesClientTestCase(TestCase):
         # This is to inspect `with PodMonitor() as monitor`:
         self.assertTrue(mock_podmonitor.return_value.__enter__.return_value.remove.called)
 
-    @patch('calrissian.k8s.watch')
+    @patch('calrissian.k8s.watch', autospec=True)
     @patch('calrissian.k8s.KubernetesClient.should_delete_pod')
     @patch('calrissian.k8s.KubernetesClient._extract_cpu_memory_requests')
     def test_wait_checks_should_delete_when_pod_state_is_terminated(self,
@@ -171,7 +171,7 @@ class KubernetesClientTestCase(TestCase):
         self.assertFalse(mock_client.CoreV1Api.return_value.delete_namespaced_pod.called)
         self.assertIsNone(kc.pod)
 
-    @patch('calrissian.k8s.watch')
+    @patch('calrissian.k8s.watch', autospec=True)
     def test_wait_raises_exception_when_state_is_unexpected(self, mock_watch, mock_get_namespace, mock_client):
         mock_pod = create_autospec(V1Pod)
         mock_pod.status.container_statuses[0].state = Mock(running=None, waiting=None, terminated=None)

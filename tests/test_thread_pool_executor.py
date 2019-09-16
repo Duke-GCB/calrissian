@@ -455,7 +455,7 @@ class ThreadPoolJobExecutorQueueingTestCase(ThreadPoolJobExecutorTestCase):
         with self.assertRaisesRegex(WorkflowException, 'workflow_eval_lock must not be None'):
             self.executor.run_jobs(mock_process, mock_job_order, self.logger, mock_runtime_context)
 
-    @patch('calrissian.thread_pool_executor.ThreadPoolExecutor', create_autospec=True)
+    @patch('calrissian.thread_pool_executor.ThreadPoolExecutor', autospec=True)
     @patch('calrissian.thread_pool_executor.ThreadPoolJobExecutor.enqueue_jobs_from_iterator')
     @patch('calrissian.thread_pool_executor.ThreadPoolJobExecutor.drain_queue')
     def test_run_jobs(self, mock_drain_queue, mock_enqueue_jobs, mock_thread_pool_executor):
