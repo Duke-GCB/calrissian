@@ -1,4 +1,4 @@
-from calrissian.thread_pool_executor import ThreadPoolJobExecutor
+from calrissian.executor import ThreadPoolJobExecutor
 from calrissian.context import CalrissianLoadingContext, CalrissianRuntimeContext
 from calrissian.version import version
 from calrissian.k8s import delete_pods

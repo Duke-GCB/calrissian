@@ -1,8 +1,11 @@
-from concurrent.futures import Future
+from concurrent.futures import Future, ThreadPoolExecutor
+import threading
 from unittest import TestCase
 from unittest.mock import patch, call, Mock, create_autospec
 
-from calrissian.thread_pool_executor import *
+from calrissian.executor import Resources, JobResourceQueue, ThreadPoolJobExecutor
+from calrissian.executor import DuplicateJobException, OversizedJobException, InconsistentResourcesException
+from cwltool.errors import WorkflowException
 
 
 def make_mock_job(resources):
@@ -280,27 +283,27 @@ class ThreadPoolJobExecutorTestCase(TestCase):
         with self.assertRaisesRegex(InconsistentResourcesException, 'Available resources exceeds total'):
             self.executor.restore(Resources(0, 1), self.logger)
 
-    @patch('calrissian.thread_pool_executor.wait')
+    @patch('calrissian.executor.wait')
     def test_raise_if_exception_queued_raises_and_waits(self, mock_wait):
         self.executor.exceptions.put(self.workflow_exception)
         with self.assertRaisesRegex(WorkflowException, 'workflow exception'):
             self.executor.raise_if_exception_queued({}, self.logger)
         self.assertTrue(mock_wait.called)
 
-    @patch('calrissian.thread_pool_executor.wait')
+    @patch('calrissian.executor.wait')
     def test_raise_if_exception_queued_casts_to_workflow_exception(self, mock_wait):
         self.executor.exceptions.put(Exception('generic exception'))
         with self.assertRaisesRegex(WorkflowException, 'generic exception'):
             self.executor.raise_if_exception_queued({}, self.logger)
         self.assertTrue(mock_wait.called)
 
-    @patch('calrissian.thread_pool_executor.wait')
+    @patch('calrissian.executor.wait')
     def test_raise_if_exception_queued_does_nothing_when_no_exceptions(self, mock_wait):
         self.assertTrue(self.executor.exceptions.empty())
         self.executor.raise_if_exception_queued({}, self.logger)
         self.assertFalse(mock_wait.called)  # wait should only be called to wait for outstanding futures
 
-    @patch('calrissian.thread_pool_executor.wait')
+    @patch('calrissian.executor.wait')
     def test_raise_if_exception_queued_cancels_futures(self, mock_wait):
         future = Future()
         self.assertFalse(future.cancelled())  # not initially cancelled
@@ -329,7 +332,7 @@ class ThreadPoolJobExecutorTestCase(TestCase):
         # self.executor.restore(large_resource, self.logger)
         # self.assertTrue(self.executor.available_resources < Resources.EMPTY)
 
-    @patch('calrissian.thread_pool_executor.ThreadPoolJobExecutor.restore')
+    @patch('calrissian.executor.ThreadPoolJobExecutor.restore')
     def test_job_done_callback_extracts_future_exception(self, mock_restore):
         future = Future()
         future.set_exception(self.workflow_exception)
@@ -338,7 +341,7 @@ class ThreadPoolJobExecutorTestCase(TestCase):
         self.assertEqual(self.workflow_exception, self.executor.exceptions.get())
         self.assertEqual(mock_restore.call_args, call(rsc, self.logger))
 
-    @patch('calrissian.thread_pool_executor.ThreadPoolJobExecutor.restore')
+    @patch('calrissian.executor.ThreadPoolJobExecutor.restore')
     def test_job_done_callback_bails_out_if_canceled(self, mock_restore):
         future = Future()
         future.cancel()
@@ -348,15 +351,15 @@ class ThreadPoolJobExecutorTestCase(TestCase):
         self.assertEqual(mock_restore.call_args, call(rsc, self.logger))
         self.assertTrue(self.executor.exceptions.empty())
 
-    @patch('calrissian.thread_pool_executor.ThreadPoolJobExecutor.restore')
+    @patch('calrissian.executor.ThreadPoolJobExecutor.restore')
     def test_job_done_callback_catches_restore_exception(self, mock_restore):
         exception = InconsistentResourcesException('inconsistent resources')
         mock_restore.side_effect = exception
         self.executor.job_done_callback(Resources(1, 1), self.logger, Mock())
         self.assertEqual(exception, self.executor.exceptions.get())
 
-    @patch('calrissian.thread_pool_executor.JobResourceQueue.dequeue')
-    @patch('calrissian.thread_pool_executor.ThreadPoolJobExecutor.allocate')
+    @patch('calrissian.executor.JobResourceQueue.dequeue')
+    @patch('calrissian.executor.ThreadPoolJobExecutor.allocate')
     def test_start_queued_jobs(self, mock_allocate, mock_dequeue):
         job_resources = [Resources(100, 1), Resources(200, 2)]
         mock_runnable_jobs = {make_mock_job(r): r for r in job_resources}
@@ -384,8 +387,8 @@ class ThreadPoolJobExecutorTestCase(TestCase):
         # returns set of submitted futures
         self.assertIn(mock_future, result)
 
-    @patch('calrissian.thread_pool_executor.wait')
-    @patch('calrissian.thread_pool_executor.FIRST_COMPLETED')
+    @patch('calrissian.executor.wait')
+    @patch('calrissian.executor.FIRST_COMPLETED')
     def test_wait_for_completion(self, mock_first_completed, mock_wait):
         mock_futures = {Mock()}
         result = self.executor.wait_for_completion(mock_futures, self.logger)
@@ -418,9 +421,9 @@ class ThreadPoolJobExecutorQueueingTestCase(ThreadPoolJobExecutorTestCase):
         for j in iterable:
             yield j
 
-    @patch('calrissian.thread_pool_executor.JobResourceQueue.enqueue')
-    @patch('calrissian.thread_pool_executor.ThreadPoolJobExecutor.raise_if_oversized')
-    @patch('calrissian.thread_pool_executor.ThreadPoolJobExecutor.start_queued_jobs')
+    @patch('calrissian.executor.JobResourceQueue.enqueue')
+    @patch('calrissian.executor.ThreadPoolJobExecutor.raise_if_oversized')
+    @patch('calrissian.executor.ThreadPoolJobExecutor.start_queued_jobs')
     def test_enqueues_jobs_simple(self, mock_start_queued_jobs, mock_raise_if_oversized, mock_enqueue):
         manager = Mock()
         manager.attach_mock(mock_enqueue, 'enqueue')
@@ -439,10 +442,10 @@ class ThreadPoolJobExecutorQueueingTestCase(ThreadPoolJobExecutorTestCase):
         self.assertEqual(expected_calls, manager.mock_calls)
         self.assertEqual(result, set())  # Nothing submitted, futures should be an empty set
 
-    @patch('calrissian.thread_pool_executor.JobResourceQueue.enqueue')
-    @patch('calrissian.thread_pool_executor.ThreadPoolJobExecutor.raise_if_oversized')
-    @patch('calrissian.thread_pool_executor.ThreadPoolJobExecutor.start_queued_jobs')
-    @patch('calrissian.thread_pool_executor.ThreadPoolJobExecutor.wait_for_completion')
+    @patch('calrissian.executor.JobResourceQueue.enqueue')
+    @patch('calrissian.executor.ThreadPoolJobExecutor.raise_if_oversized')
+    @patch('calrissian.executor.ThreadPoolJobExecutor.start_queued_jobs')
+    @patch('calrissian.executor.ThreadPoolJobExecutor.wait_for_completion')
     def test_enqueues_jobs_with_none(self, mock_wait_for_completion, mock_start_queued_jobs,
                                      mock_raise_if_oversized, mock_enqueue):
         mock_waited_futures = Mock()
@@ -467,9 +470,9 @@ class ThreadPoolJobExecutorQueueingTestCase(ThreadPoolJobExecutorTestCase):
         self.assertEqual(mock_enqueue.call_args_list, [call(j) for j in self.jobs_with_none if j])
         self.assertEqual(result, mock_waited_futures)
 
-    @patch('calrissian.thread_pool_executor.JobResourceQueue.is_empty')
-    @patch('calrissian.thread_pool_executor.ThreadPoolJobExecutor.start_queued_jobs')
-    @patch('calrissian.thread_pool_executor.ThreadPoolJobExecutor.wait_for_completion')
+    @patch('calrissian.executor.JobResourceQueue.is_empty')
+    @patch('calrissian.executor.ThreadPoolJobExecutor.start_queued_jobs')
+    @patch('calrissian.executor.ThreadPoolJobExecutor.wait_for_completion')
     def test_drain_queue(self, mock_wait_for_completion, mock_start_queued_jobs, mock_is_empty):
         mock_is_empty.return_value = True
         initial_futures = {'initial'}
@@ -494,11 +497,11 @@ class ThreadPoolJobExecutorQueueingTestCase(ThreadPoolJobExecutorTestCase):
         with self.assertRaisesRegex(WorkflowException, 'workflow_eval_lock must not be None'):
             self.executor.run_jobs(mock_process, mock_job_order, self.logger, mock_runtime_context)
 
-    @patch('calrissian.thread_pool_executor.ThreadPoolExecutor', autospec=True)
-    @patch('calrissian.thread_pool_executor.ThreadPoolJobExecutor.enqueue_jobs_from_iterator')
-    @patch('calrissian.thread_pool_executor.ThreadPoolJobExecutor.drain_queue')
-    def test_run_jobs(self, mock_drain_queue, mock_enqueue_jobs, mock_thread_pool_executor):
-        mock_context_executor = mock_thread_pool_executor.return_value.__enter__.return_value
+    @patch('calrissian.executor.ThreadPoolExecutor', autospec=True)
+    @patch('calrissian.executor.ThreadPoolJobExecutor.enqueue_jobs_from_iterator')
+    @patch('calrissian.executor.ThreadPoolJobExecutor.drain_queue')
+    def test_run_jobs(self, mock_drain_queue, mock_enqueue_jobs, mock_executor):
+        mock_context_executor = mock_executor.return_value.__enter__.return_value
         mock_job_order = Mock()
         mock_process = Mock()
         mock_job_iterator = Mock()
