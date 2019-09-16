@@ -1,4 +1,6 @@
 from kubernetes import client, config, watch
+from kubernetes.client.api_client import ApiException
+from kubernetes.config.config_exception import ConfigException
 import threading
 import logging
 import os
@@ -27,7 +29,7 @@ def load_config_get_namespace():
     try:
         config.load_incluster_config() # raises if not in cluster
         namespace = read_file(K8S_NAMESPACE_FILE)
-    except config.config_exception.ConfigException:
+    except ConfigException:
         config.load_kube_config()
         namespace = K8S_FALLBACK_NAMESPACE
     return namespace
@@ -90,7 +92,7 @@ class KubernetesClient(object):
     def delete_pod_name(self, pod_name):
         try:
             self.core_api_instance.delete_namespaced_pod(pod_name, self.namespace, client.V1DeleteOptions())
-        except client.rest.ApiException as e:
+        except ApiException as e:
             raise CalrissianJobException('Error deleting pod named {}'.format(pod_name), e)
 
     def _handle_completion(self, state, container):
