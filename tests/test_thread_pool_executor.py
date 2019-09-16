@@ -6,7 +6,7 @@ from calrissian.thread_pool_executor import *
 
 
 def make_mock_job(resources):
-    return Mock(builder=Mock(resources={'ram': resources.ram, 'cpu': resources.cpu}))
+    return Mock(builder=Mock(resources={'ram': resources.ram, 'cores': resources.cores}))
 
 
 class ResourcesTestCase(TestCase):
@@ -19,29 +19,29 @@ class ResourcesTestCase(TestCase):
         self.resource_neg = Resources(-1, 0)
 
     def test_init(self):
-        self.assertEqual(self.resource11.cpu, 1)
+        self.assertEqual(self.resource11.cores, 1)
         self.assertEqual(self.resource11.ram, 1)
-        self.assertEqual(self.resource22.cpu, 2)
+        self.assertEqual(self.resource22.cores, 2)
         self.assertEqual(self.resource22.ram, 2)
-        self.assertEqual(self.resource33.cpu, 3)
+        self.assertEqual(self.resource33.cores, 3)
         self.assertEqual(self.resource33.ram, 3)
-        self.assertEqual(self.resource21.cpu, 1)
+        self.assertEqual(self.resource21.cores, 1)
         self.assertEqual(self.resource21.ram, 2)
 
     def test_subtraction(self):
         result = self.resource33 - self.resource21
         self.assertEqual(result.ram, 1)
-        self.assertEqual(result.cpu, 2)
+        self.assertEqual(result.cores, 2)
 
     def test_addition(self):
         result = self.resource11 + self.resource22
         self.assertEqual(result.ram, 3)
-        self.assertEqual(result.cpu, 3)
+        self.assertEqual(result.cores, 3)
 
     def test_neg(self):
         result = - self.resource11
         self.assertEqual(result.ram, -1)
-        self.assertEqual(result.cpu, -1)
+        self.assertEqual(result.cores, -1)
 
     def test_lt(self):
         self.assertTrue(self.resource11 < self.resource22)
@@ -69,7 +69,7 @@ class ResourcesTestCase(TestCase):
         mock_job = make_mock_job(Resources(4, 2))
         result = Resources.from_job(mock_job)
         self.assertEqual(result.ram, 4)
-        self.assertEqual(result.cpu, 2)
+        self.assertEqual(result.cores, 2)
 
     def test_is_negative(self):
         self.assertFalse(self.resource11.is_negative())
@@ -82,7 +82,7 @@ class ResourcesTestCase(TestCase):
 
     def test_empty(self):
         self.assertEqual(Resources.EMPTY.ram, 0)
-        self.assertEqual(Resources.EMPTY.cpu, 0)
+        self.assertEqual(Resources.EMPTY.cores, 0)
 
 
 class JobResourceQueueTestCase(TestCase):
@@ -91,8 +91,8 @@ class JobResourceQueueTestCase(TestCase):
         self.jrq = JobResourceQueue()
         r100_4 = Resources(100, 4)
         r200_2 = Resources(200, 2)
-        self.job100_4 = make_mock_job(r100_4)  # 100 RAM, 2 CPU
-        self.job200_2 = make_mock_job(r200_2)  # 200 RAM, 4 CPU
+        self.job100_4 = make_mock_job(r100_4)  # 100 RAM, 2 cores
+        self.job200_2 = make_mock_job(r200_2)  # 200 RAM, 4 cores
         self.jobs = {self.job100_4: r100_4, self.job200_2: r200_2}
 
     def queue_jobs(self):
@@ -124,7 +124,7 @@ class JobResourceQueueTestCase(TestCase):
         runnable = self.jrq.dequeue(limit)
         self.assertEqual(len(runnable), 0)
 
-    def test_dequeue_none_fit_cpu_too_small(self):
+    def test_dequeue_none_fit_cores_too_small(self):
         limit = Resources(1000, 1)
         self.queue_jobs()
         runnable = self.jrq.dequeue(limit)
@@ -148,8 +148,8 @@ class JobResourceQueueTestCase(TestCase):
         runnable = self.jrq.dequeue(limit)
         self.assertEqual(len(runnable), 0)
 
-    def test_smallest_cpu_first(self):
-        self.jrq.priority = Resources.CPU
+    def test_smallest_cores_first(self):
+        self.jrq.priority = Resources.CORES
         self.jrq.descending = False
         limit = Resources(250, 5)
         self.queue_jobs()
@@ -157,8 +157,8 @@ class JobResourceQueueTestCase(TestCase):
         self.assertEqual(len(runnable), 1)
         self.assertIn(self.job200_2, runnable)
 
-    def test_pop_runnable_job_largest_cpu_first(self):
-        self.jrq.priority = Resources.CPU
+    def test_pop_runnable_job_largest_cores_first(self):
+        self.jrq.priority = Resources.CORES
         self.jrq.descending = True
         limit = Resources(250, 5)
         self.queue_jobs()
@@ -237,7 +237,7 @@ class ThreadPoolJobExecutorTestCase(TestCase):
         with self.assertRaisesRegex(InconsistentResourcesException, 'Available resources exceeds total'):
             self.executor.restore(Resources(200, 1), self.logger)
 
-    def test_restore_only_cpu_over_total_raises(self):
+    def test_restore_only_cores_over_total_raises(self):
         with self.assertRaisesRegex(InconsistentResourcesException, 'Available resources exceeds total'):
             self.executor.restore(Resources(0, 1), self.logger)
 

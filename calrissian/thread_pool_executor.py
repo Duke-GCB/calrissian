@@ -25,54 +25,64 @@ class Resources(object):
     Class to encapsulate compute resources and provide arithmetic operations and comparisons
     """
     RAM = 'ram'
-    CPU = 'cpu'
+    CORES = 'cores'
 
-    def __init__(self, ram=0, cpu=0):
+    def __init__(self, ram=0, cores=0):
         self.ram = ram
-        self.cpu = cpu
+        self.cores = cores
 
     def __sub__(self, other):
         ram = self.ram - other.ram
-        cpu = self.cpu - other.cpu
-        return Resources(ram, cpu)
+        cores = self.cores - other.cores
+        return Resources(ram, cores)
 
     def __add__(self, other):
         ram = self.ram + other.ram
-        cpu = self.cpu + other.cpu
-        return Resources(ram, cpu)
+        cores = self.cores + other.cores
+        return Resources(ram, cores)
 
     def __neg__(self):
-        return Resources(-self.ram, -self.cpu)
+        return Resources(-self.ram, -self.cores)
 
     def __lt__(self, other):
-        return self.ram < other.ram and self.cpu < other.cpu
+        return self.ram < other.ram and self.cores < other.cores
 
     def __gt__(self, other):
-        return self.ram > other.ram and self.cpu > other.cpu
+        return self.ram > other.ram and self.cores > other.cores
 
     def __eq__(self, other):
-        return self.ram == other.ram and self.cpu == other.cpu
+        return self.ram == other.ram and self.cores == other.cores
 
     def __ge__(self, other):
-        return self.ram >= other.ram and self.cpu >= other.cpu
+        return self.ram >= other.ram and self.cores >= other.cores
 
     def __le__(self, other):
-        return self.ram <= other.ram and self.cpu <= other.cpu
+        return self.ram <= other.ram and self.cores <= other.cores
 
     def __str__(self):
-        return '[ram: {}, cpu: {}]'.format(self.ram, self.cpu)
+        return '[ram: {}, cores: {}]'.format(self.ram, self.cores)
 
     def is_negative(self):
-        return self.ram < 0 or self.cpu < 0
+        return self.ram < 0 or self.cores < 0
 
     def exceeds(self, other):
-        return self.ram > other.ram or self.cpu > other.cpu
+        return self.ram > other.ram or self.cores > other.cores
+
+    def to_dict(self):
+        return { Resources.CORES: self.cores,
+                 Resources.RAM: self.ram }
+
+    @classmethod
+    def from_dict(cls, d):
+        return cls(d.get(cls.RAM, 0), d.get(cls.CORES, 0))
 
     @classmethod
     def from_job(cls, job):
-        ram = job.builder.resources.get(cls.RAM, 0)
-        cpu = job.builder.resources.get(cls.CPU, 0)
-        return cls(ram, cpu)
+        return cls.from_dict(job.builder.resources)
+
+    @classmethod
+    def min(cls, rsc1, rsc2):
+        return Resources(min(rsc1.ram, rsc2.ram), min(rsc1.cores, rsc2.cores))
 
 
 Resources.EMPTY = Resources(0, 0)
@@ -87,7 +97,7 @@ class JobResourceQueue(object):
     def __init__(self, priority=Resources.RAM, descending=False):
         """
         Create a JobResourceQueue
-        :param priority: Resources.RAM or Resources.CPU - Used as a sort key when de-queuing jobs
+        :param priority: Resources.RAM or Resources.CORES - Used as a sort key when de-queuing jobs
         :param descending: boolean: When True, the jobs requesting the most resource will be de-queued first.
         """
         self.jobs = dict()
@@ -113,7 +123,7 @@ class JobResourceQueue(object):
 
     def sorted_jobs(self):
         """
-        Produces a list of the jobs in the queue, ordered by self.priority (RAM or CPU) and ascending or descending
+        Produces a list of the jobs in the queue, ordered by self.priority (RAM or CORES) and ascending or descending
         :return:
         """
         return sorted(self.jobs.items(), key=lambda item: getattr(item[1], self.priority), reverse=self.descending)
@@ -147,12 +157,12 @@ class ThreadPoolJobExecutor(JobExecutor):
     Relevant: https://github.com/common-workflow-language/cwltool/issues/888
     """
 
-    def __init__(self, total_ram, total_cpu, max_workers=None):
+    def __init__(self, total_ram, total_cores, max_workers=None):
         """
         Initialize a ThreadPoolJobExecutor
         :param total_ram: RAM limit in megabytes for concurrent jobs
-        :param total_cpu: CPU core count limit for concurrent jobs
-        :param max_workers: Number of worker threads to create. Set to None to use Python's default of 5xCPU count, which
+        :param total_cores: cpu core count limit for concurrent jobs
+        :param max_workers: Number of worker threads to create. Set to None to use Python's default of 5xcpu count, which
         should be sufficient. Setting max_workers too low can cause deadlocks.
 
         See https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor
@@ -161,9 +171,23 @@ class ThreadPoolJobExecutor(JobExecutor):
         self.max_workers = max_workers
         self.jrq = JobResourceQueue()
         self.exceptions = Queue()
-        self.total_resources = Resources(total_ram, total_cpu)
-        self.available_resources = Resources(total_ram, total_cpu) # start with entire pool available
+        self.total_resources = Resources(total_ram, total_cores)
+        self.available_resources = Resources(total_ram, total_cores) # start with entire pool available
         self.resources_lock = threading.RLock()
+
+    def select_resources(self, request, runtime_context):  # pylint: disable=unused-argument
+        # type: (Dict[str, int], RuntimeContext) -> Dict[str, int]
+        """Naïve check for available cores cores and memory."""
+        requested_min = Resources(request['ramMin'], request['coresMin'])
+        requested_max = Resources(request['ramMax'], request['coresMax'])
+
+        if requested_min.exceeds(self.total_resources):
+            raise WorkflowException('Requested minimum resources {} exceed total available {}'.format(
+                requested_min, self.total_resources
+            ))
+
+        result = Resources.min(requested_max, self.total_resources)
+        return result.to_dict()
 
     def job_done_callback(self, rsc, logger, future):
         """
