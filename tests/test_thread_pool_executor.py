@@ -427,8 +427,25 @@ class ThreadPoolJobExecutorQueueingTestCase(ThreadPoolJobExecutorTestCase):
         self.assertEqual(mock_enqueue.call_args_list, [call(j) for j in self.jobs_with_none if j])
         self.assertEqual(result, mock_waited_futures)
 
-    def test_drain_queue(self):
-        pass
+
+    @patch('calrissian.thread_pool_executor.JobResourceQueue.is_empty')
+    @patch('calrissian.thread_pool_executor.ThreadPoolJobExecutor.start_queued_jobs')
+    @patch('calrissian.thread_pool_executor.ThreadPoolJobExecutor.wait_for_completion')
+    def test_drain_queue(self, mock_wait_for_completion, mock_start_queued_jobs, mock_is_empty):
+        mock_is_empty.return_value = True
+        initial_futures = {'initial'}
+        submitted_futures = {'submitted'}
+        waiting_futures = set()
+        mock_start_queued_jobs.return_value = submitted_futures
+        mock_wait_for_completion.return_value = waiting_futures # Empty set
+
+        self.executor.drain_queue(self.logger, self.mock_runtime_context, self.mock_pool_executor, initial_futures)
+        # calls start_queued_jobs and updates the provided futures with its result
+        self.assertEqual(mock_start_queued_jobs.call_args, call(self.mock_pool_executor, self.logger, self.mock_runtime_context))
+
+        # calls wait for completion with the whole set of futures
+        self.assertEqual(mock_wait_for_completion.call_args, call({'initial','submitted'}, self.logger))
+        self.assertTrue(mock_is_empty.called)
 
     def test_run_jobs(self):
         pass
