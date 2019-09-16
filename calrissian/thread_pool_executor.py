@@ -1,5 +1,4 @@
 import functools
-import logging
 import threading
 from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED, ALL_COMPLETED
 from queue import Queue
@@ -135,9 +134,6 @@ class JobResourceQueue(object):
         for job in jobs:
             self.jobs.pop(job)
         return jobs
-
-    def __str__(self):
-        return ' '.join([str(j) for j in self.jobs.keys()])
 
 
 class ThreadPoolJobExecutor(JobExecutor):
@@ -315,15 +311,13 @@ class ThreadPoolJobExecutor(JobExecutor):
         :param job_iterator: iterator that yields cwltool Jobs
         :param logger: logger where messages shall be logged
         :param runtime_context: cwltool RuntimeContext: to provide to the job
-        :param pool_executor:
+        :param pool_executor: A concurrent.futures.Executor on which to run job functions
         :return: set of Futures for jobs that have been submitted off the queue
         """
         futures = set()
-        # Phase 1:
-        # We take the lock because we are modifying the job and processing the queue, which will consume resources
-        # put the job in the queue
         iterator_exhausted = False
         while not iterator_exhausted:
+            # Take the lock because we are modifying the job and processing the queue, which will consume resources
             with runtime_context.workflow_eval_lock:
                 try:
                     job = next(job_iterator)
@@ -344,7 +338,14 @@ class ThreadPoolJobExecutor(JobExecutor):
         return futures
 
     def drain_queue(self, logger, runtime_context, pool_executor, futures):
-        # Phase 2: start queued jobs and wait for all futures to complete
+        """
+        Start queued jobs and wait for all futures to complete
+        :param logger: logger where messages shall be logged
+        :param runtime_context: cwltool RuntimeContext: to provide to the job
+        :param pool_executor: concurrent.futures.Executor on which to run job functions
+        :param futures: set of Futures for jobs already started
+        :return: None
+        """
         finished = False
         while not finished:
             with runtime_context.workflow_eval_lock:
@@ -368,7 +369,8 @@ class ThreadPoolJobExecutor(JobExecutor):
         :param runtime_context: cwltool RuntimeContext: to provide to the job
         :return: None
         """
-        logger.debug('Starting ThreadPoolJobExecutor.run_jobs: total_resources={}, max_workers={}'.format(self.total_resources, self.max_workers))
+        logger.debug('Starting ThreadPoolJobExecutor.run_jobs: total_resources={}, max_workers={}'.format(
+            self.total_resources, self.max_workers))
         if runtime_context.workflow_eval_lock is None:
             raise WorkflowException("runtimeContext.workflow_eval_lock must not be None")
         # Wrap in an Executor context. This ensures that the executor waits for tasks to finish before shutting down
@@ -376,4 +378,5 @@ class ThreadPoolJobExecutor(JobExecutor):
         with ThreadPoolExecutor(max_workers=self.max_workers) as pool_executor:
             futures = self.enqueue_jobs_from_iterator(job_iterator, logger, runtime_context, pool_executor)
             self.drain_queue(logger, runtime_context, pool_executor, futures)
-        logger.debug('Finishing ThreadPoolExecutor.run_jobs: total_resources={}, available_resources={}'.format(self.total_resources, self.available_resources))
+        logger.debug('Finishing ThreadPoolExecutor.run_jobs: total_resources={}, available_resources={}'.format(
+            self.total_resources, self.available_resources))
