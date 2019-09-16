@@ -91,7 +91,7 @@ class KubernetesClient(object):
 
     def delete_pod_name(self, pod_name):
         try:
-            self.core_api_instance.delete_namespaced_pod(pod_name, self.namespace, client.V1DeleteOptions())
+            self.core_api_instance.delete_namespaced_pod(pod_name, self.namespace)
         except ApiException as e:
             raise CalrissianJobException('Error deleting pod named {}'.format(pod_name), e)
 
