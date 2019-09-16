@@ -72,6 +72,13 @@ class ResourcesTestCase(TestCase):
         self.assertEqual(result.ram, 4)
         self.assertEqual(result.cores, 2)
 
+    def test_from_job_defaults_empty_without_builder(self):
+        mock_job = make_mock_job(Resources(4, 2))
+        del mock_job.builder
+        result = Resources.from_job(mock_job)
+        self.assertEqual(result.ram, 0)
+        self.assertEqual(result.cores, 0)
+
     def test_from_dict(self):
         result = Resources.from_dict({'cores': 3, 'ram': 400})
         self.assertEqual(result.cores, 3)

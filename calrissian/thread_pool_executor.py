@@ -78,7 +78,10 @@ class Resources(object):
 
     @classmethod
     def from_job(cls, job):
-        return cls.from_dict(job.builder.resources)
+        if hasattr(job, 'builder'):
+            return cls.from_dict(job.builder.resources)
+        else:
+            return Resources.EMPTY
 
     @classmethod
     def min(cls, rsc1, rsc2):
