@@ -175,11 +175,18 @@ class ThreadPoolJobExecutor(JobExecutor):
         self.available_resources = Resources(total_ram, total_cores) # start with entire pool available
         self.resources_lock = threading.RLock()
 
-    def select_resources(self, request, runtime_context):  # pylint: disable=unused-argument
-        # type: (Dict[str, int], RuntimeContext) -> Dict[str, int]
-        """Naïve check for available cores cores and memory."""
-        requested_min = Resources(request['ramMin'], request['coresMin'])
-        requested_max = Resources(request['ramMax'], request['coresMax'])
+    def select_resources(self, request, runtime_context):
+        """
+        Naïve check for available cores cores and memory
+        Checks if requested resources fit within the total allocation, raises WorkflowException if not.
+        If fits, returns a dictionary of resources that satisfy the requested min/max
+
+        :param request: dict of ramMin, coresMin, ramMax, coresMax
+        :param runtime_context: RuntimeContext, unused
+        :return: dict of selected resources
+        """
+        requested_min = Resources(request.get('ramMin'), request.get('coresMin'))
+        requested_max = Resources(request.get('ramMax'), request.get('coresMax'))
 
         if requested_min.exceeds(self.total_resources):
             raise WorkflowException('Requested minimum resources {} exceed total available {}'.format(

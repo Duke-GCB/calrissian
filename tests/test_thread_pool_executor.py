@@ -16,6 +16,7 @@ class ResourcesTestCase(TestCase):
         self.resource22 = Resources(2, 2)
         self.resource33 = Resources(3, 3)
         self.resource21 = Resources(2, 1)
+        self.resource12 = Resources(1, 2)
         self.resource_neg = Resources(-1, 0)
 
     def test_init(self):
@@ -70,6 +71,15 @@ class ResourcesTestCase(TestCase):
         result = Resources.from_job(mock_job)
         self.assertEqual(result.ram, 4)
         self.assertEqual(result.cores, 2)
+
+    def test_from_dict(self):
+        result = Resources.from_dict({'cores': 3, 'ram': 400})
+        self.assertEqual(result.cores, 3)
+        self.assertEqual(result.ram, 400)
+
+    def test_min(self):
+        result = Resources.min(self.resource21, self.resource12)
+        self.assertEqual(result, self.resource11)
 
     def test_is_negative(self):
         self.assertFalse(self.resource11.is_negative())
@@ -213,6 +223,28 @@ class ThreadPoolJobExecutorTestCase(TestCase):
         self.assertIsNotNone(self.executor.jrq)
         self.assertIsNotNone(self.executor.exceptions)
         self.assertIsNotNone(self.executor.resources_lock)
+
+    def test_select_resources_raises_if_exceeds(self):
+        request = {
+            'ramMin': 2000,
+            'ramMax': 3000,
+            'coresMin': 1,
+            'coresMax': 1
+        }
+        with self.assertRaisesRegex(WorkflowException, 'exceed total'):
+            self.executor.select_resources(request, Mock())
+
+    def test_select_resources_returns_fit(self):
+        request = {
+            'ramMin': 500,
+            'ramMax': 1500,
+            'coresMin': 1,
+            'coresMax': 1
+        }
+
+        result = self.executor.select_resources(request, Mock())
+        self.assertEqual(result['ram'], 1000) # When ram max requested exceeds total, result should be total
+        self.assertEqual(result['cores'], 1) # when cpu max requested is below total, result should be requested
 
     def test_allocate(self):
         resource = Resources(200, 1)
