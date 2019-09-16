@@ -1,6 +1,8 @@
 from unittest import TestCase
 from unittest.mock import Mock, patch, call, PropertyMock, create_autospec
 from kubernetes.client.models import V1Pod
+from kubernetes.client.api_client import ApiException
+from kubernetes.config.config_exception import ConfigException
 from calrissian.k8s import load_config_get_namespace, KubernetesClient, CalrissianJobException, PodMonitor, delete_pods
 from calrissian.k8s import CompletionResult, read_file
 
@@ -30,8 +32,7 @@ class LoadConfigTestCase(TestCase):
 
     def test_load_config_get_namespace_external(self, mock_config, mock_read_file):
         # When load_incluster_config raises an exception, call load_kube_config and assume 'default'
-        mock_config.config_exception.ConfigException = Exception
-        mock_config.load_incluster_config.side_effect = Exception
+        mock_config.load_incluster_config.side_effect = ConfigException
         namespace = load_config_get_namespace()
         self.assertEqual(namespace, 'default')
         self.assertFalse(mock_read_file.called)
@@ -178,23 +179,20 @@ class KubernetesClientTestCase(TestCase):
         self.setup_mock_watch(mock_watch, [mock_pod])
         kc = KubernetesClient()
         kc._set_pod(Mock())
-        with self.assertRaises(CalrissianJobException) as context:
+        with self.assertRaisesRegex(CalrissianJobException, 'Unexpected pod container status'):
             kc.wait_for_completion()
-        self.assertIn('Unexpected pod container status', str(context.exception))
 
     def test_raises_on_set_second_pod(self, mock_get_namespace, mock_client):
         kc = KubernetesClient()
         kc._set_pod(Mock())
-        with self.assertRaises(CalrissianJobException) as context:
+        with self.assertRaisesRegex(CalrissianJobException, 'This client is already observing pod'):
             kc._set_pod(Mock())
-        self.assertIn('This client is already observing pod', str(context.exception))
 
     def test_get_pod_for_name_not_found(self, mock_get_namespace, mock_client):
         mock_client.CoreV1Api.return_value.list_namespaced_pod.return_value = Mock(items=[])
         kc = KubernetesClient()
-        with self.assertRaises(CalrissianJobException) as raised_exception:
+        with self.assertRaisesRegex(CalrissianJobException,'Unable to find pod with name somepod'):
             kc.get_pod_for_name('somepod')
-        self.assertEqual(str(raised_exception.exception), 'Unable to find pod with name somepod')
 
     def test_get_pod_for_name_one_found(self, mock_get_namespace, mock_client):
         mock_client.CoreV1Api.return_value.list_namespaced_pod.return_value = Mock(items=['pod1'])
@@ -205,18 +203,15 @@ class KubernetesClientTestCase(TestCase):
     def test_get_pod_for_name_multiple_found(self, mock_get_namespace, mock_client):
         mock_client.CoreV1Api.return_value.list_namespaced_pod.return_value = Mock(items=['pod1', 'pod2'])
         kc = KubernetesClient()
-        with self.assertRaises(CalrissianJobException) as raised_exception:
+        with self.assertRaisesRegex(CalrissianJobException, 'Multiple pods found with name somepod'):
             kc.get_pod_for_name('somepod')
-        self.assertEqual(str(raised_exception.exception), 'Multiple pods found with name somepod')
 
     @patch('calrissian.k8s.os')
     def test_get_current_pod_missing_env_var(self, mock_os, mock_get_namespace, mock_client):
         mock_os.environ = {}
         kc = KubernetesClient()
-        with self.assertRaises(CalrissianJobException) as raised_exception:
+        with self.assertRaisesRegex(CalrissianJobException, 'Missing required environment variable \$CALRISSIAN_POD_NAME'):
             kc.get_current_pod()
-        self.assertEqual(str(raised_exception.exception),
-                         'Missing required environment variable $CALRISSIAN_POD_NAME')
 
     @patch('calrissian.k8s.os')
     def test_get_current_pod_with_env_var(self, mock_os, mock_get_namespace, mock_client):
@@ -252,11 +247,10 @@ class KubernetesClientTestCase(TestCase):
 
     def test_delete_pod_name_raises(self, mock_get_namespace, mock_client):
         mock_client.rest.ApiException = Exception
-        mock_client.CoreV1Api.return_value.delete_namespaced_pod.side_effect = mock_client.rest.ApiException
+        mock_client.CoreV1Api.return_value.delete_namespaced_pod.side_effect = ApiException
         kc = KubernetesClient()
-        with self.assertRaises(CalrissianJobException) as context:
+        with self.assertRaisesRegex(CalrissianJobException, 'Error deleting pod named pod-123'):
             kc.delete_pod_name('pod-123')
-        self.assertIn('Error deleting pod named pod-123', str(context.exception))
 
     @patch('calrissian.k8s.log')
     def test_follow_logs_streams_to_logging(self, mock_log, mock_get_namespace, mock_client):
@@ -322,9 +316,8 @@ class KubernetesClientStatusTestCase(TestCase):
 
     def test_multiple_statuses_raises(self):
         self.assertEqual(len(self.multiple_statuses), 2)
-        with self.assertRaises(CalrissianJobException) as context:
+        with self.assertRaisesRegex(CalrissianJobException, 'Expected 0 or 1 containers, found 2'):
             KubernetesClient.get_first_or_none(self.multiple_statuses)
-        self.assertIn('Expected 0 or 1 containers, found 2', str(context.exception))
 
 
 class PodMonitorTestCase(TestCase):
