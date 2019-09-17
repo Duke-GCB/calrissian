@@ -9,7 +9,7 @@ class CalrissianMainTestCase(TestCase):
 
     @patch('calrissian.main.cwlmain')
     @patch('calrissian.main.arg_parser')
-    @patch('calrissian.main.CalrissianExecutor', autospec=True)
+    @patch('calrissian.main.ThreadPoolJobExecutor', autospec=True)
     @patch('calrissian.main.CalrissianLoadingContext', autospec=True)
     @patch('calrissian.main.CalrissianRuntimeContext', autospec=True)
     @patch('calrissian.main.version')

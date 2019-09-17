@@ -1,4 +1,4 @@
-from calrissian.executor import CalrissianExecutor
+from calrissian.executor import ThreadPoolJobExecutor
 from calrissian.context import CalrissianLoadingContext, CalrissianRuntimeContext
 from calrissian.version import version
 from calrissian.k8s import delete_pods
@@ -110,7 +110,7 @@ def main():
     install_tees(parsed_args.stdout, parsed_args.stderr)
     max_ram_megabytes = MemoryParser.parse_to_megabytes(parsed_args.max_ram)
     max_cores = CPUParser.parse(parsed_args.max_cores)
-    executor = CalrissianExecutor(max_ram_megabytes, max_cores)
+    executor = ThreadPoolJobExecutor(max_ram_megabytes, max_cores)
     initialize_reporter(max_ram_megabytes, max_cores)
     runtime_context = CalrissianRuntimeContext(vars(parsed_args))
     runtime_context.select_resources = executor.select_resources
