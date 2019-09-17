@@ -334,12 +334,6 @@ class ThreadPoolJobExecutorTestCase(TestCase):
         job = make_mock_job(rsc)
         self.executor.raise_if_oversized(job)
 
-    def test_restore_raises(self):
-        large_resource = Resources(2000, 4)
-        self.assertTrue(large_resource > self.executor.total_resources)
-        # self.executor.restore(large_resource, self.logger)
-        # self.assertTrue(self.executor.available_resources < Resources.EMPTY)
-
     @patch('calrissian.executor.ThreadPoolJobExecutor.restore')
     def test_job_done_callback_extracts_future_exception(self, mock_restore):
         future = Future()
