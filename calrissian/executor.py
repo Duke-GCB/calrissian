@@ -247,15 +247,20 @@ class ThreadPoolJobExecutor(JobExecutor):
             # Wait for outstanding futures to finish up so that cleanup can happen
             logger.error('Waiting for canceled futures to finish')
             wait(futures, return_when=ALL_COMPLETED)
-            ex = self.exceptions.get()
-            # TODO: What if more than one exception exists?
-            try:
-                raise ex
-            except (WorkflowException, ValidationException):
-                raise
-            except Exception as err:
-                logger.exception("Got workflow error")
-                raise WorkflowException(str(err)) from err
+            exceptions = []
+            # Dequeue the exceptions into a list.
+            while not self.exceptions.empty():
+                exceptions.append(self.exceptions.get())
+            if len(exceptions) == 1: # single exception queued
+                try:
+                    raise exceptions[0]
+                except (WorkflowException, ValidationException):
+                    raise
+                except Exception as err:
+                    logger.exception("Got workflow error")
+                    raise WorkflowException(str(err)) from err
+            else: # multiple exceptions were queued, raise multiple
+                raise WorkflowException(str(exceptions)) from exceptions[0]
 
     def raise_if_oversized(self, job):
         """

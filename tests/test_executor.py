@@ -313,6 +313,14 @@ class ThreadPoolJobExecutorTestCase(TestCase):
         self.assertTrue(mock_wait.called)
         self.assertTrue(future.cancelled())  # cancelled after exception called
 
+    @patch('calrissian.executor.wait')
+    def test_raise_if_exception_queued_handles_multiple(self, mock_wait):
+        self.executor.exceptions.put(Exception('ex1'))
+        self.executor.exceptions.put(Exception('ex2'))
+        with self.assertRaisesRegex(WorkflowException, "ex1.*ex2"):
+            self.executor.raise_if_exception_queued({}, self.logger)
+        self.assertTrue(mock_wait.called)
+
     def test_raise_if_oversized_raises_with_oversized(self):
         rsc = Resources(100, 4)
         self.assertTrue(rsc.exceeds(self.executor.total_resources))
