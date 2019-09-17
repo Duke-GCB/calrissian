@@ -176,7 +176,7 @@ class ThreadPoolJobExecutor(JobExecutor):
         self.exceptions = Queue()
         self.total_resources = Resources(total_ram, total_cores)
         self.available_resources = Resources(total_ram, total_cores) # start with entire pool available
-        self.resources_lock = threading.RLock()
+        self.resources_lock = threading.Lock()
 
     def select_resources(self, request, runtime_context):
         """
