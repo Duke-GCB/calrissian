@@ -4,9 +4,9 @@ import os
 
 
 class RetryParameters(object):
-    MULTIPLIER = int(os.getenv('RETRY_MULTIPLIER', 5)) #  Unit for multiplying the exponent
-    MIN = int(os.getenv('RETRY_MIN', 5)) # Min time for retrying
-    MAX = int(os.getenv('RETRY_MAX', 1200)) # Max interval between retries
+    MULTIPLIER = float(os.getenv('RETRY_MULTIPLIER', 5)) #  Unit for multiplying the exponent
+    MIN = float(os.getenv('RETRY_MIN', 5)) # Min time for retrying
+    MAX = float(os.getenv('RETRY_MAX', 1200)) # Max interval between retries
     ATTEMPTS = int(os.getenv('RETRY_ATTEMPTS', 10)) # Max number of retries before giving up
 
 
