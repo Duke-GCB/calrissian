@@ -1,4 +1,4 @@
-from tenacity import retry, wait, wait_exponential, retry_if_exception_type, stop_after_attempt, after_log
+from tenacity import retry, wait, wait_exponential, retry_if_exception_type, stop_after_attempt, before_sleep_log
 import logging
 import os
 
@@ -20,7 +20,7 @@ def retry_exponential_if_exception_type(exc_class):
             retry=retry_if_exception_type(exc_class),
             wait=wait_exponential(multiplier=RetryParameters.MULTIPLIER, min=RetryParameters.MIN, max=RetryParameters.MAX),
             stop=stop_after_attempt(RetryParameters.ATTEMPTS),
-            after=after_log(logger, logging.DEBUG),
+            before_sleep=before_sleep_log(logger, logging.DEBUG),
             reraise=True
         )
         def wrapper(*args, **kwargs):
