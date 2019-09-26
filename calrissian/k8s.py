@@ -1,6 +1,7 @@
 from kubernetes import client, config, watch
 from kubernetes.client.api_client import ApiException
 from kubernetes.config.config_exception import ConfigException
+from calrissian.retry import retry_exponential_if_exception_type
 import threading
 import logging
 import os
@@ -70,6 +71,7 @@ class KubernetesClient(object):
         self.namespace = load_config_get_namespace()
         self.core_api_instance = client.CoreV1Api()
 
+    @retry_exponential_if_exception_type(ApiException, log)
     def submit_pod(self, pod_body):
         with PodMonitor() as monitor:
             pod = self.core_api_instance.create_namespaced_pod(self.namespace, pod_body)
@@ -89,6 +91,7 @@ class KubernetesClient(object):
         else:
             return True
 
+    @retry_exponential_if_exception_type(ApiException, log)
     def delete_pod_name(self, pod_name):
         try:
             self.core_api_instance.delete_namespaced_pod(pod_name, self.namespace)
@@ -117,6 +120,7 @@ class KubernetesClient(object):
         )
         log.info('handling completion with {}'.format(exit_code))
 
+    @retry_exponential_if_exception_type(ApiException, log)
     def follow_logs(self):
         pod_name = self.pod.metadata.name
         log.info('[{}] follow_logs start'.format(pod_name))
@@ -131,6 +135,7 @@ class KubernetesClient(object):
             log.debug('[{}] {}'.format(pod_name, line))
         log.info('[{}] follow_logs end'.format(pod_name))
 
+    @retry_exponential_if_exception_type(ApiException, log)
     def wait_for_completion(self):
         w = watch.Watch()
         for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_field_selector()):
@@ -212,6 +217,7 @@ class KubernetesClient(object):
         """
         return (state.terminated.started_at, state.terminated.finished_at,)
 
+    @retry_exponential_if_exception_type(ApiException, log)
     def get_pod_for_name(self, pod_name):
         """
         Given a pod name return details about this pod
