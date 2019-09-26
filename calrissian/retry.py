@@ -1,9 +1,6 @@
-from tenacity import retry, wait, wait_exponential, retry_if_exception_type, stop_after_attempt, before_sleep_log
+from tenacity import retry, wait_exponential, retry_if_exception_type, stop_after_attempt, before_sleep_log
 import logging
 import os
-
-
-logger = logging.getLogger('calrissian.retry')
 
 
 class RetryParameters(object):
@@ -13,18 +10,15 @@ class RetryParameters(object):
     ATTEMPTS = int(os.getenv('RETRY_ATTEMPTS', 10)) # Max number of retries before giving up
 
 
-# types can be a tuple
-def retry_exponential_if_exception_type(exc_class):
-    def decorator_retry(func):
-        @retry(
-            retry=retry_if_exception_type(exc_class),
+def retry_exponential_if_exception_type(exc_type, logger):
+    """
+    Decorator function that returns the tenacity @retry decorator with our commonly-used config
+    :param exc_type: Type of exception (or tuple of types) to retry if encountered
+    :param logger: A logger instance to send retry logs to
+    :return: Result of tenacity.retry decorator function
+    """
+    return retry(retry=retry_if_exception_type(exc_type),
             wait=wait_exponential(multiplier=RetryParameters.MULTIPLIER, min=RetryParameters.MIN, max=RetryParameters.MAX),
             stop=stop_after_attempt(RetryParameters.ATTEMPTS),
             before_sleep=before_sleep_log(logger, logging.DEBUG),
-            reraise=True
-        )
-        def wrapper(*args, **kwargs):
-            func(*args, **kwargs)
-        return wrapper
-    return decorator_retry
-
+            reraise=True)
