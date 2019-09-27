@@ -199,7 +199,7 @@ class ThreadPoolJobExecutor(JobExecutor):
         result = Resources.min(requested_max, self.total_resources)
         return result.to_dict()
 
-    def job_done_callback(self, rsc, logger, future):
+    def job_done_callback(self, rsc, logger, future, job):
         """
         Callback to run after a job is finished to restore reserved resources and check for exceptions.
         Expected to be called as part of the Future.add_done_callback(). The callback is invoked on a background
@@ -224,6 +224,8 @@ class ThreadPoolJobExecutor(JobExecutor):
 
         # Check if the future raised an exception - may return None
         if future.exception():
+            logger.error('job_done_callback found exception with job {}'.format(job.name))
+            logger.error('full job: {}'.format(job))
             # The Queue is thread safe so we dont need a lock, even though we're running on a background thread
             self.exceptions.put(future.exception())
 
@@ -325,7 +327,7 @@ class ThreadPoolJobExecutor(JobExecutor):
                 self.output_dirs.add(job.outdir)
             self.allocate(rsc, logger)
             future = pool_executor.submit(job.run, runtime_context)
-            callback = functools.partial(self.job_done_callback, rsc, logger)
+            callback = functools.partial(self.job_done_callback, rsc, logger, job)
             # Callback will be invoked in a thread on the submitting process (but not the thread that submitted, this
             # clarification is mostly for process pool executors)
             future.add_done_callback(callback)
