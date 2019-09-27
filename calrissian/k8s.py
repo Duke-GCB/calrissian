@@ -141,17 +141,17 @@ class KubernetesClient(object):
         """
 
         :param pod:
-        :return:
+        :return: True if done, False if not
         """
         status = self.get_first_or_none(pod.status.container_statuses)
         if status is None:
-            return True
+            return False
         if self.state_is_waiting(status.state):
-            return True
+            return False
         elif self.state_is_running(status.state):
             # Can only get logs once container is running
             self.follow_logs()  # This will not return until pod completes
-            return True
+            return False
         elif self.state_is_terminated(status.state):
             log.info('Handling terminated pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
             container = self.get_first_or_none(pod.spec.containers)
@@ -162,7 +162,7 @@ class KubernetesClient(object):
                     monitor.remove(pod)
             self._clear_pod()
             # stop watching for events, our pod is done. Causes wait loop to exit
-            return False
+            return True
         else:
             raise CalrissianJobException('Unexpected pod container status', status)
 
