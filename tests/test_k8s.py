@@ -370,7 +370,9 @@ class PodMonitorTestCase(TestCase):
             monitor.remove(pod)
         mock_log.info.assert_has_calls([
             call('PodMonitor adding pod-123'),
+            call('Starting Cleanup'),
             call('PodMonitor deleting pod pod-123'),
+            call('Finishing Cleanup'),
         ])
         mock_log.warning.assert_called_with('PodMonitor pod-123 has already been removed')
 
