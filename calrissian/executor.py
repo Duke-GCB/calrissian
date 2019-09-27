@@ -246,7 +246,7 @@ class ThreadPoolJobExecutor(JobExecutor):
             while not self.exceptions.empty():
                 exceptions.append(self.exceptions.get())
             for ex in exceptions:
-                logger.exception('Queued exception', ex)
+                logger.error('Queued exception: {}'.format(ex))
             for f in futures:
                 f.cancel()
             # Wait for outstanding futures to finish up so that cleanup can happen
