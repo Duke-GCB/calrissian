@@ -241,14 +241,19 @@ class ThreadPoolJobExecutor(JobExecutor):
             # There's at least one exception, cancel all pending jobs
             # Note that cancel will only matter if there aren't enough available threads to start processing the job in
             # the first place. Once the function starts running it cannot be cancelled.
-            logger.error('Found a queued exception, canceling outstanding futures')
+            logger.error('Found queued exception(s), canceling outstanding futures')
+            exceptions = []
+            while not self.exceptions.empty():
+                exceptions.append(self.exceptions.get())
+            for ex in exceptions:
+                logger.exception('Queued exception', ex)
             for f in futures:
                 f.cancel()
             # Wait for outstanding futures to finish up so that cleanup can happen
             logger.error('Waiting for canceled futures to finish')
             wait(futures, return_when=ALL_COMPLETED)
-            exceptions = []
             # Dequeue the exceptions into a list.
+            # see if anything else piled up while waiting?
             while not self.exceptions.empty():
                 exceptions.append(self.exceptions.get())
             if len(exceptions) == 1: # single exception queued
