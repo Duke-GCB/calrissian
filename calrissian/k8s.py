@@ -136,32 +136,52 @@ class KubernetesClient(object):
             log.debug('[{}] {}'.format(pod_name, line))
         log.info('[{}] follow_logs end'.format(pod_name))
 
+
+    def handle_pod_status(self, pod):
+        """
+
+        :param pod:
+        :return:
+        """
+        status = self.get_first_or_none(pod.status.container_statuses)
+        if status is None:
+            return True
+        if self.state_is_waiting(status.state):
+            return True
+        elif self.state_is_running(status.state):
+            # Can only get logs once container is running
+            self.follow_logs()  # This will not return until pod completes
+            return True
+        elif self.state_is_terminated(status.state):
+            log.info('Handling terminated pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
+            container = self.get_first_or_none(pod.spec.containers)
+            self._handle_completion(status.state, container)
+            if self.should_delete_pod():
+                with PodMonitor() as monitor:
+                    self.delete_pod_name(pod.metadata.name)
+                    monitor.remove(pod)
+            self._clear_pod()
+            # stop watching for events, our pod is done. Causes wait loop to exit
+            return False
+        else:
+            raise CalrissianJobException('Unexpected pod container status', status)
+
     @retry_exponential_if_exception_type((ApiException, HTTPError,), log)
     def wait_for_completion(self):
+        # At the beginning, we read the pod for its current status.
+        # We do this because a failure after getting a streaming event may cause state changes to be missed.
+        pod = self.core_api_instance.read_namespaced_pod(self.pod.metadata.name, self.namespace)
+        done = self.handle_pod_status(pod)
+        if done:
+            return self.completion_result
+        # TODO: Does this create a possible gap?
+        # If the status was finished before, we will have returned. so start watching events.
         w = watch.Watch()
         for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_field_selector()):
             pod = event['object']
-            status = self.get_first_or_none(pod.status.container_statuses)
-            if status is None:
-                continue
-            if self.state_is_waiting(status.state):
-                continue
-            elif self.state_is_running(status.state):
-                # Can only get logs once container is running
-                self.follow_logs() # This will not return until pod completes
-            elif self.state_is_terminated(status.state):
-                log.info('Handling terminated pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
-                container = self.get_first_or_none(pod.spec.containers)
-                self._handle_completion(status.state, container)
-                if self.should_delete_pod():
-                    with PodMonitor() as monitor:
-                        self.delete_pod_name(pod.metadata.name)
-                        monitor.remove(pod)
-                self._clear_pod()
-                # stop watching for events, our pod is done. Causes wait loop to exit
+            done = self.handle_pod_status(pod)
+            if done:
                 w.stop()
-            else:
-                raise CalrissianJobException('Unexpected pod container status', status)
         return self.completion_result
 
     def _set_pod(self, pod):
