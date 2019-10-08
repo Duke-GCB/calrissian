@@ -1,7 +1,7 @@
 from cwltool.job import ContainerCommandLineJob, needs_shell_quoting_re
 from cwltool.utils import DEFAULT_TMP_PREFIX
 from cwltool.errors import WorkflowException, UnsupportedRequirement
-from calrissian.k8s import KubernetesClient
+from calrissian.k8s import KubernetesClient, CalrissianPodNotFoundException
 from calrissian.report import Reporter, TimedResourceReport
 import logging
 import os
@@ -14,6 +14,7 @@ import shellescape
 import re
 from cwltool.pathmapper import ensure_writable, ensure_non_writable
 from cwltool.utils import visit_class
+from calrissian.retry import retry_exponential_if_exception_type
 
 log = logging.getLogger("calrissian.job")
 
@@ -368,9 +369,6 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         # https://github.com/common-workflow-language/cwltool/blob/1.0.20181201184214/cwltool/docker.py#L333
         self.environment["TMPDIR"] = self.container_tmpdir
 
-    def wait_for_kubernetes_pod(self):
-        return self.client.wait_for_completion()
-
     def report(self, completion_result, disk_bytes):
         """
         Convert the k8s-specific completion result into a report and submit it
@@ -499,9 +497,6 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             log.error('Runtime list is not empty. k8s does not use that, so you should see who put something there:\n{}'.format(' '.join(runtime)))
         return built
 
-    def execute_kubernetes_pod(self, pod):
-        self.client.submit_pod(pod)
-
     def _add_emptydir_volume_and_binding(self, name, target):
         self.volume_builder.add_emptydir_volume(name)
         self.volume_builder.add_emptydir_volume_binding(name, target)
@@ -583,6 +578,11 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
                     shutil.copytree(volume.resolved, host_outdir_tgt)
                 ensure_writable(host_outdir_tgt or new_dir)
 
+    @retry_exponential_if_exception_type(CalrissianPodNotFoundException, log)
+    def execute_kubernetes_pod(self, pod):
+        self.client.submit_pod(pod)
+        return self.client.wait_for_completion()
+
     def run(self, runtimeContext, tmpdir_lock=None):
         self.check_requirements()
         if tmpdir_lock:
@@ -593,8 +593,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         self.populate_env_vars()
         self._setup(runtimeContext)
         pod = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
-        self.execute_kubernetes_pod(pod) # analogous to _execute()
-        completion_result = self.wait_for_kubernetes_pod()
+        completion_result = self.execute_kubernetes_pod(pod)
         self.finish(completion_result, runtimeContext)
 
     # Below are concrete implementations of the remaining abstract methods in ContainerCommandLineJob

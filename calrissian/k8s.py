@@ -41,6 +41,10 @@ class CalrissianJobException(Exception):
     pass
 
 
+class CalrissianPodNotFoundException(Exception):
+    pass
+
+
 class CompletionResult(object):
     """
     Simple structure to hold information about pod execution duration and resources.
@@ -80,6 +84,13 @@ class KubernetesClient(object):
             monitor.add(pod)
             self._set_pod(pod)
 
+    def resubmit_pod(self):
+        # In the event the pod was deleted, we should resubmit it
+        pod = self.pod
+        self._set_pod(None)
+        log.info('Resubmitting k8s pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
+        self.submit_pod(pod)
+
     def should_delete_pod(self):
         """
         Decide whether or not to delete a pod. Defaults to True if unset.
@@ -118,21 +129,6 @@ class KubernetesClient(object):
         )
         log.info('handling completion with {}'.format(exit_code))
 
-    @retry_exponential_if_exception_type((ApiException, HTTPError,), log)
-    def follow_logs(self):
-        pod_name = self.pod.metadata.name
-        log.info('[{}] follow_logs start'.format(pod_name))
-        for line in self.core_api_instance.read_namespaced_pod_log(self.pod.metadata.name, self.namespace, follow=True,
-                                                                   _preload_content=False).stream():
-            # .stream() is only available if _preload_content=False
-            # .stream() returns a generator, each iteration yields bytes.
-            # kubernetes-client decodes them as utf-8 when _preload_content is True
-            # https://github.com/kubernetes-client/python/blob/fcda6fe96beb21cd05522c17f7f08c5a7c0e3dc3/kubernetes/client/rest.py#L215-L216
-            # So we do the same here
-            line = line.decode('utf-8').rstrip()
-            log.debug('[{}] {}'.format(pod_name, line))
-        log.info('[{}] follow_logs end'.format(pod_name))
-
 
     def handle_pod_status(self, pod):
         """
@@ -146,8 +142,7 @@ class KubernetesClient(object):
         if self.state_is_waiting(status.state):
             return False
         elif self.state_is_running(status.state):
-            # Can only get logs once container is running
-            self.follow_logs()  # This will not return until pod completes
+            # Used to get logs here but no more
             return False
         elif self.state_is_terminated(status.state):
             log.info('Handling terminated pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
@@ -167,19 +162,24 @@ class KubernetesClient(object):
     def wait_for_completion(self):
         # At the beginning, we read the pod for its current status.
         # We do this because a failure after getting a streaming event may cause state changes to be missed.
-        pod = self.core_api_instance.read_namespaced_pod(self.pod.metadata.name, self.namespace)
-        done = self.handle_pod_status(pod)
-        if done:
-            return self.completion_result
-        # TODO: Does this create a possible gap?
-        # If the status was finished before, we will have returned. so start watching events.
-        w = watch.Watch()
-        for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_field_selector()):
-            pod = event['object']
+        try:
+            pod = self.core_api_instance.read_namespaced_pod(self.pod.metadata.name, self.namespace)
             done = self.handle_pod_status(pod)
             if done:
-                w.stop()
-        return self.completion_result
+                return self.completion_result
+            # If the status was finished before, we will have returned. so start watching events.
+            w = watch.Watch()
+            for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_field_selector()):
+                pod = event['object']
+                done = self.handle_pod_status(pod)
+                if done:
+                    w.stop()
+            return self.completion_result
+        except ApiException as e: # Special case for a 404 from the API.
+            if e.status == 404:
+                raise CalrissianPodNotFoundException('Encountered 404 trying to read pod {}, likely deleted'.format(self.pod.metadata.name))
+            else:
+                raise # Re-raise the exception, likely to be retried
 
     def _set_pod(self, pod):
         log.info('k8s pod \'{}\' started'.format(pod.metadata.name))
