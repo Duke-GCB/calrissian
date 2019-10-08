@@ -199,7 +199,7 @@ class ThreadPoolJobExecutor(JobExecutor):
         result = Resources.min(requested_max, self.total_resources)
         return result.to_dict()
 
-    def job_done_callback(self, rsc, logger, future, job):
+    def job_done_callback(self, rsc, logger, job, future):
         """
         Callback to run after a job is finished to restore reserved resources and check for exceptions.
         Expected to be called as part of the Future.add_done_callback(). The callback is invoked on a background
