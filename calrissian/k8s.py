@@ -84,13 +84,6 @@ class KubernetesClient(object):
             monitor.add(pod)
             self._set_pod(pod)
 
-    def resubmit_pod(self):
-        # In the event the pod was deleted, we should resubmit it
-        pod = self.pod
-        self._set_pod(None)
-        log.info('Resubmitting k8s pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
-        self.submit_pod(pod)
-
     def should_delete_pod(self):
         """
         Decide whether or not to delete a pod. Defaults to True if unset.
@@ -137,6 +130,7 @@ class KubernetesClient(object):
         :return: True if done, False if not
         """
         status = self.get_first_or_none(pod.status.container_statuses)
+        log.debug('Handling pod {} status {}'.format(pod.metadata.name, status))
         if status is None:
             return False
         if self.state_is_waiting(status.state):
@@ -147,6 +141,7 @@ class KubernetesClient(object):
         elif self.state_is_terminated(status.state):
             log.info('Handling terminated pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
             container = self.get_first_or_none(pod.spec.containers)
+            log.info('handling terminated state {} for container {}'.format(status.state, container))
             self._handle_completion(status.state, container)
             if self.should_delete_pod():
                 with PodMonitor() as monitor:
@@ -177,7 +172,8 @@ class KubernetesClient(object):
             return self.completion_result
         except ApiException as e: # Special case for a 404 from the API.
             if e.status == 404:
-                raise CalrissianPodNotFoundException('Encountered 404 trying to read pod {}, likely deleted'.format(self.pod.metadata.name))
+                log.warning('Encountered 404 trying to read pod {}, likely deleted\n{}'.format(self.pod.metadata.name, e))
+                raise CalrissianPodNotFoundException(e)
             else:
                 raise # Re-raise the exception, likely to be retried
 
