@@ -44,6 +44,7 @@ scandir==1.10.0
 schema-salad==4.5.20190621200723
 shellescape==3.4.1
 six==1.12.0
+tenacity==5.1.1
 typing-extensions==3.7.4
 urllib3==1.24.3
 websocket-client==0.56.0
