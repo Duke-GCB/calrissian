@@ -29,3 +29,22 @@ To view open issues related to conformance, see the [conformance](https://github
 ## Setup
 
 Please see [examples](examples) for installation and setup instructions.
+
+## Environment Variables
+
+Calrissian's behaviors can be customized by setting the following environment variables in the container specification.
+
+### Pod lifecycle
+
+By default, pods for a job step will be deleted after termination
+
+- `CALRISSIAN_DELETE_PODS`: Default `true`. If `false`, job step pods will not be deleted.
+
+### Kubernetes API retries
+
+When encountering a Kubernetes API exception, Calrissian uses a library to retry API calls with an exponential backoff. See the [tenacity documentation](https://tenacity.readthedocs.io/en/latest/index.html#waiting-before-retrying) for details.
+
+- `RETRY_MULTIPLIER`: Default `5`. Unit for multiplying the exponent interval.
+- `RETRY_MIN`: Default `5`. Minimum interval between retries.
+- `RETRY_MAX`: Default `1200`. Maximum interval between retries.
+- `RETRY_ATTEMPTS`: Default `10`. Max number of retries before giving up.
