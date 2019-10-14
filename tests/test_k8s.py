@@ -245,12 +245,11 @@ class KubernetesClientTestCase(TestCase):
         kc.delete_pod_name('pod-123')
         self.assertEqual('pod-123', mock_client.CoreV1Api.return_value.delete_namespaced_pod.call_args[0][0])
 
-    def test_delete_pod_name_raises(self, mock_get_namespace, mock_client):
-        mock_client.rest.ApiException = Exception
-        mock_client.CoreV1Api.return_value.delete_namespaced_pod.side_effect = ApiException
+    def test_delete_pod_name_ignores_404(self, mock_get_namespace, mock_client):
+        mock_client.CoreV1Api.return_value.delete_namespaced_pod.side_effect = ApiException(status=404)
         kc = KubernetesClient()
-        with self.assertRaisesRegex(CalrissianJobException, 'Error deleting pod named pod-123'):
-            kc.delete_pod_name('pod-123')
+        kc.delete_pod_name('pod-123')
+        self.assertEqual('pod-123', mock_client.CoreV1Api.return_value.delete_namespaced_pod.call_args[0][0])
 
     @patch('calrissian.k8s.log')
     def test_follow_logs_streams_to_logging(self, mock_log, mock_get_namespace, mock_client):

@@ -97,7 +97,12 @@ class KubernetesClient(object):
         try:
             self.core_api_instance.delete_namespaced_pod(pod_name, self.namespace)
         except ApiException as e:
-            raise CalrissianJobException('Error deleting pod named {}'.format(pod_name), e)
+            if e.status == 404:
+                # pod was not found - already deleted, so do not retry
+                pass
+            else:
+                # Re-raise
+                raise
 
     def _handle_completion(self, state, container):
         """
