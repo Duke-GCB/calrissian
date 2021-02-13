@@ -12,8 +12,9 @@ import random
 import string
 import shellescape
 import re
-from cwltool.pathmapper import ensure_writable, ensure_non_writable
-from cwltool.utils import visit_class
+import stat
+
+from cwltool.utils import visit_class, ensure_writable
 
 log = logging.getLogger("calrissian.job")
 
@@ -521,6 +522,8 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
                                      ):
         """Append volume a file/dir mapping to the runtime option list."""
         if not volume.resolved.startswith("_:"):
+            log.debug("Make reable transfer directory or file ({})".format(volume.resolved))
+            self.ensure_readable(volume.resolved)
             self._add_volume_binding(volume.resolved, volume.target) # this one defaults to read_only
 
     def add_writable_file_volume(self,
@@ -583,6 +586,28 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
                     shutil.copytree(volume.resolved, host_outdir_tgt)
                 ensure_writable(host_outdir_tgt or new_dir)
 
+    def ensure_readable(self, path):  # type: (str) -> None
+        logging.debug("make readable {}".format(path))
+        if os.path.isdir(path):
+            st = os.stat(path)
+            mode = stat.S_IMODE(st.st_mode)
+            os.chmod(path, mode | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH )
+            for root, dirs, files in os.walk(path):
+                for name in files:
+                    j = os.path.join(root, name)
+                    st = os.stat(j)
+                    mode = stat.S_IMODE(st.st_mode)
+                    os.chmod(j, mode | stat.S_IRGRP | stat.S_IROTH)
+                for name in dirs:
+                    j = os.path.join(root, name)
+                    st = os.stat(j)
+                    mode = stat.S_IMODE(st.st_mode)
+                    os.chmod(j, mode | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH )
+        else:
+            st = os.stat(path)
+            mode = stat.S_IMODE(st.st_mode)
+            os.chmod(path, mode | stat.S_IRGRP | stat.S_IROTH)
+
     def run(self, runtimeContext, tmpdir_lock=None):
         self.check_requirements()
         if tmpdir_lock:
@@ -592,6 +617,8 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             self.make_tmpdir()
         self.populate_env_vars()
         self._setup(runtimeContext)
+        # Make out dir readable for all
+        self.ensure_readable(self.outdir)
         pod = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
         self.execute_kubernetes_pod(pod) # analogous to _execute()
         completion_result = self.wait_for_kubernetes_pod()
