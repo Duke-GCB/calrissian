@@ -2,3 +2,6 @@ venv
 cwl/tmp
 cwl/out
 .coverage
+calrissian/__pycache__/
+calrissian.egg-info/
+tests/__pycache__/
