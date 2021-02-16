@@ -12,8 +12,7 @@ import random
 import string
 import shellescape
 import re
-from cwltool.pathmapper import ensure_writable, ensure_non_writable
-from cwltool.utils import visit_class
+from cwltool.utils import visit_class, ensure_writable
 
 log = logging.getLogger("calrissian.job")
 
