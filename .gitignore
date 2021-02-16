@@ -5,3 +5,4 @@ cwl/out
 calrissian/__pycache__/
 calrissian.egg-info/
 tests/__pycache__/
+.vscode
