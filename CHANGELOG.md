@@ -1,3 +1,4 @@
+cwltool upgraded to current version 3.0 + all requirements
 # Changelog
 
 All notable changes to this project will be documented in this file.
@@ -8,6 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 
 ### Added
+
+option for ensuring all files and directories passed from a node to another in a workflow is readable by all.
 
 ### Changed
 

@@ -450,6 +450,8 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         runtime = []
 
         # Append volume for outdir
+        log.debug("Make writable out directory or file ({})".format(self.outdir))
+        self.make_dir_writable(self.outdir)
         self._add_volume_binding(os.path.realpath(self.outdir), self.builder.outdir, writable=True)
         # Use a kubernetes emptyDir: {} volume for /tmp
         # Note that below add_volumes() may result in other temporary files being mounted
@@ -521,6 +523,11 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         """Append volume a file/dir mapping to the runtime option list."""
         if not volume.resolved.startswith("_:"):
             self._add_volume_binding(volume.resolved, volume.target) # this one defaults to read_only
+
+    def make_dir_writable(self, path):  # type: (str) -> None
+        st = os.stat(path)
+        mode = stat.S_IMODE(st.st_mode)
+        os.chmod(path, mode | stat.S_IRWXG | stat.S_IRWXO)
 
     def add_writable_file_volume(self,
                                  runtime,          # type: List[Text]
