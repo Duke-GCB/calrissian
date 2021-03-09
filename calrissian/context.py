@@ -18,4 +18,5 @@ class CalrissianRuntimeContext(RuntimeContext):
         # So, if we want to capture an init param of pod_labels, we just set it to
         # None and let super() handle the rest.
         self.pod_labels = None
+        self.pod_env_vars = None
         return super(CalrissianRuntimeContext, self).__init__(kwargs)

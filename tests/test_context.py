@@ -21,3 +21,12 @@ class CalrissianRuntimeContextTestCase(TestCase):
         labels = {'key1': 'val1'}
         ctx = CalrissianRuntimeContext({'pod_labels':labels})
         self.assertEqual(ctx.pod_labels, labels)
+    
+    def test_has_pod_env_vars_field(self):
+        ctx = CalrissianRuntimeContext()
+        self.assertIsNone(ctx.pod_labels)
+
+    def test_sets_env_vars_field(self):
+        env_vars = {'key1': 'val1'}
+        ctx = CalrissianRuntimeContext({'pod_env_vars':env_vars})
+        self.assertEqual(ctx.pod_env_vars, env_vars)
