@@ -482,13 +482,19 @@ class CalrissianCommandLineJobTestCase(TestCase):
         self.assertTrue(mock_os.path.exists.called)
         self.assertFalse(mock_os.makedirs.called)
 
-    def test_populate_env_vars(self, mock_volume_builder, mock_client):
+    @patch('calrissian.job.read_yaml')
+    def test_populate_env_vars(self, mock_read_yaml, mock_volume_builder, mock_client):
+        expected_env_vars = {'HTTP_PROXY':'http://1.2.3.4:3853'}
+        mock_read_yaml.return_value = expected_env_vars
+        mock_runtime_context = Mock(pod_env_vars='env_vars.yaml')
         job = self.make_job()
-        job.populate_env_vars()
+        job.populate_env_vars(mock_runtime_context)
         # tmpdir should be '/tmp'
         self.assertEqual(job.environment['TMPDIR'], '/tmp')
         # home should be builder.outdir
         self.assertEqual(job.environment['HOME'], '/out')
+        # HTTP_PROXY should be set
+        self.assertEqual(job.environment['HTTP_PROXY'], 'http://1.2.3.4:3853')
 
     def test_wait_for_kubernetes_pod(self, mock_volume_builder, mock_client):
         job = self.make_job()
@@ -759,6 +765,22 @@ class CalrissianCommandLineJobTestCase(TestCase):
         job = self.make_job()
         labels = job.get_pod_labels(mock_runtime_context)
         self.assertEqual(labels, {})
+
+    @patch('calrissian.job.read_yaml')
+    def test_get_pod_env_vars(self, mock_read_yaml, mock_volume_builder, mock_client):
+        expected_env_vars = {'HTTP_PROXY':'1.2.3.4:3853'}
+        mock_read_yaml.return_value = expected_env_vars
+        mock_runtime_context = Mock(pod_env_vars='env_vars.yaml')
+        job = self.make_job()
+        env_vars = job.get_pod_env_vars(mock_runtime_context)
+        self.assertEqual(env_vars, expected_env_vars)
+        self.assertEqual(mock_read_yaml.call_args, call('env_vars.yaml'))
+
+    def test_get_env_vars_empty(self, mock_volume_builder, mock_client):
+        mock_runtime_context = Mock(pod_env_vars=None)
+        job = self.make_job()
+        env_vars = job.get_pod_env_vars(mock_runtime_context)
+        self.assertEqual(env_vars, {})
 
     def test_get_from_requirements_raises_not_implemented(self,  mock_volume_builder, mock_client):
         job = self.make_job()

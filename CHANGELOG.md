@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 
-option for ensuring all files and directories passed from a node to another in a workflow is readable by all.
+* option for ensuring all files and directories passed from a node to another in a workflow is readable by all.
+* adds an argument `--pod-env_vars <yaml_file>` that allows passing environment variables to the submitted pods at runtime.
 
 ### Changed
 

@@ -359,13 +359,16 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             log.debug('os.makedirs({})'.format(self.tmpdir))
             os.makedirs(self.tmpdir)
 
-    def populate_env_vars(self):
+    def populate_env_vars(self, runtimeContext):
         # cwltool DockerCommandLineJob always sets HOME to self.builder.outdir
         # https://github.com/common-workflow-language/cwltool/blob/1.0.20181201184214/cwltool/docker.py#L338
         self.environment["HOME"] = self.builder.outdir
         # cwltool DockerCommandLineJob always sets TMPDIR to /tmp
         # https://github.com/common-workflow-language/cwltool/blob/1.0.20181201184214/cwltool/docker.py#L333
         self.environment["TMPDIR"] = self.container_tmpdir
+        # Extra environement variables set at runtime
+        for k, v in self.get_pod_env_vars(runtimeContext).items():
+            self.environment[str(k)] = str(v)
 
     def wait_for_kubernetes_pod(self):
         return self.client.wait_for_completion()
@@ -440,6 +443,12 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
     def get_pod_labels(self, runtimeContext):
         if runtimeContext.pod_labels:
             return read_yaml(runtimeContext.pod_labels)
+        else:
+            return {}
+
+    def get_pod_env_vars(self, runtimeContext):
+        if runtimeContext.pod_env_vars:
+            return read_yaml(runtimeContext.pod_env_vars)
         else:
             return {}
 
@@ -596,7 +605,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
                 self.make_tmpdir()
         else:
             self.make_tmpdir()
-        self.populate_env_vars()
+        self.populate_env_vars(runtimeContext)
         self._setup(runtimeContext)
         pod = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
         self.execute_kubernetes_pod(pod) # analogous to _execute()
