@@ -2,3 +2,5 @@ venv
 cwl/tmp
 cwl/out
 .coverage
+calrissian/__pycache__
+tests/__pycache__
