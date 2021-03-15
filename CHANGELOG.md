@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 
+adds an argument `--pod-env_vars <yaml_file>` that allows passing environment variables to the submitted pods at runtime.
+
 ### Changed
 
 cwltool upgraded to current version 3.0 + all requirements
