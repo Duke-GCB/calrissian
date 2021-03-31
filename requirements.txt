@@ -38,7 +38,7 @@ rdflib>=4.2.2,<5.1
 rdflib-jsonld==0.4.0
 requests==2.22.0
 requests-oauthlib==1.2.0
-rsa==4.0
+rsa==4.1
 ruamel.yaml>=0.12.4,<=0.16.5
 scandir==1.10.0
 schema-salad>=7.0.20210124093443,<8
