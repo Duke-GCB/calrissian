@@ -33,7 +33,7 @@ pycparser==2.19
 PyJWT==1.7.1
 pyparsing==2.4.2
 python-dateutil==2.8.0
-PyYAML==5.1.2
+PyYAML==5.4
 rdflib>=4.2.2,<5.1
 rdflib-jsonld==0.4.0
 requests==2.22.0
