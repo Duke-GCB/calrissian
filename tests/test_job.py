@@ -1,3 +1,4 @@
+import os
 from unittest import TestCase
 from unittest.mock import Mock, patch, call, create_autospec
 from calrissian.job import k8s_safe_name, KubernetesVolumeBuilder, VolumeBuilderException, KubernetesPodBuilder, random_tag, read_yaml
@@ -586,6 +587,11 @@ class CalrissianCommandLineJobTestCase(TestCase):
         def realpath(path):
             return '/real' + path
         mock_os.path.realpath = realpath
+        def stat(path):
+            s = Mock()
+            s.st_mode = 744
+            return s
+        mock_os.stat = stat
         mock_add_volume_binding = Mock()
         mock_add_emptydir_volume = Mock()
         mock_add_emptydir_volume_binding = Mock()

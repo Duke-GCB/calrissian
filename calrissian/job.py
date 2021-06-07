@@ -538,9 +538,10 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             self._add_volume_binding(volume.resolved, volume.target) # this one defaults to read_only
 
     def make_dir_writable(self, path):  # type: (str) -> None
-        st = os.stat(path)
-        mode = stat.S_IMODE(st.st_mode)
-        os.chmod(path, mode | stat.S_IRWXG | stat.S_IRWXO)
+        if (os.path.exists(path)):
+            st = os.stat(path)
+            mode = stat.S_IMODE(st.st_mode)
+            os.chmod(path, mode | stat.S_IRWXG | stat.S_IRWXO)
 
     def add_writable_file_volume(self,
                                  runtime,          # type: List[Text]
@@ -620,9 +621,10 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
                     mode = stat.S_IMODE(st.st_mode)
                     os.chmod(j, mode | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH )
         else:
-            st = os.stat(path)
-            mode = stat.S_IMODE(st.st_mode)
-            os.chmod(path, mode | stat.S_IRGRP | stat.S_IROTH)
+            if (os.path.exists(path)):
+                st = os.stat(path)
+                mode = stat.S_IMODE(st.st_mode)
+                os.chmod(path, mode | stat.S_IRGRP | stat.S_IROTH)
 
     def run(self, runtimeContext, tmpdir_lock=None):
         self.check_requirements()
