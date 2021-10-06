@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+
+- cwltool upgraded to current version 3.1 + all requirements
+
 ## [v0.10.0] - 2021-03-31
 
 ### Added
