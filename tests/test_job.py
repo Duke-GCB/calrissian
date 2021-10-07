@@ -417,7 +417,12 @@ class KubernetesPodBuilderTestCase(TestCase):
                      }
                 ],
                 'restartPolicy': 'Never',
-                'volumes': self.volumes
+                'volumes': self.volumes,
+                'securityContext': {
+                    'runAsUser': 1000,
+                    'runAsGroup': 3000,
+                    'fsGroup': 2000,
+                }
             }
         }
         self.assertEqual(expected, self.pod_builder.build())
