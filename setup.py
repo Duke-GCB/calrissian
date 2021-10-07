@@ -34,7 +34,7 @@ setup(
     install_requires=[
         'urllib3<1.25,>=1.24.2',
         'kubernetes==10.0.1',
-        'cwltool==3.0.20210124104916',
+        'cwltool==3.1.20211004060744',
         'tenacity==5.1.1',
     ],
     test_suite='nose2.collector.collector',
