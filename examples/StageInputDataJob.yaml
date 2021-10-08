@@ -8,6 +8,9 @@ spec:
       containers:
       - name: stage-input-data
         image: dukegcb/calrissian:latest
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
         command:
         - "sh"
         - "-c"

@@ -188,7 +188,7 @@ class KubernetesVolumeBuilder(object):
 
 class KubernetesPodBuilder(object):
 
-    def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, resources, labels):
+    def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, resources, labels, security_context):
         self.name = name
         self.container_image = container_image
         self.environment = environment
@@ -200,6 +200,7 @@ class KubernetesPodBuilder(object):
         self.stdin = stdin
         self.resources = resources
         self.labels = labels
+        self.security_context = security_context
 
     def pod_name(self):
         tag = random_tag()
@@ -337,11 +338,7 @@ class KubernetesPodBuilder(object):
                     ],
                     'restartPolicy': 'Never',
                     'volumes': self.volumes,
-                    'securityContext': {
-                        'runAsUser': 1000,
-                        'runAsGroup': 3000,
-                        'fsGroup': 2000,
-                    }
+                    'securityContext': self.security_context
             }
         }
 
@@ -452,6 +449,15 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         else:
             return {}
 
+    def get_security_context(self, runtimeContext):
+        if not runtimeContext.no_match_user:
+            return {
+                'runAsUser': os.getuid(),
+                'runAsGroup': os.getgid()
+            }
+        else:
+            return {}
+
     def get_pod_env_vars(self, runtimeContext):
         if runtimeContext.pod_env_vars:
             return read_yaml(runtimeContext.pod_env_vars)
@@ -491,8 +497,6 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
                 secret_store=runtimeContext.secret_store,
                 any_path_okay=any_path_okay)
 
-        pod_labels = self.get_pod_labels(runtimeContext)
-
         k8s_builder = KubernetesPodBuilder(
             self.name,
             self._get_container_image(),
@@ -504,7 +508,8 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             self.stderr,
             self.stdin,
             self.builder.resources,
-            pod_labels,
+            self.get_pod_labels(runtimeContext),
+            self.get_security_context(runtimeContext),
         )
         built = k8s_builder.build()
         log.debug('{}\n{}{}\n'.format('-' * 80, yaml.dump(built), '-' * 80))
