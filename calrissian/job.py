@@ -1,3 +1,4 @@
+from typing import Dict
 from cwltool.job import ContainerCommandLineJob, needs_shell_quoting_re
 from cwltool.utils import DEFAULT_TMP_PREFIX
 from cwltool.errors import WorkflowException, UnsupportedRequirement
@@ -590,6 +591,15 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
                     log.debug('shutil.copytree({}, {})'.format(volume.resolved, host_outdir_tgt))
                     shutil.copytree(volume.resolved, host_outdir_tgt)
                 ensure_writable(host_outdir_tgt or new_dir)
+
+    def _required_env(self) -> Dict[str, str]:
+        # spec currently says "HOME must be set to the designated output
+        # directory." but spec might change to designated temp directory.
+        # runtime.append("--env=HOME=/tmp")
+        return {
+            "TMPDIR": self.CONTAINER_TMPDIR,
+            "HOME": self.builder.outdir,
+        }
 
     def run(self, runtimeContext, tmpdir_lock=None):
         self.check_requirements()
