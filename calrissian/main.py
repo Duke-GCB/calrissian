@@ -43,7 +43,6 @@ def add_arguments(parser):
     parser.add_argument('--stdout', type=Text, nargs='?', help='Output file name to tee standard output (CWL output object)')
     parser.add_argument('--stderr', type=Text, nargs='?', help='Output file name to tee standard error to (includes tool logs)')
 
-
 def print_version():
     print(version())
 

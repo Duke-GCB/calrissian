@@ -1,3 +1,4 @@
+import os
 from unittest import TestCase
 from unittest.mock import Mock, patch, call, create_autospec
 from calrissian.job import k8s_safe_name, KubernetesVolumeBuilder, VolumeBuilderException, KubernetesPodBuilder, random_tag, read_yaml
@@ -283,9 +284,10 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.stdin = 'stdin.txt'
         self.resources = {'cores': 1, 'ram': 1024}
         self.labels = {'key1': 'val1', 'key2': 123}
+        self.security_context = { 'runAsUser': os.getuid(),'runAsGroup': os.getgid() }
         self.pod_builder = KubernetesPodBuilder(self.name, self.container_image, self.environment, self.volume_mounts,
                                                 self.volumes, self.command_line, self.stdout, self.stderr, self.stdin,
-                                                self.resources, self.labels)
+                                                self.resources, self.labels, self.security_context)
 
     @patch('calrissian.job.random_tag')
     def test_safe_pod_name(self, mock_random_tag):
@@ -417,7 +419,11 @@ class KubernetesPodBuilderTestCase(TestCase):
                      }
                 ],
                 'restartPolicy': 'Never',
-                'volumes': self.volumes
+                'volumes': self.volumes,
+                'securityContext': {
+                    'runAsUser': os.getuid(),
+                    'runAsGroup': os.getgid()
+                }
             }
         }
         self.assertEqual(expected, self.pod_builder.build())
@@ -618,6 +624,7 @@ class CalrissianCommandLineJobTestCase(TestCase):
             job.stdin,
             job.builder.resources,
             mock_read_yaml.return_value,
+            job.get_security_context(mock_runtime_context)
         ))
         # calls builder.build
         # returns that
@@ -749,6 +756,19 @@ class CalrissianCommandLineJobTestCase(TestCase):
             call.exit(None, None, None)
             ]
         self.assertEqual(expected_calls, manager.mock_calls)
+
+    def test_get_security_context(self, mock_volume_builder, mock_client):
+        mock_runtime_context = Mock(no_match_user=False)
+        expected_security_context = { 'runAsUser': os.getuid(), 'runAsGroup': os.getgid() }
+        job = self.make_job()
+        security_context = job.get_security_context(mock_runtime_context)
+        self.assertEqual(security_context, expected_security_context)
+    
+    def test_get_security_context_empty(self, mock_volume_builder, mock_client):
+        mock_runtime_context = Mock(no_match_user=True)
+        job = self.make_job()
+        security_context = job.get_security_context(mock_runtime_context)
+        self.assertEqual(security_context, {})
 
     @patch('calrissian.job.read_yaml')
     def test_get_pod_labels(self, mock_read_yaml, mock_volume_builder, mock_client):
