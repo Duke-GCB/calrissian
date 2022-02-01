@@ -188,7 +188,7 @@ class KubernetesVolumeBuilder(object):
 
 class KubernetesPodBuilder(object):
 
-    def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, resources, labels, security_context):
+    def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, resources, labels, security_context, serviceaccount):
         self.name = name
         self.container_image = container_image
         self.environment = environment
@@ -201,6 +201,7 @@ class KubernetesPodBuilder(object):
         self.resources = resources
         self.labels = labels
         self.security_context = security_context
+        self.serviceaccount = serviceaccount
 
     def pod_name(self):
         tag = random_tag()
@@ -315,32 +316,37 @@ class KubernetesPodBuilder(object):
         return {str(k): str(v) for k, v in self.labels.items()}
 
     def build(self):
-        return {
+        spec = {
             'metadata': {
                 'name': self.pod_name(),
                 'labels': self.pod_labels(),
             },
             'apiVersion': 'v1',
             'kind':'Pod',
-                'spec': {
-                    'initContainers': self.init_containers(),
-                    'containers': [
-                        {
-                            'name': self.container_name(),
-                            'image': self.container_image,
-                            'command': self.container_command(),
-                            'args': self.container_args(),
-                            'env': self.container_environment(),
-                            'resources': self.container_resources(),
-                            'volumeMounts': self.volume_mounts,
-                            'workingDir': self.container_workingdir(),
-                         }
-                    ],
-                    'restartPolicy': 'Never',
-                    'volumes': self.volumes,
-                    'securityContext': self.security_context
+            'spec': {
+                'initContainers': self.init_containers(),
+                'containers': [
+                    {
+                        'name': self.container_name(),
+                        'image': self.container_image,
+                        'command': self.container_command(),
+                        'args': self.container_args(),
+                        'env': self.container_environment(),
+                        'resources': self.container_resources(),
+                        'volumeMounts': self.volume_mounts,
+                        'workingDir': self.container_workingdir(),
+                        }
+                ],
+                'restartPolicy': 'Never',
+                'volumes': self.volumes,
+                'securityContext': self.security_context
             }
         }
+        
+        if ( self.serviceaccount ):
+            spec['spec']['serviceAccountName'] = self.serviceaccount
+        
+        return spec
 
 
 # This now subclasses ContainerCommandLineJob, but only uses two of its methods:
@@ -449,6 +455,10 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         else:
             return {}
 
+    def get_serviceaccount(self, runtimeContext):
+        return runtimeContext.serviceaccount
+
+
     def get_security_context(self, runtimeContext):
         if not runtimeContext.no_match_user:
             return {
@@ -510,6 +520,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             self.builder.resources,
             self.get_pod_labels(runtimeContext),
             self.get_security_context(runtimeContext),
+            self.get_serviceaccount(runtimeContext)
         )
         built = k8s_builder.build()
         log.debug('{}\n{}{}\n'.format('-' * 80, yaml.dump(built), '-' * 80))

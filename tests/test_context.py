@@ -30,3 +30,12 @@ class CalrissianRuntimeContextTestCase(TestCase):
         env_vars = {'key1': 'val1'}
         ctx = CalrissianRuntimeContext({'pod_env_vars':env_vars})
         self.assertEqual(ctx.pod_env_vars, env_vars)
+        
+    def test_has_serviceaccount_field(self):
+        ctx = CalrissianRuntimeContext()
+        self.assertIsNone(ctx.serviceaccount)
+
+    def test_sets_serviceaccount_field(self):
+        serviceaccount = "podmanager"
+        ctx = CalrissianRuntimeContext({'serviceaccount':serviceaccount})
+        self.assertEqual(ctx.serviceaccount, serviceaccount)
