@@ -21,6 +21,15 @@ class CalrissianRuntimeContextTestCase(TestCase):
         labels = {'key1': 'val1'}
         ctx = CalrissianRuntimeContext({'pod_labels':labels})
         self.assertEqual(ctx.pod_labels, labels)
+        
+    def test_has_pod_nodeselectors_field(self):
+        ctx = CalrissianRuntimeContext()
+        self.assertIsNone(ctx.pod_nodeselectors)
+
+    def test_sets_nodeselectors_field(self):
+        nodeselectors = {'disktype': 'ssd'}
+        ctx = CalrissianRuntimeContext({'pod_nodeselectors':nodeselectors})
+        self.assertEqual(ctx.pod_nodeselectors, nodeselectors)
     
     def test_has_pod_env_vars_field(self):
         ctx = CalrissianRuntimeContext()

@@ -19,4 +19,5 @@ class CalrissianRuntimeContext(RuntimeContext):
         # None and let super() handle the rest.
         self.pod_labels = None
         self.pod_env_vars = None
+        self.pod_nodeselectors = None
         return super(CalrissianRuntimeContext, self).__init__(kwargs)
