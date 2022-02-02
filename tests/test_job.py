@@ -636,7 +636,7 @@ class CalrissianCommandLineJobTestCase(TestCase):
             job.builder.resources,
             mock_read_yaml.return_value,
             mock_read_yaml.return_value,
-            job.get_security_context(mock_runtime_context)
+            job.get_security_context(mock_runtime_context),
             None
         ))
         # calls builder.build
