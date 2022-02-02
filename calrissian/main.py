@@ -40,7 +40,7 @@ def add_arguments(parser):
     parser.add_argument('--pod-labels', type=Text, nargs='?', help='YAML file of labels to add to Pods submitted')
     parser.add_argument('--pod-env-vars', type=Text, nargs='?', help='YAML file of environment variables to add at runtime to Pods submitted')
     parser.add_argument('--pod-node-selectors', type=Text, nargs='?', help='YAML file of node selectors to add to Pods submitted')
-    parser.add_argument('--pod_serviceaccount', type=str, help='Service Account to use for pods management')
+    parser.add_argument('--pod-serviceaccount', type=str, help='Service Account to use for pods management')
     parser.add_argument('--usage-report', type=Text, nargs='?', help='Output JSON file name to record resource usage')
     parser.add_argument('--stdout', type=Text, nargs='?', help='Output file name to tee standard output (CWL output object)')
     parser.add_argument('--stderr', type=Text, nargs='?', help='Output file name to tee standard error to (includes tool logs)')
