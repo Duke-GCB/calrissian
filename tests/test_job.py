@@ -285,10 +285,10 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.resources = {'cores': 1, 'ram': 1024}
         self.labels = {'key1': 'val1', 'key2': 123}
         self.security_context = { 'runAsUser': os.getuid(),'runAsGroup': os.getgid() }
-        self.serviceaccount = "podmanager"
+        self.pod_serviceaccount = "podmanager"
         self.pod_builder = KubernetesPodBuilder(self.name, self.container_image, self.environment, self.volume_mounts,
                                                 self.volumes, self.command_line, self.stdout, self.stderr, self.stdin,
-                                                self.resources, self.labels, self.security_context, self.serviceaccount)
+                                                self.resources, self.labels, self.security_context, self.pod_serviceaccount)
 
     @patch('calrissian.job.random_tag')
     def test_safe_pod_name(self, mock_random_tag):
@@ -605,7 +605,7 @@ class CalrissianCommandLineJobTestCase(TestCase):
         job = self.make_job()
         job.outdir = '/outdir'
         job.tmpdir = '/tmpdir'
-        mock_runtime_context = Mock(tmpdir_prefix='TP', serviceaccount=None)
+        mock_runtime_context = Mock(tmpdir_prefix='TP', pod_serviceaccount=None)
         built = job.create_kubernetes_runtime(mock_runtime_context)
         # Adds volume binding for outdir
         self.assertEqual(mock_add_volume_binding.call_args, call('/real/outdir', '/out', True))

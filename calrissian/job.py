@@ -455,8 +455,8 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         else:
             return {}
 
-    def get_serviceaccount(self, runtimeContext):
-        return runtimeContext.serviceaccount
+    def get_pod_serviceaccount(self, runtimeContext):
+        return runtimeContext.pod_serviceaccount
 
 
     def get_security_context(self, runtimeContext):
@@ -520,7 +520,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             self.builder.resources,
             self.get_pod_labels(runtimeContext),
             self.get_security_context(runtimeContext),
-            self.get_serviceaccount(runtimeContext)
+            self.get_pod_serviceaccount(runtimeContext)
         )
         built = k8s_builder.build()
         log.debug('{}\n{}{}\n'.format('-' * 80, yaml.dump(built), '-' * 80))

@@ -33,9 +33,9 @@ class CalrissianRuntimeContextTestCase(TestCase):
         
     def test_has_serviceaccount_field(self):
         ctx = CalrissianRuntimeContext()
-        self.assertIsNone(ctx.serviceaccount)
+        self.assertIsNone(ctx.pod_serviceaccount)
 
     def test_sets_serviceaccount_field(self):
         serviceaccount = "podmanager"
-        ctx = CalrissianRuntimeContext({'serviceaccount':serviceaccount})
-        self.assertEqual(ctx.serviceaccount, serviceaccount)
+        ctx = CalrissianRuntimeContext({'pod_serviceaccount':serviceaccount})
+        self.assertEqual(ctx.pod_serviceaccount, serviceaccount)
