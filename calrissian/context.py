@@ -20,4 +20,5 @@ class CalrissianRuntimeContext(RuntimeContext):
         self.pod_labels = None
         self.pod_env_vars = None
         self.pod_nodeselectors = None
+        self.pod_serviceaccount = None
         return super(CalrissianRuntimeContext, self).__init__(kwargs)
