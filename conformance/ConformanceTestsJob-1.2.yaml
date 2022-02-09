@@ -1,0 +1,60 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: conformance-output-data-1-2
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: longhorn
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: conformance-tests-1-2
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      initContainers:
+      - name: prep-1-2
+        image: alpine:3.10
+        command: ["chmod", "777", "/output"]
+        volumeMounts:
+        - mountPath: /output
+          name: conformance-output-data-1-2
+      containers:
+      - name: tests-1-2
+        image: docker.terradue.com/calrissian:conformance
+        workingDir: "/conformance/cwl-v1.2-1.2.0"
+        command: ["./run_test.sh"]
+        args:
+        - "RUNNER=calrissian"
+        - "--verbose"
+        - "EXTRA=--max-ram 8G --max-cores 4 --default-container debian:stretch-slim"
+        env:
+        - name: CALRISSIAN_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: TMPDIR
+          value: "/output"
+        volumeMounts:
+        - mountPath: /conformance
+          name: conformance-test-data-1-2
+          readOnly: true
+        - mountPath: /output
+          name: conformance-output-data-1-2
+      restartPolicy: Never
+      volumes:
+      - name: conformance-test-data-1-2
+        persistentVolumeClaim:
+          claimName: conformance-test-data-1-2
+          readOnly: true
+      - name: conformance-output-data-1-2
+        persistentVolumeClaim:
+          claimName: conformance-output-data-1-2
