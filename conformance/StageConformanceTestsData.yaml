@@ -5,11 +5,12 @@ metadata:
   name: conformance-test-data-1-0
 spec:
   accessModes:
-    - ReadWriteOnce
-    - ReadOnlyMany
+    #- ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 1Gi
+  storageClassName: longhorn
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -17,11 +18,25 @@ metadata:
   name: conformance-test-data-1-1
 spec:
   accessModes:
-    - ReadWriteOnce
-    - ReadOnlyMany
+    #- ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 1Gi
+  storageClassName: longhorn
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: conformance-test-data-1-2-1
+spec:
+  accessModes:
+    #- ReadWriteOnce
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: longhorn
 ---
 apiVersion: batch/v1
 kind: Job
@@ -59,6 +74,20 @@ spec:
         volumeMounts:
         - mountPath: /conformance
           name: conformance-test-data-1-1
+      - name: 1-2
+        image: alpine:3.10
+        command:
+        - "sh"
+        - "-c"
+        - "cd /conformance; wget -q ${CWL_ARCHIVE_BASE}/${CWL_ARCHIVE_FILE}; unzip -q ${CWL_ARCHIVE_FILE}; rm ${CWL_ARCHIVE_FILE}; chmod -R a+rx *; ls -l"
+        env:
+        - name: CWL_ARCHIVE_BASE
+          value: "https://github.com/common-workflow-language/cwl-v1.2/archive/refs/heads"
+        - name: CWL_ARCHIVE_FILE
+          value: "1.2.1_proposed.zip"
+        volumeMounts:
+        - mountPath: /conformance
+          name: conformance-test-data-1-2-1
       restartPolicy: Never
       volumes:
       - name: conformance-test-data-1-0
@@ -67,3 +96,6 @@ spec:
       - name: conformance-test-data-1-1
         persistentVolumeClaim:
           claimName: conformance-test-data-1-1
+      - name: conformance-test-data-1-2-1
+        persistentVolumeClaim:
+          claimName: conformance-test-data-1-2-1

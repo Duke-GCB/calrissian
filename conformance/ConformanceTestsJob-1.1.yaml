@@ -5,15 +5,17 @@ metadata:
   name: conformance-output-data-1-1
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 1Gi
+  storageClassName: longhorn
+
 ---
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: conformance-tests-1-1
+  name: conformance-tests-1-1b
 spec:
   backoffLimit: 0
   template:
@@ -27,7 +29,7 @@ spec:
           name: conformance-output-data-1-1
       containers:
       - name: tests-1-1
-        image: calrissian:conformance
+        image: docker.terradue.com/calrissian:conformance
         workingDir: "/conformance/cwl-v1.1-1.1.0"
         command: ["./run_test.sh"]
         args:
