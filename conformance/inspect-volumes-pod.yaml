@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: inspect-volumes
+spec:
+  volumes:
+  - name: shared-data
+    emptyDir: {}
+  containers:
+  - name: nginx
+    image: nginx:latest
+    volumeMounts:
+    - mountPath: /conformance
+      name: conformance-test-data-1-2
+      readOnly: true
+    - mountPath: /output
+      name: conformance-output-data-1-2
+    env:
+    - name: CALRISSIAN_POD_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.name
+  volumes:
+  - name: conformance-test-data-1-2
+    persistentVolumeClaim:
+      claimName: conformance-test-data-1-2
+      readOnly: true
+  - name: conformance-output-data-1-2
+    persistentVolumeClaim:
+      claimName: conformance-output-data-1-2
+  hostNetwork: true
+  dnsPolicy: Default

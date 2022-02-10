@@ -31,11 +31,21 @@ spec:
       - name: tests-1-2
         image: docker.terradue.com/calrissian:conformance
         workingDir: "/conformance/cwl-v1.2-1.2.0"
-        command: ["./run_test.sh"]
+        command: ["cwltest"]
         args:
-        - "RUNNER=calrissian"
-        - "--verbose"
-        - "EXTRA=--max-ram 8G --max-cores 4 --default-container debian:stretch-slim"
+        - "--test"
+        - "/conformance/cwl-v1.2-1.2.0/conformance_tests.yaml"
+        - "--tool"
+        - "calrissian"
+        - "--badgedir"
+        - "/output/badges"
+        - "--"
+        - "--max-ram"
+        - "8G"
+        - "--max-cores"
+        - "4"
+        - "--default-container"
+        - "debian:stretch-slim"
         env:
         - name: CALRISSIAN_POD_NAME
           valueFrom:

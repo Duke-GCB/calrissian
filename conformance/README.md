@@ -24,18 +24,34 @@ Calrissian does not include cwltest, so build a container that installs it.
 ./build-conformance.sh
 ```
 
-This will build `calrissian:conformance` from the current source tree. You may need to tag that differently if pushing to a registry. If so, update the `image: ` in [ConformanceTestsJob-1.1.yaml](ConformanceTestsJob-1.1.yaml)
+This will build `calrissian:conformance` from the current source tree. You may need to tag that differently if pushing to a registry. If so, update the `image: ` in [ConformanceTestsJob-1.2.yaml](ConformanceTestsJob-1.2.yaml)
 
 ### Running Conformance Tests
 
-[ConformanceTestsJob-1.1.yaml](ConformanceTestsJob-1.1.yaml) uses `run_test.sh` from cwltool to run conformance tests with `RUNNER=calrissian` and Calrissian's required arguments in `EXTRA`.
+[ConformanceTestsJob-1.2.yaml](ConformanceTestsJob-1.2.yaml) uses `cwltest` from cwltool to run conformance tests with `--tool calrissian` and Calrissian's required arguments after `--`.
 
 ```
-kubectl --namespace="$NAMESPACE_NAME" create -f ConformanceTestsJob-1.1.yaml
+kubectl --namespace="$NAMESPACE_NAME" create -f ConformanceTestsJob-1.2.yaml
 kubectl --namespace="$NAMESPACE_NAME" wait --for=condition=Ready\
-   --selector=job-name=conformance-tests-1-1 pods
-kubectl --namespace="$NAMESPACE_NAME" logs -f jobs/conformance-tests-1-1
+   --selector=job-name=conformance-tests-1-2 pods
+kubectl --namespace="$NAMESPACE_NAME" logs -f jobs/conformance-tests-1-2
 ```
+
+### Inspect the volumes content
+
+Create a pod to inspect the volume with: 
+
+```
+kubectl --namespace="$NAMESPACE_NAME"n apply -f inspect-volumes-pod.yaml 
+```
+
+Open a shell in the pod with:
+
+```
+ kubectl --namespace="$NAMESPACE_NAME" exec --stdin --tty inspect-volumes -- /bin/bash
+```
+
+Inpect the content of `/output` with `ls -l /output`
 
 ### Notes:
 
