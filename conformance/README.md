@@ -86,6 +86,12 @@ Open a shell in the pod with:
 
 Inpect the content of `/output` with `ls -l /output`
 
+### Copy the badges
+
+```
+kubectl cp $NAMESPACE_NAME/inspect-volumes:/output/badges/ badges/
+```
+
 ### Notes:
 
 - Calrissian requires specifying an envelope of RAM and CPU resources to use in the cluster, so these are provided as `--max-ram` and `--max-cores`
