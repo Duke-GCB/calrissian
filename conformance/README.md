@@ -1,5 +1,8 @@
 # Calrissian - CWL Conformance Tests
 
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/command_line_tool.json?icon=commonwl)
+
+
 This is under development, and will eventually be automated to run in a CI environment. However, the resources here can be used to run [CWL conformance tests](https://github.com/common-workflow-language/common-workflow-language/blob/master/CONFORMANCE_TESTS.md) on a Kubernetes cluster.
 
 ### Cluster Preparation
