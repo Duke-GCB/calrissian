@@ -1,5 +1,7 @@
 # Calrissian - CWL Conformance Tests
 
+## Badges for 1.2.0
+
 ![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/command_line_tool.json?icon=commonwl)
 ![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/conditional.json?icon=commonwl)
 ![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/docker.json?icon=commonwl)
