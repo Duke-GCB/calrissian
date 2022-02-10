@@ -1,12 +1,30 @@
 # Calrissian - CWL Conformance Tests
 
-## Badges for 1.2.0
+## Conformance tests for CWL v1.0 for the latest release
 
+Coming soon
+
+## Conformance tests for CWL v1.1 for the latest release
+
+Coming soon
+
+## Conformance tests for CWL v1.2.0 for the latest release
+
+### Classes
+
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/workflow.json?icon=commonwl)
 ![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/command_line_tool.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/expression_tool.json?icon=commonwl)
+
+### Required features
+
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/required.json?icon=commonwl)
+
+### Optional features
+
 ![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/conditional.json?icon=commonwl)
 ![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/docker.json?icon=commonwl)
 ![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/env_var.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/expression_tool.json?icon=commonwl)
 ![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/format_checking.json?icon=commonwl)
 ![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/initial_work_dir.json?icon=commonwl)
 ![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/inline_javascript.json?icon=commonwl)
@@ -15,7 +33,6 @@
 ![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/multiple.json?icon=commonwl)
 ![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/multiple_input.json?icon=commonwl)
 ![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/networkaccess.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/required.json?icon=commonwl)
 ![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/resource.json?icon=commonwl)
 ![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/scatter.json?icon=commonwl)
 ![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/schema_def.json?icon=commonwl)
@@ -25,7 +42,6 @@
 ![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/step_input_expression.json?icon=commonwl)
 ![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/subworkflow.json?icon=commonwl)
 ![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/timelimit.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/workflow.json?icon=commonwl)
 
 
 
