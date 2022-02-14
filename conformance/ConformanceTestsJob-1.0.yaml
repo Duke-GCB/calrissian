@@ -5,10 +5,11 @@ metadata:
   name: conformance-output-data-1-0
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 1Gi
+  storageClassName: longhorn
 ---
 apiVersion: batch/v1
 kind: Job
@@ -29,11 +30,21 @@ spec:
       - name: tests-1-0
         image: docker.terradue.com/calrissian:conformance
         workingDir: "/conformance/common-workflow-language-1.0.2"
-        command: ["./run_test.sh"]
+        command: ["cwltest"]
         args:
-        - "RUNNER=calrissian"
-        - "--verbose"
-        - "EXTRA=--max-ram 8G --max-cores 4 --default-container debian:stretch-slim"
+        - "--test"
+        - "/conformance/common-workflow-language-1.0.2/v1.0/conformance_test_v1.0.yaml"
+        - "--tool"
+        - "calrissian"
+        - "--badgedir"
+        - "/output/badges-1.0.2"
+        - "--"
+        - "--max-ram"
+        - "8G"
+        - "--max-cores"
+        - "4"
+        - "--default-container"
+        - "debian:stretch-slim"
         env:
         - name: CALRISSIAN_POD_NAME
           valueFrom:
