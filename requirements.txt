@@ -30,7 +30,7 @@ psutil==5.6.6
 pyasn1==0.4.6
 pyasn1-modules==0.2.6
 pycparser==2.19
-PyJWT==1.7.1
+PyJWT==2.4.0
 pyparsing==2.4.2
 python-dateutil==2.8.0
 PyYAML==5.4
