@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+adds an argument --pod-nodeselectors <yaml_file> to add a node selector for computing pods
+
 ### Changed
 
 - cwltool upgraded to current version 3.1 + all requirements
