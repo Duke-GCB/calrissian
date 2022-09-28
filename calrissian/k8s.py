@@ -147,6 +147,7 @@ class KubernetesClient(object):
         for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_field_selector()):
             pod = event['object']
             status = self.get_first_or_none(pod.status.container_statuses)
+            log.info('pod name {} with id {} has status {}'.format(pod.metadata.name, pod.metadata.uid, status))
             if status is None:
                 continue
             if self.state_is_waiting(status.state):
@@ -167,6 +168,7 @@ class KubernetesClient(object):
                 w.stop()
             else:
                 raise CalrissianJobException('Unexpected pod container status', status)
+        log.info('completion_result is {}', self.completion_result)
         return self.completion_result
 
     def _set_pod(self, pod):
