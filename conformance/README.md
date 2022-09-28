@@ -139,7 +139,7 @@ kubectl --namespace="$NAMESPACE_NAME" logs -f jobs/conformance-tests-1-2
 Create a pod to inspect the volume with: 
 
 ```
-kubectl --namespace="$NAMESPACE_NAME"n apply -f inspect-volumes-pod.yaml 
+kubectl --namespace="$NAMESPACE_NAME" apply -f inspect-volumes-pod.yaml 
 ```
 
 Open a shell in the pod with:
