@@ -15,6 +15,7 @@ Add `--pod_serviceaccount` arg to set pods serviceaacount
 ### Changed
 
 - cwltool upgraded to current version 3.1 + all requirements
+- Fixed faulty bytes in log stream (PR #137)
 
 ## [v0.10.0] - 2021-03-31
 
