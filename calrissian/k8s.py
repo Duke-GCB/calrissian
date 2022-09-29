@@ -168,7 +168,10 @@ class KubernetesClient(object):
                 w.stop()
             else:
                 raise CalrissianJobException('Unexpected pod container status', status)
-        log.info('completion_result is {}', self.completion_result)
+        
+        if self.completion_result is None:
+            raise HTTPError
+
         return self.completion_result
 
     def _set_pod(self, pod):
