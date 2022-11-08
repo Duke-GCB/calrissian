@@ -399,6 +399,17 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         report = TimedResourceReport.create(self.name, completion_result, disk_bytes)
         Reporter.add_report(report)
 
+    def dump_pod_logs(self, completion_result):
+        """
+        Dumps the pod logs
+        """
+        for pod_name in completion_result.pod_logs.keys():
+            log_filename = os.path.join(self.outdir, f"{pod_name}.log")
+            log.info(f"Writing pod {pod_name} logs to {log_filename}")
+            with open(log_filename, 'w') as f:
+                for log_entry in completion_result.pod_logs[pod_name]:
+                    f.write(f"{log_entry}\n")
+
     def finish(self, completion_result, runtimeContext):
         exit_code = completion_result.exit_code
         if exit_code in self.successCodes:
@@ -416,6 +427,8 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
 
         disk_bytes = total_size(outputs)
         self.report(completion_result, disk_bytes)
+
+        self.dump_pod_logs(completion_result)
 
         # Invoke the callback with a lock
         with runtimeContext.workflow_eval_lock:

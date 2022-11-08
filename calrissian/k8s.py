@@ -47,12 +47,13 @@ class CompletionResult(object):
     The CPU and memory values should be in kubernetes units (strings).
     """
 
-    def __init__(self, exit_code, cpus, memory, start_time, finish_time):
+    def __init__(self, exit_code, cpus, memory, start_time, finish_time, pod_logs):
         self.exit_code = exit_code
         self.cpus = cpus
         self.memory = memory
         self.start_time = start_time
         self.finish_time = finish_time
+        self.pod_logs = pod_logs
 
 
 class KubernetesClient(object):
@@ -71,6 +72,7 @@ class KubernetesClient(object):
         self.completion_result = None
         self.namespace = load_config_get_namespace()
         self.core_api_instance = client.CoreV1Api()
+        self.pod_logs = {}
 
     @retry_exponential_if_exception_type((ApiException, HTTPError,), log)
     def submit_pod(self, pod_body):
@@ -117,18 +119,22 @@ class KubernetesClient(object):
         # not used for scheduling and not specified in our submitted pods
         cpus, memory = self._extract_cpu_memory_requests(container)
         start_time, finish_time = self._extract_start_finish_times(state)
+        pod_logs = self.pod_logs
+
         self.completion_result = CompletionResult(
             exit_code,
             cpus,
             memory,
             start_time,
-            finish_time
+            finish_time, 
+            pod_logs,
         )
         log.info('handling completion with {}'.format(exit_code))
 
     @retry_exponential_if_exception_type((ApiException, HTTPError,), log)
     def follow_logs(self):
         pod_name = self.pod.metadata.name
+        self.pod_logs[pod_name] = []
         log.info('[{}] follow_logs start'.format(pod_name))
         for line in self.core_api_instance.read_namespaced_pod_log(self.pod.metadata.name, self.namespace, follow=True,
                                                                    _preload_content=False).stream():
@@ -139,6 +145,7 @@ class KubernetesClient(object):
             # So we do the same here
             line = line.decode('utf-8', errors="ignore").rstrip()
             log.debug('[{}] {}'.format(pod_name, line))
+            self.pod_logs[pod_name].append(line)
         log.info('[{}] follow_logs end'.format(pod_name))
 
     @retry_exponential_if_exception_type((ApiException, HTTPError,), log)
