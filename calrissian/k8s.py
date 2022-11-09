@@ -6,6 +6,7 @@ import threading
 import logging
 import os
 from urllib3.exceptions import HTTPError
+from datetime import datetime
 
 log = logging.getLogger('calrissian.k8s')
 
@@ -47,13 +48,14 @@ class CompletionResult(object):
     The CPU and memory values should be in kubernetes units (strings).
     """
 
-    def __init__(self, exit_code, cpus, memory, start_time, finish_time, pod_logs):
+    def __init__(self, name, exit_code, cpus, memory, start_time, finish_time, pod_log):
+        self.name = name
         self.exit_code = exit_code
         self.cpus = cpus
         self.memory = memory
         self.start_time = start_time
         self.finish_time = finish_time
-        self.pod_logs = pod_logs
+        self.pod_log = pod_log
 
 
 class KubernetesClient(object):
@@ -72,7 +74,7 @@ class KubernetesClient(object):
         self.completion_result = None
         self.namespace = load_config_get_namespace()
         self.core_api_instance = client.CoreV1Api()
-        self.pod_logs = {}
+        self.pod_log = []
 
     @retry_exponential_if_exception_type((ApiException, HTTPError,), log)
     def submit_pod(self, pod_body):
@@ -113,28 +115,29 @@ class KubernetesClient(object):
         :param container: V1Container
         :return: None
         """
-
+        
         exit_code = state.terminated.exit_code
         # We extract resource requests here since requests are used for scheduling. Limits are
         # not used for scheduling and not specified in our submitted pods
         cpus, memory = self._extract_cpu_memory_requests(container)
         start_time, finish_time = self._extract_start_finish_times(state)
-        pod_logs = self.pod_logs
+        pod_log = self.pod_log
 
         self.completion_result = CompletionResult(
+            self.pod.metadata.name,
             exit_code,
             cpus,
             memory,
             start_time,
             finish_time, 
-            pod_logs,
+            pod_log,
         )
         log.info('handling completion with {}'.format(exit_code))
 
     @retry_exponential_if_exception_type((ApiException, HTTPError,), log)
     def follow_logs(self):
         pod_name = self.pod.metadata.name
-        self.pod_logs[pod_name] = []
+        #self.pod_logs[pod_name] = []
         log.info('[{}] follow_logs start'.format(pod_name))
         for line in self.core_api_instance.read_namespaced_pod_log(self.pod.metadata.name, self.namespace, follow=True,
                                                                    _preload_content=False).stream():
@@ -145,7 +148,7 @@ class KubernetesClient(object):
             # So we do the same here
             line = line.decode('utf-8', errors="ignore").rstrip()
             log.debug('[{}] {}'.format(pod_name, line))
-            self.pod_logs[pod_name].append(line)
+            self.pod_log.append({"timestamp": datetime.utcnow().isoformat(), "entry": line})
         log.info('[{}] follow_logs end'.format(pod_name))
 
     @retry_exponential_if_exception_type((ApiException, HTTPError,), log)
