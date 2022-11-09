@@ -148,7 +148,7 @@ class KubernetesClient(object):
             # So we do the same here
             line = line.decode('utf-8', errors="ignore").rstrip()
             log.debug('[{}] {}'.format(pod_name, line))
-            self.pod_log.append({"timestamp": datetime.utcnow().isoformat(), "entry": line})
+            self.pod_log.append({"timestamp": f"{datetime.utcnow().isoformat()}Z", "pod": pod_name, "entry": line})
         log.info('[{}] follow_logs end'.format(pod_name))
 
     @retry_exponential_if_exception_type((ApiException, HTTPError,), log)
