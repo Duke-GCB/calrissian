@@ -286,9 +286,10 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.labels = {'key1': 'val1', 'key2': 123}
         self.nodeselectors = {'disktype': 'ssd', 'cachelevel': 2}
         self.security_context = { 'runAsUser': os.getuid(),'runAsGroup': os.getgid() }
+        self.pod_serviceaccount = "podmanager"
         self.pod_builder = KubernetesPodBuilder(self.name, self.container_image, self.environment, self.volume_mounts,
                                                 self.volumes, self.command_line, self.stdout, self.stderr, self.stdin,
-                                                self.resources, self.labels, self.nodeselectors, self.security_context)
+                                                self.resources, self.labels, self.nodeselectors, self.security_context, self.pod_serviceaccount)
 
     @patch('calrissian.job.random_tag')
     def test_safe_pod_name(self, mock_random_tag):
@@ -432,7 +433,8 @@ class KubernetesPodBuilderTestCase(TestCase):
                 'securityContext': {
                     'runAsUser': os.getuid(),
                     'runAsGroup': os.getgid()
-                }
+                },
+                'serviceAccountName': 'podmanager'
             }
         }
         self.assertEqual(expected, self.pod_builder.build())
@@ -612,7 +614,7 @@ class CalrissianCommandLineJobTestCase(TestCase):
         job = self.make_job()
         job.outdir = '/outdir'
         job.tmpdir = '/tmpdir'
-        mock_runtime_context = Mock(tmpdir_prefix='TP')
+        mock_runtime_context = Mock(tmpdir_prefix='TP', pod_serviceaccount=None)
         built = job.create_kubernetes_runtime(mock_runtime_context)
         # Adds volume binding for outdir
         self.assertEqual(mock_add_volume_binding.call_args, call('/real/outdir', '/out', True))
@@ -634,7 +636,8 @@ class CalrissianCommandLineJobTestCase(TestCase):
             job.builder.resources,
             mock_read_yaml.return_value,
             mock_read_yaml.return_value,
-            job.get_security_context(mock_runtime_context)
+            job.get_security_context(mock_runtime_context),
+            None
         ))
         # calls builder.build
         # returns that

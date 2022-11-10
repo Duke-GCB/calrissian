@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 
-adds an argument --pod-nodeselectors <yaml_file> to add a node selector for computing pods
+- adds an argument `--pod-nodeselectors <yaml_file>` to add a node selector for computing pods
+- adda `--pod_serviceaccount` arg to set pods serviceaacount 
 
 ### Changed
 

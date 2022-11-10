@@ -188,7 +188,7 @@ class KubernetesVolumeBuilder(object):
 
 class KubernetesPodBuilder(object):
 
-    def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, resources, labels, nodeselectors, security_context):
+    def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, resources, labels, nodeselectors, security_context, serviceaccount):
         self.name = name
         self.container_image = container_image
         self.environment = environment
@@ -202,6 +202,7 @@ class KubernetesPodBuilder(object):
         self.labels = labels
         self.nodeselectors = nodeselectors
         self.security_context = security_context
+        self.serviceaccount = serviceaccount
 
     def pod_name(self):
         tag = random_tag()
@@ -323,7 +324,7 @@ class KubernetesPodBuilder(object):
         return {str(k): str(v) for k, v in self.nodeselectors.items()}
 
     def build(self):
-        return {
+        spec = {
             'metadata': {
                 'name': self.pod_name(),
                 'labels': self.pod_labels(),
@@ -350,6 +351,11 @@ class KubernetesPodBuilder(object):
                 'nodeSelector': self.pod_nodeselectors()
             }
         }
+        
+        if ( self.serviceaccount ):
+            spec['spec']['serviceAccountName'] = self.serviceaccount
+        
+        return spec
 
 
 # This now subclasses ContainerCommandLineJob, but only uses two of its methods:
@@ -464,6 +470,10 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         else:
             return {}
 
+    def get_pod_serviceaccount(self, runtimeContext):
+        return runtimeContext.pod_serviceaccount
+
+
     def get_security_context(self, runtimeContext):
         if not runtimeContext.no_match_user:
             return {
@@ -526,6 +536,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             self.get_pod_labels(runtimeContext),
             self.get_pod_nodeselectors(runtimeContext),
             self.get_security_context(runtimeContext),
+            self.get_pod_serviceaccount(runtimeContext)
         )
         built = k8s_builder.build()
         log.debug('{}\n{}{}\n'.format('-' * 80, yaml.dump(built), '-' * 80))
