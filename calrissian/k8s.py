@@ -137,7 +137,7 @@ class KubernetesClient(object):
             # kubernetes-client decodes them as utf-8 when _preload_content is True
             # https://github.com/kubernetes-client/python/blob/fcda6fe96beb21cd05522c17f7f08c5a7c0e3dc3/kubernetes/client/rest.py#L215-L216
             # So we do the same here
-            line = line.decode('utf-8').rstrip()
+            line = line.decode('utf-8', errors="ignore").rstrip()
             log.debug('[{}] {}'.format(pod_name, line))
         log.info('[{}] follow_logs end'.format(pod_name))
 
@@ -147,6 +147,7 @@ class KubernetesClient(object):
         for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_field_selector()):
             pod = event['object']
             status = self.get_first_or_none(pod.status.container_statuses)
+            log.info('pod name {} with id {} has status {}'.format(pod.metadata.name, pod.metadata.uid, status))
             if status is None:
                 continue
             if self.state_is_waiting(status.state):
@@ -167,6 +168,7 @@ class KubernetesClient(object):
                 w.stop()
             else:
                 raise CalrissianJobException('Unexpected pod container status', status)
+        log.info('completion_result is {}', self.completion_result)
         return self.completion_result
 
     def _set_pod(self, pod):
