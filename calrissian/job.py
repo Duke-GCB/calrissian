@@ -404,11 +404,11 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         Dumps the pod logs
         """
         if runtime_context.pod_logs: 
-            log_filename = os.path.join(runtime_context.pod_logs, f"{completion_result.name}.log")
+            log_filename = os.path.join(runtime_context.pod_logs, f"{completion_result.pod_name}.log")
         else: 
-            log_filename = f"{completion_result.name}.log"
+            log_filename = f"{completion_result.pod_name}.log"
 
-        log.info(f"Writing pod {completion_result.name} logs to {log_filename}")
+        log.info(f"Writing pod {completion_result.pod_name} logs to {log_filename}")
                 
         with open(log_filename, 'w') as f:
             for log_entry in completion_result.pod_log:

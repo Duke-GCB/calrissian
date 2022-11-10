@@ -379,16 +379,20 @@ class PodMonitorTestCase(TestCase):
 class CompletionResultTestCase(TestCase):
 
     def setUp(self):
+        self.pod_name = Mock()
         self.exit_code = Mock()
         self.cpus = Mock()
         self.memory = Mock()
         self.start_time = Mock()
         self.finish_time = Mock()
+        self.pod_log = Mock()
 
     def test_init(self):
-        result = CompletionResult(self.exit_code, self.cpus, self.memory, self.start_time, self.finish_time)
+        result = CompletionResult(self.pod_name, self.exit_code, self.cpus, self.memory, self.start_time, self.finish_time, self.pod_log)
+        self.assertEqual(result.pod_name, self.pod_name)
         self.assertEqual(result.exit_code, self.exit_code)
         self.assertEqual(result.cpus, self.cpus)
         self.assertEqual(result.memory, self.memory)
         self.assertEqual(result.start_time, self.start_time)
         self.assertEqual(result.finish_time, self.finish_time)
+        self.assertEqual(result.pod_log, self.pod_log)

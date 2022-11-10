@@ -143,15 +143,15 @@ class TimedResourceReport(TimedReport):
         return result
 
     @classmethod
-    def create(cls, name, completion_result, runtime_context, disk_bytes):
+    def create(cls, pod_name, completion_result, runtime_context, disk_bytes):
         cpus = CPUParser.parse(completion_result.cpus)
         ram_megabytes = MemoryParser.parse_to_megabytes(completion_result.memory)
         disk_megabytes = MemoryParser.parse_to_megabytes(str(disk_bytes))
         if runtime_context.pod_logs: 
-            pod_log = os.path.join(runtime_context.pod_logs, f"{completion_result.name}.log")
+            pod_log = os.path.join(runtime_context.pod_logs, f"{completion_result.pod_name}.log")
         else: 
-            pod_log = f"{completion_result.name}.log"
-        return cls(name=name, start_time=completion_result.start_time, finish_time=completion_result.finish_time, cpus=cpus,
+            pod_log = f"{completion_result.pod_name}.log"
+        return cls(pod_name=pod_name, start_time=completion_result.start_time, finish_time=completion_result.finish_time, cpus=cpus,
                    ram_megabytes=ram_megabytes, disk_megabytes=disk_megabytes, pod_log=pod_log)
 
 

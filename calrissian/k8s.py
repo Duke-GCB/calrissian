@@ -48,8 +48,8 @@ class CompletionResult(object):
     The CPU and memory values should be in kubernetes units (strings).
     """
 
-    def __init__(self, name, exit_code, cpus, memory, start_time, finish_time, pod_log):
-        self.name = name
+    def __init__(self, pod_name, exit_code, cpus, memory, start_time, finish_time, pod_log):
+        self.pod_name = pod_name
         self.exit_code = exit_code
         self.cpus = cpus
         self.memory = memory
