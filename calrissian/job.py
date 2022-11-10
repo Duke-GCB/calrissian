@@ -188,7 +188,7 @@ class KubernetesVolumeBuilder(object):
 
 class KubernetesPodBuilder(object):
 
-    def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, resources, labels, security_context, serviceaccount):
+    def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, resources, labels, nodeselectors, security_context, serviceaccount):
         self.name = name
         self.container_image = container_image
         self.environment = environment
@@ -200,6 +200,7 @@ class KubernetesPodBuilder(object):
         self.stdin = stdin
         self.resources = resources
         self.labels = labels
+        self.nodeselectors = nodeselectors
         self.security_context = security_context
         self.serviceaccount = serviceaccount
 
@@ -314,6 +315,13 @@ class KubernetesPodBuilder(object):
         :return:
         """
         return {str(k): str(v) for k, v in self.labels.items()}
+    
+    def pod_nodeselectors(self):
+        """
+        Submitted node selectors must be strings
+        :return:
+        """
+        return {str(k): str(v) for k, v in self.nodeselectors.items()}
 
     def build(self):
         spec = {
@@ -339,7 +347,8 @@ class KubernetesPodBuilder(object):
                 ],
                 'restartPolicy': 'Never',
                 'volumes': self.volumes,
-                'securityContext': self.security_context
+                'securityContext': self.security_context,
+                'nodeSelector': self.pod_nodeselectors()
             }
         }
         
@@ -454,6 +463,12 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             return read_yaml(runtimeContext.pod_labels)
         else:
             return {}
+    
+    def get_pod_nodeselectors(self, runtimeContext):
+        if runtimeContext.pod_nodeselectors:
+            return read_yaml(runtimeContext.pod_nodeselectors)
+        else:
+            return {}
 
     def get_pod_serviceaccount(self, runtimeContext):
         return runtimeContext.pod_serviceaccount
@@ -519,6 +534,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             self.stdin,
             self.builder.resources,
             self.get_pod_labels(runtimeContext),
+            self.get_pod_nodeselectors(runtimeContext),
             self.get_security_context(runtimeContext),
             self.get_pod_serviceaccount(runtimeContext)
         )
