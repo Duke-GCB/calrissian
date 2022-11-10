@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+Add `--pod_serviceaccount` arg to set pods serviceaacount 
+
 ### Changed
 
 - cwltool upgraded to current version 3.1 + all requirements
