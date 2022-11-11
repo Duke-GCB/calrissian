@@ -2,7 +2,7 @@ from typing import Dict
 from cwltool.job import ContainerCommandLineJob, needs_shell_quoting_re
 from cwltool.utils import DEFAULT_TMP_PREFIX
 from cwltool.errors import WorkflowException, UnsupportedRequirement
-from calrissian.k8s import KubernetesClient
+from calrissian.k8s import KubernetesClient, CompletionResult
 from calrissian.report import Reporter, TimedResourceReport
 import logging
 import os
@@ -391,30 +391,27 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
     def wait_for_kubernetes_pod(self):
         return self.client.wait_for_completion()
 
-    def report(self, completion_result, runtime_context, disk_bytes):
+    def report(self, completion_result: CompletionResult, disk_bytes):
         """
         Convert the k8s-specific completion result into a report and submit it
         :param completion_result: calrissian.k8s.CompletionResult
         """
-        report = TimedResourceReport.create(self.name, completion_result, runtime_context, disk_bytes)
+        report = TimedResourceReport.create(self.name, completion_result, disk_bytes)
         Reporter.add_report(report)
 
-    def dump_pod_logs(self, completion_result, runtime_context):
+    def dump_tool_logs(self, name, completion_result: CompletionResult, runtime_context):
         """
-        Dumps the pod logs
+        Dumps the tool logs
         """
-        if runtime_context.pod_logs: 
-            log_filename = os.path.join(runtime_context.pod_logs, f"{completion_result.pod_name}.log")
-        else: 
-            log_filename = f"{completion_result.pod_name}.log"
+        log_filename = os.path.join(runtime_context.tool_logs_basepath, f"{name}.log")
 
-        log.info(f"Writing pod {completion_result.pod_name} logs to {log_filename}")
+        log.info(f"Writing pod {name} logs to {log_filename}")
                 
         with open(log_filename, 'w') as f:
-            for log_entry in completion_result.pod_log:
+            for log_entry in completion_result.tool_log:
                 f.write(f"{log_entry['timestamp']} - {log_entry['pod']} - {log_entry['entry']}\n")
 
-    def finish(self, completion_result, runtimeContext):
+    def finish(self, completion_result: CompletionResult, runtimeContext):
         exit_code = completion_result.exit_code
         if exit_code in self.successCodes:
             status = "success"
@@ -427,14 +424,15 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         else:
             status = "permanentFail"
         
-        # dump the pod logs
-        self.dump_pod_logs(completion_result, runtimeContext)
+        # dump the tool logs
+        if runtimeContext.tool_logs_basepath: 
+            self.dump_tool_logs(self.name, completion_result, runtimeContext)
 
         # collect_outputs (and collect_output) is defined in command_line_tool
         outputs = self.collect_outputs(self.outdir, exit_code)
 
         disk_bytes = total_size(outputs)
-        self.report(completion_result, runtimeContext, disk_bytes)
+        self.report(completion_result, disk_bytes)
 
         # Invoke the callback with a lock
         with runtimeContext.workflow_eval_lock:
