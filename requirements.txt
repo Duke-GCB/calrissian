@@ -47,3 +47,4 @@ six==1.12.0
 tenacity==5.1.1
 typing-extensions==3.7.4
 websocket-client==0.56.0
+filelock

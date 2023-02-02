@@ -20,6 +20,10 @@ class InconsistentResourcesException(Exception):
     pass
 
 
+class IncompleteStatusException(Exception):
+    pass
+
+
 class Resources(object):
     """
     Class to encapsulate compute resources and provide arithmetic operations and comparisons
