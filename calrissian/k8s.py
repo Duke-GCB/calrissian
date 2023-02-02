@@ -1,6 +1,9 @@
+from typing import List, Union
 from kubernetes import client, config, watch
+from kubernetes.client.models import V1ContainerState, V1Container, V1ContainerStatus
 from kubernetes.client.api_client import ApiException
 from kubernetes.config.config_exception import ConfigException
+from calrissian.executor import IncompleteStatusException
 from calrissian.retry import retry_exponential_if_exception_type
 import threading
 import logging
@@ -107,7 +110,7 @@ class KubernetesClient(object):
                 # Re-raise
                 raise
 
-    def _handle_completion(self, state, container):
+    def _handle_completion(self, state: V1ContainerState, container: V1Container):
         """
         Sets self.completion_result to an object containing exit_code, resources, and timingused
         :param state: V1ContainerState
@@ -155,7 +158,7 @@ class KubernetesClient(object):
 
 
     @retry_exponential_if_exception_type((ApiException, HTTPError,), log)
-    def wait_for_completion(self):
+    def wait_for_completion(self) -> CompletionResult:
         w = watch.Watch()
         for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_field_selector()):
             pod = event['object']
@@ -182,8 +185,10 @@ class KubernetesClient(object):
             else:
                 raise CalrissianJobException('Unexpected pod container status', status)
         
+        # When the pod is done we should have a completion result
+        # Otherwise it will lead to further exceptions
         if self.completion_result is None:
-            raise HTTPError
+            raise IncompleteStatusException
 
         return self.completion_result
 
@@ -212,7 +217,7 @@ class KubernetesClient(object):
         return state.terminated
 
     @staticmethod
-    def get_first_or_none(container_list):
+    def get_first_or_none(container_list: List[Union[V1ContainerStatus, V1Container]]) -> Union[V1ContainerStatus, V1Container]:
         """
         Check the list. Should be 0 or 1 items. If 0, there's no container yet. If 1, there's a
         container. If > 1, there's more than 1 container and that's unexpected behavior
