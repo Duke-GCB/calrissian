@@ -157,7 +157,7 @@ class KubernetesClient(object):
         log.info('[{}] follow_logs end'.format(pod_name))
 
 
-    @retry_exponential_if_exception_type((ApiException, HTTPError,), log)
+    @retry_exponential_if_exception_type((ApiException, HTTPError, IncompleteStatusException), log)
     def wait_for_completion(self) -> CompletionResult:
         w = watch.Watch()
         for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_field_selector()):
