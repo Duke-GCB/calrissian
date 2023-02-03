@@ -8,3 +8,4 @@ tests/__pycache__/
 .vscode
 env37
 build
+*.egg

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- adds an argument `--tool-logs-basepath <local_folder_path>` that enable the tool to fetch the pod logs by tool specified in the workflow (PR #139)
+
+### Changed
+
+- contraints the pod to complete with a proper termination status or raise an exception. (PR #139)
 
 ## [v0.11.0] - 2022-11-10
 

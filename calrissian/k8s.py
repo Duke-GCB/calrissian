@@ -1,11 +1,15 @@
+from typing import List, Union
 from kubernetes import client, config, watch
+from kubernetes.client.models import V1ContainerState, V1Container, V1ContainerStatus
 from kubernetes.client.api_client import ApiException
 from kubernetes.config.config_exception import ConfigException
+from calrissian.executor import IncompleteStatusException
 from calrissian.retry import retry_exponential_if_exception_type
 import threading
 import logging
 import os
 from urllib3.exceptions import HTTPError
+from datetime import datetime
 
 log = logging.getLogger('calrissian.k8s')
 
@@ -47,12 +51,13 @@ class CompletionResult(object):
     The CPU and memory values should be in kubernetes units (strings).
     """
 
-    def __init__(self, exit_code, cpus, memory, start_time, finish_time):
+    def __init__(self, exit_code, cpus, memory, start_time, finish_time, tool_log):
         self.exit_code = exit_code
         self.cpus = cpus
         self.memory = memory
         self.start_time = start_time
         self.finish_time = finish_time
+        self.tool_log = tool_log
 
 
 class KubernetesClient(object):
@@ -71,6 +76,7 @@ class KubernetesClient(object):
         self.completion_result = None
         self.namespace = load_config_get_namespace()
         self.core_api_instance = client.CoreV1Api()
+        self.tool_log = []
 
     @retry_exponential_if_exception_type((ApiException, HTTPError,), log)
     def submit_pod(self, pod_body):
@@ -104,31 +110,38 @@ class KubernetesClient(object):
                 # Re-raise
                 raise
 
-    def _handle_completion(self, state, container):
+    def _handle_completion(self, state: V1ContainerState, container: V1Container):
         """
         Sets self.completion_result to an object containing exit_code, resources, and timingused
         :param state: V1ContainerState
         :param container: V1Container
         :return: None
         """
-
+        
         exit_code = state.terminated.exit_code
         # We extract resource requests here since requests are used for scheduling. Limits are
         # not used for scheduling and not specified in our submitted pods
         cpus, memory = self._extract_cpu_memory_requests(container)
         start_time, finish_time = self._extract_start_finish_times(state)
+
         self.completion_result = CompletionResult(
             exit_code,
             cpus,
             memory,
             start_time,
-            finish_time
+            finish_time, 
+            self.tool_log,
         )
         log.info('handling completion with {}'.format(exit_code))
+
+    @staticmethod
+    def format_log_entry(pod_name, log_entry):
+        return {"timestamp": f"{datetime.utcnow().isoformat()}Z", "pod": pod_name, "entry": log_entry}
 
     @retry_exponential_if_exception_type((ApiException, HTTPError,), log)
     def follow_logs(self):
         pod_name = self.pod.metadata.name
+
         log.info('[{}] follow_logs start'.format(pod_name))
         for line in self.core_api_instance.read_namespaced_pod_log(self.pod.metadata.name, self.namespace, follow=True,
                                                                    _preload_content=False).stream():
@@ -139,10 +152,13 @@ class KubernetesClient(object):
             # So we do the same here
             line = line.decode('utf-8', errors="ignore").rstrip()
             log.debug('[{}] {}'.format(pod_name, line))
+            self.tool_log.append(self.format_log_entry(pod_name, line))
+        
         log.info('[{}] follow_logs end'.format(pod_name))
 
-    @retry_exponential_if_exception_type((ApiException, HTTPError,), log)
-    def wait_for_completion(self):
+
+    @retry_exponential_if_exception_type((ApiException, HTTPError, IncompleteStatusException), log)
+    def wait_for_completion(self) -> CompletionResult:
         w = watch.Watch()
         for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_field_selector()):
             pod = event['object']
@@ -168,7 +184,12 @@ class KubernetesClient(object):
                 w.stop()
             else:
                 raise CalrissianJobException('Unexpected pod container status', status)
-        log.info('completion_result is {}', self.completion_result)
+        
+        # When the pod is done we should have a completion result
+        # Otherwise it will lead to further exceptions
+        if self.completion_result is None:
+            raise IncompleteStatusException
+
         return self.completion_result
 
     def _set_pod(self, pod):
@@ -196,7 +217,7 @@ class KubernetesClient(object):
         return state.terminated
 
     @staticmethod
-    def get_first_or_none(container_list):
+    def get_first_or_none(container_list: List[Union[V1ContainerStatus, V1Container]]) -> Union[V1ContainerStatus, V1Container]:
         """
         Check the list. Should be 0 or 1 items. If 0, there's no container yet. If 1, there's a
         container. If > 1, there's more than 1 container and that's unexpected behavior
