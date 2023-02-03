@@ -1,4 +1,5 @@
 cwltool==3.1.20230201224320
+freezegun==0.3.12
 kubernetes==10.0.1
 mypy-extensions==0.4.3
 nose2==0.9.1
