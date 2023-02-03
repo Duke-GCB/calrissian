@@ -63,7 +63,7 @@ class CalrissianMainTestCase(TestCase):
     def test_add_arguments(self):
         mock_parser = Mock()
         add_arguments(mock_parser)
-        self.assertEqual(mock_parser.add_argument.call_count, 9)
+        self.assertEqual(mock_parser.add_argument.call_count, 10)
 
     @patch('calrissian.main.sys')
     def test_parse_arguments_exits_without_ram_or_cores(self, mock_sys):

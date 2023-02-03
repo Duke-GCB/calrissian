@@ -44,6 +44,7 @@ def add_arguments(parser):
     parser.add_argument('--usage-report', type=Text, nargs='?', help='Output JSON file name to record resource usage')
     parser.add_argument('--stdout', type=Text, nargs='?', help='Output file name to tee standard output (CWL output object)')
     parser.add_argument('--stderr', type=Text, nargs='?', help='Output file name to tee standard error to (includes tool logs)')
+    parser.add_argument('--tool-logs-basepath', type=Text, nargs='?', help='Base path for saving the tool logs')
 
 def print_version():
     print(version())
