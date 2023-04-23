@@ -1,7 +1,7 @@
 from calrissian.executor import ThreadPoolJobExecutor
 from calrissian.context import CalrissianLoadingContext, CalrissianRuntimeContext
 from calrissian.version import version
-from calrissian.k8s import delete_pods
+from calrissian.k8s import delete_pods, patch_delete
 from calrissian.report import initialize_reporter, write_report, CPUParser, MemoryParser
 from cwltool.main import main as cwlmain
 from cwltool.argparser import arg_parser
@@ -45,6 +45,7 @@ def add_arguments(parser):
     parser.add_argument('--stdout', type=Text, nargs='?', help='Output file name to tee standard output (CWL output object)')
     parser.add_argument('--stderr', type=Text, nargs='?', help='Output file name to tee standard error to (includes tool logs)')
     parser.add_argument('--tool-logs-basepath', type=Text, nargs='?', help='Base path for saving the tool logs')
+    parser.add_argument('--self-delete', type=bool, default=False, help='Delete the pod after the workflow is completed')    
 
 def print_version():
     print(version())
@@ -131,9 +132,10 @@ def main():
         if parsed_args.usage_report:
             write_report(parsed_args.usage_report)
         flush_tees()
+        if parsed_args.self_delete:
+            patch_delete()
 
     return result
 
-
 if __name__ == '__main__':
-    sys.exit(main())
+    main()

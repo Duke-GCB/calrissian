@@ -8,7 +8,8 @@ spec:
     spec:
       containers:
       - name: calrissian
-        image: dukegcb/calrissian:latest
+        # image: dukegcb/calrissian:latest
+        image: commanderblop/haha:v1.9
         securityContext:
           runAsUser: 1000
           runAsGroup: 1000
@@ -22,6 +23,8 @@ spec:
           - "/calrissian/tmpout/"
           - "--outdir"
           - "/calrissian/output-data/"
+          - "--self-delete"
+          - "True"
           - "/calrissian/input-data/revsort-single.cwl"
           - "/calrissian/input-data/revsort-single-job.json"
         volumeMounts:

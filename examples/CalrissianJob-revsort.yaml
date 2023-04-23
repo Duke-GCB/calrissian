@@ -8,7 +8,9 @@ spec:
     spec:
       containers:
       - name: calrissian
-        image: dukegcb/calrissian:latest
+        # image: dukegcb/calrissian:latest
+        image: commanderblop/haha
+        imagePullPolicy: Never
         securityContext:
           runAsUser: 1000
           runAsGroup: 1000

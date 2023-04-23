@@ -1,5 +1,6 @@
 from typing import List, Union
 from kubernetes import client, config, watch
+from kubernetes.client import V1JobStatus
 from kubernetes.client.models import V1ContainerState, V1Container, V1ContainerStatus
 from kubernetes.client.api_client import ApiException
 from kubernetes.config.config_exception import ConfigException
@@ -320,7 +321,31 @@ class PodMonitor(object):
                     log.error('Error deleting pod named {}, ignoring'.format(pod_name))
             PodMonitor.pod_names = []
         log.info('Finishing Cleanup')
+        
+    @staticmethod
+    # delete self when all process finishes
+    def patch_delete():
+        ttl_seconds_after_finished = 5  # Set the duration to an appropriate value based on your requirements
+        ttl_patch = {"spec": {"ttlSecondsAfterFinished": ttl_seconds_after_finished}}
+        pod = client.CoreV1Api().read_namespaced_pod(name=os.environ.get(POD_NAME_ENV_VARIABLE), namespace=load_config_get_namespace())
+        job_name = None
+        if pod and pod.metadata and pod.metadata.owner_references:
+            for owner_reference in pod.metadata.owner_references:
+                if owner_reference.kind == "Job":
+                    job_name = owner_reference.name
+                    break
 
+        try:
+            api_response = client.BatchV1Api().patch_namespaced_job(
+                name=job_name, namespace=load_config_get_namespace(), body=ttl_patch
+            )
+            print("Job ttlSecondsAfterFinished updated:", api_response)
+        except client.ApiException as e:
+            print("Exception when calling BatchV1Api->patch_namespaced_job: %s\n" % e)
+                
 
 def delete_pods():
     PodMonitor.cleanup()
+    
+def patch_delete():
+    PodMonitor.patch_delete()
