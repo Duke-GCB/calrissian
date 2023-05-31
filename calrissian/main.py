@@ -63,9 +63,9 @@ def parse_arguments(parser):
             parser.set_defaults(**json.load(f))
     
     if args.conf is not None:
-        for conf_fname in args.conf:    
-            with open(conf_fname, 'r') as f:
-                parser.set_defaults(**json.load(f))
+        
+        with open(args.conf, 'r') as f:
+            parser.set_defaults(**json.load(f))
 
     args = parser.parse_args()
 
