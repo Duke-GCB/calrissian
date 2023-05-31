@@ -1,3 +1,4 @@
+import contextlib
 from calrissian.executor import ThreadPoolJobExecutor
 from calrissian.context import CalrissianLoadingContext, CalrissianRuntimeContext
 from calrissian.version import version
@@ -12,6 +13,7 @@ import signal
 import subprocess
 import os
 import shlex
+import json
 
 log = logging.getLogger("calrissian.main")
 
@@ -45,13 +47,28 @@ def add_arguments(parser):
     parser.add_argument('--stdout', type=Text, nargs='?', help='Output file name to tee standard output (CWL output object)')
     parser.add_argument('--stderr', type=Text, nargs='?', help='Output file name to tee standard error to (includes tool logs)')
     parser.add_argument('--tool-logs-basepath', type=Text, nargs='?', help='Base path for saving the tool logs')
+    parser.add_argument('--conf', help='Defines the default values for the CLI arguments', action='append')
 
 def print_version():
     print(version())
 
 
 def parse_arguments(parser):
+    
+    # read default config from file
     args = parser.parse_args()
+
+    with contextlib.suppress(KeyError, FileNotFoundError):
+        with open(os.path.join(os.environ["HOME"], ".calrissian", "default.json"), 'r') as f:
+            parser.set_defaults(**json.load(f))
+    
+    if args.conf is not None:
+        for conf_fname in args.conf:    
+            with open(conf_fname, 'r') as f:
+                parser.set_defaults(**json.load(f))
+
+    args = parser.parse_args()
+
     # Check for version arg
     if args.version:
         print_version()
