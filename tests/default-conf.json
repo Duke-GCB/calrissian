@@ -1,0 +1,6 @@
+{
+    "max_ram": "32G",
+    "max_cores": "10",
+    "outdir": "results",
+    "tmp_out_dir_prefix": "tmp"
+}
