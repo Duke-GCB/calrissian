@@ -20,6 +20,19 @@ Calrissian is designed to issue tasks in parallel if they are independent, and t
 
 When running `calrissian`, you must provide a limit the the number of CPU cores (`--max-cores`) and RAM megabytes (`--max-ram`) to use concurrently. Calrissian will use CWL [ResourceRequirements](https://www.commonwl.org/v1.0/CommandLineTool.html#ResourceRequirement) to track usage and stay within the limits provided. We highly recommend using accurate ResourceRequirements in your workloads, so that they can be scheduled efficiently and are less likely to be terminated or refused by the cluster.
 
+`calrissian` parameters can be provided via a JSON configuration file either stored under `~/.calrissian/default.json` or provided via the `--conf` option.
+
+Below an example of such a file:
+
+```json
+{
+    "max_ram": "16G",
+    "max_cores": "10",
+    "outdir": "/calrissian",
+    "tmpdir_prefix": "/calrissian/tmp"
+}
+```
+
 ## CWL Conformance
 
 Calrissian leverages [cwltool](https://github.com/common-workflow-language/cwltool) heavily and most conformance tests for CWL v1.0. Please see [conformance](conformance) for further details and processes.
