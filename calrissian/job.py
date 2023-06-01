@@ -320,6 +320,8 @@ class KubernetesPodBuilder(object):
                 if "limits" in container_resources:
                     resource_bound = 'limits'
                     container_resources[resource_bound]['nvidia.com/gpu'] = str(requirement["cudaDeviceCountMax"])
+                else:
+                    container_resources['limits'] = {'nvidia.com/gpu': str(requirement["cudaDeviceCountMax"])}
 
         return container_resources
 

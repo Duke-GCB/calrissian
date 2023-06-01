@@ -354,6 +354,9 @@ class KubernetesPodBuilderTestCase(TestCase):
                 'cpu': '2', 
                 'memory': '256Mi',
                 'nvidia.com/gpu': '1'
+            }, 
+            "limits": {
+                'nvidia.com/gpu': '1'
             }
         }
         self.assertEqual(expected, resources)
