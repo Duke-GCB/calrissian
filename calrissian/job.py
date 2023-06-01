@@ -205,7 +205,7 @@ class KubernetesPodBuilder(object):
         self.security_context = security_context
         self.serviceaccount = serviceaccount
         self.requirements = {} if requirements is None else requirements
-        self.hints = {} if hints is None else hints
+        self.hints = [] if hints is None else hints
 
     def pod_name(self):
         tag = random_tag()
@@ -312,14 +312,14 @@ class KubernetesPodBuilder(object):
                 container_resources[resource_bound][resource_type] = resource_value
 
         # Add CUDA requirements from CWL
-        for requirement, requirement_value in self.hints.items():
-            if requirement == 'cwltool:CUDARequirement':
+        for requirement in self.hints:
+            if requirement["class"] in ['cwltool:CUDARequirement', 'http://commonwl.org/cwltool#CUDARequirement']:
                 log.debug('Adding CUDARequirement resources spec')
                 resource_bound = 'requests'
-                container_resources[resource_bound]['nvidia.com/gpu'] = str(requirement_value["cudaDeviceCountMin"])
+                container_resources[resource_bound]['nvidia.com/gpu'] = str(requirement["cudaDeviceCountMin"])
                 if "limits" in container_resources:
                     resource_bound = 'limits'
-                    container_resources[resource_bound]['nvidia.com/gpu'] = str(requirement_value["cudaDeviceCountMax"])
+                    container_resources[resource_bound]['nvidia.com/gpu'] = str(requirement["cudaDeviceCountMax"])
 
         return container_resources
 

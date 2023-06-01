@@ -8,7 +8,7 @@ from cwltool.errors import UnsupportedRequirement
 from calrissian.context import CalrissianRuntimeContext
 from calrissian.k8s import CompletionResult
 import threading
-
+from collections import OrderedDict
 
 class SafeNameTestCase(TestCase):
 
@@ -344,9 +344,9 @@ class KubernetesPodBuilderTestCase(TestCase):
         }
         self.assertEqual(expected, resources)
         
-    def test_gpu_requirements(self):
+    def test_gpu_hints(self):
         self.pod_builder.resources = {'cores': 2, 'ram': 256}
-        self.pod_builder.requirements = {"cwltool:CUDARequirement": {"cudaVersionMin": '10.0', "cudaComputeCapability": '3.0', "cudaDeviceCountMin": 1, "cudaDeviceCountMax": 1}}
+        self.pod_builder.hints = [OrderedDict([("class", "cwltool:CUDARequirement"), ("cudaVersionMin", '10.0'), ("cudaComputeCapability", '3.0'), ("cudaDeviceCountMin", 1), ("cudaDeviceCountMax", 1)])]
 
         resources = self.pod_builder.container_resources()
         expected = {
