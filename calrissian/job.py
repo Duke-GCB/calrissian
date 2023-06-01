@@ -189,7 +189,7 @@ class KubernetesVolumeBuilder(object):
 
 class KubernetesPodBuilder(object):
 
-    def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, resources, labels, nodeselectors, security_context, serviceaccount, requirements=None):
+    def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, resources, labels, nodeselectors, security_context, serviceaccount, requirements=None, hints=None):
         self.name = name
         self.container_image = container_image
         self.environment = environment
@@ -205,6 +205,7 @@ class KubernetesPodBuilder(object):
         self.security_context = security_context
         self.serviceaccount = serviceaccount
         self.requirements = {} if requirements is None else requirements
+        self.hints = {} if hints is None else hints
 
     def pod_name(self):
         tag = random_tag()
@@ -311,7 +312,7 @@ class KubernetesPodBuilder(object):
                 container_resources[resource_bound][resource_type] = resource_value
 
         # Add CUDA requirements from CWL
-        for requirement, requirement_value in self.requirements.items():
+        for requirement, requirement_value in self.hints.items():
             if requirement == 'cwltool:CUDARequirement':
                 log.debug('Adding CUDARequirement resources spec')
                 resource_bound = 'requests'
@@ -568,6 +569,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             self.get_security_context(runtimeContext),
             self.get_pod_serviceaccount(runtimeContext),
             self.builder.requirements,
+            self.builder.hints
         )
         built = k8s_builder.build()
         log.debug('{}\n{}{}\n'.format('-' * 80, yaml.dump(built), '-' * 80))
