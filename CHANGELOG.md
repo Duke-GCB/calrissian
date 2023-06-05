@@ -5,8 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v0.12.0] - 2023-02-13
 
+### Added
+
+- adds an argument `--tool-logs-basepath <local_folder_path>` that enable the tool to fetch the pod logs by tool specified in the workflow (PR #139)
+- returns proper exit code when the pod fails (PR #139)
+
+### Changed
+
+- contraints the pod to complete with a proper termination status or raise an exception. (PR #139)
 
 ## [v0.11.0] - 2022-11-10
 

@@ -4,7 +4,7 @@ from setuptools import setup
 # version checking derived from https://github.com/levlaz/circleci.py/blob/master/setup.py
 from setuptools.command.install import install
 
-VERSION = '0.11.0'
+VERSION = '0.12.0'
 TAG_ENV_VAR = 'CIRCLE_TAG'
 
 with open("README.md", "r") as fh:
@@ -34,8 +34,9 @@ setup(
     install_requires=[
         'urllib3>=1.24.2,<1.27',
         'kubernetes==10.0.1',
-        'cwltool==3.1.20211004060744',
+        'cwltool==3.1.20230201224320',
         'tenacity==5.1.1',
+        'importlib-metadata<5,>=0.23'
     ],
     test_suite='nose2.collector.collector',
     tests_require=['nose2'],
