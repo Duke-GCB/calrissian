@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v0.13.0] - 2023-06-06
+
+### Added
+
+- adds an argument `--conf <conf_file_path>` that enables CLI arguments from a json file (PR #150)
+- default configuration can be defined in `$HOME/.calrissian/default.json`
+
+### Changed
+
+- Updated cwltool to `3.1.20230201224320` and some other dependencies. (PR #142)
+
 ## [v0.12.0] - 2023-02-13
 
 ### Added
