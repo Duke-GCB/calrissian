@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 
 - adds an argument `--conf <conf_file_path>` that enables CLI arguments from a json file (PR #150)
+- adds a default path for config file `~/.calrissian/default.json` (PR #150)
 
 ### Changed
 
