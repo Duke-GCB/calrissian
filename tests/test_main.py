@@ -32,7 +32,7 @@ class CalrissianMainTestCase(TestCase):
                                                   mock_install_signal_handler, mock_delete_pods,
                                                   mock_add_arguments, mock_parse_arguments, mock_version,
                                                   mock_runtime_context, mock_loading_context, mock_executor,
-                                                  mock_arg_parser, mock_cwlmain):
+                                                  mock_arg_parser, mock_cwlmain,):
         mock_exit_code = Mock()
         mock_cwlmain.return_value = mock_exit_code  # not called before main
         result = main()
@@ -63,26 +63,26 @@ class CalrissianMainTestCase(TestCase):
     def test_add_arguments(self):
         mock_parser = Mock()
         add_arguments(mock_parser)
-        self.assertEqual(mock_parser.add_argument.call_count, 10)
+        self.assertEqual(mock_parser.add_argument.call_count, 11)
 
     @patch('calrissian.main.sys')
     def test_parse_arguments_exits_without_ram_or_cores(self, mock_sys):
         mock_parser = Mock()
-        mock_parser.parse_args.return_value = Mock(max_ram=None, max_cores=None, version=None)
+        mock_parser.parse_args.return_value = Mock(max_ram=None, max_cores=None, version=None, conf=None)
         parse_arguments(mock_parser)
         self.assertEqual(mock_sys.exit.call_args, call(1))
 
     @patch('calrissian.main.sys')
     def test_parse_arguments_exits_with_ram_but_no_cores(self, mock_sys):
         mock_parser = Mock()
-        mock_parser.parse_args.return_value = Mock(max_ram=2048, max_cores=None, version=None)
+        mock_parser.parse_args.return_value = Mock(max_ram=2048, max_cores=None, version=None, conf=None)
         parse_arguments(mock_parser)
         self.assertEqual(mock_sys.exit.call_args, call(1))
 
     @patch('calrissian.main.sys')
     def test_parse_arguments_succeeds_with_ram_and_cores(self, mock_sys):
         mock_parser = Mock()
-        mock_parser.parse_args.return_value = Mock(max_ram=2048, max_cores=3, version=None)
+        mock_parser.parse_args.return_value = Mock(max_ram=2048, max_cores=3, version=None, conf=None)
         parsed = parse_arguments(mock_parser)
         self.assertEqual(parsed, mock_parser.parse_args.return_value)
         self.assertFalse(mock_sys.exit.called)
@@ -91,7 +91,7 @@ class CalrissianMainTestCase(TestCase):
     @patch('calrissian.main.print_version')
     def test_parse_arguments_exits_with_version(self, mock_print_version, mock_sys):
         mock_parser = Mock()
-        mock_parser.parse_args.return_value = Mock(version=True)
+        mock_parser.parse_args.return_value = Mock(version=True, conf=None)
         parsed = parse_arguments(mock_parser)
         self.assertEqual(parsed, mock_parser.parse_args.return_value)
         self.assertTrue(mock_print_version.called)
