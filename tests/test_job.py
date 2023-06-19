@@ -360,6 +360,20 @@ class KubernetesPodBuilderTestCase(TestCase):
             }
         }
         self.assertEqual(expected, resources)
+        self.pod_builder.hints = [OrderedDict([("class", "cwltool:CUDARequirement"), ("cudaVersionMin", '10.0'), ("cudaComputeCapability", '3.0'), ("cudaDeviceCountMin", 2), ("cudaDeviceCountMax", 4)])]
+
+        resources = self.pod_builder.container_resources()
+        expected = {
+            'requests': {
+                'cpu': '2', 
+                'memory': '256Mi',
+                'nvidia.com/gpu': '2'
+            }, 
+            "limits": {
+                'nvidia.com/gpu': '4'
+            }
+        }
+        self.assertEqual(expected, resources)
 
     def test_string_labels(self):
         self.pod_builder.labels = {'key1': 123}
