@@ -4,6 +4,7 @@ from cwltool.utils import DEFAULT_TMP_PREFIX
 from cwltool.errors import WorkflowException, UnsupportedRequirement
 from calrissian.k8s import KubernetesClient, CompletionResult
 from calrissian.report import Reporter, TimedResourceReport
+from cwltool.builder import Builder
 import logging
 import os
 import yaml
@@ -188,7 +189,7 @@ class KubernetesVolumeBuilder(object):
 
 class KubernetesPodBuilder(object):
 
-    def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, resources, labels, nodeselectors, security_context, serviceaccount):
+    def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, resources, labels, nodeselectors, security_context, serviceaccount, requirements=None, hints=None):
         self.name = name
         self.container_image = container_image
         self.environment = environment
@@ -203,6 +204,8 @@ class KubernetesPodBuilder(object):
         self.nodeselectors = nodeselectors
         self.security_context = security_context
         self.serviceaccount = serviceaccount
+        self.requirements = {} if requirements is None else requirements
+        self.hints = [] if hints is None else hints
 
     def pod_name(self):
         tag = random_tag()
@@ -297,7 +300,7 @@ class KubernetesPodBuilder(object):
             return None
 
     def container_resources(self):
-        log.debug('Building resources spec from {}'.format(self.resources))
+        log.debug(f'Building resources spec from {self.resources}')
         container_resources = {}
         for cwl_field, cwl_value in self.resources.items():
             resource_bound = 'requests'
@@ -307,6 +310,19 @@ class KubernetesPodBuilder(object):
                 if not container_resources.get(resource_bound):
                     container_resources[resource_bound] = {}
                 container_resources[resource_bound][resource_type] = resource_value
+
+        # Add CUDA requirements from CWL
+        for requirement in self.hints:
+            if requirement["class"] in ['cwltool:CUDARequirement', 'http://commonwl.org/cwltool#CUDARequirement']:
+                log.debug('Adding CUDARequirement resources spec')
+                resource_bound = 'requests'
+                container_resources[resource_bound]['nvidia.com/gpu'] = str(requirement["cudaDeviceCountMin"])
+                if "limits" in container_resources:
+                    resource_bound = 'limits'
+                    container_resources[resource_bound]['nvidia.com/gpu'] = str(requirement["cudaDeviceCountMax"])
+                else:
+                    container_resources['limits'] = {'nvidia.com/gpu': str(requirement["cudaDeviceCountMax"])}
+
         return container_resources
 
     def pod_labels(self):
@@ -553,7 +569,9 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             self.get_pod_labels(runtimeContext),
             self.get_pod_nodeselectors(runtimeContext),
             self.get_security_context(runtimeContext),
-            self.get_pod_serviceaccount(runtimeContext)
+            self.get_pod_serviceaccount(runtimeContext),
+            self.builder.requirements,
+            self.builder.hints
         )
         built = k8s_builder.build()
         log.debug('{}\n{}{}\n'.format('-' * 80, yaml.dump(built), '-' * 80))
