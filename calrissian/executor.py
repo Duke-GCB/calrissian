@@ -30,7 +30,7 @@ class Resources(object):
     """
     RAM = 'ram'
     CORES = 'cores'
-    GPUS = 'cudaDeviceCount'
+    GPUS = 'gpus'
 
     def __init__(self, ram=0, cores=0, gpus=0):
         self.ram = ram
@@ -169,7 +169,7 @@ class ThreadPoolJobExecutor(JobExecutor):
     Relevant: https://github.com/common-workflow-language/cwltool/issues/888
     """
 
-    def __init__(self, total_ram, total_cores, total_gpus, max_workers=None):
+    def __init__(self, total_ram, total_cores, total_gpus=0, max_workers=None):
         """
         Initialize a ThreadPoolJobExecutor
         :param total_ram: RAM limit in megabytes for concurrent jobs

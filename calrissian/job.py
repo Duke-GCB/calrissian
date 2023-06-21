@@ -475,7 +475,8 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
     # Dictionary of supported features.
     # Not yet complete, only checks features of DockerRequirement
     supported_features = {
-        'DockerRequirement': ['class', 'dockerPull']
+        'DockerRequirement': ['class', 'dockerPull'],
+        'http://commonwl.org/cwltool#CUDARequirement': ['class', 'cudaDeviceCount', 'cudaDeviceCountMin', 'cudaDeviceCountMax'],
     }
 
     def check_requirements(self, runtimeContext):
@@ -486,17 +487,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
                     if not field in self.supported_features[feature]:
                         raise UnsupportedRequirement('Error: feature {}.{} is not supported'.format(feature, field))
 
-        cuda_req, _ = self.builder.get_requirement("http://commonwl.org/cwltool#CUDARequirement")
-
-        if cuda_req:
-            if runtimeContext.max_gpus:
-                # if --max-gpus is set, set cudaDeviceCount to 1 
-                # to pass the cwltool job.py check
-                self.builder.resources["cudaDeviceCount"] = max(cuda_req["cudaDeviceCountMin"], cuda_req["cudaDeviceCountMax"])  
-                self.builder.resources["cudaDeviceCountMin"] = cuda_req["cudaDeviceCountMin"]
-                self.builder.resources["cudaDeviceCountMax"] = cuda_req["cudaDeviceCountMax"]
-            else:
-                raise WorkflowException('Error: set --max-gpus to run CWL files with the CUDARequirement')
+        
 
     def _get_container_image(self):
         docker_requirement, _ = self.get_requirement('DockerRequirement')
@@ -705,14 +696,26 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             self.make_tmpdir()
         self.populate_env_vars(runtimeContext)
 
-        
-        
-
         self._setup(runtimeContext)
+        # specific setup for Kubernetes
+        self.setup_kubernetes(runtimeContext)
         pod = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
         self.execute_kubernetes_pod(pod) # analogous to _execute()
         completion_result = self.wait_for_kubernetes_pod()
         self.finish(completion_result, runtimeContext)
+    
+    def setup_kubernetes(self, runtime_context):
+        cuda_req, _ = self.get_requirement("http://commonwl.org/cwltool#CUDARequirement")
+
+        if cuda_req:
+            if runtime_context.max_gpus:
+                # if --max-gpus is set, set cudaDeviceCount to 1 
+                # to pass the cwltool job.py check
+                self.builder.resources["cudaDeviceCount"] = max(cuda_req["cudaDeviceCountMin"], cuda_req["cudaDeviceCountMax"])  
+                self.builder.resources["cudaDeviceCountMin"] = cuda_req["cudaDeviceCountMin"]
+                self.builder.resources["cudaDeviceCountMax"] = cuda_req["cudaDeviceCountMax"]
+            else:
+                raise WorkflowException('Error: set --max-gpus to run CWL files with the CUDARequirement')
 
     # Below are concrete implementations of the remaining abstract methods in ContainerCommandLineJob
     # They are not implemented and not expected to be called, so they all raise NotImplementedError

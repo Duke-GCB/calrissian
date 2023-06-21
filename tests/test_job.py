@@ -353,14 +353,14 @@ class KubernetesPodBuilderTestCase(TestCase):
             'requests': {
                 'cpu': '2', 
                 'memory': '256Mi',
-                'nvidia.com/gpu': '2'
+                'nvidia.com/gpu': '1'
             }, 
             "limits": {
-                'nvidia.com/gpu': '4'
+                'nvidia.com/gpu': '1'
             }
         }
         self.assertEqual(expected, resources)
-        self.pod_builder.hints = [OrderedDict([("class", "cwltool:CUDARequirement"), ("cudaVersionMin", '10.0'), ("cudaComputeCapability", '3.0'), ("cudaDeviceCountMin", 2), ("cudaDeviceCountMax", 4)])]
+        self.pod_builder.requirements = [OrderedDict([("class", "cwltool:CUDARequirement"), ("cudaVersionMin", '10.0'), ("cudaComputeCapability", '3.0'), ("cudaDeviceCountMin", 2), ("cudaDeviceCountMax", 4)])]
 
         resources = self.pod_builder.container_resources()
         expected = {
