@@ -1,6 +1,7 @@
 from typing import Dict
 from cwltool.job import ContainerCommandLineJob, needs_shell_quoting_re
 
+# override cwltool.cuda.cuda_check
 def _cuda_check(cuda_req, requestCount):
     return 1
 
