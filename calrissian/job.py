@@ -312,16 +312,20 @@ class KubernetesPodBuilder(object):
                 container_resources[resource_bound][resource_type] = resource_value
 
         # Add CUDA requirements from CWL
-        for requirement in self.hints:
+        # Add CUDA requirements from CWL
+        for requirement in self.requirements:
             if requirement["class"] in ['cwltool:CUDARequirement', 'http://commonwl.org/cwltool#CUDARequirement']:
                 log.debug('Adding CUDARequirement resources spec')
+
+                cuda_device_count = max(requirement["cudaDeviceCountMin"], requirement["cudaDeviceCountMax"])
+
                 resource_bound = 'requests'
-                container_resources[resource_bound]['nvidia.com/gpu'] = str(requirement["cudaDeviceCountMin"])
+                container_resources[resource_bound]['nvidia.com/gpu'] = str(cuda_device_count)
                 if "limits" in container_resources:
                     resource_bound = 'limits'
-                    container_resources[resource_bound]['nvidia.com/gpu'] = str(requirement["cudaDeviceCountMax"])
+                    container_resources[resource_bound]['nvidia.com/gpu'] = str(cuda_device_count)
                 else:
-                    container_resources['limits'] = {'nvidia.com/gpu': str(requirement["cudaDeviceCountMax"])}
+                    container_resources['limits'] = {'nvidia.com/gpu': str(cuda_device_count)}
 
         return container_resources
 
@@ -386,7 +390,12 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         volume_builder = KubernetesVolumeBuilder()
         volume_builder.add_persistent_volume_entries_from_pod(self.client.get_current_pod())
         self.volume_builder = volume_builder
-
+        cuda_req, _ = self.builder.get_requirement("http://commonwl.org/cwltool#CUDARequirement")
+        if cuda_req:
+            self.builder.resources["cudaDeviceCountMin"] = cuda_req["cudaDeviceCountMin"]
+            self.builder.resources["cudaDeviceCountMax"] = cuda_req["cudaDeviceCountMax"]
+            self.builder.resources["cudaDeviceCount"] = cuda_req["cudaDeviceCountMin"]
+            
     def make_tmpdir(self):
         # Doing this because cwltool.job does it
         if not os.path.exists(self.tmpdir):
@@ -674,6 +683,9 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         }
 
     def run(self, runtimeContext, tmpdir_lock=None):
+        
+        
+        
         self.check_requirements()
         if tmpdir_lock:
             with tmpdir_lock:
