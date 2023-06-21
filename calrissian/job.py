@@ -312,7 +312,6 @@ class KubernetesPodBuilder(object):
                 container_resources[resource_bound][resource_type] = resource_value
 
         # Add CUDA requirements from CWL
-        # Add CUDA requirements from CWL
         for requirement in self.requirements:
             if requirement["class"] in ['cwltool:CUDARequirement', 'http://commonwl.org/cwltool#CUDARequirement']:
                 log.debug('Adding CUDARequirement resources spec')
@@ -390,11 +389,6 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         volume_builder = KubernetesVolumeBuilder()
         volume_builder.add_persistent_volume_entries_from_pod(self.client.get_current_pod())
         self.volume_builder = volume_builder
-        cuda_req, _ = self.builder.get_requirement("http://commonwl.org/cwltool#CUDARequirement")
-        if cuda_req:
-            self.builder.resources["cudaDeviceCountMin"] = cuda_req["cudaDeviceCountMin"]
-            self.builder.resources["cudaDeviceCountMax"] = cuda_req["cudaDeviceCountMax"]
-            self.builder.resources["cudaDeviceCount"] = cuda_req["cudaDeviceCountMin"]
             
     def make_tmpdir(self):
         # Doing this because cwltool.job does it
@@ -478,13 +472,22 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         'DockerRequirement': ['class', 'dockerPull']
     }
 
-    def check_requirements(self):
+    def check_requirements(self, runtimeContext):
         for feature in self.supported_features:
             requirement, is_required = self.get_requirement(feature)
             if requirement and is_required:
                 for field in requirement:
                     if not field in self.supported_features[feature]:
                         raise UnsupportedRequirement('Error: feature {}.{} is not supported'.format(feature, field))
+
+        cuda_req, _ = self.builder.get_requirement("http://commonwl.org/cwltool#CUDARequirement")
+        if cuda_req:
+            if runtimeContext.max_gpus:
+                # if --max-gpus is set, set cudaDeviceCount to 1 
+                # to pass the cwltool job.py check
+                self.builder.resources["cudaDeviceCount"] = 1      
+            else:
+                raise WorkflowException('Error: set --max-gpus to run CWL files with the CUDARequirement')
 
     def _get_container_image(self):
         docker_requirement, _ = self.get_requirement('DockerRequirement')
@@ -684,9 +687,8 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
 
     def run(self, runtimeContext, tmpdir_lock=None):
         
+        self.check_requirements(runtimeContext)
         
-        
-        self.check_requirements()
         if tmpdir_lock:
             with tmpdir_lock:
                 self.make_tmpdir()
