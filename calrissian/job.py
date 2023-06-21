@@ -323,15 +323,13 @@ class KubernetesPodBuilder(object):
             if requirement["class"] in ['cwltool:CUDARequirement', 'http://commonwl.org/cwltool#CUDARequirement']:
                 log.debug('Adding CUDARequirement resources spec')
 
-                cuda_device_count = max(requirement["cudaDeviceCountMin"], requirement["cudaDeviceCountMax"])
-
                 resource_bound = 'requests'
-                container_resources[resource_bound]['nvidia.com/gpu'] = str(cuda_device_count)
+                container_resources[resource_bound]['nvidia.com/gpu'] = str(requirement["cudaDeviceCountMin"])
                 if "limits" in container_resources:
                     resource_bound = 'limits'
-                    container_resources[resource_bound]['nvidia.com/gpu'] = str(cuda_device_count)
+                    container_resources[resource_bound]['nvidia.com/gpu'] = str(requirement["cudaDeviceCountMax"])
                 else:
-                    container_resources['limits'] = {'nvidia.com/gpu': str(cuda_device_count)}
+                    container_resources['limits'] = {'nvidia.com/gpu': str(requirement["cudaDeviceCountMax"])}
 
         return container_resources
 
@@ -494,6 +492,8 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
                 # if --max-gpus is set, set cudaDeviceCount to 1 
                 # to pass the cwltool job.py check
                 self.builder.resources["cudaDeviceCount"] = max(cuda_req["cudaDeviceCountMin"], cuda_req["cudaDeviceCountMax"])  
+                self.builder.resources["cudaDeviceCountMin"] = cuda_req["cudaDeviceCountMin"]
+                self.builder.resources["cudaDeviceCountMax"] = cuda_req["cudaDeviceCountMax"]
             else:
                 raise WorkflowException('Error: set --max-gpus to run CWL files with the CUDARequirement')
 
