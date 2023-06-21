@@ -312,7 +312,6 @@ class KubernetesPodBuilder(object):
                 container_resources[resource_bound][resource_type] = resource_value
 
         # Add CUDA requirements from CWL
-        # Add CUDA requirements from CWL
         for requirement in self.requirements:
             if requirement["class"] in ['cwltool:CUDARequirement', 'http://commonwl.org/cwltool#CUDARequirement']:
                 log.debug('Adding CUDARequirement resources spec')
