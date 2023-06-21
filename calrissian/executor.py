@@ -30,55 +30,60 @@ class Resources(object):
     """
     RAM = 'ram'
     CORES = 'cores'
+    GPUS = 'cudaDeviceCount'
 
-    def __init__(self, ram=0, cores=0):
+    def __init__(self, ram=0, cores=0, gpus=0):
         self.ram = ram
         self.cores = cores
+        self.gpus = gpus
 
     def __sub__(self, other):
         ram = self.ram - other.ram
         cores = self.cores - other.cores
-        return Resources(ram, cores)
+        gpus = self.gpus - other.gpus
+        return Resources(ram, cores, gpus)
 
     def __add__(self, other):
         ram = self.ram + other.ram
         cores = self.cores + other.cores
-        return Resources(ram, cores)
+        gpus = self.gpus + other.gpus
+        return Resources(ram, cores, gpus)
 
     def __neg__(self):
-        return Resources(-self.ram, -self.cores)
+        return Resources(-self.ram, -self.cores, -self.gpus)
 
     def __lt__(self, other):
-        return self.ram < other.ram and self.cores < other.cores
+        return self.ram < other.ram and self.cores < other.cores and self.gpus < other.gpus
 
     def __gt__(self, other):
-        return self.ram > other.ram and self.cores > other.cores
+        return self.ram > other.ram and self.cores > other.cores and self.gpus > other.gpus
 
     def __eq__(self, other):
-        return self.ram == other.ram and self.cores == other.cores
+        return self.ram == other.ram and self.cores == other.cores and self.gpus == other.gpus
 
     def __ge__(self, other):
-        return self.ram >= other.ram and self.cores >= other.cores
+        return self.ram >= other.ram and self.cores >= other.cores and self.gpus >= other.gpus
 
     def __le__(self, other):
-        return self.ram <= other.ram and self.cores <= other.cores
+        return self.ram <= other.ram and self.cores <= other.cores and self.gpus <= other.gpus
 
     def __str__(self):
-        return '[ram: {}, cores: {}]'.format(self.ram, self.cores)
+        return '[ram: {}, cores: {}, gpus {}]'.format(self.ram, self.cores, self.gpus)
 
     def is_negative(self):
-        return self.ram < 0 or self.cores < 0
+        return self.ram < 0 or self.cores < 0 or self.gpus < 0
 
     def exceeds(self, other):
-        return self.ram > other.ram or self.cores > other.cores
+        return self.ram > other.ram or self.cores > other.cores or self.gpus > other.gpus
 
     def to_dict(self):
         return { Resources.CORES: self.cores,
-                 Resources.RAM: self.ram }
+                 Resources.RAM: self.ram,
+                 Resources.GPUS: self.gpus }
 
     @classmethod
     def from_dict(cls, d):
-        return cls(d.get(cls.RAM, 0), d.get(cls.CORES, 0))
+        return cls(d.get(cls.RAM, 0), d.get(cls.CORES, 0), d.get(cls.GPUS, 0))
 
     @classmethod
     def from_job(cls, job):
@@ -89,10 +94,10 @@ class Resources(object):
 
     @classmethod
     def min(cls, rsc1, rsc2):
-        return Resources(min(rsc1.ram, rsc2.ram), min(rsc1.cores, rsc2.cores))
+        return Resources(min(rsc1.ram, rsc2.ram), min(rsc1.cores, rsc2.cores), min(rsc1.gpus, rsc2.gpus))
 
 
-Resources.EMPTY = Resources(0, 0)
+Resources.EMPTY = Resources(0, 0, 0)
 
 
 class JobResourceQueue(object):
@@ -164,7 +169,7 @@ class ThreadPoolJobExecutor(JobExecutor):
     Relevant: https://github.com/common-workflow-language/cwltool/issues/888
     """
 
-    def __init__(self, total_ram, total_cores, max_workers=None):
+    def __init__(self, total_ram, total_cores, total_gpus, max_workers=None):
         """
         Initialize a ThreadPoolJobExecutor
         :param total_ram: RAM limit in megabytes for concurrent jobs
@@ -178,8 +183,8 @@ class ThreadPoolJobExecutor(JobExecutor):
         self.max_workers = max_workers
         self.jrq = JobResourceQueue()
         self.exceptions = Queue()
-        self.total_resources = Resources(total_ram, total_cores)
-        self.available_resources = Resources(total_ram, total_cores) # start with entire pool available
+        self.total_resources = Resources(total_ram, total_cores, total_gpus)
+        self.available_resources = Resources(total_ram, total_cores, total_gpus) # start with entire pool available
         self.resources_lock = threading.Lock()
 
     def select_resources(self, request, runtime_context):
@@ -192,8 +197,8 @@ class ThreadPoolJobExecutor(JobExecutor):
         :param runtime_context: RuntimeContext, unused
         :return: dict of selected resources
         """
-        requested_min = Resources(request.get('ramMin'), request.get('coresMin'))
-        requested_max = Resources(request.get('ramMax'), request.get('coresMax'))
+        requested_min = Resources(request.get('ramMin'), request.get('coresMin'), request.get('cudaDeviceCountMin', 0))
+        requested_max = Resources(request.get('ramMax'), request.get('coresMax'), request.get('cudaDeviceCountMax', 0))
 
         if requested_min.exceeds(self.total_resources):
             raise WorkflowException('Requested minimum resources {} exceed total available {}'.format(

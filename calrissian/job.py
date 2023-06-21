@@ -1,5 +1,12 @@
 from typing import Dict
 from cwltool.job import ContainerCommandLineJob, needs_shell_quoting_re
+
+def _cuda_check(cuda_req, requestCount):
+    return 1
+
+import cwltool.job
+cwltool.job.cuda_check = _cuda_check
+
 from cwltool.utils import DEFAULT_TMP_PREFIX
 from cwltool.errors import WorkflowException, UnsupportedRequirement
 from calrissian.k8s import KubernetesClient, CompletionResult
@@ -481,11 +488,12 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
                         raise UnsupportedRequirement('Error: feature {}.{} is not supported'.format(feature, field))
 
         cuda_req, _ = self.builder.get_requirement("http://commonwl.org/cwltool#CUDARequirement")
+
         if cuda_req:
             if runtimeContext.max_gpus:
                 # if --max-gpus is set, set cudaDeviceCount to 1 
                 # to pass the cwltool job.py check
-                self.builder.resources["cudaDeviceCount"] = 1      
+                self.builder.resources["cudaDeviceCount"] = max(cuda_req["cudaDeviceCountMin"], cuda_req["cudaDeviceCountMax"])  
             else:
                 raise WorkflowException('Error: set --max-gpus to run CWL files with the CUDARequirement')
 
@@ -695,6 +703,10 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         else:
             self.make_tmpdir()
         self.populate_env_vars(runtimeContext)
+
+        
+        
+
         self._setup(runtimeContext)
         pod = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
         self.execute_kubernetes_pod(pod) # analogous to _execute()

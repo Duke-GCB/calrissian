@@ -132,7 +132,8 @@ def main():
     install_tees(parsed_args.stdout, parsed_args.stderr)
     max_ram_megabytes = MemoryParser.parse_to_megabytes(parsed_args.max_ram)
     max_cores = CPUParser.parse(parsed_args.max_cores)
-    executor = ThreadPoolJobExecutor(max_ram_megabytes, max_cores)
+    max_gpus = int(parsed_args.max_gpus) if parsed_args.max_gpus else 0
+    executor = ThreadPoolJobExecutor(max_ram_megabytes, max_cores, max_gpus)
     initialize_reporter(max_ram_megabytes, max_cores)
     runtime_context = CalrissianRuntimeContext(vars(parsed_args))
     runtime_context.select_resources = executor.select_resources
