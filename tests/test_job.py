@@ -345,8 +345,8 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.assertEqual(expected, resources)
         
     def test_gpu_hints(self):
-        self.pod_builder.resources = {'cores': 2, 'ram': 256}
-        self.pod_builder.hints = [OrderedDict([("class", "cwltool:CUDARequirement"), ("cudaVersionMin", '10.0'), ("cudaComputeCapability", '3.0'), ("cudaDeviceCountMin", 1), ("cudaDeviceCountMax", 1)])]
+        self.pod_builder.resources = {'cores': 2, 'ram': 256 }
+        self.pod_builder.requirements = [OrderedDict([("class", "cwltool:CUDARequirement"), ("cudaVersionMin", '10.0'), ("cudaComputeCapability", '3.0'), ("cudaDeviceCountMin", 1), ("cudaDeviceCountMax", 1)])]
 
         resources = self.pod_builder.container_resources()
         expected = {
@@ -360,7 +360,7 @@ class KubernetesPodBuilderTestCase(TestCase):
             }
         }
         self.assertEqual(expected, resources)
-        self.pod_builder.hints = [OrderedDict([("class", "cwltool:CUDARequirement"), ("cudaVersionMin", '10.0'), ("cudaComputeCapability", '3.0'), ("cudaDeviceCountMin", 2), ("cudaDeviceCountMax", 4)])]
+        self.pod_builder.requirements = [OrderedDict([("class", "cwltool:CUDARequirement"), ("cudaVersionMin", '10.0'), ("cudaComputeCapability", '3.0'), ("cudaDeviceCountMin", 2), ("cudaDeviceCountMax", 4)])]
 
         resources = self.pod_builder.container_resources()
         expected = {
@@ -507,12 +507,12 @@ class CalrissianCommandLineJobTestCase(TestCase):
         self.requirements = [{'class': 'DockerRequirement', 'dockerBuild': 'FROM ubuntu:latest\n'}]
         job = self.make_job()
         with self.assertRaisesRegex(UnsupportedRequirement, 'DockerRequirement.dockerBuild is not supported'):
-            job.check_requirements()
+            job.check_requirements(self.runtime_context)
 
     def test_check_requirements_ok_with_empty_requirements(self, mock_volume_builder, mock_client):
         self.requirements = []
         job = self.make_job()
-        job.check_requirements()
+        job.check_requirements(self.runtime_context)
 
     @patch('calrissian.job.os')
     def test_makes_tmpdir_when_not_exists(self, mock_os, mock_volume_builder, mock_client):
