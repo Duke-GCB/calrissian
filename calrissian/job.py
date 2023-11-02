@@ -428,6 +428,10 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         """
         Dumps the tool logs
         """
+        if not os.path.exists(runtime_context.tool_logs_basepath):
+            log.debug(f'os.makedirs({runtime_context.tool_logs_basepath})')
+            os.makedirs(runtime_context.tool_logs_basepath)
+            
         log_filename = os.path.join(runtime_context.tool_logs_basepath, f"{name}.log")
 
         log.info(f"Writing pod {name} logs to {log_filename}")
