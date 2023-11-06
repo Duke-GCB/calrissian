@@ -36,7 +36,8 @@ setup(
         'kubernetes==10.0.1',
         'cwltool==3.1.20230601100705',
         'tenacity==5.1.1',
-        'importlib-metadata<5,>=0.23'
+        'importlib-metadata<5,>=0.23',
+        'msgpack==0.5.2'
     ],
     test_suite='nose2.collector.collector',
     tests_require=['nose2'],
