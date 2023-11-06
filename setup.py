@@ -34,7 +34,7 @@ setup(
     install_requires=[
         'urllib3>=1.24.2,<1.27',
         'kubernetes==10.0.1',
-        'cwltool==3.1.20230201224320',
+        'cwltool==3.1.20230601100705',
         'tenacity==5.1.1',
         'importlib-metadata<5,>=0.23'
     ],

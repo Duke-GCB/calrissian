@@ -1,5 +1,13 @@
 from typing import Dict
 from cwltool.job import ContainerCommandLineJob, needs_shell_quoting_re
+
+# override cwltool.cuda.cuda_check
+def _cuda_check(cuda_req, requestCount):
+    return 1
+
+import cwltool.job
+cwltool.job.cuda_check = _cuda_check
+
 from cwltool.utils import DEFAULT_TMP_PREFIX
 from cwltool.errors import WorkflowException, UnsupportedRequirement
 from calrissian.k8s import KubernetesClient, CompletionResult
@@ -17,6 +25,7 @@ import re
 from cwltool.utils import visit_class, ensure_writable
 
 log = logging.getLogger("calrissian.job")
+log_main = logging.getLogger("calrissian.main")
 
 
 K8S_UNSAFE_REGEX = re.compile('[^-a-z0-9]')
@@ -312,9 +321,10 @@ class KubernetesPodBuilder(object):
                 container_resources[resource_bound][resource_type] = resource_value
 
         # Add CUDA requirements from CWL
-        for requirement in self.hints:
+        for requirement in self.requirements:
             if requirement["class"] in ['cwltool:CUDARequirement', 'http://commonwl.org/cwltool#CUDARequirement']:
                 log.debug('Adding CUDARequirement resources spec')
+
                 resource_bound = 'requests'
                 container_resources[resource_bound]['nvidia.com/gpu'] = str(requirement["cudaDeviceCountMin"])
                 if "limits" in container_resources:
@@ -386,7 +396,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         volume_builder = KubernetesVolumeBuilder()
         volume_builder.add_persistent_volume_entries_from_pod(self.client.get_current_pod())
         self.volume_builder = volume_builder
-
+            
     def make_tmpdir(self):
         # Doing this because cwltool.job does it
         if not os.path.exists(self.tmpdir):
@@ -419,6 +429,10 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         """
         Dumps the tool logs
         """
+        if not os.path.exists(runtime_context.tool_logs_basepath):
+            log.debug(f'os.makedirs({runtime_context.tool_logs_basepath})')
+            os.makedirs(runtime_context.tool_logs_basepath)
+            
         log_filename = os.path.join(runtime_context.tool_logs_basepath, f"{name}.log")
 
         log.info(f"Writing pod {name} logs to {log_filename}")
@@ -466,16 +480,19 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
     # Dictionary of supported features.
     # Not yet complete, only checks features of DockerRequirement
     supported_features = {
-        'DockerRequirement': ['class', 'dockerPull']
+        'DockerRequirement': ['class', 'dockerPull'],
+        'http://commonwl.org/cwltool#CUDARequirement': ['class', 'cudaDeviceCount', 'cudaDeviceCountMin', 'cudaDeviceCountMax'],
     }
 
-    def check_requirements(self):
+    def check_requirements(self, runtimeContext):
         for feature in self.supported_features:
             requirement, is_required = self.get_requirement(feature)
             if requirement and is_required:
                 for field in requirement:
                     if not field in self.supported_features[feature]:
                         raise UnsupportedRequirement('Error: feature {}.{} is not supported'.format(feature, field))
+
+        
 
     def _get_container_image(self):
         docker_requirement, _ = self.get_requirement('DockerRequirement')
@@ -674,18 +691,45 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         }
 
     def run(self, runtimeContext, tmpdir_lock=None):
-        self.check_requirements()
+        
+        def get_pod_command(pod):
+            return pod['spec']['containers'][0]['args']
+            
+        def get_pod_name(pod):
+            return pod['spec']['containers'][0]['name']
+
+        self.check_requirements(runtimeContext)
+        
         if tmpdir_lock:
             with tmpdir_lock:
                 self.make_tmpdir()
         else:
             self.make_tmpdir()
         self.populate_env_vars(runtimeContext)
+
         self._setup(runtimeContext)
+        # specific setup for Kubernetes
+        self.setup_kubernetes(runtimeContext)
         pod = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
         self.execute_kubernetes_pod(pod) # analogous to _execute()
         completion_result = self.wait_for_kubernetes_pod()
+        if completion_result.exit_code != 0:
+            log_main.error(f"ERROR the command below failed in pod {get_pod_name(pod)}:")
+            log_main.error("\t" + " ".join(get_pod_command(pod)))
         self.finish(completion_result, runtimeContext)
+    
+    def setup_kubernetes(self, runtime_context):
+        cuda_req, _ = self.get_requirement("http://commonwl.org/cwltool#CUDARequirement")
+
+        if cuda_req:
+            if runtime_context.max_gpus:
+                # if --max-gpus is set, set cudaDeviceCount to 1 
+                # to pass the cwltool job.py check
+                self.builder.resources["cudaDeviceCount"] = max(cuda_req["cudaDeviceCountMin"], cuda_req["cudaDeviceCountMax"])  
+                self.builder.resources["cudaDeviceCountMin"] = cuda_req["cudaDeviceCountMin"]
+                self.builder.resources["cudaDeviceCountMax"] = cuda_req["cudaDeviceCountMax"]
+            else:
+                raise WorkflowException('Error: set --max-gpus to run CWL files with the CUDARequirement')
 
     # Below are concrete implementations of the remaining abstract methods in ContainerCommandLineJob
     # They are not implemented and not expected to be called, so they all raise NotImplementedError

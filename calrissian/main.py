@@ -39,6 +39,7 @@ def activate_logging(level):
 def add_arguments(parser):
     parser.add_argument('--max-ram', type=str, help='Maximum amount of RAM to use, e.g 1048576, 512Mi or 2G. Follows k8s resource conventions')
     parser.add_argument('--max-cores', type=str, help='Maximum number of CPU cores to use')
+    parser.add_argument('--max-gpus', type=str, nargs='?', help='Maximum number of GPU cores to use')
     parser.add_argument('--pod-labels', type=Text, nargs='?', help='YAML file of labels to add to Pods submitted')
     parser.add_argument('--pod-env-vars', type=Text, nargs='?', help='YAML file of environment variables to add at runtime to Pods submitted')
     parser.add_argument('--pod-nodeselectors', type=Text, nargs='?', help='YAML file of node selectors to add to Pods submitted')
@@ -48,6 +49,7 @@ def add_arguments(parser):
     parser.add_argument('--stderr', type=Text, nargs='?', help='Output file name to tee standard error to (includes tool logs)')
     parser.add_argument('--tool-logs-basepath', type=Text, nargs='?', help='Base path for saving the tool logs')
     parser.add_argument('--conf', help='Defines the default values for the CLI arguments', action='append')
+
 
 def print_version():
     print(version())
@@ -130,7 +132,8 @@ def main():
     install_tees(parsed_args.stdout, parsed_args.stderr)
     max_ram_megabytes = MemoryParser.parse_to_megabytes(parsed_args.max_ram)
     max_cores = CPUParser.parse(parsed_args.max_cores)
-    executor = ThreadPoolJobExecutor(max_ram_megabytes, max_cores)
+    max_gpus = int(parsed_args.max_gpus) if parsed_args.max_gpus else 0
+    executor = ThreadPoolJobExecutor(max_ram_megabytes, max_cores, max_gpus)
     initialize_reporter(max_ram_megabytes, max_cores)
     runtime_context = CalrissianRuntimeContext(vars(parsed_args))
     runtime_context.select_resources = executor.select_resources

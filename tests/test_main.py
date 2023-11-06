@@ -44,7 +44,7 @@ class CalrissianMainTestCase(TestCase):
         self.assertEqual(mock_memory_parser.parse_to_megabytes.call_args, call(mock_parse_arguments.return_value.max_ram))
         self.assertEqual(mock_cpu_parser.parse.call_args, call(mock_parse_arguments.return_value.max_cores))
         self.assertEqual(mock_executor.call_args,
-                         call(mock_memory_parser.parse_to_megabytes.return_value, mock_cpu_parser.parse.return_value))
+                         call(mock_memory_parser.parse_to_megabytes.return_value, mock_cpu_parser.parse.return_value, 1))
         self.assertTrue(mock_runtime_context.called)
         self.assertEqual(mock_cwlmain.call_args, call(args=mock_parse_arguments.return_value,
                                                       executor=mock_executor.return_value,
@@ -63,7 +63,7 @@ class CalrissianMainTestCase(TestCase):
     def test_add_arguments(self):
         mock_parser = Mock()
         add_arguments(mock_parser)
-        self.assertEqual(mock_parser.add_argument.call_count, 11)
+        self.assertEqual(mock_parser.add_argument.call_count, 12)
 
     @patch('calrissian.main.sys')
     def test_parse_arguments_exits_without_ram_or_cores(self, mock_sys):

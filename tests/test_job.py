@@ -345,8 +345,8 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.assertEqual(expected, resources)
         
     def test_gpu_hints(self):
-        self.pod_builder.resources = {'cores': 2, 'ram': 256}
-        self.pod_builder.hints = [OrderedDict([("class", "cwltool:CUDARequirement"), ("cudaVersionMin", '10.0'), ("cudaComputeCapability", '3.0'), ("cudaDeviceCountMin", 1), ("cudaDeviceCountMax", 1)])]
+        self.pod_builder.resources = {'cores': 2, 'ram': 256 }
+        self.pod_builder.requirements = [OrderedDict([("class", "cwltool:CUDARequirement"), ("cudaVersionMin", '10.0'), ("cudaComputeCapability", '3.0'), ("cudaDeviceCountMin", 1), ("cudaDeviceCountMax", 1)])]
 
         resources = self.pod_builder.container_resources()
         expected = {
@@ -360,7 +360,7 @@ class KubernetesPodBuilderTestCase(TestCase):
             }
         }
         self.assertEqual(expected, resources)
-        self.pod_builder.hints = [OrderedDict([("class", "cwltool:CUDARequirement"), ("cudaVersionMin", '10.0'), ("cudaComputeCapability", '3.0'), ("cudaDeviceCountMin", 2), ("cudaDeviceCountMax", 4)])]
+        self.pod_builder.requirements = [OrderedDict([("class", "cwltool:CUDARequirement"), ("cudaVersionMin", '10.0'), ("cudaComputeCapability", '3.0'), ("cudaDeviceCountMin", 2), ("cudaDeviceCountMax", 4)])]
 
         resources = self.pod_builder.container_resources()
         expected = {
@@ -507,12 +507,12 @@ class CalrissianCommandLineJobTestCase(TestCase):
         self.requirements = [{'class': 'DockerRequirement', 'dockerBuild': 'FROM ubuntu:latest\n'}]
         job = self.make_job()
         with self.assertRaisesRegex(UnsupportedRequirement, 'DockerRequirement.dockerBuild is not supported'):
-            job.check_requirements()
+            job.check_requirements(self.runtime_context)
 
     def test_check_requirements_ok_with_empty_requirements(self, mock_volume_builder, mock_client):
         self.requirements = []
         job = self.make_job()
-        job.check_requirements()
+        job.check_requirements(self.runtime_context)
 
     @patch('calrissian.job.os')
     def test_makes_tmpdir_when_not_exists(self, mock_os, mock_volume_builder, mock_client):
@@ -757,7 +757,8 @@ class CalrissianCommandLineJobTestCase(TestCase):
         self.assertEqual(mock_quoted_arg_list.return_value, result)
         self.assertEqual(mock_quoted_arg_list.call_args, call(job.command_line))
 
-    def test_run(self, mock_volume_builder, mock_client):
+    @patch('calrissian.job.KubernetesPodBuilder')
+    def test_run(self, mock_pod_builder, mock_volume_builder, mock_client):
         job = self.make_job()
         job.make_tmpdir = Mock()
         job.populate_env_vars = Mock()
@@ -767,6 +768,7 @@ class CalrissianCommandLineJobTestCase(TestCase):
         job.wait_for_kubernetes_pod = Mock()
         job.report = Mock()
         job.finish = Mock()
+        job.create_kubernetes_runtime = mock_pod_builder
 
         job.run(self.runtime_context)
         self.assertTrue(job.make_tmpdir.called)
@@ -777,7 +779,8 @@ class CalrissianCommandLineJobTestCase(TestCase):
         self.assertTrue(job.wait_for_kubernetes_pod.called)
         self.assertEqual(job.finish.call_args, call(job.wait_for_kubernetes_pod.return_value, self.runtime_context))
 
-    def test_run_uses_tmpdir_lock(self, mock_volume_builder, mock_client):
+    @patch('calrissian.job.KubernetesPodBuilder')
+    def test_run_uses_tmpdir_lock(self, mock_pod_builder, mock_volume_builder, mock_client):
         mock_make_tmpdir = Mock()
         mock_enter = Mock()
         mock_exit = Mock()
@@ -789,6 +792,7 @@ class CalrissianCommandLineJobTestCase(TestCase):
         job.execute_kubernetes_pod = Mock()
         job.wait_for_kubernetes_pod = Mock()
         job.finish = Mock()
+        job.create_kubernetes_runtime = mock_pod_builder
 
         mock_tmpdir_lock = Mock(__enter__=mock_enter, __exit__=mock_exit)
         manager = Mock()
