@@ -37,7 +37,8 @@ setup(
         'cwltool==3.1.20230601100705',
         'tenacity==5.1.1',
         'importlib-metadata<5,>=0.23',
-        'msgpack==0.5.2'
+        'msgpack==0.5.2',
+        'typing-extensions==3.7.4'
     ],
     test_suite='nose2.collector.collector',
     tests_require=['nose2'],
