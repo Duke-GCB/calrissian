@@ -12,7 +12,7 @@ spec:
         command: ["chmod", "777", "/output"]
         volumeMounts:
         - mountPath: /output
-          name: conformance-output-data
+          name: conformance-test-output
       containers:
       - name: tests-1-2
         imagePullPolicy: IfNotPresent
@@ -53,6 +53,6 @@ spec:
         persistentVolumeClaim:
           claimName: conformance-test-data
           readOnly: true
-      - name: conformance-output-data
+      - name: conformance-test-output
         persistentVolumeClaim:
           claimName: conformance-test-output

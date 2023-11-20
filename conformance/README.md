@@ -132,17 +132,38 @@ kubectl --namespace="$NAMESPACE_NAME" create -f StageConformanceTestsData.yaml
 
 **This step can probably be simplified, but as conformance tests are in development it's too early to optimize**
 
-Calrissian does not include cwltest, so build a container that installs it with: 
+Build a container that installs `calrissian` and `cwltest` with: 
 
 ```
 minikube image build .. -t ghcr.io/calrissian/conformance:latest -f conformance/Dockerfile.conformance 
 ```
 
-This will build `calrissian:conformance` from the current source tree. You may need to tag that differently if pushing to a registry. If so, update the `image: ` in [ConformanceTestsJob-1.2.yaml](ConformanceTestsJob-1.2.yaml)
+This will build `calrissian:conformance` from the current source tree and this image is available in the minikube cluster node.
 
 ### Running Conformance Tests
 
-[ConformanceTestsJob-1.2.yaml](ConformanceTestsJob-1.2.yaml) uses `cwltest` from cwltool to run conformance tests with `--tool calrissian` and Calrissian's required arguments after `--`.
+[ConformanceTestsJob-1.2.yaml](ConformanceTestsJob-1.2.yaml) uses `cwltest` from cwltool to run conformance tests with `--tool calrissian` and Calrissian's required arguments after `--`, e.g.:
+
+```
+...
+  command: ["cwltest"]
+  args:
+  - "--test"
+  - "/conformance/common-workflow-language-1.0.2/v1.0/conformance_test_v1.0.yaml"
+  - "--tool"
+  - "calrissian"
+  - "--badgedir"
+  - "/output/badges-1.0.2"
+  - "--verbose"
+  - "--"
+  - "--max-ram"
+  - "8G"
+  - "--max-cores"
+  - "4"
+  - "--default-container"
+  - "debian:stretch-slim"
+...
+```
 
 #### CWL 1.0
 
@@ -150,7 +171,7 @@ This will build `calrissian:conformance` from the current source tree. You may n
 kubectl --namespace="$NAMESPACE_NAME" create -f ConformanceTestsJob-1.0.yaml
 kubectl --namespace="$NAMESPACE_NAME" wait --for=condition=Ready\
    --selector=job-name=conformance-tests-1-0 pods
-kubectl --namespace="$NAMESPACE_NAME" logs -f jobs/conformance-tests-1-0
+kubectl --namespace="$NAMESPACE_NAME" logs -f jobs/conformance-tests-1-0 > ../docs/conformance/1.0/result-1-0.txt
 ```
 
 #### CWL 1.1
