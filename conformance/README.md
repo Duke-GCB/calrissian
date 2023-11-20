@@ -1,6 +1,8 @@
 # Calrissian - CWL Conformance Tests
 
-This is under development, and will eventually be automated to run in a CI environment. However, the resources here can be used to run [CWL conformance tests](https://github.com/common-workflow-language/common-workflow-language/blob/master/CONFORMANCE_TESTS.md) on a Kubernetes cluster.
+This is under development, and will eventually be automated to run in a CI environment. However, the resources here can be used to run [CWL conformance tests](https://github.com/common-workflow-language/cwltest) on a Kubernetes cluster.
+
+The manifests are ready for a minikube local cluster.
 
 
 ## Conformance tests for CWL v1.0 for the latest release
