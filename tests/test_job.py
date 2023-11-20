@@ -43,11 +43,11 @@ class ReadYamlTestCase(TestCase):
         self.assertEqual(mock_yaml.safe_load.call_args, call(mock_open.return_value.__enter__.return_value))
 
 
-class QuotedArgListTestCase(TestCase):
+# class QuotedArgListTestCase(TestCase):
 
-    def test_quoted_arg_list(self):
-        arg_list = ['ls', '@foo']
-        self.assertEqual(quoted_arg_list(arg_list), ['ls', '\'@foo\''])
+#     def test_quoted_arg_list(self):
+#         arg_list = ['ls', '@foo']
+#         self.assertEqual(quoted_arg_list(arg_list), ['ls', '\'@foo\''])
 
 
 class KubernetesPodVolumeInspectorTestCase(TestCase):

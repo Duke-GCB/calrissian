@@ -1,7 +1,7 @@
 from unittest import TestCase
 from unittest.mock import Mock, patch, call, PropertyMock, create_autospec
 from kubernetes.client.models import V1Pod, V1ContainerStateTerminated, V1ContainerState
-from kubernetes.client.api_client import ApiException
+from kubernetes.client.rest import ApiException
 from kubernetes.config.config_exception import ConfigException
 from calrissian.executor import IncompleteStatusException
 from calrissian.k8s import load_config_get_namespace, KubernetesClient, CalrissianJobException, PodMonitor, delete_pods

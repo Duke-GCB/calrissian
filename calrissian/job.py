@@ -67,8 +67,8 @@ def read_yaml(filename):
 
 
 def quoted_arg_list(arg_list):
-        shouldquote = needs_shell_quoting_re.search
-        return [shellescape.quote(arg) if shouldquote(arg) else arg for arg in arg_list]
+    shouldquote = needs_shell_quoting_re.search
+    return [shellescape.quote(arg) if shouldquote(arg) else arg for arg in arg_list]
 
 
 def total_size(outputs):
