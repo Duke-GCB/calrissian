@@ -1,15 +1,14 @@
----
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: conformance-output-data-1-0
 spec:
   accessModes:
-    - ReadWriteMany
+  - ReadWriteMany
   resources:
     requests:
       storage: 1Gi
-  storageClassName: longhorn
+  storageClassName: standard
 ---
 apiVersion: batch/v1
 kind: Job
@@ -28,7 +27,8 @@ spec:
           name: conformance-output-data-1-0
       containers:
       - name: tests-1-0
-        image: docker.terradue.com/calrissian:conformance
+        imagePullPolicy: IfNotPresent
+        image: conformance:latest
         workingDir: "/conformance/common-workflow-language-1.0.2"
         command: ["cwltest"]
         args:

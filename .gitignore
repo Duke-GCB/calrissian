@@ -7,3 +7,6 @@ calrissian.egg-info/
 tests/__pycache__/
 .vscode
 build
+*.egg
+*.whl
+*.zip

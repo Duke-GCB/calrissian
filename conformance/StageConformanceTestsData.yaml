@@ -1,16 +1,14 @@
----
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: conformance-test-data-1-0
 spec:
   accessModes:
-    #- ReadWriteOnce
-    - ReadWriteMany
+  - ReadWriteMany
   resources:
     requests:
       storage: 1Gi
-  storageClassName: longhorn
+  storageClassName: standard
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -18,12 +16,11 @@ metadata:
   name: conformance-test-data-1-1
 spec:
   accessModes:
-    #- ReadWriteOnce
-    - ReadWriteMany
+  - ReadWriteMany
   resources:
     requests:
       storage: 1Gi
-  storageClassName: longhorn
+  storageClassName: standard
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -31,12 +28,11 @@ metadata:
   name: conformance-test-data-1-2
 spec:
   accessModes:
-    #- ReadWriteOnce
-    - ReadWriteMany
+  - ReadWriteMany
   resources:
     requests:
       storage: 1Gi
-  storageClassName: longhorn
+  storageClassName: standard
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -44,12 +40,11 @@ metadata:
   name: conformance-test-data-1-2-1
 spec:
   accessModes:
-    #- ReadWriteOnce
-    - ReadWriteMany
+  - ReadWriteMany
   resources:
     requests:
       storage: 1Gi
-  storageClassName: longhorn
+  storageClassName: standard
 ---
 apiVersion: batch/v1
 kind: Job

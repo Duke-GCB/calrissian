@@ -98,10 +98,25 @@ This is under development, and will eventually be automated to run in a CI envir
 ![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/1.2.1/step_input_expression.json?icon=commonwl)
 ![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/1.2.1/subworkflow.json?icon=commonwl)
 ![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Terradue/calrissian/conformance-1.2.1/conformance/badges/1.2.1/timelimit.json?icon=commonwl)
+ 
+## Run the conformance tests on Minikube
 
 ### Cluster Preparation
 
-To run the conformance tests, follow the instructions in the **Creating Namespace and Roles** section of [examples/README.md](../examples/README.md). You do not need to create any VolumeClaims from the examples.
+To run the conformance tests, setup a namespace and create the resources needed with:
+
+```
+NAMESPACE_NAME=calrissian-conformance
+kubectl create namespace "$NAMESPACE_NAME"
+kubectl --namespace="$NAMESPACE_NAME" create role pod-manager-role \
+  --verb=create,patch,delete,list,watch --resource=pods
+kubectl --namespace="$NAMESPACE_NAME" create role log-reader-role \
+  --verb=get,list --resource=pods/log
+kubectl --namespace="$NAMESPACE_NAME" create rolebinding pod-manager-default-binding \
+  --role=pod-manager-role --serviceaccount=${NAMESPACE_NAME}:default
+kubectl --namespace="$NAMESPACE_NAME" create rolebinding log-reader-default-binding \
+  --role=log-reader-role --serviceaccount=${NAMESPACE_NAME}:default
+```
 
 ### Staging Conformance Tests Data
 
@@ -115,10 +130,10 @@ kubectl --namespace="$NAMESPACE_NAME" create -f StageConformanceTestsData.yaml
 
 **This step can probably be simplified, but as conformance tests are in development it's too early to optimize**
 
-Calrissian does not include cwltest, so build a container that installs it.
+Calrissian does not include cwltest, so build a container that installs it with: 
 
 ```
-./build-conformance.sh
+minikube image build .. -t ghcr.io/calrissian/conformance:latest -f conformance/Dockerfile.conformance 
 ```
 
 This will build `calrissian:conformance` from the current source tree. You may need to tag that differently if pushing to a registry. If so, update the `image: ` in [ConformanceTestsJob-1.2.yaml](ConformanceTestsJob-1.2.yaml)
@@ -126,6 +141,27 @@ This will build `calrissian:conformance` from the current source tree. You may n
 ### Running Conformance Tests
 
 [ConformanceTestsJob-1.2.yaml](ConformanceTestsJob-1.2.yaml) uses `cwltest` from cwltool to run conformance tests with `--tool calrissian` and Calrissian's required arguments after `--`.
+
+#### CWL 1.0
+
+```
+kubectl --namespace="$NAMESPACE_NAME" create -f ConformanceTestsJob-1.0.yaml
+kubectl --namespace="$NAMESPACE_NAME" wait --for=condition=Ready\
+   --selector=job-name=conformance-tests-1-0 pods
+kubectl --namespace="$NAMESPACE_NAME" logs -f jobs/conformance-tests-1-0
+```
+
+#### CWL 1.1
+
+
+```
+kubectl --namespace="$NAMESPACE_NAME" create -f ConformanceTestsJob-1.0.yaml
+kubectl --namespace="$NAMESPACE_NAME" wait --for=condition=Ready\
+   --selector=job-name=conformance-tests-1-0 pods
+kubectl --namespace="$NAMESPACE_NAME" logs -f jobs/conformance-tests-1-0
+```
+
+#### CWL 1.2.1
 
 ```
 kubectl --namespace="$NAMESPACE_NAME" create -f ConformanceTestsJob-1.2.yaml
@@ -145,13 +181,22 @@ kubectl --namespace="$NAMESPACE_NAME" apply -f inspect-volumes-pod.yaml
 Open a shell in the pod with:
 
 ```
- kubectl --namespace="$NAMESPACE_NAME" exec --stdin --tty inspect-volumes -- /bin/bash
+kubectl --namespace="$NAMESPACE_NAME" exec --stdin --tty inspect-volumes -- /bin/bash
 ```
 
-Inpect the content of `/output` with `ls -l /output`
+Inspect the content of `/output` with `ls -l /output`
 
 ### Copy the badges
 
+Create a pod to copy the badges from the volume with: 
+
+```
+kubectl --namespace="$NAMESPACE_NAME" apply -f inspect-volumes-pod.yaml 
+```
+
+```
+kubectl cp $NAMESPACE_NAME/inspect-volumes:/output/badges-1.0/ badges/1.0
+```
 
 ```
 kubectl cp $NAMESPACE_NAME/inspect-volumes:/output/badges-1.1.0/ badges/1.1.0
