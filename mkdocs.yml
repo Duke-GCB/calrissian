@@ -25,4 +25,5 @@ nav:
 - Introduction: 'index.md'
 - Conformance:
   - 1.0: 'conformance/1.0/conformance.md'
+  - 1.1: 'conformance/1.0/conformance.md'
 
