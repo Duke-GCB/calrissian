@@ -1,0 +1,6 @@
+dependencies:
+- pip
+- pip:
+  - pdocs
+  - mkdocs-material
+  - mkdocs-jupyter

@@ -2,7 +2,9 @@ name: docs
 on:
   push:
     branches:
-    - conformance-1.2.1
+    - develop
+    - main
+    - secrets
     paths:
     # Only rebuild website when docs have changed
     - 'README.md'
@@ -16,17 +18,13 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - uses: mamba-org/provision-with-micromamba@main
+    - name: Install Conda environment from environment.yml
+      uses: mamba-org/provision-with-micromamba@main
       with:
-        micromamba-version: '1.2.0'
-        environment-file: false
+        environment-file: docs/environment.yml
         environment-name: env_docs
-        extra-specs: |
-          python=3.10
-          pip:
-          - mkdocs-material
-          - mkdocs-jupyter
-        channels: conda-forge
+        channels: terradue,eoepca,conda-forge
+        channel-priority: flexible
 
     - name: Install project
       run: |
