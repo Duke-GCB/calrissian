@@ -1,0 +1,31 @@
+name: docs
+on:
+  push:
+    branches:
+    - conformance-1.2.1
+    paths:
+    # Only rebuild website when docs have changed
+    - 'README.md'
+    - 'docs/**'
+    - 'mkdocs.yml'
+    - .github/**
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install Conda environment from environment.yml
+      uses: mamba-org/provision-with-micromamba@main
+      with:
+        environment-file: docs/environment.yml
+        environment-name: env_docs
+        channels: conda-forge
+        channel-priority: flexible
+
+    - name: Install project
+      run: |
+        /home/runner/micromamba-root/envs/env_docs/bin/python setup.py install
+
+    - run: /home/runner/micromamba-root/envs/env_docs/bin/mkdocs gh-deploy --force

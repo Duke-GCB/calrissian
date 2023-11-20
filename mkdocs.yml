@@ -1,0 +1,28 @@
+site_name: Calrissian
+site_description: 'CWL runner for Kubernetes'
+# Repository
+
+repo_name: 'Duke-GCB/calrissian'
+repo_url: 'https://github.com/Duke-GCB/calrissian.git'
+edit_uri: 'blob/main/docs/'
+site_url: 'https://Duke-GCB.github.io/calrissian/'
+
+
+theme:
+  name: material
+
+markdown_extensions:
+- admonition
+- pymdownx.highlight
+- pymdownx.superfences
+- attr_list
+
+plugins:
+- search
+#- mkdocs-jupyter
+
+nav:
+- Introduction: 'index.md'
+- Conformance:
+  - 1.0: 'conformance/1.0/conformance.md'
+
