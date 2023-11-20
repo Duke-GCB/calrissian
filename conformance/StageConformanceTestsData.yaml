@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: conformance-test-data-1-0
+  name: conformance-test-data
 spec:
   accessModes:
   - ReadWriteMany
@@ -13,31 +13,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: conformance-test-data-1-1
-spec:
-  accessModes:
-  - ReadWriteMany
-  resources:
-    requests:
-      storage: 1Gi
-  storageClassName: standard
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: conformance-test-data-1-2
-spec:
-  accessModes:
-  - ReadWriteMany
-  resources:
-    requests:
-      storage: 1Gi
-  storageClassName: standard
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: conformance-test-data-1-2-1
+  name: conformance-test-output
 spec:
   accessModes:
   - ReadWriteMany
@@ -67,7 +43,7 @@ spec:
           value: "v1.0.2.zip"
         volumeMounts:
         - mountPath: /conformance
-          name: conformance-test-data-1-0
+          name: conformance-test-data
       - name: 1-1
         image: alpine:3.10
         command:
@@ -81,7 +57,7 @@ spec:
           value: "v1.1.0.zip"
         volumeMounts:
         - mountPath: /conformance
-          name: conformance-test-data-1-1
+          name: conformance-test-data
       - name: 1-2
         image: alpine:3.10
         command:
@@ -95,7 +71,7 @@ spec:
           value: "v1.2.0.zip"
         volumeMounts:
         - mountPath: /conformance
-          name: conformance-test-data-1-2
+          name: conformance-test-data
       - name: 1-2-1
         image: alpine:3.10
         command:
@@ -109,18 +85,9 @@ spec:
           value: "1.2.1_proposed.zip"
         volumeMounts:
         - mountPath: /conformance
-          name: conformance-test-data-1-2-1
+          name: conformance-test-data
       restartPolicy: Never
       volumes:
-      - name: conformance-test-data-1-0
+      - name: conformance-test-data
         persistentVolumeClaim:
-          claimName: conformance-test-data-1-0
-      - name: conformance-test-data-1-1
-        persistentVolumeClaim:
-          claimName: conformance-test-data-1-1
-      - name: conformance-test-data-1-2
-        persistentVolumeClaim:
-          claimName: conformance-test-data-1-2
-      - name: conformance-test-data-1-2-1
-        persistentVolumeClaim:
-          claimName: conformance-test-data-1-2-1
+          claimName: conformance-test-data

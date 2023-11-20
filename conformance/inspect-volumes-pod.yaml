@@ -11,22 +11,22 @@ spec:
     image: nginx:latest
     volumeMounts:
     - mountPath: /conformance
-      name: conformance-test-data-1-2
+      name: conformance-test-data
       readOnly: true
     - mountPath: /output
-      name: conformance-output-data-1-2
+      name: conformance-test-output
     env:
     - name: CALRISSIAN_POD_NAME
       valueFrom:
         fieldRef:
           fieldPath: metadata.name
   volumes:
-  - name: conformance-test-data-1-2
+  - name: conformance-test-data
     persistentVolumeClaim:
-      claimName: conformance-test-data-1-2
+      claimName: conformance-test-data
       readOnly: true
-  - name: conformance-output-data-1-2
+  - name: conformance-test-output
     persistentVolumeClaim:
-      claimName: conformance-output-data-1-2
+      claimName: conformance-test-output
   hostNetwork: true
   dnsPolicy: Default
