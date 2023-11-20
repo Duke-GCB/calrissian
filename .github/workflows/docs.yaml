@@ -16,13 +16,17 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install Conda environment from environment.yml
-      uses: mamba-org/provision-with-micromamba@main
+    - uses: mamba-org/provision-with-micromamba@main
       with:
-        environment-file: docs/environment.yml
+        micromamba-version: '1.2.0'
+        environment-file: false
         environment-name: env_docs
+        extra-specs: |
+          python=3.10
+          pip:
+          - mkdocs-material
+          - mkdocs-jupyter
         channels: conda-forge
-        channel-priority: flexible
 
     - name: Install project
       run: |
