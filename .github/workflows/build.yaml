@@ -40,7 +40,7 @@ jobs:
     - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
     - name: build & push image
       run: |
-        IMAGE_ID=ghcr.io/Duke-GCB/calrissian/calrissian
+        IMAGE_ID=ghcr.io/duke-gcb/calrissian/calrissian
         docker build . --file Dockerfile --tag calrissian
         docker tag calrissian $IMAGE_ID:${{needs.version.outputs.app-version}}
         docker push $IMAGE_ID:${{needs.version.outputs.app-version}}
