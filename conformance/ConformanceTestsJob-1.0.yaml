@@ -41,6 +41,8 @@ spec:
               fieldPath: metadata.name
         - name: TMPDIR
           value: "/output"
+        - name: RETRY_ATTEMPTS
+          value: "1"
         volumeMounts:
         - mountPath: /conformance
           name: conformance-test-data
