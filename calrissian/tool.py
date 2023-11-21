@@ -46,6 +46,7 @@ class CalrissianCommandLineTool(CommandLineTool):
                 'class': 'DockerRequirement',
                 'dockerPull': default_container
             })
+        
         return CalrissianCommandLineJob
 
 

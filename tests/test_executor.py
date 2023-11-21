@@ -15,12 +15,12 @@ def make_mock_job(resources):
 class ResourcesTestCase(TestCase):
 
     def setUp(self):
-        self.resource11 = Resources(1, 1)
-        self.resource22 = Resources(2, 2)
-        self.resource33 = Resources(3, 3)
-        self.resource21 = Resources(2, 1)
-        self.resource12 = Resources(1, 2)
-        self.resource_neg = Resources(-1, 0)
+        self.resource11 = Resources(1, 1, 1)
+        self.resource22 = Resources(2, 2, 2)
+        self.resource33 = Resources(3, 3, 3)
+        self.resource21 = Resources(2, 1, 2)
+        self.resource12 = Resources(1, 2, 1)
+        self.resource_neg = Resources(-1, 0, 0)
 
     def test_init(self):
         self.assertEqual(self.resource11.cores, 1)
@@ -66,26 +66,27 @@ class ResourcesTestCase(TestCase):
         self.assertFalse(self.resource33 <= self.resource22)
 
     def test_eq(self):
-        other = Resources(1, 1)
+        other = Resources(1, 1, 1)
         self.assertEqual(self.resource11, other)
 
     def test_from_job(self):
-        mock_job = make_mock_job(Resources(4, 2))
+        mock_job = make_mock_job(Resources(4, 2, 1))
         result = Resources.from_job(mock_job)
         self.assertEqual(result.ram, 4)
         self.assertEqual(result.cores, 2)
 
     def test_from_job_defaults_empty_without_builder(self):
-        mock_job = make_mock_job(Resources(4, 2))
+        mock_job = make_mock_job(Resources(4, 2, 1))
         del mock_job.builder
         result = Resources.from_job(mock_job)
         self.assertEqual(result.ram, 0)
         self.assertEqual(result.cores, 0)
 
     def test_from_dict(self):
-        result = Resources.from_dict({'cores': 3, 'ram': 400})
+        result = Resources.from_dict({'cores': 3, 'ram': 400, 'gpus': 1})
         self.assertEqual(result.cores, 3)
         self.assertEqual(result.ram, 400)
+        self.assertEqual(result.gpus, 1)
 
     def test_min(self):
         result = Resources.min(self.resource21, self.resource12)
@@ -221,12 +222,12 @@ class JobResourceQueueTestCase(TestCase):
 class ThreadPoolJobExecutorTestCase(TestCase):
 
     def setUp(self):
-        self.executor = ThreadPoolJobExecutor(1000, 2)
+        self.executor = ThreadPoolJobExecutor(1000, 2, 2)
         self.workflow_exception = WorkflowException('workflow exception')
         self.logger = Mock()
 
     def test_init(self):
-        expected_resources = Resources(1000, 2)
+        expected_resources = Resources(1000, 2, 2)
         self.assertEqual(self.executor.total_resources, expected_resources)
         self.assertEqual(self.executor.available_resources, expected_resources)
         self.assertIsNone(self.executor.max_workers)
@@ -257,13 +258,13 @@ class ThreadPoolJobExecutorTestCase(TestCase):
         self.assertEqual(result['cores'], 1) # when cpu max requested is below total, result should be requested
 
     def test_allocate(self):
-        resource = Resources(200, 1)
+        resource = Resources(200, 1, 1)
         self.executor.allocate(resource, self.logger)
-        self.assertEqual(self.executor.available_resources, Resources(800, 1))
+        self.assertEqual(self.executor.available_resources, Resources(800, 1, 1))
 
     def test_restore(self):
-        resource = Resources(200, 1)
-        self.executor.available_resources = Resources(800, 1)
+        resource = Resources(200, 1, 1)
+        self.executor.available_resources = Resources(800, 1, 1)
         self.executor.restore(resource, self.logger)
         self.assertEqual(self.executor.available_resources, self.executor.total_resources)
 

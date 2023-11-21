@@ -23,6 +23,8 @@ jobs:
           command: |
             . venv/bin/activate
             nose2
+          environment:
+            RETRY_ATTEMPTS: 1
   deploy:
     docker:
       - image: circleci/python:3.7

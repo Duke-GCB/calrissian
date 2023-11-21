@@ -19,7 +19,8 @@ Note that for real workloads, you'll want a real cluster. For these examples, lo
 ### Creating Namespace and Roles
 
 Calrissian executes CWL workflows by running steps as Pods in your cluster. To support this requirement, we create a role with the necessary privileges and bind it to a service account.
-
+By default, the created steps pods are therefore executed with the serviceaccount specified in the Calrissian job. If not specified, the default service account of the namespace is used.
+The service account for the step pods can be overridden by specifying the `--pod_serviceaccount` option.
 Please choose the instructions that match your cluster - you don't need to run both.
 
 #### Kubernetes

@@ -8,7 +8,7 @@ from cwltool.errors import UnsupportedRequirement
 from calrissian.context import CalrissianRuntimeContext
 from calrissian.k8s import CompletionResult
 import threading
-
+from collections import OrderedDict
 
 class SafeNameTestCase(TestCase):
 
@@ -284,10 +284,12 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.stdin = 'stdin.txt'
         self.resources = {'cores': 1, 'ram': 1024}
         self.labels = {'key1': 'val1', 'key2': 123}
+        self.nodeselectors = {'disktype': 'ssd', 'cachelevel': 2}
         self.security_context = { 'runAsUser': os.getuid(),'runAsGroup': os.getgid() }
+        self.pod_serviceaccount = "podmanager"
         self.pod_builder = KubernetesPodBuilder(self.name, self.container_image, self.environment, self.volume_mounts,
                                                 self.volumes, self.command_line, self.stdout, self.stderr, self.stdin,
-                                                self.resources, self.labels, self.security_context)
+                                                self.resources, self.labels, self.nodeselectors, self.security_context, self.pod_serviceaccount)
 
     @patch('calrissian.job.random_tag')
     def test_safe_pod_name(self, mock_random_tag):
@@ -341,10 +343,45 @@ class KubernetesPodBuilderTestCase(TestCase):
             }
         }
         self.assertEqual(expected, resources)
+        
+    def test_gpu_hints(self):
+        self.pod_builder.resources = {'cores': 2, 'ram': 256 }
+        self.pod_builder.requirements = [OrderedDict([("class", "cwltool:CUDARequirement"), ("cudaVersionMin", '10.0'), ("cudaComputeCapability", '3.0'), ("cudaDeviceCountMin", 1), ("cudaDeviceCountMax", 1)])]
+
+        resources = self.pod_builder.container_resources()
+        expected = {
+            'requests': {
+                'cpu': '2', 
+                'memory': '256Mi',
+                'nvidia.com/gpu': '1'
+            }, 
+            "limits": {
+                'nvidia.com/gpu': '1'
+            }
+        }
+        self.assertEqual(expected, resources)
+        self.pod_builder.requirements = [OrderedDict([("class", "cwltool:CUDARequirement"), ("cudaVersionMin", '10.0'), ("cudaComputeCapability", '3.0'), ("cudaDeviceCountMin", 2), ("cudaDeviceCountMax", 4)])]
+
+        resources = self.pod_builder.container_resources()
+        expected = {
+            'requests': {
+                'cpu': '2', 
+                'memory': '256Mi',
+                'nvidia.com/gpu': '2'
+            }, 
+            "limits": {
+                'nvidia.com/gpu': '4'
+            }
+        }
+        self.assertEqual(expected, resources)
 
     def test_string_labels(self):
         self.pod_builder.labels = {'key1': 123}
         self.assertEqual(self.pod_builder.pod_labels(), {'key1':'123'})
+        
+    def test_string_nodeselectors(self):
+        self.pod_builder.nodeselectors = {'cachelevel': 2}
+        self.assertEqual(self.pod_builder.pod_nodeselectors(), {'cachelevel':'2'})
 
     def test_init_containers_empty_when_no_stdout_or_stderr(self):
         self.pod_builder.stdout = None
@@ -420,10 +457,15 @@ class KubernetesPodBuilderTestCase(TestCase):
                 ],
                 'restartPolicy': 'Never',
                 'volumes': self.volumes,
+                'nodeSelector': {
+                    "disktype": "ssd",
+                    "cachelevel": "2"
+                },
                 'securityContext': {
                     'runAsUser': os.getuid(),
                     'runAsGroup': os.getgid()
-                }
+                },
+                'serviceAccountName': 'podmanager'
             }
         }
         self.assertEqual(expected, self.pod_builder.build())
@@ -452,8 +494,8 @@ class CalrissianCommandLineJobTestCase(TestCase):
         return job
 
     def make_completion_result(self, exit_code):
-        return create_autospec(CompletionResult, exit_code=exit_code, cpus='1', memory='1', start_time=Mock(),
-                        finish_time=Mock())
+        return create_autospec(CompletionResult, pod_name=self.name, exit_code=exit_code, cpus='1', memory='1', start_time=Mock(),
+                        finish_time=Mock(), pod_log='logs/')
 
     def test_constructor_calculates_persistent_volume_entries(self, mock_volume_builder, mock_client):
         self.make_job()
@@ -465,12 +507,12 @@ class CalrissianCommandLineJobTestCase(TestCase):
         self.requirements = [{'class': 'DockerRequirement', 'dockerBuild': 'FROM ubuntu:latest\n'}]
         job = self.make_job()
         with self.assertRaisesRegex(UnsupportedRequirement, 'DockerRequirement.dockerBuild is not supported'):
-            job.check_requirements()
+            job.check_requirements(self.runtime_context)
 
     def test_check_requirements_ok_with_empty_requirements(self, mock_volume_builder, mock_client):
         self.requirements = []
         job = self.make_job()
-        job.check_requirements()
+        job.check_requirements(self.runtime_context)
 
     @patch('calrissian.job.os')
     def test_makes_tmpdir_when_not_exists(self, mock_os, mock_volume_builder, mock_client):
@@ -603,7 +645,7 @@ class CalrissianCommandLineJobTestCase(TestCase):
         job = self.make_job()
         job.outdir = '/outdir'
         job.tmpdir = '/tmpdir'
-        mock_runtime_context = Mock(tmpdir_prefix='TP')
+        mock_runtime_context = Mock(tmpdir_prefix='TP', pod_serviceaccount=None)
         built = job.create_kubernetes_runtime(mock_runtime_context)
         # Adds volume binding for outdir
         self.assertEqual(mock_add_volume_binding.call_args, call('/real/outdir', '/out', True))
@@ -624,7 +666,11 @@ class CalrissianCommandLineJobTestCase(TestCase):
             job.stdin,
             job.builder.resources,
             mock_read_yaml.return_value,
-            job.get_security_context(mock_runtime_context)
+            mock_read_yaml.return_value,
+            job.get_security_context(mock_runtime_context),
+            None, 
+            job.builder.requirements,
+            job.builder.hints,
         ))
         # calls builder.build
         # returns that
@@ -785,6 +831,22 @@ class CalrissianCommandLineJobTestCase(TestCase):
         job = self.make_job()
         labels = job.get_pod_labels(mock_runtime_context)
         self.assertEqual(labels, {})
+        
+    @patch('calrissian.job.read_yaml')
+    def test_get_pod_nodeselectors(self, mock_read_yaml, mock_volume_builder, mock_client):
+        expected_nodeselectors = {'disktype':'ssd'}
+        mock_read_yaml.return_value = expected_nodeselectors
+        mock_runtime_context = Mock(pod_nodeselectors='nodeselectors.yaml')
+        job = self.make_job()
+        nodeselectors = job.get_pod_nodeselectors(mock_runtime_context)
+        self.assertEqual(nodeselectors, expected_nodeselectors)
+        self.assertEqual(mock_read_yaml.call_args, call('nodeselectors.yaml'))
+
+    def test_get_pod_nodeselectors_empty(self, mock_volume_builder, mock_client):
+        mock_runtime_context = Mock(pod_nodeselectors=None)
+        job = self.make_job()
+        nodeselectors = job.get_pod_nodeselectors(mock_runtime_context)
+        self.assertEqual(nodeselectors, {})
 
     @patch('calrissian.job.read_yaml')
     def test_get_pod_env_vars(self, mock_read_yaml, mock_volume_builder, mock_client):

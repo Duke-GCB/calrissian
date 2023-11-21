@@ -5,11 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v0.14.0] - 2023-06-19
+
+### Added
+
+- adds CWL GPU requirements supports (PR #153)
+
+## [v0.13.0] - 2023-06-06
+
+### Added
+
+- adds an argument `--conf <conf_file_path>` that enables CLI arguments from a json file (PR #150)
+- default configuration can be defined in `$HOME/.calrissian/default.json`
+
+### Changed
+
+- Updated cwltool to `3.1.20230201224320` and some other dependencies. (PR #142)
+
+## [v0.12.0] - 2023-02-13
+
+### Added
+
+- adds an argument `--tool-logs-basepath <local_folder_path>` that enable the tool to fetch the pod logs by tool specified in the workflow (PR #139)
+- returns proper exit code when the pod fails (PR #139)
+
+### Changed
+
+- contraints the pod to complete with a proper termination status or raise an exception. (PR #139)
+
+## [v0.11.0] - 2022-11-10
+
+### Added
+
+- adds an argument `--pod-nodeselectors <yaml_file>` to add a node selector for computing pods
+- adda `--pod_serviceaccount` arg to set pods serviceaacount 
 
 ### Changed
 
 - cwltool upgraded to current version 3.1 + all requirements
+- Fixed faulty bytes in log stream (PR #137)
 
 ## [v0.10.0] - 2021-03-31
 
