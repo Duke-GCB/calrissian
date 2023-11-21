@@ -1,0 +1,39 @@
+name: Upload Python Package
+
+on:
+  push:
+    branches:
+      - issue-160
+
+jobs:
+  deploy:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_API_TOKEN }}
+        python-version: '3.x'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python3 -m venv venv
+        . venv/bin/activate
+        pip install setuptools wheel twine
+        pip install -r requirements.txt
+    - name: run tests
+      run: |
+        pip install nose2
+        nose2
+    - name: Build and publish
+      env:
+        TWINE_USERNAME: ${{ secrets.PYPI_USER }}
+        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+
+      run: |
+        python setup.p_y bdist_wheel --universal
+        twine upload dist/*
