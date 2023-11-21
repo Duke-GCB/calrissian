@@ -15,7 +15,7 @@ jobs:
 
   version:
 
-    runs-on: python:3.10.0-slim-buster
+    runs-on: ubuntu-latest
 
     outputs:
 
