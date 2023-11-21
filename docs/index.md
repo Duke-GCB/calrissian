@@ -8,7 +8,7 @@ Calrissian is a [CWL](https://www.commonwl.org) implementation designed to run i
 
 ## Cluster Requirements
 
-Calrissian requires a [Kubernetes](https://kubernetes.io) cluster, configured to provision [PersistentVolumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/) with the `ReadWriteMany` access mode. 
+Calrissian requires a [Kubernetes](https://kubernetes.io) cluster, configured to provision [PersistentVolumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/) with the [ReadWriteMany](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes) access mode. 
 
 ## Scalability / Resource Requirements
 
