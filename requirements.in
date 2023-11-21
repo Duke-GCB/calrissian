@@ -6,4 +6,3 @@ importlib-metadata
 msgpack
 typing-extensions
 freezegun
-shellescape==3.4.1
