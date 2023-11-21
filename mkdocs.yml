@@ -26,6 +26,7 @@ nav:
 - Installation: 'installation.md'
 - Cluster Configuration: 'cluster-configuration.md'
 - Conformance:
-  - 1.0: 'conformance/1.0/conformance.md'
-  - 1.1: 'conformance/1.0/conformance.md'
-
+  - 1.0: 'conformance/1.0.md'
+  - 1.1: 'conformance/1.1.md'
+  - 1.2: 'conformance/1.2.md'
+  - 1.2.1: 'conformance/1.2.1.md'
