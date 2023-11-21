@@ -15,7 +15,7 @@ jobs:
 
   version:
 
-    runs-on: ubuntu-latest
+    runs-on: python:3.10.0-slim-buster
 
     outputs:
 
@@ -23,7 +23,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - run: echo "APP_VERSION=$(python setup.py --version" >> $GITHUB_ENV
+    - run: echo "APP_VERSION=$(python setup.py --version)" >> $GITHUB_ENV
     - run: echo app version is $APP_VERSION
     - id: set-version
       run: echo "::set-output name=version::$APP_VERSION"
