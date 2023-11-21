@@ -119,8 +119,10 @@ schema-salad==8.4.20231117150958
     #   cwl-upgrader
     #   cwl-utils
     #   cwltool
-shellescape==3.8.1
-    # via cwltool
+shellescape==3.4.1
+    # via
+    #   -r requirements.in
+    #   cwltool
 six==1.16.0
     # via
     #   isodate

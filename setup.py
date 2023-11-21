@@ -39,6 +39,7 @@ setup(
         'importlib-metadata==6.8.0',
         'msgpack==1.0.7',
         'typing-extensions==4.8.0'
+        'shellescape==3.4.1',
     ],
     test_suite='nose2.collector.collector',
     tests_require=['nose2'],
