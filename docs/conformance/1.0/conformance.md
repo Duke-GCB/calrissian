@@ -27,4 +27,4 @@
 
 ### Conformance output
 
-[log](result-1.0.txt){:download}
+[results-v1.0.txt](../../../conformance/results-v1.0.txt){:download}
