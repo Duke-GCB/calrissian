@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/python:3.7
+      - image: circleci/python:3.10
     working_directory: ~/calrissian
     steps:
       - checkout
@@ -27,7 +27,7 @@ jobs:
             RETRY_ATTEMPTS: 1
   deploy:
     docker:
-      - image: circleci/python:3.7
+      - image: circleci/python:3.10
     steps:
       - checkout
       - restore_cache:
