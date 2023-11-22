@@ -25,12 +25,20 @@ jobs:
         . venv/bin/activate
         pip install setuptools wheel twine
         pip install -r requirements.txt
-    - name: Build and publish
+    - name: verify git tag vs. version
+      run: |
+        python3 -m venv venv
+        . venv/bin/activate
+        python setup.py verify        
+    - name: Build
+      run: |
+        . venv/bin/activate
+        python setup.py bdist_wheel --universal
+    - name: Publish
       env:
         TWINE_USERNAME: ${{ secrets.PYPI_USER }}
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: |
-        python setup.py bdist_wheel --universal
         twine upload dist/*
 
   version:
