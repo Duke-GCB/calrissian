@@ -2,9 +2,6 @@ name: package
 on:
   release:
     types: [created]
-  push:
-    branches:
-      - issue-160
 
 jobs:
 
@@ -35,11 +32,11 @@ jobs:
         . venv/bin/activate
         pip install setuptools wheel twine
         pip install -r requirements.txt
-    # - name: verify git tag vs. version
-    #   run: |
-    #     python3 -m venv venv
-    #     . venv/bin/activate
-    #     python setup.py verify        
+    - name: verify git tag vs. version
+      run: |
+        python3 -m venv venv
+        . venv/bin/activate
+        python setup.py verify        
     - name: Build
       run: |
         . venv/bin/activate
