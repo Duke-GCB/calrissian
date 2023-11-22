@@ -5,7 +5,7 @@ from setuptools import setup
 from setuptools.command.install import install
 
 VERSION = '0.15.0'
-TAG_ENV_VAR = 'CIRCLE_TAG'
+TAG_ENV_VAR = 'GITHUB_REF_NAME'
 
 with open("README.md", "r") as fh:
     long_description = fh.read()

@@ -8,8 +8,19 @@ on:
 
 jobs:
 
-  deploy:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      app-version: ${{ steps.set-version.outputs.version }}
+    steps:
+    - uses: actions/checkout@v2
+    - run: echo "APP_VERSION=$(python setup.py --version)" >> $GITHUB_ENV
+    - run: echo app version is $APP_VERSION
+    - id: set-version
+      run: echo "::set-output name=version::$APP_VERSION"
 
+  deploy:
+    needs: version
     runs-on: ubuntu-latest
     
     steps:
@@ -40,17 +51,6 @@ jobs:
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: |
         twine upload dist/*
-
-  version:
-    runs-on: ubuntu-latest
-    outputs:
-      app-version: ${{ steps.set-version.outputs.version }}
-    steps:
-    - uses: actions/checkout@v2
-    - run: echo "APP_VERSION=$(python setup.py --version)" >> $GITHUB_ENV
-    - run: echo app version is $APP_VERSION
-    - id: set-version
-      run: echo "::set-output name=version::$APP_VERSION"
 
   container-build:
     needs: version
