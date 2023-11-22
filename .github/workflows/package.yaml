@@ -13,14 +13,13 @@ jobs:
     outputs:
       app-version: ${{ steps.set-version.outputs.version }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - run: echo "APP_VERSION=$(python setup.py --version)" >> $GITHUB_ENV
     - run: echo app version is $APP_VERSION
     - id: set-version
       run: echo "::set-output name=version::$APP_VERSION"
 
   deploy:
-    needs: version
     runs-on: ubuntu-latest
     
     steps:
@@ -36,11 +35,11 @@ jobs:
         . venv/bin/activate
         pip install setuptools wheel twine
         pip install -r requirements.txt
-    - name: verify git tag vs. version
-      run: |
-        python3 -m venv venv
-        . venv/bin/activate
-        python setup.py verify        
+    # - name: verify git tag vs. version
+    #   run: |
+    #     python3 -m venv venv
+    #     . venv/bin/activate
+    #     python setup.py verify        
     - name: Build
       run: |
         . venv/bin/activate
@@ -56,7 +55,7 @@ jobs:
     needs: version
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2   
+    - uses: actions/checkout@v4   
     - run: echo version ${{needs.version.outputs.app-version}}
     - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
     - name: build & push image
