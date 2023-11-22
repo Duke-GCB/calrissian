@@ -28,6 +28,7 @@ jobs:
         env: 
           RETRY_ATTEMPTS: 1
         run: |
+          . venv/bin/activate
           pip install nose2
           nose2
       - name: Build a binary wheel and a source tarball
