@@ -1,0 +1,69 @@
+{
+    "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+    "@type": "SoftwareSourceCode",
+    "license": "https://spdx.org/licenses/MIT",
+    "codeRepository": "https://github.com/Duke-GCB/calrissian",
+    "contIntegration": "https://github.com/Duke-GCB/calrissian/tree/master/.github/workflows",
+    "dateCreated": "2019-08-02",
+    "datePublished": "2019-08-02",
+    "dateModified": "2023-10-23",
+    "downloadUrl": "https://pypi.org/project/calrissian/",
+    "issueTracker": "https://github.com/Duke-GCB/calrissian/issues",
+    "name": "calrissian",
+    "version": "0.16.0",
+    "description": "CWL on Kubernetes",
+    "applicationCategory": "Distributed Computing",
+    "releaseNotes": "https://github.com/Duke-GCB/calrissian/blob/master/CHANGELOG.md",
+    "developmentStatus": "active",
+    "keywords": [
+        "CWL",
+        "Kubernetes"
+    ],
+    "programmingLanguage": [
+        "Python"
+    ],
+    "runtimePlatform": [
+        "Kubernetes"
+    ],
+    "relatedLink": [
+        "https://pypi.org/project/calrissian/"
+    ],
+    "author": [
+        {
+            "@type": "Person",
+            "@id": "https://orcid.org/0000-0003-3221-9579",
+            "givenName": "Daniel",
+            "familyName": "Leehr"
+        },
+        {
+            "@type": "Person",
+            "@id": "https://orcid.org/0000-0003-3858-848X",
+            "givenName": "John",
+            "familyName": "Bradley",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Duke University"
+            }
+        }
+    ],
+    "contributor": [
+        {
+            "@type": "Person",
+            "givenName": "Emmanuel",
+            "familyName": "Mathot",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Terradue Srl"
+            }
+        },
+        {
+            "@type": "Person",
+            "givenName": "Fabrice",
+            "familyName": "Brito",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Terradue Srl"
+            }
+        }
+    ]
+}
