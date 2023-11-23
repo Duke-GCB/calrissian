@@ -58,6 +58,7 @@
         },
         {
             "@type": "Person",
+            "@id": "https://orcid.org/0009-0000-1342-9736",
             "givenName": "Fabrice",
             "familyName": "Brito",
             "affiliation": {
