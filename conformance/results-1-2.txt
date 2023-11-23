@@ -1,0 +1,2224 @@
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `id` field with integer is deprecated. Use string identifier instead.
+The `id` field with integer is deprecated. Use string identifier instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `id` field with integer is deprecated. Use string identifier instead.
+The `id` field with integer is deprecated. Use string identifier instead.
+The `id` field with integer is deprecated. Use string identifier instead.
+The `id` field with integer is deprecated. Use string identifier instead.
+The `id` field with integer is deprecated. Use string identifier instead.
+The `id` field with integer is deprecated. Use string identifier instead.
+The `id` field with integer is deprecated. Use string identifier instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `label` field is deprecated. Use `id` field instead.
+The `id` field is missing.
+The `id` field is missing.
+The `id` field is missing.
+The `id` field is missing.
+The `id` field is missing.
+The `id` field is missing.
+The `id` field is missing.
+The `id` field is missing.
+The `id` field is missing.
+The `id` field is missing.
+Test [1/336] cl_basic_generation: General test of command line generation
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmptj28d16x --quiet tests/bwa-mem-tool.cwl tests/bwa-mem-job.json
+Test [2/336] nested_prefixes_arrays: Test nested prefixes with arrays
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmprrkotqxe --quiet tests/binding-test.cwl tests/bwa-mem-job.json
+Test [3/336] nested_cl_bindings: Test nested command line bindings
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmptw4hs_7k --quiet tests/tmap-tool.cwl tests/tmap-job.json
+Test [4/336] cl_optional_inputs_missing: Test command line with optional input (missing)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpgg09jk8x --quiet tests/cat1-testcli.cwl tests/cat-job.json
+Test [5/336] cl_optional_bindings_provided: Test command line with optional input (provided)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpfe7kw920 --quiet tests/cat1-testcli.cwl tests/cat-n-job.json
+Test [6/336] initworkdir_expreng_requirements: Test InitialWorkDirRequirement ExpressionEngineRequirement.engineConfig feature
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpmfzcx9se --quiet tests/template-tool.cwl tests/cat-job.json
+[1;30mWARNING[0m [33mtests/template-tool.cwl:7:9: JSHINT:       exports = module.exports = _;
+tests/template-tool.cwl:7:9: JSHINT:       ^
+tests/template-tool.cwl:7:9: JSHINT: W117: 'exports' is not defined.[0m
+[1;30mWARNING[0m [33mtests/template-tool.cwl:7:9: JSHINT:     exports._ = _;
+tests/template-tool.cwl:7:9: JSHINT:     ^
+tests/template-tool.cwl:7:9: JSHINT: W117: 'exports' is not defined.[0m
+[1;30mWARNING[0m [33mtests/template-tool.cwl:7:9: JSHINT:     if (typeof module !== 'undefined' && module.exports) {
+tests/template-tool.cwl:7:9: JSHINT:                                          ^
+tests/template-tool.cwl:7:9: JSHINT: W117: 'module' is not defined.[0m
+[1;30mWARNING[0m [33mtests/template-tool.cwl:7:9: JSHINT:       exports = module.exports = _;
+tests/template-tool.cwl:7:9: JSHINT:                 ^
+tests/template-tool.cwl:7:9: JSHINT: W117: 'module' is not defined.[0m
+[1;30mWARNING[0m [33mtests/template-tool.cwl:7:9: JSHINT:     return setTimeout(function(){
+tests/template-tool.cwl:7:9: JSHINT:            ^
+tests/template-tool.cwl:7:9: JSHINT: W117: 'setTimeout' is not defined.[0m
+[1;30mWARNING[0m [33mtests/template-tool.cwl:7:9: JSHINT:         timeout = setTimeout(later, remaining);
+tests/template-tool.cwl:7:9: JSHINT:                   ^
+tests/template-tool.cwl:7:9: JSHINT: W117: 'setTimeout' is not defined.[0m
+[1;30mWARNING[0m [33mtests/template-tool.cwl:7:9: JSHINT:         timeout = setTimeout(later, wait - last);
+tests/template-tool.cwl:7:9: JSHINT:                   ^
+tests/template-tool.cwl:7:9: JSHINT: W117: 'setTimeout' is not defined.[0m
+[1;30mWARNING[0m [33mtests/template-tool.cwl:7:9: JSHINT:       if (!timeout) timeout = setTimeout(later, wait);
+tests/template-tool.cwl:7:9: JSHINT:                               ^
+tests/template-tool.cwl:7:9: JSHINT: W117: 'setTimeout' is not defined.[0m
+[1;30mWARNING[0m [33mtests/template-tool.cwl:7:9: JSHINT:         clearTimeout(timeout);
+tests/template-tool.cwl:7:9: JSHINT:         ^
+tests/template-tool.cwl:7:9: JSHINT: W117: 'clearTimeout' is not defined.[0m
+[1;30mWARNING[0m [33mtests/template-tool.cwl:7:9: JSHINT:     root._ = previousUnderscore;
+tests/template-tool.cwl:7:9: JSHINT:              ^
+tests/template-tool.cwl:7:9: JSHINT: W117: 'previousUnderscore' is not defined.[0m
+[1;30mWARNING[0m [33mtests/template-tool.cwl:7:9: JSHINT:   if (typeof define === 'function' && define.amd) {
+tests/template-tool.cwl:7:9: JSHINT:                                       ^
+tests/template-tool.cwl:7:9: JSHINT: W117: 'define' is not defined.[0m
+[1;30mWARNING[0m [33mtests/template-tool.cwl:7:9: JSHINT:     define('underscore', [], function() {
+tests/template-tool.cwl:7:9: JSHINT:     ^
+tests/template-tool.cwl:7:9: JSHINT: W117: 'define' is not defined.[0m
+[1;30mWARNING[0m [33mtests/template-tool.cwl:8:9: JSHINT: var t = function(s) { return _.template(s, {variable: 'data'})({'inputs': inputs}); };
+tests/template-tool.cwl:8:9: JSHINT:                              ^
+tests/template-tool.cwl:8:9: JSHINT: W117: '_' is not defined.[0m
+Test [7/336] stdout_redirect_docker: Test command execution in Docker with stdout redirection
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp2kyewfy9 --quiet tests/cat3-tool.cwl tests/cat-job.json
+Test [8/336] stdout_redirect_shortcut_docker: Test command execution in Docker with shortcut stdout redirection
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmphczbm2wo --quiet tests/cat3-tool-shortcut.cwl tests/cat-job.json
+Test [9/336] stdout_redirect_mediumcut_docker: Test command execution in Docker with mediumcut stdout redirection
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpg71qzeek --quiet tests/cat3-tool-mediumcut.cwl tests/cat-job.json
+Test [10/336] stderr_redirect: Test command line with stderr redirection
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp3p3ax554 --quiet tests/stderr.cwl tests/empty.json
+Test [11/336] stderr_redirect_shortcut: Test command line with stderr redirection, brief syntax
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpcnkenzrw --quiet tests/stderr-shortcut.cwl tests/empty.json
+Test [12/336] stderr_redirect_mediumcut: Test command line with stderr redirection, named brief syntax
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpzugthsp1 --quiet tests/stderr-mediumcut.cwl tests/empty.json
+Test [13/336] stdinout_redirect_docker: Test command execution in Docker with stdin and stdout redirection
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp21unthmx --quiet tests/cat4-tool.cwl tests/cat-job.json
+Test [14/336] expression_any: Test default usage of Any in expressions.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpzu7celta --quiet tests/null-expression1-tool.cwl tests/empty.json
+Test [15/336] expression_any_null: Test explicitly passing null to Any type inputs with default values.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp5yrtnaha --quiet tests/null-expression1-tool.cwl tests/null-expression1-job.json
+Test [16/336] expression_any_string: Testing the string 'null' does not trip up an Any with a default value.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmprvi64hig --quiet tests/null-expression1-tool.cwl tests/null-expression2-job.json
+Test [17/336] expression_any_nodefaultany: Test Any without defaults cannot be unspecified.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpls5fd2g2 --quiet tests/null-expression2-tool.cwl tests/empty.json
+[1;30mERROR[0m [31mWorkflow error, try again with --debug for more information:
+Invalid job input record:
+tests/null-expression2-tool.cwl:9:3: Missing required input parameter 'i1'[0m
+Test [18/336] expression_any_null_nodefaultany: Test explicitly passing null to Any type without a default value.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpgesjs6c5 --quiet tests/null-expression2-tool.cwl tests/null-expression1-job.json
+[1;30mERROR[0m [31mWorkflow error, try again with --debug for more information:
+Invalid job input record:
+tests/null-expression2-tool.cwl:9:3: Missing required input parameter 'i1'[0m
+Test [19/336] expression_any_nullstring_nodefaultany: Testing the string 'null' does not trip up an Any without a default value.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmplxfi4vye --quiet tests/null-expression2-tool.cwl tests/null-expression2-job.json
+Test [20/336] any_outputSource_compatibility: Testing Any type compatibility in outputSource
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpui8vr2do --quiet tests/any-type-compat.cwl tests/any-type-job.json
+Test [21/336] stdinout_redirect: Test command execution in with stdin and stdout redirection
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpcqwkmb7g --quiet tests/cat-tool.cwl tests/cat-job.json
+Test [22/336] expression_parseint: Test ExpressionTool with Javascript engine
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmphana96tl --quiet tests/parseInt-tool.cwl tests/parseInt-job.json
+Test [23/336] expression_outputEval: Test outputEval to transform output
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmph9ap58ii --quiet tests/wc2-tool.cwl tests/wc-job.json
+Test [24/336] wf_wc_parseInt: Test two step workflow with imported tools
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp95mqpwvf --quiet tests/count-lines1-wf.cwl tests/wc-job.json
+Test [25/336] wf_wc_expressiontool: Test two step workflow with inline tools
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp_7b749jk --quiet tests/count-lines2-wf.cwl tests/wc-job.json
+Test [26/336] wf_wc_scatter: Test single step workflow with Scatter step
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpqm_f_07f --quiet tests/count-lines3-wf.cwl tests/count-lines3-job.json
+Test [27/336] wf_wc_scatter_multiple_merge: Test single step workflow with Scatter step and two data links connected to same input, default merge behavior
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpyybl9ar8 --quiet tests/count-lines4-wf.cwl tests/count-lines4-job.json
+Test [28/336] wf_wc_scatter_multiple_nested: Test single step workflow with Scatter step and two data links connected to same input, nested merge behavior
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpxmoqo9i2 --quiet tests/count-lines6-wf.cwl tests/count-lines6-job.json
+Test [29/336] wf_wc_scatter_multiple_flattened: Test single step workflow with Scatter step and two data links connected to same input, flattened merge behavior
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpmi602746 --quiet tests/count-lines7-wf.cwl tests/count-lines6-job.json
+Test [30/336] wf_wc_nomultiple: Test when step source is a single-item list and there is no linkMerge, then it not wrapped in a list, and that MultipleInputFeatureRequirement is not required.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmphsb4rjlf --quiet tests/count-lines13-wf.cwl tests/count-lines4-job.json
+Test [31/336] wf_wc_nomultiple: Test when step source is a single-item list and linkMerge is listed, then it is wrapped in a list.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp1me9rjrn --quiet tests/count-lines19-wf.cwl tests/count-lines4-job.json
+Test [32/336] wf_input_default_missing: Test workflow with default value for input parameter (missing)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpedf26x0f --quiet tests/count-lines5-wf.cwl tests/empty.json
+Test [33/336] wf_input_default_provided: Test workflow with default value for input parameter (provided)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp9g4geddl --quiet tests/count-lines5-wf.cwl tests/wc-job.json
+Test [34/336] wf_default_tool_default: Test that workflow defaults override tool defaults
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpoox3lwwb --quiet tests/echo-wf-default.cwl tests/empty.json
+Test [35/336] envvar_req: Test EnvVarRequirement
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpv9ak_2u3 --quiet tests/env-tool1.cwl tests/env-job.json
+Test [36/336] wf_scatter_single_param: Test workflow scatter with single scatter parameter
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpytpx3mwd --quiet tests/scatter-wf1.cwl tests/scatter-job1.json
+Test [37/336] wf_scatter_two_nested_crossproduct: Test workflow scatter with two scatter parameters and nested_crossproduct join method
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp9wudeag9 --quiet tests/scatter-wf2.cwl tests/scatter-job2.json
+Test [38/336] wf_scatter_two_flat_crossproduct: Test workflow scatter with two scatter parameters and flat_crossproduct join method
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp5cvjt358 --quiet tests/scatter-wf3.cwl#main tests/scatter-job2.json
+Test [39/336] wf_scatter_two_dotproduct: Test workflow scatter with two scatter parameters and dotproduct join method
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp4j_0o9gr --quiet tests/scatter-wf4.cwl#main tests/scatter-job2.json
+Test [40/336] wf_scatter_emptylist: Test workflow scatter with single empty list parameter
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpvcyyq77u --quiet tests/scatter-wf1.cwl tests/scatter-empty-job1.json
+[1;30mWARNING[0m [33m[job step step1] Notice: scattering over empty input in 'echo_in'.  All outputs will be empty.[0m
+Test [41/336] wf_scatter_nested_crossproduct_secondempty: Test workflow scatter with two scatter parameters and nested_crossproduct join method with second list empty
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpwn1uk5mm --quiet tests/scatter-wf2.cwl tests/scatter-empty-job2.json
+[1;30mWARNING[0m [33m[job step step1] Notice: scattering over empty input in 'echo_in2'.  All outputs will be empty.[0m
+Test [42/336] wf_scatter_nested_crossproduct_firstempty: Test workflow scatter with two scatter parameters and nested_crossproduct join method with first list empty
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmph_cmw_fs --quiet tests/scatter-wf3.cwl#main tests/scatter-empty-job3.json
+[1;30mWARNING[0m [33m[job step step1] Notice: scattering over empty input in 'echo_in1'.  All outputs will be empty.[0m
+Test [43/336] wf_scatter_flat_crossproduct_oneempty: Test workflow scatter with two scatter parameters, one of which is empty and flat_crossproduct join method
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpt6lvhr5c --quiet tests/scatter-wf3.cwl#main tests/scatter-empty-job2.json
+[1;30mWARNING[0m [33m[job step step1] Notice: scattering over empty input in 'echo_in2'.  All outputs will be empty.[0m
+Test [44/336] wf_scatter_dotproduct_twoempty: Test workflow scatter with two empty scatter parameters and dotproduct join method
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpiyfdq7zl --quiet tests/scatter-wf4.cwl#main tests/scatter-empty-job4.json
+[1;30mWARNING[0m [33m[job step step1] Notice: scattering over empty input in 'echo_in1', 'echo_in2'.  All outputs will be empty.[0m
+Test [45/336] any_input_param: Test Any type input parameter
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmppdaqtu8j --quiet tests/echo-tool.cwl tests/env-job.json
+Test [46/336] nested_workflow: Test nested workflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp0t_g1l2s --quiet tests/count-lines8-wf.cwl tests/wc-job.json
+Test [47/336] requirement_priority: Test requirement priority
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpik2gwm9m --quiet tests/env-wf1.cwl tests/env-job.json
+Test [48/336] requirement_override_hints: Test requirements override hints
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpd8_ikb4f --quiet tests/env-wf2.cwl tests/env-job.json
+Test [49/336] requirement_workflow_steps: Test requirements on workflow steps
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp8v7aw3kp --quiet tests/env-wf3.cwl tests/env-job.json
+Test [50/336] step_input_default_value: Test default value on step input parameter
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpysqj_7xi --quiet tests/count-lines9-wf.cwl tests/empty.json
+Test [51/336] step_input_default_value_nosource: Test use default value on step input parameter with empty source
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpa_y09e94 --quiet tests/count-lines11-wf.cwl tests/empty.json
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/count-lines11-wf.cwl:6:3:  Source 'file1' of type ["null", "File"] may be incompatible
+tests/count-lines11-wf.cwl:17:7:   with sink 'file1' of type "File"[0m
+Test [52/336] step_input_default_value_nullsource: Test use default value on step input parameter with null source
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmprhhr9eu8 --quiet tests/count-lines11-wf.cwl tests/file1-null.json
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/count-lines11-wf.cwl:6:3:  Source 'file1' of type ["null", "File"] may be incompatible
+tests/count-lines11-wf.cwl:17:7:   with sink 'file1' of type "File"[0m
+Test [53/336] step_input_default_value_overriden: Test default value on step input parameter overridden by provided source
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp1yxf5kjj --quiet tests/count-lines11-wf.cwl tests/cat-job.json
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/count-lines11-wf.cwl:6:3:  Source 'file1' of type ["null", "File"] may be incompatible
+tests/count-lines11-wf.cwl:17:7:   with sink 'file1' of type "File"[0m
+Test [54/336] wf_simple: Test simple workflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpcq2ir2vg --quiet tests/revsort.cwl tests/revsort-job.json
+Test [55/336] hints_unknown_ignored: Test unknown hints are ignored.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpo9u8j7o8 --quiet tests/cat5-tool.cwl tests/cat-job.json
+tests/cat5-tool.cwl:10:3: Warning: checking item
+                          Warning:   Field 'class' contains undefined reference to
+                          'http://example.com/BlibberBlubberFakeRequirement'
+Test [56/336] initial_workdir_secondary_files_expr: Test InitialWorkDirRequirement linking input files and capturing secondaryFiles on input and output. Also tests the use of a variety of parameter references and expressions in the secondaryFiles field.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpc32jx37q --quiet tests/search.cwl#main tests/search-job.json
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/search.cwl:103:13: Source 'result' of type "File" may be incompatible
+tests/search.cwl:108:9:    with sink 'file' of type "File"[0m
+Test [57/336] rename: Test InitialWorkDirRequirement with expression in filename.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpr5ssm8ar --quiet tests/rename.cwl tests/rename-job.json
+Test [58/336] initial_workdir_trailingnl: Test if trailing newline is present in file entry in InitialWorkDir
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpwrt5bzu7 --quiet tests/iwdr-entry.cwl tests/string-job.json
+Test [59/336] inline_expressions: Test inline expressions
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpx0q6y3yv --quiet tests/wc4-tool.cwl tests/wc-job.json
+Test [60/336] schemadef_req_tool_param: Test SchemaDefRequirement definition used in tool parameter
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpk026n253 --quiet tests/schemadef-tool.cwl tests/schemadef-job.json
+Test [61/336] schemadef_req_wf_param: Test SchemaDefRequirement definition used in workflow parameter
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmptgk_2u3u --quiet tests/schemadef-wf.cwl tests/schemadef-job.json
+Test [62/336] param_evaluation_noexpr: Test parameter evaluation, no support for JS expressions
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp7v0d0ngj --quiet tests/params.cwl tests/empty.json
+Test [63/336] param_evaluation_expr: Test parameter evaluation, with support for JS expressions
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp_qmno274 --quiet tests/params2.cwl tests/empty.json
+Test [64/336] metadata: Test metadata
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp5w5ziifm --quiet tests/metadata.cwl tests/cat-job.json
+Test [65/336] format_checking: Test simple format checking.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp7efyu4ez --quiet tests/formattest.cwl tests/formattest-job.json
+Test [66/336] format_checking_subclass: Test format checking against ontology using subclassOf.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpv59menjr --quiet tests/formattest2.cwl tests/formattest2-job.json
+Test [67/336] format_checking_equivalentclass: Test format checking against ontology using equivalentClass.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp5mfe5v36 --quiet tests/formattest3.cwl tests/formattest2-job.json
+Test [68/336] output_secondaryfile_optional: Test optional output file and optional secondaryFile on output.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpu8yrrp8p --quiet tests/optional-output.cwl tests/cat-job.json
+Test [69/336] valuefrom_ignored_null: Test that valueFrom is ignored when the parameter is null
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp7zf8gloi --quiet tests/vf-concat.cwl tests/empty.json
+Test [70/336] valuefrom_secondexpr_ignored: Test that second expression in concatenated valueFrom is not ignored
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpvoa40wob --quiet tests/vf-concat.cwl tests/cat-job.json
+Test [71/336] valuefrom_wf_step: Test valueFrom on workflow step.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpohy783xj --quiet tests/step-valuefrom-wf.cwl tests/step-valuefrom-wf.json
+Test [72/336] valuefrom_wf_step_multiple: Test valueFrom on workflow step with multiple sources
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpwpzffi6r --quiet tests/step-valuefrom2-wf.cwl tests/step-valuefrom-job.json
+Test [73/336] valuefrom_wf_step_other: Test valueFrom on workflow step referencing other inputs
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp4byfem0o --quiet tests/step-valuefrom3-wf.cwl tests/step-valuefrom-job.json
+Test [74/336] record_output_binding: Test record type output binding.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp8s0ut8d1 --quiet tests/record-output.cwl tests/record-output-job.json
+Test [75/336] docker_json_output_path: Test support for reading cwl.output.json when running in a Docker container and just 'path' is provided.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpb4uoj_p1 --quiet tests/test-cwl-out.cwl tests/empty.json
+Test [76/336] docker_json_output_location: Test support for reading cwl.output.json when running in a Docker container and just 'location' is provided.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpk24m2r6s --quiet tests/test-cwl-out2.cwl tests/empty.json
+Test [77/336] multiple_glob_expr_list: Test support for returning multiple glob patterns from expression
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpxj9i5uo9 --quiet tests/glob-expr-list.cwl tests/abc.json
+Test [78/336] wf_scatter_oneparam_valuefrom: Test workflow scatter with single scatter parameter and two valueFrom on step input (first and current el)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpcsmr0o2s --quiet tests/scatter-valuefrom-wf1.cwl tests/scatter-valuefrom-job1.json
+Test [79/336] wf_scatter_twoparam_nested_crossproduct_valuefrom: Test workflow scatter with two scatter parameters and nested_crossproduct join method and valueFrom on step input
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmppm65uavu --quiet tests/scatter-valuefrom-wf2.cwl tests/scatter-valuefrom-job2.json
+Test [80/336] wf_scatter_twoparam_flat_crossproduct_valuefrom: Test workflow scatter with two scatter parameters and flat_crossproduct join method and valueFrom on step input
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp9dhs_5e1 --quiet tests/scatter-valuefrom-wf3.cwl#main tests/scatter-valuefrom-job2.json
+Test [81/336] wf_scatter_twoparam_dotproduct_valuefrom: Test workflow scatter with two scatter parameters and dotproduct join method and valueFrom on step input
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmph5d5hfq6 --quiet tests/scatter-valuefrom-wf4.cwl#main tests/scatter-valuefrom-job2.json
+Test [82/336] wf_scatter_oneparam_valuefrom_twice_current_el: Test workflow scatter with single scatter parameter and two valueFrom on step input (current el twice)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpnr61iorz --quiet tests/scatter-valuefrom-wf5.cwl tests/scatter-valuefrom-job1.json
+Test [83/336] wf_scatter_oneparam_valueFrom: Test valueFrom eval on scattered input parameter
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmprct6m7hs --quiet tests/scatter-valuefrom-wf6.cwl tests/scatter-valuefrom-job3.json
+Test [84/336] wf_two_inputfiles_namecollision: Test workflow two input files with same name.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp75h6b0rk --quiet tests/conflict-wf.cwl#collision tests/conflict-job.json
+Test [85/336] directory_input_param_ref: Test directory input with parameter reference
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpz7ywxy2z --quiet tests/dir.cwl tests/dir-job.yml
+Test [86/336] directory_input_docker: Test directory input in Docker
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp7zhw0x81 --quiet tests/dir2.cwl tests/dir-job.yml
+Test [87/336] directory_output: Test directory output
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmph4__3mig --quiet tests/dir3.cwl tests/dir3-job.yml
+Test [88/336] directory_secondaryfiles: Test directories in secondaryFiles
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpgobnwozn --quiet tests/dir4.cwl tests/dir4-job.yml
+Test [89/336] dynamic_initial_workdir: Test dynamic initial work dir
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp1su4zztr --quiet tests/dir5.cwl tests/dir-job.yml
+Test [90/336] writable_stagedfiles: Test writable staged files.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpugoks9gx --quiet tests/stagefile.cwl tests/stagefile-job.yml
+Test [91/336] input_file_literal: Test file literal as input
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpzfpdqyfd --quiet tests/cat3-tool.cwl tests/file-literal.yml
+Test [92/336] initial_workdir_expr: Test expression in InitialWorkDir listing
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpqmrqtoun --quiet tests/linkfile.cwl tests/arguments-job.yml
+Test [93/336] nameroot_nameext_stdout_expr: Test nameroot/nameext expression in arguments, stdout
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp0bm5fh6o --quiet tests/nameroot.cwl tests/wc-job.json
+Test [94/336] input_dir_inputbinding: Test directory input with inputBinding
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp06lim7u0 --quiet tests/dir6.cwl tests/dir-job.yml
+Test [95/336] cl_gen_arrayofarrays: Test command line generation of array-of-arrays
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpy5uveptj --quiet tests/nested-array.cwl tests/nested-array-job.yml
+Test [96/336] env_home_tmpdir: Test $HOME and $TMPDIR are set correctly
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpqcncxvbn --quiet tests/envvar.cwl tests/empty.json
+Test [97/336] env_home_tmpdir_docker: Test $HOME and $TMPDIR are set correctly in Docker
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpg9udsi0u --quiet tests/envvar2.cwl tests/empty.json
+Test [98/336] expressionlib_tool_wf_override: Test that expressionLib requirement of individual tool step overrides expressionLib of workflow.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpqzoarbj8 --quiet tests/js-expr-req-wf.cwl#wf tests/empty.json
+Test [99/336] initial_workdir_output: Test output of InitialWorkDir
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpy9ydgngg --quiet tests/initialworkdirrequirement-docker-out.cwl tests/initialworkdirrequirement-docker-out-job.json
+Test [100/336] embedded_subworkflow: Test embedded subworkflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp_xu29lh5 --quiet tests/count-lines10-wf.cwl tests/wc-job.json
+Test [101/336] filesarray_secondaryfiles: Test required, optional and null secondaryFiles on array of files.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmplmf25rqv --quiet tests/docker-array-secondaryfiles.cwl tests/docker-array-secondaryfiles-job.json
+Test [102/336] filesarray_secondaryfiles2: Test required, optional and null secondaryFiles on array of files.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmptcib21c1 --quiet tests/docker-array-secondaryfiles.cwl tests/docker-array-secondaryfiles-job2.json
+[1;30mERROR[0m [31mWorkflow error, try again with --debug for more information:
+Missing required secondary file '.dat' from file object: {
+    "class": "File",
+    "location": "file:///conformance/cwl-v1.2-1.2.0/tests/ref.fasta",
+    "size": 12010,
+    "basename": "ref.fasta",
+    "nameroot": "ref",
+    "nameext": ".fasta",
+    "secondaryFiles": [
+        {
+            "location": "file:///conformance/cwl-v1.2-1.2.0/tests/ref.fasta.fai",
+            "basename": "ref.fasta.fai",
+            "class": "File"
+        }
+    ]
+}[0m
+Test [103/336] exprtool_directory_literal: Test directory literal output created by ExpressionTool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpmu0p5amt --quiet tests/dir7.cwl tests/dir7.yml
+Test [104/336] exprtool_file_literal: Test file literal output created by ExpressionTool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmperfu7swk --quiet tests/file-literal-ex.cwl tests/empty.json
+Test [105/336] dockeroutputdir: Test dockerOutputDirectory
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpjj4wrbre --quiet tests/docker-output-dir.cwl tests/empty.json
+[1;30mERROR[0m [31mFound a queued exception, canceling outstanding futures[0m
+[1;30mERROR[0m [31mWaiting for canceled futures to finish[0m
+[1;30mERROR[0m [31mWorkflow or tool uses unsupported feature:
+Error: feature DockerRequirement.dockerOutputDirectory is not supported[0m
+Test [106/336] hints_import: Test hints with $import
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp568hmlas --quiet tests/imported-hint.cwl tests/empty.json
+Test [107/336] default_path_notfound_warning: Test warning instead of error when default path is not found
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmppg6rvap6 --quiet tests/default_path.cwl tests/default_path_job.yml
+Test [108/336] inlinejs_req_expressions: Test InlineJavascriptRequirement with multiple expressions in the same tool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpcnkbn7ny --quiet tests/inline-js.cwl tests/empty.json
+Test [109/336] input_dir_recurs_copy_writable: Test if a writable input directory is recursively copied and writable
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp_m41o1_q --quiet tests/recursive-input-directory.cwl tests/recursive-input-directory.yml
+Test [110/336] null_missing_params: Test that missing parameters are null (not undefined) in expression
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpaq8_9kxx --quiet tests/null-defined.cwl tests/empty.json
+Test [111/336] param_notnull_expr: Test that provided parameter is not null in expression
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpk526lrnc --quiet tests/null-defined.cwl tests/cat-job.json
+Test [112/336] wf_compound_doc: Test compound workflow document
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpldyijv3j --quiet tests/revsort-packed.cwl#main tests/revsort-job.json
+Test [113/336] nameroot_nameext_generated: Test that nameroot and nameext are generated from basename at execution time by the runner
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpx5r_2vg6 --quiet tests/basename-fields-test.cwl tests/basename-fields-job.yml
+Test [114/336] initialworkpath_output: Test that file path in $(inputs) for initialworkdir is in $(outdir).
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp5rer5yzr --quiet tests/initialwork-path.cwl tests/wc-job.json
+Test [115/336] wf_scatter_twopar_oneinput_flattenedmerge: Test single step workflow with Scatter step and two data links connected to same input, flattened merge behavior. Workflow inputs are set as list
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp9uwtn1a7 --quiet tests/count-lines12-wf.cwl tests/count-lines6-job.json
+Test [116/336] wf_multiplesources_multipletypes: Test step input with multiple sources with multiple types
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpiy7e57q7 --quiet tests/sum-wf.cwl tests/sum-job.json
+Test [117/336] shelldir_notinterpreted: Test that shell directives are not interpreted.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpx6q0ybpx --quiet tests/shellchar.cwl tests/empty.json
+Test [118/336] shelldir_quoted: Test that shell directives are quoted.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpwa85gjfl --quiet tests/shellchar2.cwl tests/empty.json
+Test [119/336] initial_workdir_empty_writable: Test empty writable dir with InitialWorkDirRequirement
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpss679x49 --quiet tests/writable-dir.cwl tests/empty.json
+Test [120/336] initial_workdir_empty_writable_docker: Test empty writable dir with InitialWorkDirRequirement inside Docker
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpffp62tnw --quiet tests/writable-dir-docker.cwl tests/empty.json
+Test [121/336] dynamic_resreq_inputs: Test dynamic resource reqs referencing inputs
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpwahn45mj --quiet tests/dynresreq.cwl tests/dynresreq-job.yaml
+Test [122/336] fileliteral_input_docker: Test file literal as input without Docker
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmprz46yyy3 --quiet tests/cat3-nodocker.cwl tests/file-literal.yml
+Test [123/336] outputbinding_glob_sorted: Test that OutputBinding.glob is sorted as specified by POSIX
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpd0d7ingo --quiet tests/glob_test.cwl tests/empty.json
+Test [124/336] initialworkdir_nesteddir: Test InitialWorkDirRequirement with a nested directory structure from another step
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpo7foxdzj --quiet tests/iwdr_with_nested_dirs.cwl tests/empty.json
+Test [125/336] booleanflags_cl_noinputbinding: Test that boolean flags do not appear on command line if inputBinding is empty and not null
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmptyn7jfg7 --quiet tests/bool-empty-inputbinding.cwl tests/bool-empty-inputbinding-job.json
+Test [126/336] expr_reference_self_noinput: Test that expression engine does not fail to evaluate reference to self with unprovided input
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp2hjtuzse --quiet tests/stage-unprovided-file.cwl tests/empty.json
+Test [127/336] success_codes: Test successCodes
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpntioizzx --quiet tests/exit-success.cwl tests/empty.json
+Test [128/336] dynamic_resreq_wf: Test simple workflow with a dynamic resource requirement
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp1j3mqbcp --quiet tests/dynresreq-workflow.cwl tests/dynresreq-job.yaml
+Test [129/336] cl_empty_array_input: Test that empty array input does not add anything to command line
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmps7rsr655 --quiet tests/empty-array-input.cwl tests/empty-array-job.json
+Test [130/336] resreq_step_overrides_wf: Test that ResourceRequirement on a step level redefines requirement on the workflow level
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp1wdxvi3r --quiet tests/steplevel-resreq.cwl tests/empty.json
+Test [131/336] valuefrom_constant_overrides_inputs: Test valueFrom with constant value overriding provided array inputs
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp_4w_oz8j --quiet tests/valueFrom-constant.cwl tests/array-of-strings-job.yml
+Test [132/336] dynamic_resreq_filesizes: Test dynamic resource reqs referencing the size of Files inside a Directory
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpc9muwel4 --quiet tests/dynresreq-dir.cwl tests/dynresreq-dir-job.yaml
+Test [133/336] wf_step_connect_undeclared_param: Test that it is not an error to connect a parameter to a workflow step, even if the parameter doesn't appear in the `run` process inputs.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpuujcx1z4 --quiet tests/pass-unconnected.cwl tests/empty.json
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/pass-unconnected.cwl:18:7: 'in2' is not an input parameter of
+                                 file:///conformance/cwl-v1.2-1.2.0/tests/echo-tool.cwl, expected in[0m
+Test [134/336] wf_step_access_undeclared_param: Test that parameters that don't appear in the `run` process inputs are not present in the input object used to run the tool.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpbyg9x498 --quiet tests/fail-unconnected.cwl tests/empty.json
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/fail-unconnected.cwl:18:7: 'in2' is not an input parameter of
+                                 file:///conformance/cwl-v1.2-1.2.0/tests/fail-unspecified-input.cwl,
+                                 expected in[0m
+[1;30mERROR[0m [31mSyntax error in parameter reference 'inputs.in2': inputs does not contain key 'in2'. This could be due to using Javascript code without specifying InlineJavascriptRequirement.[0m
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/cwltool/expression.py", line 393, in do_eval
+    return interpolate(
+  File "/usr/local/lib/python3.10/site-packages/cwltool/expression.py", line 297, in interpolate
+    e = evaluator(
+  File "/usr/local/lib/python3.10/site-packages/cwltool/expression.py", line 243, in evaluator
+    raise JavascriptException(
+cwltool.sandboxjs.JavascriptException: Syntax error in parameter reference 'inputs.in2': inputs does not contain key 'in2'. This could be due to using Javascript code without specifying InlineJavascriptRequirement.
+[1;30mERROR[0m [31mException on step 'step1'[0m
+[1;30mERROR[0m [31m[step step1] Cannot make job: tests/fail-unspecified-input.cwl:13:33: Expression evaluation error:
+tests/fail-unspecified-input.cwl:13:33: Syntax error in parameter reference 'inputs.in2': inputs does not contain key 'in2'. This could be due to using Javascript code without specifying InlineJavascriptRequirement.[0m
+[1;30mWARNING[0m [33mFinal process status is permanentFail[0m
+Test [135/336] env_home_tmpdir_docker: Test $HOME and $TMPDIR are set correctly in Docker without using return code
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmplbwaxu8b --quiet tests/envvar3.cwl tests/empty.json
+Test [136/336] wf_scatter_oneparam_valuefrom_inputs: Test workflow scatter with single scatter parameter and two valueFrom using $inputs (first and current el)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmptercc0nd --quiet tests/scatter-valuefrom-inputs-wf1.cwl tests/scatter-valuefrom-job1.json
+Test [137/336] packed_import_schema: SchemaDefRequirement with $import, and packed
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpg4l_qzum --quiet tests/import_schema-def_packed.cwl tests/import_schema-def_job.yml
+Test [138/336] job_input_secondary_subdirs: Test specifying secondaryFiles in subdirectories of the job input document.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpledsj5w2 --quiet tests/dir4.cwl tests/dir4-subdir-1-job.yml
+Test [139/336] job_input_subdir_primary_and_secondary_subdirs: Test specifying secondaryFiles in same subdirectory of the job input as the primary input file.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpmk5wfzoa --quiet tests/dir4.cwl tests/dir4-subdir-2-job.yml
+Test [140/336] scatter_embedded_subworkflow: Test simple scatter over an embedded subworkflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp2soi1maz --quiet tests/count-lines18-wf.cwl tests/count-lines3-job.json
+Test [141/336] scatter_multi_input_embedded_subworkflow: Test simple multiple input scatter over an embedded subworkflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp4fsebptt --quiet tests/count-lines14-wf.cwl tests/count-lines4-job.json
+Test [142/336] workflow_embedded_subworkflow_embedded_subsubworkflow: Test twice nested subworkflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpfyesuxwq --quiet tests/count-lines15-wf.cwl tests/wc-job.json
+Test [143/336] workflow_embedded_subworkflow_with_tool_and_subsubworkflow: Test subworkflow of mixed depth with tool first
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpitf3756b --quiet tests/count-lines16-wf.cwl tests/wc-job.json
+Test [144/336] workflow_embedded_subworkflow_with_subsubworkflow_and_tool: Test subworkflow of mixed depth with tool after
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpppitoqkf --quiet tests/count-lines17-wf.cwl tests/wc-job.json
+Test [145/336] workflow_records_inputs_and_outputs: Test record type inputs to and outputs from workflows.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmprbf7vmao --quiet tests/record-output-wf.cwl tests/record-output-job.json
+Test [146/336] workflow_integer_input: Test integer workflow input and outputs
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpaji3xzd9 --quiet tests/io-int-wf.cwl tests/io-int.json
+Test [147/336] workflow_integer_input_optional_specified: Test optional integer workflow inputs (specified)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpdb_nnqpf --quiet tests/io-int-optional-wf.cwl tests/io-int.json
+Test [148/336] workflow_integer_input_optional_unspecified: Test optional integer workflow inputs (unspecified)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpyr7xn18i --quiet tests/io-int-optional-wf.cwl tests/empty.json
+Test [149/336] workflow_integer_input_default_specified: Test default integer workflow inputs (specified)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpba15hz81 --quiet tests/io-int-default-wf.cwl tests/io-int.json
+Test [150/336] workflow_integer_input_default_unspecified: Test default integer workflow inputs (unspecified)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp8rbv_tde --quiet tests/io-int-default-wf.cwl tests/empty.json
+Test [151/336] workflow_integer_input_default_and_tool_integer_input_default: Test default integer tool and workflow inputs (unspecified)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpailmgadp --quiet tests/io-int-default-tool-and-wf.cwl tests/empty.json
+Test [152/336] workflow_file_input_default_unspecified: Test File input with default unspecified to workflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpeonpim65 --quiet tests/io-file-default-wf.cwl tests/empty.json
+Test [153/336] workflow_file_input_default_specified: Test File input with default specified to workflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpz1p32iz0 --quiet tests/io-file-default-wf.cwl tests/default_path_job.yml
+Test [154/336] clt_optional_union_input_file_or_files_with_array_of_one_file_provided: Test input union type or File or File array to a tool with one file in array specified.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpqj7y6us6 --quiet tests/io-file-or-files.cwl tests/job-input-array-one-empty-file.json
+Test [155/336] clt_optional_union_input_file_or_files_with_many_files_provided: Test input union type or File or File array to a tool with a few files in array specified.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpin5c1ug5 --quiet tests/io-file-or-files.cwl tests/job-input-array-few-files.json
+Test [156/336] clt_optional_union_input_file_or_files_with_single_file_provided: Test input union type or File or File array to a tool with one file specified.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpus73gsu9 --quiet tests/io-file-or-files.cwl tests/job-input-one-file.json
+Test [157/336] clt_optional_union_input_file_or_files_with_nothing_provided: Test input union type or File or File array to a tool with null specified.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpaj_r8o_r --quiet tests/io-file-or-files.cwl tests/job-input-null.json
+Test [158/336] clt_any_input_with_integer_provided: Test Any parameter with integer input to a tool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpuojbv5q9 --quiet tests/io-any-1.cwl tests/io-any-int.json
+Test [159/336] clt_any_input_with_string_provided: Test Any parameter with string input to a tool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp4ic1jx38 --quiet tests/io-any-1.cwl tests/io-any-string.json
+Test [160/336] clt_any_input_with_file_provided: Test Any parameter with file input to a tool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmptnv53r0d --quiet tests/io-any-1.cwl tests/io-any-file.json
+Test [161/336] clt_any_input_with_mixed_array_provided: Test Any parameter with array input to a tool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpks4cobau --quiet tests/io-any-1.cwl tests/io-any-array.json
+Test [162/336] clt_any_input_with_record_provided: Test Any parameter with record input to a tool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp5jbctv9d --quiet tests/io-any-1.cwl tests/io-any-record.json
+Test [163/336] workflow_any_input_with_integer_provided: Test Any parameter with integer input to a workflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpzoqnifu4 --quiet tests/io-any-wf-1.cwl tests/io-any-int.json
+Test [164/336] workflow_any_input_with_string_provided: Test Any parameter with string input to a workflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpkbxyznrw --quiet tests/io-any-wf-1.cwl tests/io-any-string.json
+Test [165/336] workflow_any_input_with_file_provided: Test Any parameter with file input to a workflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp3knjl392 --quiet tests/io-any-wf-1.cwl tests/io-any-file.json
+Test [166/336] workflow_any_input_with_mixed_array_provided: Test Any parameter with array input to a workflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpggsgyo1z --quiet tests/io-any-wf-1.cwl tests/io-any-array.json
+Test [167/336] workflow_any_input_with_record_provided: Test Any parameter with record input to a tool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpqq7vcmfn --quiet tests/io-any-wf-1.cwl tests/io-any-record.json
+Test [168/336] workflow_union_default_input_unspecified: Test union type input to workflow with default unspecified
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp7797zrdf --quiet tests/io-union-input-default-wf.cwl tests/empty.json
+Test [169/336] workflow_union_default_input_with_file_provided: Test union type input to workflow with default specified as file
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpyyjwnv57 --quiet tests/io-union-input-default-wf.cwl tests/io-any-file.json
+Test [170/336] workflowstep_valuefrom_string: Test valueFrom on workflow step from literal (string).
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpuy1ezh46 --quiet tests/step-valuefrom4-wf.cwl tests/empty.json
+Test [171/336] workflowstep_valuefrom_file_basename: Test valueFrom on workflow step using basename.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp91nt6yyq --quiet tests/step-valuefrom5-wf.cwl tests/wc-job.json
+Test [172/336] expression_tool_int_array_output: Test output arrays in a tool (with ints).
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpaq28gu0k --quiet tests/output-arrays-int.cwl tests/output-arrays-int-job.json
+Test [173/336] workflowstep_int_array_input_output: Test output arrays in a workflow (with ints).
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpmcnnu72y --quiet tests/output-arrays-int-wf.cwl tests/output-arrays-int-job.json
+Test [174/336] workflow_file_array_output: Test output arrays in a workflow (with Files).
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmps6vc3277 --quiet tests/output-arrays-file-wf.cwl tests/output-arrays-file-job.json
+Test [175/336] docker_entrypoint: Test Docker ENTRYPOINT usage
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpxyiuu9_u --quiet tests/docker-run-cmd.cwl tests/empty.json
+[1;30mERROR[0m [31mFound a queued exception, canceling outstanding futures[0m
+[1;30mERROR[0m [31mWaiting for canceled futures to finish[0m
+[1;30mERROR[0m [31mWorkflow error, try again with --debug for more information:
+("Error collecting output for parameter 'cow': tests/docker-run-cmd.cwl:11:7: Did not find output
+                                                                              file with glob
+                                                                              pattern: '['cow']'.",
+                                                                              {})[0m
+Test 175 failed: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpxyiuu9_u --quiet tests/docker-run-cmd.cwl tests/empty.json
+Test Docker ENTRYPOINT usage
+Returned non-zero
+Test [176/336] clt_file_size_property_with_empty_file: Test use of size in expressions for an empty file
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmperxuulr7 --quiet tests/size-expression-tool.cwl tests/job-input-array-one-empty-file.json
+Test [177/336] clt_file_size_property_with_multi_file: Test use of size in expressions for a few files
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpml_i1_vs --quiet tests/size-expression-tool.cwl tests/job-input-array-few-files.json
+Test [178/336] any_without_defaults_unspecified_fails: Test Any without defaults, unspecified, should fail.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmps1l0h1rq --quiet tests/echo-tool.cwl tests/null-expression-echo-job.json
+[1;30mERROR[0m [31mWorkflow error, try again with --debug for more information:
+Invalid job input record:
+tests/echo-tool.cwl:6:3: Missing required input parameter 'in'[0m
+Test [179/336] any_without_defaults_specified_fails: Test Any without defaults, specified, should fail.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpiwr9d1le --quiet tests/echo-tool.cwl tests/null-expression1-job.json
+[1;30mERROR[0m [31mWorkflow error, try again with --debug for more information:
+Invalid job input record:
+tests/echo-tool.cwl:6:3: Missing required input parameter 'in'[0m
+Test [180/336] step_input_default_value_noexp: Test default value on step input parameter, no ExpressionTool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmprh1gpwhk --quiet tests/count-lines9-wf-noET.cwl tests/empty.json
+Test [181/336] step_input_default_value_overriden_noexp: Test default value on step input parameter overridden by provided source, no ExpressionTool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpagzw7eg1 --quiet tests/count-lines11-wf-noET.cwl tests/cat-job.json
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/count-lines11-wf-noET.cwl:6:3:  Source 'file1' of type ["null", "File"] may be incompatible
+tests/count-lines11-wf-noET.cwl:17:7:   with sink 'file1' of type "File"[0m
+Test [182/336] nested_workflow_noexp: Test nested workflow, without ExpressionTool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpaa2o8v8h --quiet tests/count-lines8-wf-noET.cwl tests/wc-job.json
+Test [183/336] wf_multiplesources_multipletypes_noexp: Test step input with multiple sources with multiple types, without ExpressionTool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpdg0pir0n --quiet tests/sum-wf-noET.cwl tests/sum-job.json
+Test [184/336] dynamic_resreq_wf_optional_file_default: Within a workflow, test accessing the size attribute of an optional input File as part of a CommandLineTool's ResourceRequirement calculation. The CommandLineTool input has a default value (a local file) and the workflow nor the workflow step does not provide any value for this input.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpncnhjv80 --quiet tests/dynresreq-workflow-tooldefault.cwl tests/empty.json
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/dynresreq-workflow-tooldefault.cwl:6:3:  Source 'special_file' of type ["null", "File"] may
+                                               be incompatible
+tests/dynresreq-workflow-tooldefault.cwl:15:7:   with sink 'special_file' of type "File"[0m
+Test [185/336] dynamic_resreq_wf_optional_file_step_default: Within a workflow, test accessing the size attribute of an optional input File as part of a CommandLineTool's ResourceRequirement calculation. The workflow step provides a default value (a local file) for this input and the workflow itself does not provide any value for this input.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpiyoyvles --quiet tests/dynresreq-workflow-stepdefault.cwl tests/empty.json
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/dynresreq-workflow-stepdefault.cwl:6:3:  Source 'special_file' of type ["null", "File"] may
+                                               be incompatible
+tests/dynresreq-workflow-stepdefault.cwl:15:7:   with sink 'special_file' of type "File"[0m
+Test [186/336] dynamic_resreq_wf_optional_file_wf_default: Within a workflow, test accessing the size attribute of an optional input File as part of a CommandLineTool's ResourceRequirement calculation. The workflow itelf provides a default value (a local file) for this input.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp1ukp66bc --quiet tests/dynresreq-workflow-inputdefault.cwl tests/empty.json
+Test [187/336] step_input_default_value_overriden_2nd_step: Test default value on step input parameter overridden by provided source. With passthrough first step
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpmp05v5f7 --quiet tests/count-lines11-extra-step-wf.cwl tests/cat-job.json
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/count-lines11-extra-step-wf.cwl:6:3:  Source 'file1' of type ["null", "File"] may be
+                                            incompatible
+tests/count-lines11-extra-step-wf.cwl:17:7:   with sink 'file1' of type "File"[0m
+Test [188/336] step_input_default_value_overriden_2nd_step_noexp: Test default value on step input parameter overridden by provided source. With passthrough first step and no ExpressionTool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpdgqn3y01 --quiet tests/count-lines11-extra-step-wf-noET.cwl tests/cat-job.json
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/count-lines11-extra-step-wf-noET.cwl:6:3:  Source 'file1' of type ["null", "File"] may be
+                                                 incompatible
+tests/count-lines11-extra-step-wf-noET.cwl:17:7:   with sink 'file1' of type "File"[0m
+Test [189/336] step_input_default_value_overriden_2nd_step_null: Test default value on step input parameter overridden by provided source. With null producing first step
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp27mpb8p8 --quiet tests/count-lines11-null-step-wf.cwl tests/empty.json
+Test [190/336] step_input_default_value_overriden_2nd_step_null_noexp: Test default value on step input parameter overridden by provided source. With null producing first step and no ExpressionTool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpi30l3h3r --quiet tests/count-lines11-null-step-wf-noET.cwl tests/empty.json
+Test [191/336] stdin_from_directory_literal_with_local_file: Pipe to stdin from user provided local File via a Directory literal
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpmj9_8vuz --quiet tests/cat-from-dir.cwl tests/cat-from-dir-job.yaml
+Test [192/336] stdin_from_directory_literal_with_literal_file: Pipe to stdin from literal File via a Directory literal
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpsn1_z7t0 --quiet tests/cat-from-dir.cwl tests/cat-from-dir-with-literal-file.yaml
+Test [193/336] directory_literal_with_literal_file_nostdin: Test non-stdin reference to literal File via a Directory literal
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpn4pgr9gk --quiet tests/cat3-from-dir.cwl tests/cat-from-dir-with-literal-file.yaml
+Test [194/336] no_inputs_commandlinetool: Test CommandLineTool without inputs
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpy1u6mk_e --quiet tests/no-inputs-tool.cwl
+Test [195/336] no_outputs_commandlinetool: Test CommandLineTool without outputs
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpig2z3fhj --quiet tests/no-outputs-tool.cwl tests/cat-job.json
+Test [196/336] no_inputs_workflow: Test Workflow without inputs
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpxx1hhz2s --quiet tests/no-inputs-wf.cwl
+Test [197/336] no_outputs_workflow: Test Workflow without outputs
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp75ulw60s --quiet tests/no-outputs-wf.cwl tests/cat-job.json
+Test [198/336] anonymous_enum_in_array: Test an anonymous enum inside an array inside a record
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpf_bjwr2q --quiet tests/anon_enum_inside_array.cwl tests/anon_enum_inside_array.yml
+Test [199/336] schema-def_anonymous_enum_in_array: Test an anonymous enum inside an array inside a record, SchemaDefRequirement
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpww70w7os --quiet tests/anon_enum_inside_array_inside_schemadef.cwl tests/anon_enum_inside_array_inside_schemadef.yml
+Test [200/336] stdin_shorcut: Test command execution in with stdin and stdout redirection using stdin shortcut
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpjnjaocp4 --quiet tests/cat-tool-shortcut.cwl tests/wc-job.json
+Test [201/336] secondary_files_in_unnamed_records: Test secondaryFiles on anonymous record fields
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpg1w93149 --quiet tests/record-in-secondaryFiles.cwl tests/record-secondaryFiles-job.yml
+Test [202/336] secondary_files_in_named_records: Test secondaryFiles on SchemaDefRequirement record fields
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpccx2ntx7 --quiet tests/record-sd-secondaryFiles.cwl tests/record-secondaryFiles-job.yml
+Test [203/336] secondary_files_in_output_records: Test secondaryFiles on output record fields
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp58fynae1 --quiet tests/record-out-secondaryFiles.cwl tests/empty.json
+Test [204/336] secondary_files_workflow_propagation: Test secondaryFiles propagation through workflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpx6klqn40 --quiet tests/record-in-secondaryFiles-wf.cwl tests/record-secondaryFiles-job.yml
+Test [205/336] secondary_files_missing: Test checking when secondaryFiles are missing
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp0e17a5as --quiet tests/record-in-secondaryFiles-missing-wf.cwl tests/record-secondaryFiles-job.yml
+[1;30mERROR[0m [31mException on step 'step1'[0m
+[1;30mERROR[0m [31m[step step1] Cannot make job: tests/record-in-secondaryFiles.cwl:10:11: Missing required secondary file 'A.s2' from file object: {
+tests/record-in-secondaryFiles.cwl:10:11:     "class": "File",
+tests/record-in-secondaryFiles.cwl:10:11:     "location": "file:///conformance/cwl-v1.2-1.2.0/tests/rec/A",
+tests/record-in-secondaryFiles.cwl:10:11:     "size": 0,
+tests/record-in-secondaryFiles.cwl:10:11:     "basename": "A",
+tests/record-in-secondaryFiles.cwl:10:11:     "nameroot": "A",
+tests/record-in-secondaryFiles.cwl:10:11:     "nameext": "",
+tests/record-in-secondaryFiles.cwl:10:11:     "secondaryFiles": []
+tests/record-in-secondaryFiles.cwl:10:11: }[0m
+[1;30mWARNING[0m [33mFinal process status is permanentFail[0m
+Test [206/336] input_records_file_entry_with_format: Test format on anonymous record fields
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpecxdnml5 --quiet tests/record-in-format.cwl tests/record-format-job.yml
+Test [207/336] input_records_file_entry_with_format_and_bad_regular_input_file_format: Test file format checking on parameter
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpt169it46 --quiet tests/record-in-format.cwl tests/record-format-job2.yml
+[1;30mERROR[0m [31mWorkflow error, try again with --debug for more information:
+Expected value of 'regular_input' to have format http://example.com/format1 but
+  File has an incompatible format: {
+    "class": "File",
+    "location": "file:///conformance/cwl-v1.2-1.2.0/tests/rec/D",
+    "format": "http://example.com/formatZ",
+    "size": 0,
+    "basename": "D",
+    "nameroot": "D",
+    "nameext": ""
+}[0m
+Test [208/336] input_records_file_entry_with_format_and_bad_entry_file_format: Test file format checking on record field
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp47fqo3u6 --quiet tests/record-in-format.cwl tests/record-format-job3.yml
+[1;30mERROR[0m [31mWorkflow error, try again with --debug for more information:
+Expected value of 'f1' to have format http://example.com/format1 but
+  File has an incompatible format: {
+    "class": "File",
+    "location": "file:///conformance/cwl-v1.2-1.2.0/tests/rec/A",
+    "format": "http://example.com/formatZ",
+    "size": 0,
+    "basename": "A",
+    "nameroot": "A",
+    "nameext": ""
+}[0m
+Test [209/336] input_records_file_entry_with_format_and_bad_entry_array_file_format: Test file format checking on array item
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpbrrh0s_q --quiet tests/record-in-format.cwl tests/record-format-job4.yml
+[1;30mERROR[0m [31mUnhandled error, try again with --debug for more information:
+  'name'[0m
+Test [210/336] record_output_file_entry_format: Test format on output record fields
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp_1c8por2 --quiet tests/record-out-format.cwl tests/record-secondaryFiles-job.yml
+Test [211/336] workflow_input_inputBinding_loadContents: Test WorkflowInputParameter.inputBinding.loadContents
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpbpr8g92c --quiet tests/wf-loadContents.cwl tests/wf-loadContents-job.yml
+Test [212/336] workflow_input_loadContents_without_inputBinding: Test WorkflowInputParameter.loadContents
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp473nviow --quiet tests/wf-loadContents2.cwl tests/wf-loadContents-job.yml
+Test [213/336] expression_tool_input_loadContents: Test loadContents on InputParameter.loadContents (expression)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp9iey724h --quiet tests/wf-loadContents3.cwl tests/wf-loadContents-job.yml
+Test [214/336] workflow_step_in_loadContents: Test WorkflowStepInput.loadContents
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp4t_878fg --quiet tests/wf-loadContents4.cwl tests/wf-loadContents-job.yml
+Test [215/336] timelimit_basic: Test that job fails when exceeding time limit
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp2k8kt300 --quiet tests/timelimit.cwl tests/empty.json
+Test 215 failed: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp2k8kt300 --quiet tests/timelimit.cwl tests/empty.json
+Test that job fails when exceeding time limit
+Returned zero but it should be non-zero
+Test [216/336] timelimit_invalid: Test invalid time limit value
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpc586knrv --quiet tests/timelimit2.cwl tests/empty.json
+[1;30mERROR[0m [31mInput object failed validation:
+tests/timelimit2.cwl:7:5: timelimit must be an integer >= 0, got: -1[0m
+Test [217/336] timelimit_zero_unlimited: Test zero timelimit means no limit
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp_uq59klq --quiet tests/timelimit3.cwl tests/empty.json
+Test [218/336] timelimit_from_expression: Test expression in time limit
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpq_n9snsx --quiet tests/timelimit4.cwl tests/empty.json
+Test 218 failed: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpq_n9snsx --quiet tests/timelimit4.cwl tests/empty.json
+Test expression in time limit
+Returned zero but it should be non-zero
+Test [219/336] timelimit_expressiontool: Test timelimit in expressiontool is ignored
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp3fqeuknq --quiet tests/timelimit5.cwl tests/empty.json
+Test [220/336] timelimit_basic_wf: Test that tool in workflow fails when exceeding time limit
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpepzn83v2 --quiet tests/timelimit-wf.cwl tests/empty.json
+[1;30mERROR[0m [31mTool definition failed validation:
+tests/timelimit-wf.cwl:2:1:     Object 'tests/timelimit-wf.cwl' is not valid because
+                                tried 'Workflow' but
+tests/timelimit-wf.cwl:18:1:       the 'steps' field is not valid because
+                                    tried array of <WorkflowStep> but
+tests/timelimit-wf.cwl:19:3:           item is invalid because
+tests/timelimit-wf.cwl:23:5:             the 'run' field is not valid because
+tests/timelimit-wf.cwl:29:7:               the 'outputs' field is not valid because
+tests/timelimit-wf.cwl:30:9:                 item is invalid because
+tests/timelimit-wf.cwl:32:11:                 the 'outputBinding' field is not valid because
+                                                tried CommandOutputBinding but
+tests/timelimit-wf.cwl:33:13:                     the 'outputEval' field is not valid because
+                                                    tried Expression but
+                                                      value 'time passed' does not contain an
+                                                      expression in the form $() or ${}[0m
+Test [221/336] timelimit_invalid_wf: Test that workflow level time limit is not applied to workflow execution time
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpktq5a430 --quiet tests/timelimit2-wf.cwl tests/empty.json
+Test [222/336] timelimit_zero_unlimited_wf: Test zero timelimit means no limit in workflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp2x_wp_af --quiet tests/timelimit3-wf.cwl tests/empty.json
+Test [223/336] timelimit_from_expression_wf: Test expression in time limit in workflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpx4r8_d5g --quiet tests/timelimit4-wf.cwl tests/empty.json
+[1;30mERROR[0m [31mTool definition failed validation:
+tests/timelimit4-wf.cwl:2:1:     Object 'tests/timelimit4-wf.cwl' is not valid because
+                                 tried 'Workflow' but
+tests/timelimit4-wf.cwl:21:1:       the 'steps' field is not valid because
+                                     tried array of <WorkflowStep> but
+tests/timelimit4-wf.cwl:22:3:           item is invalid because
+tests/timelimit4-wf.cwl:26:5:             the 'run' field is not valid because
+tests/timelimit4-wf.cwl:32:7:               the 'outputs' field is not valid because
+tests/timelimit4-wf.cwl:33:9:                 item is invalid because
+tests/timelimit4-wf.cwl:35:11:                 the 'outputBinding' field is not valid because
+                                                 tried CommandOutputBinding but
+tests/timelimit4-wf.cwl:36:13:                     the 'outputEval' field is not valid because
+                                                     tried Expression but
+                                                       value 'time passed' does not contain an
+                                                       expression in the form $() or ${}[0m
+Test [224/336] networkaccess: Test networkaccess enabled
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpyqxv5xj2 --quiet tests/networkaccess.cwl tests/empty.json
+Test [225/336] networkaccess_disabled: Test networkaccess is disabled by default
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpg5bb67yb --quiet tests/networkaccess2.cwl tests/empty.json
+Test 225 failed: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpg5bb67yb --quiet tests/networkaccess2.cwl tests/empty.json
+Test networkaccess is disabled by default
+Returned zero but it should be non-zero
+Test [226/336] Test null and array input in InitialWorkDirRequirement
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpjj971xw5 --quiet tests/stage-array.cwl tests/stage-array-job.json
+Test [227/336] Test array of directories InitialWorkDirRequirement
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpx0iad7o8 --quiet tests/stage-array-dirs.cwl tests/stage-array-dirs-job.yml
+Test 227 failed: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpx0iad7o8 --quiet tests/stage-array-dirs.cwl tests/stage-array-dirs-job.yml
+Test array of directories InitialWorkDirRequirement
+Compare failure expected: {
+    "output": [
+        {
+            "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709",
+            "class": "File",
+            "location": "a",
+            "size": 0
+        },
+        {
+            "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709",
+            "class": "File",
+            "location": "B",
+            "size": 0
+        }
+    ]
+}
+got: {
+    "output": []
+}
+caused by: failed comparison for key 'output': expected: [
+    {
+        "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709",
+        "class": "File",
+        "location": "a",
+        "size": 0
+    },
+    {
+        "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709",
+        "class": "File",
+        "location": "B",
+        "size": 0
+    }
+]
+got: []
+caused by: lengths don't match
+Test [228/336] cwl_requirements_addition: Test requirements in input document via EnvVarRequirement
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmprhqjd8p4 --quiet tests/env-tool3.cwl tests/env-job3.yaml
+Test [229/336] cwl_requirements_override_expression: Test conflicting requirements in input document via EnvVarRequirement and expression
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpxn25c6g7 --quiet tests/env-tool4.cwl tests/env-job3.yaml
+Test [230/336] cwl_requirements_override_static: Test conflicting requirements in input document via EnvVarRequirement
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpns0s339l --quiet tests/env-tool3.cwl tests/env-job4.yaml
+Test [231/336] Test output of InitialWorkDir
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmppyxs2wt6 --quiet tests/initialworkdir-glob-fullpath.cwl tests/initialworkdirrequirement-docker-out-job.json
+Test [232/336] Test if full paths are allowed in glob
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpm5cad53z --quiet tests/initialworkdir-glob-fullpath.cwl tests/initialworkdirrequirement-docker-out-job.json
+Test [233/336] Test fail trying to glob outside output directory
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpql2q9xk4 --quiet tests/glob-path-error.cwl tests/empty.json
+[1;30mERROR[0m [31mFound a queued exception, canceling outstanding futures[0m
+[1;30mERROR[0m [31mWaiting for canceled futures to finish[0m
+[1;30mERROR[0m [31mWorkflow error, try again with --debug for more information:
+("Error collecting output for parameter 'OUTPUT': tests/glob-path-error.cwl:17:7: glob patterns must
+                                                                                  not start with
+                                                                                  '/'", {})[0m
+Test [234/336] symlink to file outside of working directory should NOT be retrieved
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpeju6knkq --quiet tests/symlink-illegal.cwl tests/empty.json
+[1;30mERROR[0m [31mFound a queued exception, canceling outstanding futures[0m
+[1;30mERROR[0m [31mWaiting for canceled futures to finish[0m
+[1;30mERROR[0m [31mWorkflow error, try again with --debug for more information:
+Error validating output record. Does not exist or is not a Directory: 'file:///output/2xh3ukd7/symlink.txt'
+ in {
+    "output_file": {
+        "location": "file:///output/2xh3ukd7/symlink.txt",
+        "basename": "symlink.txt",
+        "nameroot": "symlink",
+        "nameext": ".txt",
+        "class": "Directory"
+    }
+}[0m
+Test [235/336] symlink to file inside of working directory should be retrieved
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpv2s7l_fj --quiet tests/symlink-legal.cwl tests/empty.json
+Test [236/336] inplace update has side effect on file content
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpukipxpf3 --quiet tests/inp_update_wf.cwl tests/empty.json
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/inp_update_wf.cwl:26:7: 'wait' is not an input parameter of
+                              file:///conformance/cwl-v1.2-1.2.0/tests/parseInt-tool.cwl, expected
+                              file1[0m
+Test 236 failed: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpukipxpf3 --quiet tests/inp_update_wf.cwl tests/empty.json
+inplace update has side effect on file content
+Compare failure expected: {
+    "a": 4,
+    "b": 4
+}
+got: {
+    "a": 4,
+    "b": null
+}
+caused by: failed comparison for key 'b': expected: 4
+got: null
+Test [237/336] inplace update has side effect on directory content
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpz090a2bd --quiet tests/inpdir_update_wf.cwl tests/empty.json
+Test 237 failed: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpz090a2bd --quiet tests/inpdir_update_wf.cwl tests/empty.json
+inplace update has side effect on directory content
+Compare failure expected: {
+    "a": [
+        {
+            "basename": "blurb",
+            "class": "File",
+            "location": "blurb"
+        }
+    ],
+    "b": [
+        {
+            "basename": "blurb",
+            "class": "File",
+            "location": "blurb"
+        }
+    ]
+}
+got: {
+    "a": [
+        {
+            "basename": "blurb",
+            "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709",
+            "class": "File",
+            "location": "file:///output/tmpz090a2bd/blurb",
+            "path": "/output/tmpz090a2bd/blurb",
+            "size": 0
+        }
+    ],
+    "b": []
+}
+caused by: failed comparison for key 'b': expected: [
+    {
+        "basename": "blurb",
+        "class": "File",
+        "location": "blurb"
+    }
+]
+got: []
+caused by: lengths don't match
+Test [238/336] outputbinding_glob_directory: Test that OutputBinding.glob accepts Directories
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmphde56aqz --quiet tests/glob_directory.cwl tests/empty.json
+Test [239/336] stage_file_array: Test that array of input files can be staged to directory with entryname
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp4mopj6rt --quiet tests/stage_file_array.cwl tests/stage_file_array.job.json
+Test [240/336] stage_file_array: Test that array of input files can be staged to directory with basename
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp_kacy401 --quiet tests/stage_file_array_basename.cwl tests/stage_file_array.job.json
+Test [241/336] stage_file_array: Test that if array of input files are staged to directory with basename and entryname, entryname overrides
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpntg6r0ag --quiet tests/stage_file_array_basename_and_entryname.cwl tests/stage_file_array.job.json
+Test [242/336] tmpdir_is_not_outdir: Test that runtime.tmpdir is not runtime.outdir
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp_wyfdtqg --quiet tests/runtime-paths-distinct.cwl tests/empty.json
+Test [243/336] listing_default_none: Test that default behavior is 'no_listing' if not specified
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpusd1j1jp --quiet tests/listing_none1.cwl tests/listing-job.yml
+Test [244/336] listing_requirement_none: Test that 'listing' is not present when LoadListingRequirement is 'no_listing'
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpdx5chxd0 --quiet tests/listing_none2.cwl tests/listing-job.yml
+Test [245/336] listing_loadListing_none: Test that 'listing' is not present when loadListing on input parameter is 'no_listing'
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp4l0kwj2f --quiet tests/listing_none3.cwl tests/listing-job.yml
+Test [246/336] listing_requirement_shallow: Test that 'listing' is present in top directory object but not subdirectory object when LoadListingRequirement is 'shallow_listing'
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpaqjhu0k8 --quiet tests/listing_shallow1.cwl tests/listing-job.yml
+Test [247/336] listing_loadListing_shallow: Test that 'listing' is present in top directory object but not subdirectory object when loadListing on input parameter loadListing is 'shallow_listing'
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp6qfca9sv --quiet tests/listing_shallow2.cwl tests/listing-job.yml
+Test [248/336] listing_requirement_deep: Test that 'listing' is present in top directory object and in subdirectory objects when LoadListingRequirement is 'deep_listing'
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpevznthd0 --quiet tests/listing_deep1.cwl tests/listing-job.yml
+Test [249/336] listing_loadListing_deep: Test that 'listing' is present in top directory object and in subdirectory objects when input parameter loadListing is 'deep_listing'
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpv5factgd --quiet tests/listing_deep2.cwl tests/listing-job.yml
+Test [250/336] inputBinding_position_expr: Test for expression in the InputBinding.position field; also test using emoji in CWL document and tool output
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpz9guap4q --quiet tests/echo-position-expr.cwl tests/echo-position-expr-job.yml
+Test [251/336] outputEval_exitCode: Can access exit code in outputEval
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpd9pthrmp --quiet tests/exitcode.cwl tests/empty.json
+Test [252/336] any_input_param_graph_no_default: Test use of $graph without specifying which process to run
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmphwecca0i --quiet tests/echo-tool-packed.cwl tests/env-job.json
+Test [253/336] any_input_param_graph_no_default_hashmain: Test use of $graph without specifying which process to run, hash-prefixed "main"
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpufdps9tz --quiet tests/echo-tool-packed2.cwl tests/env-job.json
+Test [254/336] optional_numerical_output_returns_0_not_null: Test that optional number output is returned as 0, not null
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpkggk50hr --quiet tests/optional-numerical-output-0.cwl tests/empty.json
+Test [255/336] cores_float: Test float value for coresMin(Max) is rounded up in runtime.cores
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpdruswqf7 --quiet tests/cores_float.cwl tests/empty.json
+Test [256/336] storage_float: Test float value for ram/tmpdir/outdir Min(Max) is rounded up
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpy4a7a7xa --quiet tests/storage_float.cwl tests/empty.json
+[1;30mERROR[0m [31mSyntax error in parameter reference 'runtime.tmpdirSize': runtime does not contain key 'tmpdirSize'. This could be due to using Javascript code without specifying InlineJavascriptRequirement.[0m
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/cwltool/expression.py", line 393, in do_eval
+    return interpolate(
+  File "/usr/local/lib/python3.10/site-packages/cwltool/expression.py", line 297, in interpolate
+    e = evaluator(
+  File "/usr/local/lib/python3.10/site-packages/cwltool/expression.py", line 243, in evaluator
+    raise JavascriptException(
+cwltool.sandboxjs.JavascriptException: Syntax error in parameter reference 'runtime.tmpdirSize': runtime does not contain key 'tmpdirSize'. This could be due to using Javascript code without specifying InlineJavascriptRequirement.
+[1;30mERROR[0m [31mWorkflow error, try again with --debug for more information:
+tests/storage_float.cwl:23:30: Expression evaluation error:
+                               Syntax error in parameter reference 'runtime.tmpdirSize': runtime
+                               does not contain key 'tmpdirSize'. This could be due to using
+                               Javascript code without specifying InlineJavascriptRequirement.[0m
+Test 256 failed: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpy4a7a7xa --quiet tests/storage_float.cwl tests/empty.json
+Test float value for ram/tmpdir/outdir Min(Max) is rounded up
+Returned non-zero
+Test [257/336] escaping: Line continuations in bash scripts should behave correctly
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpcommvg4z --quiet tests/string-interpolation/bash-line-continuation.cwl
+Test [258/336] escaping: Line continuations in bash scripts should always behave correctly
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpeuk53t89 --quiet tests/string-interpolation/bash-line-continuation-with-expression.cwl
+Test [259/336] escaping: Test quoting multiple backslashes
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpgui4untu --quiet tests/string-interpolation/bash-dollar-quote.cwl
+Test [260/336] quotes: Strings returned from JS expressions should not have extra quotes around them
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpojwkxsof --quiet tests/string-interpolation/js-quote.cwl
+Test [261/336] direct_optional_null_result: Simplest conditional pattern (False)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpt5m_jl88 --quiet tests/conditionals/cond-wf-001.cwl tests/conditionals/val.1.job.yaml
+Test [262/336] direct_optional_nonnull_result: Simplest conditional pattern (True)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpcblpuw48 --quiet tests/conditionals/cond-wf-001.cwl tests/conditionals/val.3.job.yaml
+Test [263/336] direct_required: Should give validation warning because of required sink
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpydr7rd2n --quiet tests/conditionals/cond-wf-002.cwl tests/conditionals/val.1.job.yaml
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/conditionals/cond-wf-002.cwl:14:11: Source 'out1' of type ["null", "string"] may be
+                                          incompatible
+tests/conditionals/cond-wf-002.cwl:18:5:    with sink 'out1' of type "string"
+                                            Source is from conditional step and may produce `null`
+tests/conditionals/cond-wf-002.cwl:14:11: Source 'out1' of type ["null", "string"] may be
+                                          incompatible
+tests/conditionals/cond-wf-002.cwl:18:5:    with sink 'out1' of type "string"[0m
+Test [264/336] pass_through_required_false_when: Pass through pattern with pickValue: first_non_null; 'when' is false
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmprba6jcdk --quiet tests/conditionals/cond-wf-003.cwl tests/conditionals/val.1.job.yaml
+Test [265/336] pass_through_required_true_when: pass through pattern with pickvalue: first_non_null; 'when' is true
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmppaiiqt9r --quiet tests/conditionals/cond-wf-003.cwl tests/conditionals/val.3.job.yaml
+Test [266/336] first_non_null_first_non_null: pickValue: first_non_null first item is non null
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpl2qmpppg --quiet tests/conditionals/cond-wf-003.1.cwl tests/conditionals/val.0.job.yaml
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/conditionals/cond-wf-003.1.cwl:11:7: 'a_new_var' is not an input parameter of
+                                           file:///conformance/cwl-v1.2-1.2.0/tests/conditionals/foo.cwl,
+                                           expected in1[0m
+Test [267/336] first_non_null_all_null: pickValue: first_non_null needs at least one non null
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp4le58iqx --quiet tests/conditionals/cond-wf-003.1.cwl tests/conditionals/val.1.job.yaml
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/conditionals/cond-wf-003.1.cwl:11:7: 'a_new_var' is not an input parameter of
+                                           file:///conformance/cwl-v1.2-1.2.0/tests/conditionals/foo.cwl,
+                                           expected in1[0m
+[1;30mERROR[0m [31m[workflow ] Cannot collect workflow output: All sources for 'out1' are null[0m
+[1;30mWARNING[0m [33mFinal process status is permanentFail[0m
+Test [268/336] first_non_null_second_non_null: pickValue: first_non_null second item is non null
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp39zajsbd --quiet tests/conditionals/cond-wf-003.1.cwl tests/conditionals/val.3.job.yaml
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/conditionals/cond-wf-003.1.cwl:11:7: 'a_new_var' is not an input parameter of
+                                           file:///conformance/cwl-v1.2-1.2.0/tests/conditionals/foo.cwl,
+                                           expected in1[0m
+Test [269/336] pass_through_required_the_only_non_null: pickvalue: the_only_non_null will pass, only for false condition
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpp13mtuli --quiet tests/conditionals/cond-wf-004.cwl tests/conditionals/val.1.job.yaml
+Test [270/336] pass_through_required_fail: pickValue: the_only_non_null will fail due to multiple non nulls
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpt2dvvot7 --quiet tests/conditionals/cond-wf-004.cwl tests/conditionals/val.3.job.yaml
+[1;30mERROR[0m [31m[workflow ] Cannot collect workflow output: Expected only one source for 'out1' to be non-null, got ['foo 3', 'Direct'][0m
+[1;30mWARNING[0m [33mFinal process status is permanentFail[0m
+Test [271/336] all_non_null_multi_with_non_array_output: pickValue: all_non_null will fail validation
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp4ci1hmeb --quiet tests/conditionals/cond-wf-005.cwl tests/conditionals/val.3.job.yaml
+[1;30mERROR[0m [31mTool definition failed validation:
+
+tests/conditionals/cond-wf-005.cwl:17:11: Source 'out1' of type "string" is incompatible
+tests/conditionals/cond-wf-005.cwl:21:5:     with sink 'out1' of type "string"
+                                            pickValue is: all_non_null
+                                            source has linkMerge method merge_nested
+tests/conditionals/cond-wf-005.cwl:6:5:     Source 'def' of type "string" is incompatible
+tests/conditionals/cond-wf-005.cwl:21:5:     with sink 'out1' of type "string"
+                                            pickValue is: all_non_null
+                                            source has linkMerge method merge_nested[0m
+Test [272/336] the_only_non_null_single_true: pickValue: the_only_non_null will pass for only one active node
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpnav0a7j6 --quiet tests/conditionals/cond-wf-006.cwl tests/conditionals/val.1.job.yaml
+Test [273/336] the_only_non_null_multi_true: pickValue: the_only_non_null will fail with two active nodes
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpz9ft2s0k --quiet tests/conditionals/cond-wf-006.cwl tests/conditionals/val.3.job.yaml
+[1;30mERROR[0m [31m[workflow ] Cannot collect workflow output: Expected only one source for 'out1' to be non-null, got ['foo 3', 'bar 3'][0m
+[1;30mWARNING[0m [33mFinal process status is permanentFail[0m
+Test [274/336] all_non_null_all_null: pickValue: all_non_null will produce a list, even if empty
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpvaws_tlp --quiet tests/conditionals/cond-wf-007.cwl tests/conditionals/val.0.job.yaml
+Test [275/336] all_non_null_one_non_null: pickValue: all_non_null will produce a list; even if single item list
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp9imfgq9k --quiet tests/conditionals/cond-wf-007.cwl tests/conditionals/val.1.job.yaml
+Test [276/336] all_non_null_multi_non_null: pickValue: all_non_null will produce a list
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpcf2hcqdv --quiet tests/conditionals/cond-wf-007.cwl tests/conditionals/val.3.job.yaml
+Test [277/336] condifional_scatter_on_nonscattered_false: Simple scatter: conditional on a non scattered variable (False)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp7nxtukse --quiet tests/conditionals/cond-wf-009.cwl tests/conditionals/cond15.job.yaml
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/conditionals/cond-wf-009.cwl:15:11: Source 'out1' of type ["null", {"type": "array", "items":
+                                          "string"}] may be incompatible
+tests/conditionals/cond-wf-009.cwl:20:5:    with sink 'out1' of type {"type": "array", "items":
+                                            "string"}
+                                            pickValue is used but only a single input source is
+                                            declared
+tests/conditionals/cond-wf-009.cwl:15:11: Source 'out1' of type ["null", {"type": "array", "items":
+                                          "string"}] may be incompatible
+tests/conditionals/cond-wf-009.cwl:20:5:    with sink 'out1' of type {"type": "array", "items":
+                                            "string"}
+                                            Source is from conditional step and may produce `null`
+tests/conditionals/cond-wf-009.cwl:15:11: Source 'out1' of type ["null", {"type": "array", "items":
+                                          "string"}] may be incompatible
+tests/conditionals/cond-wf-009.cwl:20:5:    with sink 'out1' of type {"type": "array", "items":
+                                            "string"}
+                                            pickValue is: all_non_null[0m
+Test [278/336] condifional_scatter_on_nonscattered_true: Simple scatter: conditional on a non scattered variable (True)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpfcr_r5i4 --quiet tests/conditionals/cond-wf-009.cwl tests/conditionals/cond16.job.yaml
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/conditionals/cond-wf-009.cwl:15:11: Source 'out1' of type ["null", {"type": "array", "items":
+                                          "string"}] may be incompatible
+tests/conditionals/cond-wf-009.cwl:20:5:    with sink 'out1' of type {"type": "array", "items":
+                                            "string"}
+                                            pickValue is used but only a single input source is
+                                            declared
+tests/conditionals/cond-wf-009.cwl:15:11: Source 'out1' of type ["null", {"type": "array", "items":
+                                          "string"}] may be incompatible
+tests/conditionals/cond-wf-009.cwl:20:5:    with sink 'out1' of type {"type": "array", "items":
+                                            "string"}
+                                            Source is from conditional step and may produce `null`
+tests/conditionals/cond-wf-009.cwl:15:11: Source 'out1' of type ["null", {"type": "array", "items":
+                                          "string"}] may be incompatible
+tests/conditionals/cond-wf-009.cwl:20:5:    with sink 'out1' of type {"type": "array", "items":
+                                            "string"}
+                                            pickValue is: all_non_null[0m
+Test [279/336] scatter_on_scattered_conditional: Simple scatter: Add conditional variable to scatter
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp3qoq0h_0 --quiet tests/conditionals/cond-wf-010.cwl tests/conditionals/val.6.list.job.yaml
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/conditionals/cond-wf-010.cwl:14:11: Source 'out1' of type ["null", {"type": "array", "items":
+                                          "string"}] may be incompatible
+tests/conditionals/cond-wf-010.cwl:20:5:    with sink 'out1' of type {"type": "array", "items":
+                                            "string"}
+                                            pickValue is used but only a single input source is
+                                            declared
+tests/conditionals/cond-wf-010.cwl:14:11: Source 'out1' of type ["null", {"type": "array", "items":
+                                          "string"}] may be incompatible
+tests/conditionals/cond-wf-010.cwl:20:5:    with sink 'out1' of type {"type": "array", "items":
+                                            "string"}
+                                            Source is from conditional step and may produce `null`
+tests/conditionals/cond-wf-010.cwl:14:11: Source 'out1' of type ["null", {"type": "array", "items":
+                                          "string"}] may be incompatible
+tests/conditionals/cond-wf-010.cwl:20:5:    with sink 'out1' of type {"type": "array", "items":
+                                            "string"}
+                                            pickValue is: all_non_null[0m
+Test [280/336] conditionals_nested_cross_scatter: nested cross product scatter with condition on one dimension
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp08gen1j9 --quiet tests/conditionals/cond-wf-011.cwl tests/conditionals/cond18.job.yaml
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/conditionals/cond-wf-011.cwl:17:11: Source 'out1' of type ["null", {"type": "array", "items":
+                                          {"type": "array", "items": {"type": "array", "items":
+                                          "string"}}}] may be incompatible
+tests/conditionals/cond-wf-011.cwl:23:5:    with sink 'out1' of type {"type": "array", "items":
+                                            {"type": "array", "items": {"type": "array", "items":
+                                            "string"}}}
+                                            pickValue is used but only a single input source is
+                                            declared
+tests/conditionals/cond-wf-011.cwl:17:11: Source 'out1' of type ["null", {"type": "array", "items":
+                                          {"type": "array", "items": {"type": "array", "items":
+                                          "string"}}}] may be incompatible
+tests/conditionals/cond-wf-011.cwl:23:5:    with sink 'out1' of type {"type": "array", "items":
+                                            {"type": "array", "items": {"type": "array", "items":
+                                            "string"}}}
+                                            Source is from conditional step and may produce `null`
+tests/conditionals/cond-wf-011.cwl:17:11: Source 'out1' of type ["null", {"type": "array", "items":
+                                          {"type": "array", "items": {"type": "array", "items":
+                                          "string"}}}] may be incompatible
+tests/conditionals/cond-wf-011.cwl:23:5:    with sink 'out1' of type {"type": "array", "items":
+                                            {"type": "array", "items": {"type": "array", "items":
+                                            "string"}}}
+                                            pickValue is: all_non_null[0m
+Test [281/336] conditionals_non_boolean_fail: Non-boolean values from "when" should fail
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpwb9uu8rp --quiet tests/conditionals/cond-wf-012.cwl tests/conditionals/val.1.job.yaml
+[1;30mERROR[0m [31m[step step1] Cannot make job: Conditional 'when' must evaluate to 'true' or 'false'[0m
+[1;30mWARNING[0m [33mFinal process status is permanentFail[0m
+Test [282/336] conditionals_multi_scatter: Scatter two steps, flatten result + pickValue
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpn67s62jf --quiet tests/conditionals/cond-wf-013.cwl tests/conditionals/cond20.job.yaml
+Test [283/336] direct_optional_null_result_nojs: simplest conditional pattern (true), no javascript
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmppauitwbj --quiet tests/conditionals/cond-wf-001_nojs.cwl tests/conditionals/test-true.yml
+Test [284/336] direct_optional_nonnull_result_nojs: simplest conditional pattern (false), no javascript
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpqh294hf6 --quiet tests/conditionals/cond-wf-001_nojs.cwl tests/conditionals/test-false.yml
+Test [285/336] direct_required_nojs: Should give validation warning because of required sink, no javascript
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmplhfilnds --quiet tests/conditionals/cond-wf-002_nojs.cwl tests/conditionals/val.1.job.yaml
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/conditionals/cond-wf-002_nojs.cwl:17:11: Source 'out1' of type ["null", "string"] may be
+                                               incompatible
+tests/conditionals/cond-wf-002_nojs.cwl:21:5:    with sink 'out1' of type "string"
+                                                 Source is from conditional step and may produce
+                                                 `null`
+tests/conditionals/cond-wf-002_nojs.cwl:17:11: Source 'out1' of type ["null", "string"] may be
+                                               incompatible
+tests/conditionals/cond-wf-002_nojs.cwl:21:5:    with sink 'out1' of type "string"[0m
+Test [286/336] pass_through_required_false_when_nojs: Pass through pattern with pickValue: first_non_null; 'when' is false'; no javascript
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpx_xdaenu --quiet tests/conditionals/cond-wf-003_nojs.cwl tests/conditionals/test-false.yml
+Test [287/336] pass_through_required_true_when_nojs: pass through pattern with pickvalue: first_non_null; 'when' is true'; no javascript
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpoc725v9d --quiet tests/conditionals/cond-wf-003_nojs.cwl tests/conditionals/test-true.yml
+Test [288/336] first_non_null_first_non_null_nojs: pickValue: first_non_null first item is non null; no javascript
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpgdtnvy5l --quiet tests/conditionals/cond-wf-003.1_nojs.cwl tests/conditionals/first-true.yml
+Test [289/336] first_non_null_all_null_nojs: pickValue: first_non_null needs at least one non null; no javascript
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpmik8no5b --quiet tests/conditionals/cond-wf-003.1_nojs.cwl tests/conditionals/both-false.yml
+[1;30mERROR[0m [31m[workflow ] Cannot collect workflow output: All sources for 'out1' are null[0m
+[1;30mWARNING[0m [33mFinal process status is permanentFail[0m
+Test [290/336] first_non_null_second_non_null_nojs: pickValue: first_non_null second item is non null; no javascript
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpfctuxdjs --quiet tests/conditionals/cond-wf-003.1_nojs.cwl tests/conditionals/second-true.yml
+Test [291/336] pass_through_required_the_only_non_null: pickvalue: the_only_non_null will pass, only for false condition; no javascript
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmprsezcy9p --quiet tests/conditionals/cond-wf-004_nojs.cwl tests/conditionals/test-false.yml
+Test [292/336] pass_through_required_fail: pickValue: the_only_non_null will fail due to multiple non nulls; no javascript
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp1plsto1h --quiet tests/conditionals/cond-wf-004_nojs.cwl tests/conditionals/test-true.yml
+[1;30mERROR[0m [31m[workflow ] Cannot collect workflow output: Expected only one source for 'out1' to be non-null, got ['foo 23', 'Direct'][0m
+[1;30mWARNING[0m [33mFinal process status is permanentFail[0m
+Test [293/336] all_non_null_multi_with_non_array_output_nojs: pickValue: all_non_null will fail validation; no javascript
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpazpynr80 --quiet tests/conditionals/cond-wf-005_nojs.cwl tests/conditionals/test-true.yml
+[1;30mERROR[0m [31mTool definition failed validation:
+
+tests/conditionals/cond-wf-005_nojs.cwl:20:11: Source 'out1' of type "string" is incompatible
+tests/conditionals/cond-wf-005_nojs.cwl:24:5:     with sink 'out1' of type "string"
+                                                 pickValue is: all_non_null
+                                                 source has linkMerge method merge_nested
+tests/conditionals/cond-wf-005_nojs.cwl:9:5:     Source 'def' of type "string" is incompatible
+tests/conditionals/cond-wf-005_nojs.cwl:24:5:     with sink 'out1' of type "string"
+                                                 pickValue is: all_non_null
+                                                 source has linkMerge method merge_nested[0m
+Test [294/336] the_only_non_null_single_true_nojs: pickValue: the_only_non_null will pass for only one active node; no javascript
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpyjdvbzcv --quiet tests/conditionals/cond-wf-006_nojs.cwl tests/conditionals/second-true.yml
+Test [295/336] the_only_non_null_multi_true_nojs: pickValue: the_only_non_null will fail with two active nodes; no javascript
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp3gwnsj6z --quiet tests/conditionals/cond-wf-006_nojs.cwl tests/conditionals/both-true.yml
+[1;30mERROR[0m [31m[workflow ] Cannot collect workflow output: Expected only one source for 'out1' to be non-null, got ['foo 23', 'bar 23'][0m
+[1;30mWARNING[0m [33mFinal process status is permanentFail[0m
+Test [296/336] all_non_null_all_null_nojs: pickValue: all_non_null will produce a list, even if empty; no javascript
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp9kk5zx0y --quiet tests/conditionals/cond-wf-007_nojs.cwl tests/conditionals/both-false.yml
+Test [297/336] all_non_null_one_non_null_nojs: pickValue: all_non_null will produce a list; even if single item list; no javascript
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp0wpbkjmt --quiet tests/conditionals/cond-wf-007_nojs.cwl tests/conditionals/second-true.yml
+Test [298/336] all_non_null_multi_non_null_nojs: pickValue: all_non_null will produce a list; no javascript
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpo60eimif --quiet tests/conditionals/cond-wf-007_nojs.cwl tests/conditionals/both-true.yml
+Test [299/336] condifional_scatter_on_nonscattered_false_nojs: Simple scatter: conditional on a non scattered variable (False); no javascript
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpvod7hsek --quiet tests/conditionals/cond-wf-009_nojs.cwl tests/conditionals/test-false.yml
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/conditionals/cond-wf-009_nojs.cwl:17:11: Source 'out1' of type ["null", {"type": "array",
+                                               "items": "string"}] may be incompatible
+tests/conditionals/cond-wf-009_nojs.cwl:22:5:    with sink 'out1' of type {"type": "array",
+                                                 "items": "string"}
+                                                 pickValue is used but only a single input source
+                                                 is declared
+tests/conditionals/cond-wf-009_nojs.cwl:17:11: Source 'out1' of type ["null", {"type": "array",
+                                               "items": "string"}] may be incompatible
+tests/conditionals/cond-wf-009_nojs.cwl:22:5:    with sink 'out1' of type {"type": "array",
+                                                 "items": "string"}
+                                                 Source is from conditional step and may produce
+                                                 `null`
+tests/conditionals/cond-wf-009_nojs.cwl:17:11: Source 'out1' of type ["null", {"type": "array",
+                                               "items": "string"}] may be incompatible
+tests/conditionals/cond-wf-009_nojs.cwl:22:5:    with sink 'out1' of type {"type": "array",
+                                                 "items": "string"}
+                                                 pickValue is: all_non_null[0m
+Test [300/336] condifional_scatter_on_nonscattered_true_nojs: Simple scatter: conditional on a non scattered variable (True); no javascript
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpwwgububh --quiet tests/conditionals/cond-wf-009_nojs.cwl tests/conditionals/test-true.yml
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/conditionals/cond-wf-009_nojs.cwl:17:11: Source 'out1' of type ["null", {"type": "array",
+                                               "items": "string"}] may be incompatible
+tests/conditionals/cond-wf-009_nojs.cwl:22:5:    with sink 'out1' of type {"type": "array",
+                                                 "items": "string"}
+                                                 pickValue is used but only a single input source
+                                                 is declared
+tests/conditionals/cond-wf-009_nojs.cwl:17:11: Source 'out1' of type ["null", {"type": "array",
+                                               "items": "string"}] may be incompatible
+tests/conditionals/cond-wf-009_nojs.cwl:22:5:    with sink 'out1' of type {"type": "array",
+                                                 "items": "string"}
+                                                 Source is from conditional step and may produce
+                                                 `null`
+tests/conditionals/cond-wf-009_nojs.cwl:17:11: Source 'out1' of type ["null", {"type": "array",
+                                               "items": "string"}] may be incompatible
+tests/conditionals/cond-wf-009_nojs.cwl:22:5:    with sink 'out1' of type {"type": "array",
+                                                 "items": "string"}
+                                                 pickValue is: all_non_null[0m
+Test [301/336] scatter_on_scattered_conditional_nojs: Simple scatter: Add conditional variable to scatter; no javascript
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpdug71ga5 --quiet tests/conditionals/cond-wf-010_nojs.cwl tests/empty.json
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/conditionals/cond-wf-010_nojs.cwl:19:11: Source 'out1' of type ["null", {"type": "array",
+                                               "items": "string"}] may be incompatible
+tests/conditionals/cond-wf-010_nojs.cwl:25:5:    with sink 'out1' of type {"type": "array",
+                                                 "items": "string"}
+                                                 pickValue is used but only a single input source
+                                                 is declared
+tests/conditionals/cond-wf-010_nojs.cwl:19:11: Source 'out1' of type ["null", {"type": "array",
+                                               "items": "string"}] may be incompatible
+tests/conditionals/cond-wf-010_nojs.cwl:25:5:    with sink 'out1' of type {"type": "array",
+                                                 "items": "string"}
+                                                 Source is from conditional step and may produce
+                                                 `null`
+tests/conditionals/cond-wf-010_nojs.cwl:19:11: Source 'out1' of type ["null", {"type": "array",
+                                               "items": "string"}] may be incompatible
+tests/conditionals/cond-wf-010_nojs.cwl:25:5:    with sink 'out1' of type {"type": "array",
+                                                 "items": "string"}
+                                                 pickValue is: all_non_null[0m
+Test [302/336] conditionals_nested_cross_scatter_nojs: nested cross product scatter with condition on one dimension; no javascript
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp0zup1gun --quiet tests/conditionals/cond-wf-011_nojs.cwl tests/empty.json
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/conditionals/cond-wf-011_nojs.cwl:27:11: Source 'out1' of type ["null", {"type": "array",
+                                               "items": {"type": "array", "items": {"type":
+                                               "array", "items": "string"}}}] may be incompatible
+tests/conditionals/cond-wf-011_nojs.cwl:33:5:    with sink 'out1' of type {"type": "array",
+                                                 "items": {"type": "array", "items": {"type":
+                                                 "array", "items": "string"}}}
+                                                 pickValue is used but only a single input source
+                                                 is declared
+tests/conditionals/cond-wf-011_nojs.cwl:27:11: Source 'out1' of type ["null", {"type": "array",
+                                               "items": {"type": "array", "items": {"type":
+                                               "array", "items": "string"}}}] may be incompatible
+tests/conditionals/cond-wf-011_nojs.cwl:33:5:    with sink 'out1' of type {"type": "array",
+                                                 "items": {"type": "array", "items": {"type":
+                                                 "array", "items": "string"}}}
+                                                 Source is from conditional step and may produce
+                                                 `null`
+tests/conditionals/cond-wf-011_nojs.cwl:27:11: Source 'out1' of type ["null", {"type": "array",
+                                               "items": {"type": "array", "items": {"type":
+                                               "array", "items": "string"}}}] may be incompatible
+tests/conditionals/cond-wf-011_nojs.cwl:33:5:    with sink 'out1' of type {"type": "array",
+                                                 "items": {"type": "array", "items": {"type":
+                                                 "array", "items": "string"}}}
+                                                 pickValue is: all_non_null[0m
+Test [303/336] conditionals_non_boolean_fail_nojs: Non-boolean values from "when" should fail; no javascript
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpnjef14dx --quiet tests/conditionals/cond-wf-012_nojs.cwl tests/empty.json
+[1;30mERROR[0m [31m[step step1] Cannot make job: Conditional 'when' must evaluate to 'true' or 'false'[0m
+[1;30mWARNING[0m [33mFinal process status is permanentFail[0m
+Test [304/336] conditionals_multi_scatter_nojs: Scatter two steps, flatten result + pickValue; no javascript
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpa4syrgk2 --quiet tests/conditionals/cond-wf-013_nojs.cwl tests/empty.json
+Test [305/336] cond-with-defaults-1: Default inputs, choose step to run based on what was provided, first case
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp_9pyxbq5 --quiet tests/conditionals/cond-with-defaults.cwl tests/conditionals/cond-job.yaml
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/conditionals/cond-with-defaults.cwl:12:5: Source 'forward_reads' of type ["null", "File"] may
+                                                be incompatible
+tests/conditionals/cond-with-defaults.cwl:36:7:   with sink 'initial_file' of type {"type":
+                                                  "array", "items": "File"}
+                                                  source has linkMerge method merge_nested
+tests/conditionals/cond-with-defaults.cwl:13:5: Source 'reverse_reads' of type ["null", "File"] may
+                                                be incompatible
+tests/conditionals/cond-with-defaults.cwl:36:7:   with sink 'initial_file' of type {"type":
+                                                  "array", "items": "File"}
+                                                  source has linkMerge method merge_nested
+tests/conditionals/cond-with-defaults.cwl:14:5: Source 'single_reads' of type ["null", "File"] may
+                                                be incompatible
+tests/conditionals/cond-with-defaults.cwl:47:7:   with sink 'initial_file' of type "File"[0m
+Test [306/336] cond-with-defaults-2: Default inputs, choose step to run based on what was provided, second case
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpoa3qcv13 --quiet tests/conditionals/cond-with-defaults.cwl tests/conditionals/cond-job2.yaml
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/conditionals/cond-with-defaults.cwl:12:5: Source 'forward_reads' of type ["null", "File"] may
+                                                be incompatible
+tests/conditionals/cond-with-defaults.cwl:36:7:   with sink 'initial_file' of type {"type":
+                                                  "array", "items": "File"}
+                                                  source has linkMerge method merge_nested
+tests/conditionals/cond-with-defaults.cwl:13:5: Source 'reverse_reads' of type ["null", "File"] may
+                                                be incompatible
+tests/conditionals/cond-with-defaults.cwl:36:7:   with sink 'initial_file' of type {"type":
+                                                  "array", "items": "File"}
+                                                  source has linkMerge method merge_nested
+tests/conditionals/cond-with-defaults.cwl:14:5: Source 'single_reads' of type ["null", "File"] may
+                                                be incompatible
+tests/conditionals/cond-with-defaults.cwl:47:7:   with sink 'initial_file' of type "File"[0m
+Test [307/336] Confirm CommandInputParameter expression can receive a File object
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmplqof8uuz --quiet tests/secondaryfiles/rename-inputs.cwl tests/secondaryfiles/rename-inputs.yml
+Test [308/336] Confirm CommandOutputParameter expression can receive a File object
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp2jiwil28 --quiet tests/secondaryfiles/rename-outputs.cwl
+Test [309/336] test v1.0 workflow document that runs other versions
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp1dwceqwe --quiet tests/mixed-versions/wf-v10.cwl
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/mixed-versions/wf-v10.cwl:5:5:   Source 'inp1' of type "File" may be incompatible
+tests/mixed-versions/wf-v10.cwl:18:10:   with sink 'inp1' of type "File"
+tests/mixed-versions/wf-v10.cwl:5:5:   Source 'inp1' of type "File" may be incompatible
+tests/mixed-versions/wf-v10.cwl:22:10:   with sink 'inp1' of type "File"[0m
+Test [310/336] test v1.1 workflow document that runs other versions
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpjmmp1gj4 --quiet tests/mixed-versions/wf-v11.cwl
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/mixed-versions/wf-v11.cwl:5:5:   Source 'inp1' of type "File" may be incompatible
+tests/mixed-versions/wf-v11.cwl:15:10:   with sink 'inp1' of type "File"[0m
+Test [311/336] test v1.2 workflow document that runs other versions
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp36snqfku --quiet tests/mixed-versions/wf-v12.cwl
+[1;30mWARNING[0m [33mWorkflow checker warning:
+tests/mixed-versions/wf-v12.cwl:7:5:   Source 'inp1' of type "File" may be incompatible
+tests/mixed-versions/wf-v12.cwl:17:10:   with sink 'inp1' of type "File"[0m
+Test [312/336] test tool with v1.2 syntax marked as v1.0 (should fail)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpiat45vip --quiet tests/mixed-versions/invalid-tool-v10.cwl
+[1;30mERROR[0m [31mTool definition failed validation:
+tests/mixed-versions/invalid-tool-v10.cwl:1:1:   Object 'tests/mixed-versions/invalid-tool-v10.cwl'
+                                                is not valid because
+                                                  tried 'CommandLineTool' but
+tests/mixed-versions/invalid-tool-v10.cwl:3:1:       * the 'inputs' field is not valid because
+tests/mixed-versions/invalid-tool-v10.cwl:4:3:         item is invalid because
+tests/mixed-versions/invalid-tool-v10.cwl:6:5:           the 'secondaryFiles' field is not valid
+                                                        because
+                                                          tried array of <string or Expression> but
+tests/mixed-versions/invalid-tool-v10.cwl:7:9:               item is invalid because
+                                                              value is a CommentedMap, expected
+                                                              string or Expression
+tests/mixed-versions/invalid-tool-v10.cwl:9:1:       * the 'requirements' field is not valid because
+                                                      tried array of <InlineJavascriptRequirement
+                                                      or SchemaDefRequirement or DockerRequirement or
+                                                      SoftwareRequirement or InitialWorkDirRequirement or
+                                                      EnvVarRequirement or ShellCommandRequirement or
+                                                      ResourceRequirement or
+                                                      SubworkflowFeatureRequirement or
+                                                      ScatterFeatureRequirement or
+                                                      MultipleInputFeatureRequirement or
+                                                      StepInputExpressionRequirement> but
+tests/mixed-versions/invalid-tool-v10.cwl:10:3:         item is invalid because
+tests/mixed-versions/invalid-tool-v10.cwl:11:5:           the 'coresMin' field is not valid because
+                                                            - tried long but
+                                                              the value '0.5' is not long
+                                                            - tried string but
+                                                              the value is not string
+                                                            - tried Expression but
+                                                              value is a ScalarFloat but expected a
+                                                              string[0m
+Test [313/336] test tool with v1.2 syntax marked as v1.1 (should fail)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpolqpbycu --quiet tests/mixed-versions/invalid-tool-v11.cwl
+[1;30mERROR[0m [31mTool definition failed validation:
+tests/mixed-versions/invalid-tool-v11.cwl:1:1:   Object 'tests/mixed-versions/invalid-tool-v11.cwl'
+                                                is not valid because
+                                                  tried 'CommandLineTool' but
+tests/mixed-versions/invalid-tool-v11.cwl:9:1:       the 'requirements' field is not valid because
+                                                      tried array of <InlineJavascriptRequirement
+                                                      or SchemaDefRequirement or LoadListingRequirement
+                                                      or DockerRequirement or SoftwareRequirement or
+                                                      InitialWorkDirRequirement or EnvVarRequirement or
+                                                      ShellCommandRequirement or ResourceRequirement or
+                                                      WorkReuse or NetworkAccess or
+                                                      InplaceUpdateRequirement or ToolTimeLimit or
+                                                      SubworkflowFeatureRequirement or
+                                                      ScatterFeatureRequirement or
+                                                      MultipleInputFeatureRequirement or
+                                                      StepInputExpressionRequirement> but
+tests/mixed-versions/invalid-tool-v11.cwl:10:3:         item is invalid because
+tests/mixed-versions/invalid-tool-v11.cwl:11:5:           the 'coresMin' field is not valid because
+                                                            - tried long but
+                                                              the value '0.5' is not long
+                                                            - tried Expression but
+                                                              value is a ScalarFloat but expected a
+                                                              string[0m
+Test [314/336] test wf with v1.2 syntax marked as v1.0 (should fail)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpuwx1sz7j --quiet tests/mixed-versions/invalid-wf-v10.cwl
+[1;30mERROR[0m [31mTool definition failed validation:
+tests/mixed-versions/invalid-wf-v10.cwl:1:1:   Object 'tests/mixed-versions/invalid-wf-v10.cwl' is
+                                              not valid because
+                                                tried 'Workflow' but
+tests/mixed-versions/invalid-wf-v10.cwl:5:1:       * the 'inputs' field is not valid because
+tests/mixed-versions/invalid-wf-v10.cwl:6:3:         item is invalid because
+tests/mixed-versions/invalid-wf-v10.cwl:11:5:         the 'secondaryFiles' field is not valid
+                                                      because
+                                                        tried array of <string or Expression> but
+tests/mixed-versions/invalid-wf-v10.cwl:12:9:             item is invalid because
+                                                            value is a CommentedMap, expected
+                                                            string or Expression
+tests/mixed-versions/invalid-wf-v10.cwl:15:1:     * the 'steps' field is not valid because
+                                                    tried array of <WorkflowStep> but
+tests/mixed-versions/invalid-wf-v10.cwl:24:3:         item is invalid because
+tests/mixed-versions/invalid-wf-v10.cwl:27:5:           invalid field 'when', expected one of:
+                                                        'id', 'in', 'out', 'requirements', 'hints', 'label',
+                                                        'doc', 'run', 'scatter', 'scatterMethod'[0m
+Test [315/336] test wf with v1.2 syntax marked as v1.1 (should fail)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpf0ia7lim --quiet tests/mixed-versions/invalid-wf-v11.cwl
+[1;30mERROR[0m [31mTool definition failed validation:
+tests/mixed-versions/invalid-wf-v11.cwl:1:1:   Object 'tests/mixed-versions/invalid-wf-v11.cwl' is
+                                              not valid because
+                                                tried 'Workflow' but
+tests/mixed-versions/invalid-wf-v11.cwl:15:1:     the 'steps' field is not valid because
+                                                    tried array of <WorkflowStep> but
+tests/mixed-versions/invalid-wf-v11.cwl:24:3:         item is invalid because
+tests/mixed-versions/invalid-wf-v11.cwl:27:5:           invalid field 'when', expected one of:
+                                                        'id', 'label', 'doc', 'in', 'out', 'requirements',
+                                                        'hints', 'run', 'scatter', 'scatterMethod'[0m
+Test [316/336] test 1.2 wf that includes tools that are marked as v1.0 and v1.1 that contain v1.2 features (should fail)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpc1vvhac0 --quiet tests/mixed-versions/invalid-wf-v12.cwl
+[1;30mERROR[0m [31mTool definition failed initialization:
+Tool definition file:///conformance/cwl-v1.2-1.2.0/tests/mixed-versions/invalid-tool-v10.cwl failed validation:
+tests/mixed-versions/invalid-tool-v10.cwl:1:1:     Object 'tests/mixed-versions/invalid-tool-v10.cwl'
+                                                  is not valid because
+                                                    tried 'CommandLineTool' but
+tests/mixed-versions/invalid-tool-v10.cwl:3:1:         * the 'inputs' field is not valid because
+tests/mixed-versions/invalid-tool-v10.cwl:4:3:           item is invalid because
+tests/mixed-versions/invalid-tool-v10.cwl:6:5:             the 'secondaryFiles' field is not valid
+                                                          because
+                                                            tried array of <string or Expression> but
+tests/mixed-versions/invalid-tool-v10.cwl:7:9:                 item is invalid because
+                                                                value is a CommentedMap, expected
+                                                                string or Expression
+tests/mixed-versions/invalid-tool-v10.cwl:9:1:         * the 'requirements' field is not valid because
+                                                        tried array of <InlineJavascriptRequirement
+                                                        or SchemaDefRequirement or DockerRequirement or
+                                                        SoftwareRequirement or InitialWorkDirRequirement or
+                                                        EnvVarRequirement or ShellCommandRequirement or
+                                                        ResourceRequirement or
+                                                        SubworkflowFeatureRequirement or
+                                                        ScatterFeatureRequirement or
+                                                        MultipleInputFeatureRequirement or
+                                                        StepInputExpressionRequirement> but
+tests/mixed-versions/invalid-tool-v10.cwl:10:3:           item is invalid because
+tests/mixed-versions/invalid-tool-v10.cwl:11:5:             the 'coresMin' field is not valid because
+                                                              - tried long but
+                                                                the value '0.5' is not long
+                                                              - tried string but
+                                                                the value is not string
+                                                              - tried Expression but
+                                                                value is a ScalarFloat but expected a
+                                                                string[0m
+Test [317/336] cwloutput-nolimit: Test that loading from cwl.output.json isn't limited to 64k
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpiu3j76ru --quiet tests/loadContents/cwloutput-nolimit.cwl
+Test [318/336] loadContents-limit: Test that loadContents on a file larger than 64k fails
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpwpl9220g --quiet tests/loadContents/loadContents-limit.cwl tests/loadContents/input.yml
+[1;30mERROR[0m [31mWorkflow error, try again with --debug for more information:
+tests/loadContents/loadContents-limit.cwl:7:5: Reading
+                                               file:///conformance/cwl-v1.2-1.2.0/tests/loadContents/inp-filelist.txt
+                                               file is too large, loadContents limited to 65536
+                                               bytes[0m
+Test [319/336] iwd-nolimit: Test that InitialWorkDir contents can be bigger than 64k
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpzd6_2be_ --quiet tests/iwd/iwd-nolimit.cwl
+Test [320/336] iwd-jsondump1: Test dump object to JSON in InitialWorkDir file contents, no trailing newline
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpt6yd52_p --quiet tests/iwd/iwd-jsondump1.cwl
+Test [321/336] iwd-jsondump1-nl: Test dump object to JSON in InitialWorkDir file contents, with trailing newline
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpf9n3u8xv --quiet tests/iwd/iwd-jsondump1-nl.cwl
+Test [322/336] iwd-jsondump2: Test array to JSON in InitialWorkDir file contents, no trailing newline
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp240a_yja --quiet tests/iwd/iwd-jsondump2.cwl
+Test [323/336] iwd-jsondump2-nl: Test array to JSON in InitialWorkDir file contents, with trailing newline
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp2n5xsqa5 --quiet tests/iwd/iwd-jsondump2-nl.cwl
+Test [324/336] iwd-jsondump3: Test number to JSON in InitialWorkDir file contents, no trailing newline
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp0w9m5bzy --quiet tests/iwd/iwd-jsondump3.cwl
+Test [325/336] iwd-jsondump3-nl: Test number to JSON in InitialWorkDir file contents, with trailing newline
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp_nflieud --quiet tests/iwd/iwd-jsondump3-nl.cwl
+Test [326/336] iwd-passthrough1: Test InitialWorkDir file passthrough
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpcih5gi6f --quiet tests/iwd/iwd-passthrough1.cwl tests/loadContents/input.yml
+tests/iwd/iwd-passthrough1.cwl:17:3: object id 'tests/iwd/iwd-passthrough1.cwl#filelist' previously defined
+Test [327/336] iwd-passthrough2: Test InitialWorkDir file object is serialized to json
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpjv9a8869 --quiet tests/iwd/iwd-passthrough2.cwl tests/loadContents/input.yml
+Test [328/336] iwd-passthrough3: Test InitialWorkDir file object is passed through
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpl2ez2yux --quiet tests/iwd/iwd-passthrough3.cwl tests/loadContents/input.yml
+tests/iwd/iwd-passthrough3.cwl:10:3: object id 'tests/iwd/iwd-passthrough3.cwl#filelist' previously defined
+Test [329/336] iwd-passthrough4: Test InitialWorkDir file object is passed through
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpbbwo45c1 --quiet tests/iwd/iwd-passthrough4.cwl tests/loadContents/input.yml
+tests/iwd/iwd-passthrough4.cwl:9:3: object id 'tests/iwd/iwd-passthrough4.cwl#filelist' previously defined
+Test [330/336] iwd-fileobjs1: Test File and Directory object in listing
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp49z9r8gz --quiet tests/iwd/iwd-fileobjs1.cwl
+Test 330 failed: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp49z9r8gz --quiet tests/iwd/iwd-fileobjs1.cwl
+Test File and Directory object in listing
+Compare failure expected: {
+    "filelist": {
+        "basename": "inp-filelist.txt",
+        "checksum": "sha1$57f77b36009332d236b52b4beca77301b503b27c",
+        "class": "File",
+        "location": "inp-filelist.txt",
+        "size": 268866
+    },
+    "testdir": {
+        "basename": "testdir",
+        "class": "Directory",
+        "listing": [
+            {
+                "basename": "b",
+                "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709",
+                "class": "File",
+                "location": "b",
+                "size": 0
+            },
+            {
+                "basename": "c",
+                "class": "Directory",
+                "listing": [
+                    {
+                        "basename": "d",
+                        "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709",
+                        "class": "File",
+                        "location": "d",
+                        "size": 0
+                    }
+                ],
+                "location": "c"
+            },
+            {
+                "basename": "a",
+                "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709",
+                "class": "File",
+                "location": "a",
+                "size": 0
+            }
+        ],
+        "location": "testdir"
+    }
+}
+got: {
+    "filelist": {
+        "basename": "inp-filelist.txt",
+        "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709",
+        "class": "File",
+        "location": "file:///output/tmp49z9r8gz/inp-filelist.txt",
+        "path": "/output/tmp49z9r8gz/inp-filelist.txt",
+        "size": 0
+    },
+    "testdir": {
+        "basename": "testdir",
+        "class": "Directory",
+        "listing": [],
+        "location": "file:///output/tmp49z9r8gz/testdir",
+        "path": "/output/tmp49z9r8gz/testdir"
+    }
+}
+caused by: failed comparison for key 'filelist': expected: {
+    "basename": "inp-filelist.txt",
+    "checksum": "sha1$57f77b36009332d236b52b4beca77301b503b27c",
+    "class": "File",
+    "location": "inp-filelist.txt",
+    "size": 268866
+}
+got: {
+    "basename": "inp-filelist.txt",
+    "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709",
+    "class": "File",
+    "location": "file:///output/tmp49z9r8gz/inp-filelist.txt",
+    "path": "/output/tmp49z9r8gz/inp-filelist.txt",
+    "size": 0
+}
+caused by: Output file checksums do not match: actual 'sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709' is not equal to expected 'sha1$57f77b36009332d236b52b4beca77301b503b27c'
+Test [331/336] iwd-fileobjs2: Test File and Directory object in listing
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp2xhttrc3 --quiet tests/iwd/iwd-fileobjs2.cwl
+Test 331 failed: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp2xhttrc3 --quiet tests/iwd/iwd-fileobjs2.cwl
+Test File and Directory object in listing
+Compare failure expected: {
+    "filelist": {
+        "basename": "inp-filelist.txt",
+        "checksum": "sha1$57f77b36009332d236b52b4beca77301b503b27c",
+        "class": "File",
+        "location": "inp-filelist.txt",
+        "size": 268866
+    },
+    "testdir": {
+        "basename": "testdir",
+        "class": "Directory",
+        "listing": [
+            {
+                "basename": "b",
+                "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709",
+                "class": "File",
+                "location": "b",
+                "size": 0
+            },
+            {
+                "basename": "c",
+                "class": "Directory",
+                "listing": [
+                    {
+                        "basename": "d",
+                        "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709",
+                        "class": "File",
+                        "location": "d",
+                        "size": 0
+                    }
+                ],
+                "location": "c"
+            },
+            {
+                "basename": "a",
+                "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709",
+                "class": "File",
+                "location": "a",
+                "size": 0
+            }
+        ],
+        "location": "testdir"
+    }
+}
+got: {
+    "filelist": {
+        "basename": "inp-filelist.txt",
+        "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709",
+        "class": "File",
+        "location": "file:///output/tmp2xhttrc3/inp-filelist.txt",
+        "path": "/output/tmp2xhttrc3/inp-filelist.txt",
+        "size": 0
+    },
+    "testdir": {
+        "basename": "testdir",
+        "class": "Directory",
+        "listing": [],
+        "location": "file:///output/tmp2xhttrc3/testdir",
+        "path": "/output/tmp2xhttrc3/testdir"
+    }
+}
+caused by: failed comparison for key 'filelist': expected: {
+    "basename": "inp-filelist.txt",
+    "checksum": "sha1$57f77b36009332d236b52b4beca77301b503b27c",
+    "class": "File",
+    "location": "inp-filelist.txt",
+    "size": 268866
+}
+got: {
+    "basename": "inp-filelist.txt",
+    "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709",
+    "class": "File",
+    "location": "file:///output/tmp2xhttrc3/inp-filelist.txt",
+    "path": "/output/tmp2xhttrc3/inp-filelist.txt",
+    "size": 0
+}
+caused by: Output file checksums do not match: actual 'sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709' is not equal to expected 'sha1$57f77b36009332d236b52b4beca77301b503b27c'
+Test [332/336] iwd-container-entryname1: Test input mount locations when container required
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp2zlk5w4r --quiet tests/iwd/iwd-container-entryname1.cwl tests/loadContents/input.yml
+[1;30mERROR[0m [31mFound a queued exception, canceling outstanding futures[0m
+[1;30mERROR[0m [31mWaiting for canceled futures to finish[0m
+[1;30mERROR[0m [31mWorkflow or tool uses unsupported feature:
+Error: feature DockerRequirement.dockerOutputDirectory is not supported[0m
+Test [333/336] iwd-container-entryname2: Test input mount locations when no container (should fail)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmptcuymbqo --quiet tests/iwd/iwd-container-entryname2.cwl tests/loadContents/input.yml
+[1;30mERROR[0m [31mFound a queued exception, canceling outstanding futures[0m
+[1;30mERROR[0m [31mWaiting for canceled futures to finish[0m
+[1;30mERROR[0m [31mWorkflow error, try again with --debug for more information:
+("Error collecting output for parameter 'head': tests/iwd/iwd-container-entryname2.cwl:12:7: Did not find output
+                                                                                             file with glob
+                                                                                             pattern:
+                                                                                             '['head.txt']'.",
+                                                                                             {})[0m
+Test [334/336] iwd-container-entryname3: Test input mount locations when container is a hint (should fail)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpbmbu__im --quiet tests/iwd/iwd-container-entryname3.cwl tests/loadContents/input.yml
+[1;30mWARNING[0m [33mtests/iwd/iwd-container-entryname3.cwl:15:5: When 'dockerOutputDirectory' is declared, DockerRequirement should go in the 'requirements' section, not 'hints'.[0m
+[1;30mERROR[0m [31mWorkflow error, try again with --debug for more information:
+tests/iwd/iwd-container-entryname3.cwl:19:5: Name '/tmp2j3y7rpb/input/stuff.txt' at index 0 of
+                                             listing is invalid, name can only start with '/' when
+                                             DockerRequirement is in 'requirements'.[0m
+Test [335/336] iwd-container-entryname4: Must fail if entryname starts with ../
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp7if196tq --quiet tests/iwd/iwd-container-entryname4.cwl tests/loadContents/input.yml
+[1;30mERROR[0m [31mWorkflow error, try again with --debug for more information:
+tests/iwd/iwd-container-entryname4.cwl:14:5: Name '../input/stuff.txt' at index 0 of listing is
+                                             invalid, cannot start with '../'[0m
+Test [336/336] iwdr_dir_literal_real_file: Test directory literal containing a real file
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpp2d_u6_g --quiet tests/iwd/iwdr_dir_literal_real_file.cwl tests/loadContents/input.yml
+324 tests passed, 10 failures, 2 unsupported features
