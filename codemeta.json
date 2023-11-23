@@ -49,6 +49,7 @@
     "contributor": [
         {
             "@type": "Person",
+            "@id": "https://orcid.org/0009-0007-4519-0804",
             "givenName": "Emmanuel",
             "familyName": "Mathot",
             "affiliation": {
