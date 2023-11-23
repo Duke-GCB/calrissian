@@ -4,8 +4,8 @@ from setuptools import setup
 # version checking derived from https://github.com/levlaz/circleci.py/blob/master/setup.py
 from setuptools.command.install import install
 
-VERSION = '0.14.0'
-TAG_ENV_VAR = 'CIRCLE_TAG'
+VERSION = '0.15.0'
+TAG_ENV_VAR = 'GITHUB_REF_NAME'
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -32,11 +32,14 @@ setup(
     author_email='dan.leehr@duke.edu',
     description='CWL runner for Kubernetes',
     install_requires=[
-        'urllib3>=1.24.2,<1.27',
-        'kubernetes==10.0.1',
-        'cwltool==3.1.20230601100705',
-        'tenacity==5.1.1',
-        'importlib-metadata<5,>=0.23'
+        'urllib3==1.26.18',
+        'kubernetes==28.1.0',
+        'cwltool==3.1.20231114134824',
+        'tenacity==8.2.3',
+        'importlib-metadata==6.8.0',
+        'msgpack==1.0.7',
+        'typing-extensions==4.8.0',
+        'freezegun==1.2.2',
     ],
     test_suite='nose2.collector.collector',
     tests_require=['nose2'],

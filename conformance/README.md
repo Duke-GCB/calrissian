@@ -135,7 +135,7 @@ kubectl --namespace="$NAMESPACE_NAME" create -f StageConformanceTestsData.yaml
 Build a container that installs `calrissian` and `cwltest` with: 
 
 ```
-minikube image build .. -t ghcr.io/calrissian/conformance:latest -f conformance/Dockerfile.conformance 
+minikube image build .. -t conformance:latest -f conformance/Dockerfile.conformance 
 ```
 
 This will build `calrissian:conformance` from the current source tree and this image is available in the minikube cluster node.

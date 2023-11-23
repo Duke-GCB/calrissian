@@ -10,3 +10,4 @@ build
 *.egg
 *.whl
 *.zip
+env-calrissian*

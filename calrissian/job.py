@@ -25,6 +25,7 @@ import re
 from cwltool.utils import visit_class, ensure_writable
 
 log = logging.getLogger("calrissian.job")
+log_main = logging.getLogger("calrissian.main")
 
 
 K8S_UNSAFE_REGEX = re.compile('[^-a-z0-9]')
@@ -66,8 +67,8 @@ def read_yaml(filename):
 
 
 def quoted_arg_list(arg_list):
-        shouldquote = needs_shell_quoting_re.search
-        return [shellescape.quote(arg) if shouldquote(arg) else arg for arg in arg_list]
+    shouldquote = needs_shell_quoting_re.search
+    return [shellescape.quote(arg) if shouldquote(arg) else arg for arg in arg_list]
 
 
 def total_size(outputs):
@@ -428,6 +429,10 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         """
         Dumps the tool logs
         """
+        if not os.path.exists(runtime_context.tool_logs_basepath):
+            log.debug(f'os.makedirs({runtime_context.tool_logs_basepath})')
+            os.makedirs(runtime_context.tool_logs_basepath)
+            
         log_filename = os.path.join(runtime_context.tool_logs_basepath, f"{name}.log")
 
         log.info(f"Writing pod {name} logs to {log_filename}")
@@ -687,6 +692,12 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
 
     def run(self, runtimeContext, tmpdir_lock=None):
         
+        def get_pod_command(pod):
+            return pod['spec']['containers'][0]['args']
+            
+        def get_pod_name(pod):
+            return pod['spec']['containers'][0]['name']
+
         self.check_requirements(runtimeContext)
         
         if tmpdir_lock:
@@ -702,6 +713,9 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         pod = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
         self.execute_kubernetes_pod(pod) # analogous to _execute()
         completion_result = self.wait_for_kubernetes_pod()
+        if completion_result.exit_code != 0:
+            log_main.error(f"ERROR the command below failed in pod {get_pod_name(pod)}:")
+            log_main.error("\t" + " ".join(get_pod_command(pod)))
         self.finish(completion_result, runtimeContext)
     
     def setup_kubernetes(self, runtime_context):
