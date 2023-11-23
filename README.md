@@ -2,7 +2,7 @@
 
 CWL on Kubernetes
 
-[![CircleCI](https://circleci.com/gh/Duke-GCB/calrissian.svg?style=svg)](https://circleci.com/gh/Duke-GCB/calrissian)
+![Build Workflow](https://github.com/Duke-GCB/calrissian/actions/workflows/build.yaml/badge.svg)
 
 ## Overview
 
