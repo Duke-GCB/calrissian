@@ -1,0 +1,725 @@
+Test [1/197] cl_basic_generation: General test of command line generation
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpu6yzwxx9 --quiet v1.0/v1.0/bwa-mem-tool.cwl v1.0/v1.0/bwa-mem-job.json
+Test [2/197] nested_prefixes_arrays: Test nested prefixes with arrays
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpt1cin1lf --quiet v1.0/v1.0/binding-test.cwl v1.0/v1.0/bwa-mem-job.json
+Test [3/197] nested_cl_bindings: Test nested command line bindings
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpz6qmxl29 --quiet v1.0/v1.0/tmap-tool.cwl v1.0/v1.0/tmap-job.json
+Test [4/197] cl_optional_inputs_missing: Test command line with optional input (missing)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp8n68w7te --quiet v1.0/v1.0/cat1-testcli.cwl v1.0/v1.0/cat-job.json
+Test [5/197] cl_optional_bindings_provided: Test command line with optional input (provided)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpf_3e6tzr --quiet v1.0/v1.0/cat1-testcli.cwl v1.0/v1.0/cat-n-job.json
+Test [6/197] initworkdir_expreng_requirements: Test InitialWorkDirRequirement ExpressionEngineRequirement.engineConfig feature
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmphlip3kmr --quiet v1.0/v1.0/template-tool.cwl v1.0/v1.0/cat-job.json
+[1;30mWARNING[0m [33mv1.0/v1.0/template-tool.cwl:7:9: JSHINT:       exports = module.exports = _;
+v1.0/v1.0/template-tool.cwl:7:9: JSHINT:       ^
+v1.0/v1.0/template-tool.cwl:7:9: JSHINT: W117: 'exports' is not defined.[0m
+[1;30mWARNING[0m [33mv1.0/v1.0/template-tool.cwl:7:9: JSHINT:     exports._ = _;
+v1.0/v1.0/template-tool.cwl:7:9: JSHINT:     ^
+v1.0/v1.0/template-tool.cwl:7:9: JSHINT: W117: 'exports' is not defined.[0m
+[1;30mWARNING[0m [33mv1.0/v1.0/template-tool.cwl:7:9: JSHINT:     if (typeof module !== 'undefined' && module.exports) {
+v1.0/v1.0/template-tool.cwl:7:9: JSHINT:                                          ^
+v1.0/v1.0/template-tool.cwl:7:9: JSHINT: W117: 'module' is not defined.[0m
+[1;30mWARNING[0m [33mv1.0/v1.0/template-tool.cwl:7:9: JSHINT:       exports = module.exports = _;
+v1.0/v1.0/template-tool.cwl:7:9: JSHINT:                 ^
+v1.0/v1.0/template-tool.cwl:7:9: JSHINT: W117: 'module' is not defined.[0m
+[1;30mWARNING[0m [33mv1.0/v1.0/template-tool.cwl:7:9: JSHINT:     return setTimeout(function(){
+v1.0/v1.0/template-tool.cwl:7:9: JSHINT:            ^
+v1.0/v1.0/template-tool.cwl:7:9: JSHINT: W117: 'setTimeout' is not defined.[0m
+[1;30mWARNING[0m [33mv1.0/v1.0/template-tool.cwl:7:9: JSHINT:         timeout = setTimeout(later, remaining);
+v1.0/v1.0/template-tool.cwl:7:9: JSHINT:                   ^
+v1.0/v1.0/template-tool.cwl:7:9: JSHINT: W117: 'setTimeout' is not defined.[0m
+[1;30mWARNING[0m [33mv1.0/v1.0/template-tool.cwl:7:9: JSHINT:         timeout = setTimeout(later, wait - last);
+v1.0/v1.0/template-tool.cwl:7:9: JSHINT:                   ^
+v1.0/v1.0/template-tool.cwl:7:9: JSHINT: W117: 'setTimeout' is not defined.[0m
+[1;30mWARNING[0m [33mv1.0/v1.0/template-tool.cwl:7:9: JSHINT:       if (!timeout) timeout = setTimeout(later, wait);
+v1.0/v1.0/template-tool.cwl:7:9: JSHINT:                               ^
+v1.0/v1.0/template-tool.cwl:7:9: JSHINT: W117: 'setTimeout' is not defined.[0m
+[1;30mWARNING[0m [33mv1.0/v1.0/template-tool.cwl:7:9: JSHINT:         clearTimeout(timeout);
+v1.0/v1.0/template-tool.cwl:7:9: JSHINT:         ^
+v1.0/v1.0/template-tool.cwl:7:9: JSHINT: W117: 'clearTimeout' is not defined.[0m
+[1;30mWARNING[0m [33mv1.0/v1.0/template-tool.cwl:7:9: JSHINT:     root._ = previousUnderscore;
+v1.0/v1.0/template-tool.cwl:7:9: JSHINT:              ^
+v1.0/v1.0/template-tool.cwl:7:9: JSHINT: W117: 'previousUnderscore' is not defined.[0m
+[1;30mWARNING[0m [33mv1.0/v1.0/template-tool.cwl:7:9: JSHINT:   if (typeof define === 'function' && define.amd) {
+v1.0/v1.0/template-tool.cwl:7:9: JSHINT:                                       ^
+v1.0/v1.0/template-tool.cwl:7:9: JSHINT: W117: 'define' is not defined.[0m
+[1;30mWARNING[0m [33mv1.0/v1.0/template-tool.cwl:7:9: JSHINT:     define('underscore', [], function() {
+v1.0/v1.0/template-tool.cwl:7:9: JSHINT:     ^
+v1.0/v1.0/template-tool.cwl:7:9: JSHINT: W117: 'define' is not defined.[0m
+[1;30mWARNING[0m [33mv1.0/v1.0/template-tool.cwl:8:9: JSHINT: var t = function(s) { return _.template(s, {variable: 'data'})({'inputs': inputs}); };
+v1.0/v1.0/template-tool.cwl:8:9: JSHINT:                              ^
+v1.0/v1.0/template-tool.cwl:8:9: JSHINT: W117: '_' is not defined.[0m
+Test [7/197] stdout_redirect_docker: Test command execution in Docker with stdout redirection
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpj0c59e4w --quiet v1.0/v1.0/cat3-tool-docker.cwl v1.0/v1.0/cat-job.json
+Test [8/197] stdout_redirect_shortcut_docker: Test command execution in Docker with shortcut stdout redirection
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpr8kckz9u --quiet v1.0/v1.0/cat3-tool-shortcut.cwl v1.0/v1.0/cat-job.json
+Test [9/197] stdout_redirect_mediumcut_docker: Test command execution in Docker with mediumcut stdout redirection
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpdsc2n1dk --quiet v1.0/v1.0/cat3-tool-mediumcut.cwl v1.0/v1.0/cat-job.json
+Test [10/197] stderr_redirect: Test command line with stderr redirection
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpnt3ezz4r --quiet v1.0/v1.0/stderr.cwl v1.0/v1.0/empty.json
+Test [11/197] stderr_redirect_shortcut: Test command line with stderr redirection, brief syntax
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpcnrndpkg --quiet v1.0/v1.0/stderr-shortcut.cwl v1.0/v1.0/empty.json
+Test [12/197] stderr_redirect_mediumcut: Test command line with stderr redirection, named brief syntax
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpbyzzvhko --quiet v1.0/v1.0/stderr-mediumcut.cwl v1.0/v1.0/empty.json
+Test [13/197] stdinout_redirect_docker: Test command execution in Docker with stdin and stdout redirection
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpoorhmdeu --quiet v1.0/v1.0/cat4-tool.cwl v1.0/v1.0/cat-job.json
+Test [14/197] expression_any: Test default usage of Any in expressions.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpz8lssgk_ --quiet v1.0/v1.0/null-expression1-tool.cwl v1.0/v1.0/empty.json
+Test [15/197] expression_any_null: Test explicitly passing null to Any type inputs with default values.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpqwp6vtoz --quiet v1.0/v1.0/null-expression1-tool.cwl v1.0/v1.0/null-expression1-job.json
+Test [16/197] expression_any_string: Testing the string 'null' does not trip up an Any with a default value.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp074naqb1 --quiet v1.0/v1.0/null-expression1-tool.cwl v1.0/v1.0/null-expression2-job.json
+Test [17/197] expression_any_nodefaultany: Test Any without defaults cannot be unspecified.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpoiazenx0 --quiet v1.0/v1.0/null-expression2-tool.cwl v1.0/v1.0/empty.json
+[1;30mERROR[0m [31mWorkflow error, try again with --debug for more information:
+Invalid job input record:
+v1.0/v1.0/null-expression2-tool.cwl:9:3: Missing required input parameter 'i1'[0m
+Test [18/197] expression_any_null_nodefaultany: Test explicitly passing null to Any type without a default value.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpbxxbej4h --quiet v1.0/v1.0/null-expression2-tool.cwl v1.0/v1.0/null-expression1-job.json
+[1;30mERROR[0m [31mWorkflow error, try again with --debug for more information:
+Invalid job input record:
+v1.0/v1.0/null-expression2-tool.cwl:9:3: Missing required input parameter 'i1'[0m
+Test [19/197] expression_any_nullstring_nodefaultany: Testing the string 'null' does not trip up an Any without a default value.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmphf95q475 --quiet v1.0/v1.0/null-expression2-tool.cwl v1.0/v1.0/null-expression2-job.json
+Test [20/197] any_outputSource_compatibility: Testing Any type compatibility in outputSource
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpsxe4r9p3 --quiet v1.0/v1.0/any-type-compat.cwl v1.0/v1.0/any-type-job.json
+Test [21/197] stdinout_redirect: Test command execution in with stdin and stdout redirection
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpz23q08vv --quiet v1.0/v1.0/cat-tool.cwl v1.0/v1.0/cat-job.json
+Test [22/197] expression_parseint: Test ExpressionTool with Javascript engine
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpnuku229o --quiet v1.0/v1.0/parseInt-tool.cwl v1.0/v1.0/parseInt-job.json
+Test [23/197] expression_outputEval: Test outputEval to transform output
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpx8jbmvfm --quiet v1.0/v1.0/wc2-tool.cwl v1.0/v1.0/wc-job.json
+Test [24/197] wf_wc_parseInt: Test two step workflow with imported tools
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpxuy399xd --quiet v1.0/v1.0/count-lines1-wf.cwl v1.0/v1.0/wc-job.json
+Test [25/197] wf_wc_expressiontool: Test two step workflow with inline tools
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpmee_jvo_ --quiet v1.0/v1.0/count-lines2-wf.cwl v1.0/v1.0/wc-job.json
+Test [26/197] wf_wc_scatter: Test single step workflow with Scatter step
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpk2i7q1ko --quiet v1.0/v1.0/count-lines3-wf.cwl v1.0/v1.0/count-lines3-job.json
+Test [27/197] wf_wc_scatter_multiple_merge: Test single step workflow with Scatter step and two data links connected to same input, default merge behavior
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpunnkc483 --quiet v1.0/v1.0/count-lines4-wf.cwl v1.0/v1.0/count-lines4-job.json
+Test [28/197] wf_wc_scatter_multiple_nested: Test single step workflow with Scatter step and two data links connected to same input, nested merge behavior
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmph_rkml9w --quiet v1.0/v1.0/count-lines6-wf.cwl v1.0/v1.0/count-lines6-job.json
+Test [29/197] wf_wc_scatter_multiple_flattened: Test single step workflow with Scatter step and two data links connected to same input, flattened merge behavior
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpj6k2dgb6 --quiet v1.0/v1.0/count-lines7-wf.cwl v1.0/v1.0/count-lines6-job.json
+Test [30/197] wf_wc_nomultiple: Test that no MultipleInputFeatureRequirement is necessary when workflow step source is a single-item list
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpoz2f6oq0 --quiet v1.0/v1.0/count-lines13-wf.cwl v1.0/v1.0/count-lines6-job.json
+Test [31/197] wf_input_default_missing: Test workflow with default value for input parameter (missing)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp7sxvvy73 --quiet v1.0/v1.0/count-lines5-wf.cwl v1.0/v1.0/empty.json
+Test [32/197] wf_input_default_provided: Test workflow with default value for input parameter (provided)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp0pxgdv45 --quiet v1.0/v1.0/count-lines5-wf.cwl v1.0/v1.0/wc-job.json
+Test [33/197] wf_default_tool_default: Test that workflow defaults override tool defaults
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmppdv6s91f --quiet v1.0/v1.0/echo-wf-default.cwl v1.0/v1.0/empty.json
+Test [34/197] envvar_req: Test EnvVarRequirement
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpvjvwxysv --quiet v1.0/v1.0/env-tool1.cwl v1.0/v1.0/env-job.json
+Test [35/197] wf_scatter_single_param: Test workflow scatter with single scatter parameter
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpgi_b91cx --quiet v1.0/v1.0/scatter-wf1.cwl v1.0/v1.0/scatter-job1.json
+Test [36/197] wf_scatter_two_nested_crossproduct: Test workflow scatter with two scatter parameters and nested_crossproduct join method
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpl8kng3o9 --quiet v1.0/v1.0/scatter-wf2.cwl v1.0/v1.0/scatter-job2.json
+Test [37/197] wf_scatter_two_flat_crossproduct: Test workflow scatter with two scatter parameters and flat_crossproduct join method
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpjcis1wrj --quiet v1.0/v1.0/scatter-wf3.cwl#main v1.0/v1.0/scatter-job2.json
+Test [38/197] wf_scatter_two_dotproduct: Test workflow scatter with two scatter parameters and dotproduct join method
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpbjuvcsra --quiet v1.0/v1.0/scatter-wf4.cwl#main v1.0/v1.0/scatter-job2.json
+Test [39/197] wf_scatter_emptylist: Test workflow scatter with single empty list parameter
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmprqu86cfi --quiet v1.0/v1.0/scatter-wf1.cwl v1.0/v1.0/scatter-empty-job1.json
+[1;30mWARNING[0m [33m[job step step1] Notice: scattering over empty input in 'echo_in'.  All outputs will be empty.[0m
+Test [40/197] wf_scatter_nested_crossproduct_secondempty: Test workflow scatter with two scatter parameters and nested_crossproduct join method with second list empty
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpkkh8npfy --quiet v1.0/v1.0/scatter-wf2.cwl v1.0/v1.0/scatter-empty-job2.json
+[1;30mWARNING[0m [33m[job step step1] Notice: scattering over empty input in 'echo_in2'.  All outputs will be empty.[0m
+Test [41/197] wf_scatter_nested_crossproduct_firstempty: Test workflow scatter with two scatter parameters and nested_crossproduct join method with first list empty
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp439dn31j --quiet v1.0/v1.0/scatter-wf3.cwl#main v1.0/v1.0/scatter-empty-job3.json
+[1;30mWARNING[0m [33m[job step step1] Notice: scattering over empty input in 'echo_in1'.  All outputs will be empty.[0m
+Test [42/197] wf_scatter_flat_crossproduct_oneempty: Test workflow scatter with two scatter parameters, one of which is empty and flat_crossproduct join method
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpy91r_iqx --quiet v1.0/v1.0/scatter-wf3.cwl#main v1.0/v1.0/scatter-empty-job2.json
+[1;30mWARNING[0m [33m[job step step1] Notice: scattering over empty input in 'echo_in2'.  All outputs will be empty.[0m
+Test [43/197] wf_scatter_dotproduct_twoempty: Test workflow scatter with two empty scatter parameters and dotproduct join method
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp3r5lcygz --quiet v1.0/v1.0/scatter-wf4.cwl#main v1.0/v1.0/scatter-empty-job4.json
+[1;30mWARNING[0m [33m[job step step1] Notice: scattering over empty input in 'echo_in1', 'echo_in2'.  All outputs will be empty.[0m
+Test [44/197] any_input_param: Test Any type input parameter
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmphsyq81av --quiet v1.0/v1.0/echo-tool.cwl v1.0/v1.0/env-job.json
+Test [45/197] nested_workflow: Test nested workflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp053s6scq --quiet v1.0/v1.0/count-lines8-wf.cwl v1.0/v1.0/wc-job.json
+Test [46/197] requirement_priority: Test requirement priority
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpm4915w5f --quiet v1.0/v1.0/env-wf1.cwl v1.0/v1.0/env-job.json
+Test [47/197] requirement_override_hints: Test requirements override hints
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp5uiargo5 --quiet v1.0/v1.0/env-wf2.cwl v1.0/v1.0/env-job.json
+Test [48/197] requirement_workflow_steps: Test requirements on workflow steps
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpz5_ewb6c --quiet v1.0/v1.0/env-wf3.cwl v1.0/v1.0/env-job.json
+Test [49/197] step_input_default_value: Test default value on step input parameter
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpodggbjk5 --quiet v1.0/v1.0/count-lines9-wf.cwl v1.0/v1.0/empty.json
+Test [50/197] step_input_default_value_nosource: Test use default value on step input parameter with empty source
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpwhy1g8l0 --quiet v1.0/v1.0/count-lines11-wf.cwl v1.0/v1.0/empty.json
+[1;30mWARNING[0m [33mWorkflow checker warning:
+v1.0/v1.0/count-lines11-wf.cwl:6:3:  Source 'file1' of type ["null", "File"] may be incompatible
+v1.0/v1.0/count-lines11-wf.cwl:17:7:   with sink 'file1' of type "File"[0m
+Test [51/197] step_input_default_value_nullsource: Test use default value on step input parameter with null source
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpng738owh --quiet v1.0/v1.0/count-lines11-wf.cwl v1.0/v1.0/file1-null.json
+[1;30mWARNING[0m [33mWorkflow checker warning:
+v1.0/v1.0/count-lines11-wf.cwl:6:3:  Source 'file1' of type ["null", "File"] may be incompatible
+v1.0/v1.0/count-lines11-wf.cwl:17:7:   with sink 'file1' of type "File"[0m
+Test [52/197] step_input_default_value_overriden: Test default value on step input parameter overridden by provided source
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpen5x16ve --quiet v1.0/v1.0/count-lines11-wf.cwl v1.0/v1.0/cat-job.json
+[1;30mWARNING[0m [33mWorkflow checker warning:
+v1.0/v1.0/count-lines11-wf.cwl:6:3:  Source 'file1' of type ["null", "File"] may be incompatible
+v1.0/v1.0/count-lines11-wf.cwl:17:7:   with sink 'file1' of type "File"[0m
+Test [53/197] wf_simple: Test simple workflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmplrrumw50 --quiet v1.0/v1.0/revsort.cwl v1.0/v1.0/revsort-job.json
+Test [54/197] hints_unknown_ignored: Test unknown hints are ignored.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp_pzzil1w --quiet v1.0/v1.0/cat5-tool.cwl v1.0/v1.0/cat-job.json
+v1.0/v1.0/cat5-tool.cwl:12:3: Warning: checking item
+                              Warning:   Field 'class' contains undefined reference to
+                              'http://example.com/BlibberBlubberFakeRequirement'
+Test [55/197] initial_workdir_secondary_files_expr: Test InitialWorkDirRequirement linking input files and capturing secondaryFiles on input and output. Also tests the use of a variety of parameter references and expressions in the secondaryFiles field.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmps3pszo30 --quiet v1.0/v1.0/search.cwl#main v1.0/v1.0/search-job.json
+[1;30mWARNING[0m [33mWorkflow checker warning:
+v1.0/v1.0/search.cwl:107:13: Source 'result' of type "File" may be incompatible
+v1.0/v1.0/search.cwl:112:9:    with sink 'file' of type "File"[0m
+Test [56/197] rename: Test InitialWorkDirRequirement with expression in filename.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmprtyqi89a --quiet v1.0/v1.0/rename.cwl v1.0/v1.0/rename-job.json
+Test [57/197] initial_workdir_trailingnl: Test if trailing newline is present in file entry in InitialWorkDir
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmplntjk0wd --quiet v1.0/v1.0/iwdr-entry.cwl v1.0/v1.0/string-job.json
+Test [58/197] inline_expressions: Test inline expressions
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp2q18ax5v --quiet v1.0/v1.0/wc4-tool.cwl v1.0/v1.0/wc-job.json
+Test [59/197] schemadef_req_tool_param: Test SchemaDefRequirement definition used in tool parameter
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpias0wori --quiet v1.0/v1.0/schemadef-tool.cwl v1.0/v1.0/schemadef-job.json
+Test [60/197] schemadef_req_wf_param: Test SchemaDefRequirement definition used in workflow parameter
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpudp2gadt --quiet v1.0/v1.0/schemadef-wf.cwl v1.0/v1.0/schemadef-job.json
+Test [61/197] param_evaluation_noexpr: Test parameter evaluation, no support for JS expressions
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpkf6t4g1a --quiet v1.0/v1.0/params.cwl v1.0/v1.0/empty.json
+Test [62/197] param_evaluation_expr: Test parameter evaluation, with support for JS expressions
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp2awf_1uv --quiet v1.0/v1.0/params2.cwl v1.0/v1.0/empty.json
+Test [63/197] metadata: Test metadata
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpe2hapnza --quiet v1.0/v1.0/metadata.cwl v1.0/v1.0/cat-job.json
+Test [64/197] format_checking: Test simple format checking.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpg6k2kxpr --quiet v1.0/v1.0/formattest.cwl v1.0/v1.0/formattest-job.json
+Test [65/197] format_checking_subclass: Test format checking against ontology using subclassOf.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpy9qxitcq --quiet v1.0/v1.0/formattest2.cwl v1.0/v1.0/formattest2-job.json
+Test [66/197] format_checking_equivalentclass: Test format checking against ontology using equivalentClass.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpncb487z1 --quiet v1.0/v1.0/formattest3.cwl v1.0/v1.0/formattest2-job.json
+Test [67/197] output_secondaryfile_optional: Test optional output file and optional secondaryFile on output.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmptmmpik2u --quiet v1.0/v1.0/optional-output.cwl v1.0/v1.0/cat-job.json
+Test [68/197] valuefrom_ignored_null: Test that valueFrom is ignored when the parameter is null
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpavl6i4v6 --quiet v1.0/v1.0/vf-concat.cwl v1.0/v1.0/empty.json
+Test [69/197] valuefrom_secondexpr_ignored: Test that second expression in concatenated valueFrom is not ignored
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpcq_5o2ao --quiet v1.0/v1.0/vf-concat.cwl v1.0/v1.0/cat-job.json
+Test [70/197] valuefrom_wf_step: Test valueFrom on workflow step.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpwewvri6y --quiet v1.0/v1.0/step-valuefrom-wf.cwl v1.0/v1.0/step-valuefrom-wf.json
+Test [71/197] valuefrom_wf_step_multiple: Test valueFrom on workflow step with multiple sources
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpqfz_61l1 --quiet v1.0/v1.0/step-valuefrom2-wf.cwl v1.0/v1.0/step-valuefrom-job.json
+Test [72/197] valuefrom_wf_step_other: Test valueFrom on workflow step referencing other inputs
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpe9mk1xrm --quiet v1.0/v1.0/step-valuefrom3-wf.cwl v1.0/v1.0/step-valuefrom-job.json
+Test [73/197] record_output_binding: Test record type output binding.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp9jmg70ll --quiet v1.0/v1.0/record-output.cwl v1.0/v1.0/record-output-job.json
+Test [74/197] docker_json_output_path: Test support for reading cwl.output.json when running in a Docker container and just 'path' is provided.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpi503cg18 --quiet v1.0/v1.0/test-cwl-out.cwl v1.0/v1.0/empty.json
+Test [75/197] docker_json_output_location: Test support for reading cwl.output.json when running in a Docker container and just 'location' is provided.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp8l6grtwl --quiet v1.0/v1.0/test-cwl-out2.cwl v1.0/v1.0/empty.json
+Test [76/197] multiple_glob_expr_list: Test support for returning multiple glob patterns from expression
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp7fcbsef9 --quiet v1.0/v1.0/glob-expr-list.cwl v1.0/v1.0/abc.json
+Test [77/197] wf_scatter_oneparam_valuefrom: Test workflow scatter with single scatter parameter and two valueFrom on step input (first and current el)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp8f850dk8 --quiet v1.0/v1.0/scatter-valuefrom-wf1.cwl v1.0/v1.0/scatter-valuefrom-job1.json
+Test [78/197] wf_scatter_twoparam_nested_crossproduct_valuefrom: Test workflow scatter with two scatter parameters and nested_crossproduct join method and valueFrom on step input
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmps5kv9n96 --quiet v1.0/v1.0/scatter-valuefrom-wf2.cwl v1.0/v1.0/scatter-valuefrom-job2.json
+Test [79/197] wf_scatter_twoparam_flat_crossproduct_valuefrom: Test workflow scatter with two scatter parameters and flat_crossproduct join method and valueFrom on step input
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpep__ktns --quiet v1.0/v1.0/scatter-valuefrom-wf3.cwl#main v1.0/v1.0/scatter-valuefrom-job2.json
+Test [80/197] wf_scatter_twoparam_dotproduct_valuefrom: Test workflow scatter with two scatter parameters and dotproduct join method and valueFrom on step input
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpkpuepe0f --quiet v1.0/v1.0/scatter-valuefrom-wf4.cwl#main v1.0/v1.0/scatter-valuefrom-job2.json
+Test [81/197] wf_scatter_oneparam_valuefrom_twice_current_el: Test workflow scatter with single scatter parameter and two valueFrom on step input (current el twice)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpz8wtkz_l --quiet v1.0/v1.0/scatter-valuefrom-wf5.cwl v1.0/v1.0/scatter-valuefrom-job1.json
+Test [82/197] wf_scatter_oneparam_valueFrom: Test valueFrom eval on scattered input parameter
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmppwmra84l --quiet v1.0/v1.0/scatter-valuefrom-wf6.cwl v1.0/v1.0/scatter-valuefrom-job3.json
+Test [83/197] wf_two_inputfiles_namecollision: Test workflow two input files with same name.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpdza8tbkf --quiet v1.0/v1.0/conflict-wf.cwl#collision v1.0/v1.0/conflict-job.json
+Test [84/197] directory_input_param_ref: Test directory input with parameter reference
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpgp2ct_uk --quiet v1.0/v1.0/dir.cwl v1.0/v1.0/dir-job.yml
+Test [85/197] directory_input_docker: Test directory input in Docker
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp7hl7tbca --quiet v1.0/v1.0/dir2.cwl v1.0/v1.0/dir-job.yml
+Test [86/197] directory_output: Test directory output
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmphyl3q10z --quiet v1.0/v1.0/dir3.cwl v1.0/v1.0/dir3-job.yml
+Test [87/197] directory_secondaryfiles: Test directories in secondaryFiles
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpmfegzt5n --quiet v1.0/v1.0/dir4.cwl v1.0/v1.0/dir4-job.yml
+Test [88/197] dynamic_initial_workdir: Test dynamic initial work dir
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpn3emzq7o --quiet v1.0/v1.0/dir5.cwl v1.0/v1.0/dir-job.yml
+Test [89/197] writable_stagedfiles: Test writable staged files.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp568reei_ --quiet v1.0/v1.0/stagefile.cwl v1.0/v1.0/stagefile-job.yml
+Test [90/197] input_file_literal: Test file literal as input
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpp9x6qql4 --quiet v1.0/v1.0/cat3-tool.cwl v1.0/v1.0/file-literal.yml
+Test [91/197] initial_workdir_expr: Test expression in InitialWorkDir listing
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpvbxgpnfs --quiet v1.0/v1.0/linkfile.cwl v1.0/v1.0/arguments-job.yml
+Test [92/197] nameroot_nameext_stdout_expr: Test nameroot/nameext expression in arguments, stdout
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpa3ssjst2 --quiet v1.0/v1.0/nameroot.cwl v1.0/v1.0/wc-job.json
+Test [93/197] input_dir_inputbinding: Test directory input with inputBinding
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp2pwh9u0g --quiet v1.0/v1.0/dir6.cwl v1.0/v1.0/dir-job.yml
+Test [94/197] cl_gen_arrayofarrays: Test command line generation of array-of-arrays
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp06omolnd --quiet v1.0/v1.0/nested-array.cwl v1.0/v1.0/nested-array-job.yml
+Test [95/197] env_home_tmpdir: Test $HOME and $TMPDIR are set correctly
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpkhgekm03 --quiet v1.0/v1.0/envvar.cwl v1.0/v1.0/empty.json
+Test [96/197] env_home_tmpdir_docker: Test $HOME and $TMPDIR are set correctly in Docker
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpccv1ylgc --quiet v1.0/v1.0/envvar2.cwl v1.0/v1.0/empty.json
+Test [97/197] expressionlib_tool_wf_override: Test that expressionLib requirement of individual tool step overrides expressionLib of workflow.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp27s4xyho --quiet v1.0/v1.0/js-expr-req-wf.cwl#wf v1.0/v1.0/empty.json
+Test [98/197] initial_workdir_output: Test output of InitialWorkDir
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpjapsl1cg --quiet v1.0/v1.0/initialworkdirrequirement-docker-out.cwl v1.0/v1.0/initialworkdirrequirement-docker-out-job.json
+Test [99/197] embedded_subworkflow: Test embedded subworkflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpbw4nmlee --quiet v1.0/v1.0/count-lines10-wf.cwl v1.0/v1.0/wc-job.json
+Test [100/197] filesarray_secondaryfiles: Test secondaryFiles on array of files.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp3tdf3rb0 --quiet v1.0/v1.0/docker-array-secondaryfiles.cwl v1.0/v1.0/docker-array-secondaryfiles-job.json
+Test [101/197] exprtool_directory_literal: Test directory literal output created by ExpressionTool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp6sq9_mc1 --quiet v1.0/v1.0/dir7.cwl v1.0/v1.0/dir7.yml
+Test [102/197] exprtool_file_literal: Test file literal output created by ExpressionTool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpjcfqkyvx --quiet v1.0/v1.0/file-literal-ex.cwl v1.0/v1.0/empty.json
+Test [103/197] dockeroutputdir: Test dockerOutputDirectory
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmptrkkbmer --quiet v1.0/v1.0/docker-output-dir.cwl v1.0/v1.0/empty.json
+[1;30mERROR[0m [31mFound a queued exception, canceling outstanding futures[0m
+[1;30mERROR[0m [31mWaiting for canceled futures to finish[0m
+[1;30mERROR[0m [31mWorkflow or tool uses unsupported feature:
+Error: feature DockerRequirement.dockerOutputDirectory is not supported[0m
+Test [104/197] hints_import: Test hints with $import
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpp3tiaevv --quiet v1.0/v1.0/imported-hint.cwl v1.0/v1.0/empty.json
+Test [105/197] default_path_notfound_warning: Test warning instead of error when default path is not found
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmple9f17dw --quiet v1.0/v1.0/default_path.cwl v1.0/v1.0/default_path_job.yml
+Test [106/197] inlinejs_req_expressions: Test InlineJavascriptRequirement with multiple expressions in the same tool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpbehti6ft --quiet v1.0/v1.0/inline-js.cwl v1.0/v1.0/empty.json
+Test [107/197] input_dir_recurs_copy_writable: Test if a writable input directory is recursively copied and writable
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpaqe7aili --quiet v1.0/v1.0/recursive-input-directory.cwl v1.0/v1.0/recursive-input-directory.yml
+Test [108/197] null_missing_params: Test that missing parameters are null (not undefined) in expression
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpkenxy1k4 --quiet v1.0/v1.0/null-defined.cwl v1.0/v1.0/empty.json
+Test [109/197] param_notnull_expr: Test that provided parameter is not null in expression
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpf6rymae9 --quiet v1.0/v1.0/null-defined.cwl v1.0/v1.0/cat-job.json
+Test [110/197] wf_compound_doc: Test compound workflow document
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp5eri02_x --quiet v1.0/v1.0/revsort-packed.cwl#main v1.0/v1.0/revsort-job.json
+Test [111/197] nameroot_nameext_generated: Test that nameroot and nameext are generated from basename at execution time by the runner
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp4csk2zc4 --quiet v1.0/v1.0/basename-fields-test.cwl v1.0/v1.0/basename-fields-job.yml
+Test [112/197] initialworkpath_output: Test that file path in $(inputs) for initialworkdir is in $(outdir).
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpxwwsf53b --quiet v1.0/v1.0/initialwork-path.cwl v1.0/v1.0/wc-job.json
+Test [113/197] wf_scatter_twopar_oneinput_flattenedmerge: Test single step workflow with Scatter step and two data links connected to same input, flattened merge behavior. Workflow inputs are set as list
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpa0zbk8_d --quiet v1.0/v1.0/count-lines12-wf.cwl v1.0/v1.0/count-lines6-job.json
+Test [114/197] wf_multiplesources_multipletypes: Test step input with multiple sources with multiple types
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpkzw8291g --quiet v1.0/v1.0/sum-wf.cwl v1.0/v1.0/sum-job.json
+Test [115/197] shelldir_notinterpreted: Test that shell directives are not interpreted.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpwoiss8_o --quiet v1.0/v1.0/shellchar.cwl v1.0/v1.0/empty.json
+Test [116/197] shelldir_quoted: Test that shell directives are quoted.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp27t3cwsl --quiet v1.0/v1.0/shellchar2.cwl v1.0/v1.0/empty.json
+Test [117/197] initial_workdir_empty_writable: Test empty writable dir with InitialWorkDirRequirement
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpaqj8hz6z --quiet v1.0/v1.0/writable-dir.cwl v1.0/v1.0/empty.json
+Test [118/197] initial_workdir_empty_writable_docker: Test empty writable dir with InitialWorkDirRequirement inside Docker
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpxt9hfhoa --quiet v1.0/v1.0/writable-dir-docker.cwl v1.0/v1.0/empty.json
+Test [119/197] dynamic_resreq_inputs: Test dynamic resource reqs referencing inputs
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpsi7blyfv --quiet v1.0/v1.0/dynresreq.cwl v1.0/v1.0/dynresreq-job.yaml
+Test [120/197] fileliteral_input_docker: Test file literal as input without Docker
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpocmq9oqq --quiet v1.0/v1.0/cat3-nodocker.cwl v1.0/v1.0/file-literal.yml
+Test [121/197] outputbinding_glob_sorted: Test that OutputBinding.glob is sorted as specified by POSIX
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpdpwrnonq --quiet v1.0/v1.0/glob_test.cwl v1.0/v1.0/empty.json
+Test [122/197] initialworkdir_nesteddir: Test InitialWorkDirRequirement with a nested directory structure from another step
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp77ib00xn --quiet v1.0/v1.0/iwdr_with_nested_dirs.cwl v1.0/v1.0/empty.json
+Test [123/197] booleanflags_cl_noinputbinding: Test that boolean flags do not appear on command line if inputBinding is empty and not null
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmplg6k3fnu --quiet v1.0/v1.0/bool-empty-inputbinding.cwl v1.0/v1.0/bool-empty-inputbinding-job.json
+Test [124/197] expr_reference_self_noinput: Test that expression engine does not fail to evaluate reference to self with unprovided input
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpuu2heum8 --quiet v1.0/v1.0/stage-unprovided-file.cwl v1.0/v1.0/empty.json
+Test [125/197] success_codes: Test successCodes
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpjhej2t71 --quiet v1.0/v1.0/exit-success.cwl v1.0/v1.0/empty.json
+Test [126/197] dynamic_resreq_wf: Test simple workflow with a dynamic resource requirement
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmps8rtwx9w --quiet v1.0/v1.0/dynresreq-workflow.cwl v1.0/v1.0/dynresreq-job.yaml
+Test [127/197] cl_empty_array_input: Test that empty array input does not add anything to command line
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp_q3lhypi --quiet v1.0/v1.0/empty-array-input.cwl v1.0/v1.0/empty-array-job.json
+Test [128/197] resreq_step_overrides_wf: Test that ResourceRequirement on a step level redefines requirement on the workflow level
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmplal1v2v5 --quiet v1.0/v1.0/steplevel-resreq.cwl v1.0/v1.0/empty.json
+Test [129/197] valuefrom_constant_overrides_inputs: Test valueFrom with constant value overriding provided array inputs
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp5mfhk16v --quiet v1.0/v1.0/valueFrom-constant.cwl v1.0/v1.0/array-of-strings-job.yml
+Test [130/197] dynamic_resreq_filesizes: Test dynamic resource reqs referencing the size of Files inside a Directory
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpoigknylo --quiet v1.0/v1.0/dynresreq-dir.cwl v1.0/v1.0/dynresreq-dir-job.yaml
+Test [131/197] wf_step_connect_undeclared_param: Test that it is not an error to connect a parameter to a workflow step, even if the parameter doesn't appear in the `run` process inputs.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpkykvxdkg --quiet v1.0/v1.0/pass-unconnected.cwl v1.0/v1.0/empty.json
+[1;30mWARNING[0m [33mWorkflow checker warning:
+v1.0/v1.0/pass-unconnected.cwl:18:7: 'in2' is not an input parameter of
+                                     file:///conformance/common-workflow-language-1.0.2/v1.0/v1.0/echo-tool.cwl,
+                                     expected in[0m
+Test [132/197] wf_step_access_undeclared_param: Test that parameters that don't appear in the `run` process inputs are not present in the input object used to run the tool.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp204z8nie --quiet v1.0/v1.0/fail-unconnected.cwl v1.0/v1.0/empty.json
+[1;30mWARNING[0m [33mWorkflow checker warning:
+v1.0/v1.0/fail-unconnected.cwl:18:7: 'in2' is not an input parameter of
+                                     file:///conformance/common-workflow-language-1.0.2/v1.0/v1.0/fail-unspecified-input.cwl,
+                                     expected in[0m
+[1;30mERROR[0m [31mSyntax error in parameter reference 'inputs.in2': inputs does not contain key 'in2'. This could be due to using Javascript code without specifying InlineJavascriptRequirement.[0m
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/cwltool/expression.py", line 393, in do_eval
+    return interpolate(
+  File "/usr/local/lib/python3.10/site-packages/cwltool/expression.py", line 297, in interpolate
+    e = evaluator(
+  File "/usr/local/lib/python3.10/site-packages/cwltool/expression.py", line 243, in evaluator
+    raise JavascriptException(
+cwltool.sandboxjs.JavascriptException: Syntax error in parameter reference 'inputs.in2': inputs does not contain key 'in2'. This could be due to using Javascript code without specifying InlineJavascriptRequirement.
+[1;30mERROR[0m [31mException on step 'step1'[0m
+[1;30mERROR[0m [31m[step step1] Cannot make job: v1.0/v1.0/fail-unspecified-input.cwl:16:33: Expression evaluation error:
+v1.0/v1.0/fail-unspecified-input.cwl:16:33: Syntax error in parameter reference 'inputs.in2': inputs does not contain key 'in2'. This could be due to using Javascript code without specifying InlineJavascriptRequirement.[0m
+[1;30mWARNING[0m [33mFinal process status is permanentFail[0m
+Test [133/197] env_home_tmpdir_docker: Test $HOME and $TMPDIR are set correctly in Docker without using return code
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp25u18jad --quiet v1.0/v1.0/envvar3.cwl v1.0/v1.0/empty.json
+Test [134/197] wf_scatter_oneparam_valuefrom_inputs: Test workflow scatter with single scatter parameter and two valueFrom using $inputs (first and current el)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpm5byye8o --quiet v1.0/v1.0/scatter-valuefrom-inputs-wf1.cwl v1.0/v1.0/scatter-valuefrom-job1.json
+Test [135/197] packed_import_schema: SchemaDefRequirement with $import, and packed
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmplx7k_jua --quiet v1.0/v1.0/import_schema-def_packed.cwl#main v1.0/v1.0/import_schema-def_job.yml
+Test [136/197] job_input_secondary_subdirs: Test specifying secondaryFiles in subdirectories of the job input document.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp_nuwhctf --quiet v1.0/v1.0/dir4.cwl v1.0/v1.0/dir4-subdir-1-job.yml
+Test [137/197] job_input_subdir_primary_and_secondary_subdirs: Test specifying secondaryFiles in same subdirectory of the job input as the primary input file.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp7ot1_yvq --quiet v1.0/v1.0/dir4.cwl v1.0/v1.0/dir4-subdir-2-job.yml
+Test [138/197] scatter_embedded_subworkflow: Test simple scatter over an embedded subworkflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp0gz4cb6k --quiet v1.0/v1.0/count-lines18-wf.cwl v1.0/v1.0/count-lines3-job.json
+Test [139/197] scatter_multi_input_embedded_subworkflow: Test simple multiple input scatter over an embedded subworkflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpy_qu00y4 --quiet v1.0/v1.0/count-lines14-wf.cwl v1.0/v1.0/count-lines4-job.json
+Test [140/197] workflow_embedded_subworkflow_embedded_subsubworkflow: Test twice nested subworkflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp8l090xp0 --quiet v1.0/v1.0/count-lines15-wf.cwl v1.0/v1.0/wc-job.json
+Test [141/197] workflow_embedded_subworkflow_with_tool_and_subsubworkflow: Test subworkflow of mixed depth with tool first
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp74p8ok4o --quiet v1.0/v1.0/count-lines16-wf.cwl v1.0/v1.0/wc-job.json
+Test [142/197] workflow_embedded_subworkflow_with_subsubworkflow_and_tool: Test subworkflow of mixed depth with tool after
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp6v_0ui0v --quiet v1.0/v1.0/count-lines17-wf.cwl v1.0/v1.0/wc-job.json
+Test [143/197] workflow_records_inputs_and_outputs: Test record type inputs to and outputs from workflows.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpxzrgu8_z --quiet v1.0/v1.0/record-output-wf.cwl v1.0/v1.0/record-output-job.json
+Test [144/197] workflow_integer_input: Test integer workflow input and outputs
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpd10zcozx --quiet v1.0/v1.0/io-int-wf.cwl v1.0/v1.0/io-int.json
+Test [145/197] workflow_integer_input_optional_specified: Test optional integer workflow inputs (specified)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp651o6cxd --quiet v1.0/v1.0/io-int-optional-wf.cwl v1.0/v1.0/io-int.json
+Test [146/197] workflow_integer_input_optional_unspecified: Test optional integer workflow inputs (unspecified)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpxklljqrl --quiet v1.0/v1.0/io-int-optional-wf.cwl v1.0/v1.0/empty.json
+Test [147/197] workflow_integer_input_default_specified: Test default integer workflow inputs (specified)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpefy38bfp --quiet v1.0/v1.0/io-int-default-wf.cwl v1.0/v1.0/io-int.json
+Test [148/197] workflow_integer_input_default_unspecified: Test default integer workflow inputs (unspecified)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpcst8j4u6 --quiet v1.0/v1.0/io-int-default-wf.cwl v1.0/v1.0/empty.json
+Test [149/197] workflow_integer_input_default_and_tool_integer_input_default: Test default integer tool and workflow inputs (unspecified)
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpzgghn0so --quiet v1.0/v1.0/io-int-default-tool-and-wf.cwl v1.0/v1.0/empty.json
+Test [150/197] workflow_file_input_default_unspecified: Test File input with default unspecified to workflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpgxqs994t --quiet v1.0/v1.0/io-file-default-wf.cwl v1.0/v1.0/empty.json
+Test [151/197] workflow_file_input_default_specified: Test File input with default specified to workflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpnf_mwk2a --quiet v1.0/v1.0/io-file-default-wf.cwl v1.0/v1.0/default_path_job.yml
+Test [152/197] clt_optional_union_input_file_or_files_with_array_of_one_file_provided: Test input union type or File or File array to a tool with one file in array specified.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmptwk6ptft --quiet v1.0/v1.0/io-file-or-files.cwl v1.0/v1.0/job-input-array-one-empty-file.json
+Test [153/197] clt_optional_union_input_file_or_files_with_many_files_provided: Test input union type or File or File array to a tool with a few files in array specified.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp0uwu69se --quiet v1.0/v1.0/io-file-or-files.cwl v1.0/v1.0/job-input-array-few-files.json
+Test [154/197] clt_optional_union_input_file_or_files_with_single_file_provided: Test input union type or File or File array to a tool with one file specified.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmphwjnw96z --quiet v1.0/v1.0/io-file-or-files.cwl v1.0/v1.0/job-input-one-file.json
+Test [155/197] clt_optional_union_input_file_or_files_with_nothing_provided: Test input union type or File or File array to a tool with null specified.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpc5y019lc --quiet v1.0/v1.0/io-file-or-files.cwl v1.0/v1.0/job-input-null.json
+Test [156/197] clt_any_input_with_integer_provided: Test Any parameter with integer input to a tool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp4kve_pqb --quiet v1.0/v1.0/io-any-1.cwl v1.0/v1.0/io-any-int.json
+Test [157/197] clt_any_input_with_string_provided: Test Any parameter with string input to a tool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpkuij6k7x --quiet v1.0/v1.0/io-any-1.cwl v1.0/v1.0/io-any-string.json
+Test [158/197] clt_any_input_with_file_provided: Test Any parameter with file input to a tool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpj359qtky --quiet v1.0/v1.0/io-any-1.cwl v1.0/v1.0/io-any-file.json
+Test [159/197] clt_any_input_with_mixed_array_provided: Test Any parameter with array input to a tool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpla1llq8o --quiet v1.0/v1.0/io-any-1.cwl v1.0/v1.0/io-any-array.json
+Test [160/197] clt_any_input_with_record_provided: Test Any parameter with record input to a tool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp6pl7wx47 --quiet v1.0/v1.0/io-any-1.cwl v1.0/v1.0/io-any-record.json
+Test [161/197] workflow_any_input_with_integer_provided: Test Any parameter with integer input to a workflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp9rr78qq2 --quiet v1.0/v1.0/io-any-wf-1.cwl v1.0/v1.0/io-any-int.json
+Test [162/197] workflow_any_input_with_string_provided: Test Any parameter with string input to a workflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp5eqefyyx --quiet v1.0/v1.0/io-any-wf-1.cwl v1.0/v1.0/io-any-string.json
+Test [163/197] workflow_any_input_with_file_provided: Test Any parameter with file input to a workflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpyu9ocdbl --quiet v1.0/v1.0/io-any-wf-1.cwl v1.0/v1.0/io-any-file.json
+Test [164/197] workflow_any_input_with_mixed_array_provided: Test Any parameter with array input to a workflow
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp95xp61he --quiet v1.0/v1.0/io-any-wf-1.cwl v1.0/v1.0/io-any-array.json
+Test [165/197] workflow_any_input_with_record_provided: Test Any parameter with record input to a tool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmphxqdlex4 --quiet v1.0/v1.0/io-any-wf-1.cwl v1.0/v1.0/io-any-record.json
+Test [166/197] workflow_union_default_input_unspecified: Test union type input to workflow with default unspecified
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpljrzhw8b --quiet v1.0/v1.0/io-union-input-default-wf.cwl v1.0/v1.0/empty.json
+Test [167/197] workflow_union_default_input_with_file_provided: Test union type input to workflow with default specified as file
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpxhwemaon --quiet v1.0/v1.0/io-union-input-default-wf.cwl v1.0/v1.0/io-any-file.json
+Test [168/197] workflowstep_valuefrom_string: Test valueFrom on workflow step from literal (string).
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpmvogq6uy --quiet v1.0/v1.0/step-valuefrom4-wf.cwl v1.0/v1.0/empty.json
+Test [169/197] workflowstep_valuefrom_file_basename: Test valueFrom on workflow step using basename.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpbpkb5_xj --quiet v1.0/v1.0/step-valuefrom5-wf.cwl v1.0/v1.0/wc-job.json
+Test [170/197] expression_tool_int_array_output: Test output arrays in a tool (with ints).
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp_dp1hpxr --quiet v1.0/v1.0/output-arrays-int.cwl v1.0/v1.0/output-arrays-int-job.json
+Test [171/197] workflowstep_int_array_input_output: Test output arrays in a workflow (with ints).
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmphwzqrf50 --quiet v1.0/v1.0/output-arrays-int-wf.cwl v1.0/v1.0/output-arrays-int-job.json
+Test [172/197] workflow_file_array_output: Test output arrays in a workflow (with Files).
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpc2xkbsd3 --quiet v1.0/v1.0/output-arrays-file-wf.cwl v1.0/v1.0/output-arrays-file-job.json
+Test [173/197] docker_entrypoint: Test Docker ENTRYPOINT usage
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpers__hrx --quiet v1.0/v1.0/docker-run-cmd.cwl v1.0/v1.0/empty.json
+[1;30mERROR[0m [31mFound a queued exception, canceling outstanding futures[0m
+[1;30mERROR[0m [31mWaiting for canceled futures to finish[0m
+[1;30mERROR[0m [31mWorkflow error, try again with --debug for more information:
+("Error collecting output for parameter 'cow': v1.0/v1.0/docker-run-cmd.cwl:14:7: Did not find output
+                                                                                  file with glob
+                                                                                  pattern:
+                                                                                  '['cow']'.", {})[0m
+Test 173 failed: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpers__hrx --quiet v1.0/v1.0/docker-run-cmd.cwl v1.0/v1.0/empty.json
+Test Docker ENTRYPOINT usage
+Returned non-zero
+Test [174/197] clt_file_size_property_with_empty_file: Test use of size in expressions for an empty file
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmps3bl6lm8 --quiet v1.0/v1.0/size-expression-tool.cwl v1.0/v1.0/job-input-array-one-empty-file.json
+Test [175/197] clt_file_size_property_with_multi_file: Test use of size in expressions for a few files
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpxejcejbj --quiet v1.0/v1.0/size-expression-tool.cwl v1.0/v1.0/job-input-array-few-files.json
+Test [176/197] any_without_defaults_unspecified_fails: Test Any without defaults, unspecified, should fail.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpdk5ggmc0 --quiet v1.0/v1.0/echo-tool.cwl v1.0/v1.0/null-expression-echo-job.json
+[1;30mERROR[0m [31mWorkflow error, try again with --debug for more information:
+Invalid job input record:
+v1.0/v1.0/echo-tool.cwl:9:3: Missing required input parameter 'in'[0m
+Test [177/197] any_without_defaults_specified_fails: Test Any without defaults, specified, should fail.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmptgyelaf7 --quiet v1.0/v1.0/echo-tool.cwl v1.0/v1.0/null-expression1-job.json
+[1;30mERROR[0m [31mWorkflow error, try again with --debug for more information:
+Invalid job input record:
+v1.0/v1.0/echo-tool.cwl:9:3: Missing required input parameter 'in'[0m
+Test [178/197] step_input_default_value_noexp: Test default value on step input parameter, no ExpressionTool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp56ik97co --quiet v1.0/v1.0/count-lines9-wf-noET.cwl v1.0/v1.0/empty.json
+Test [179/197] step_input_default_value_overriden_noexp: Test default value on step input parameter overridden by provided source, no ExpressionTool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp56_xgszg --quiet v1.0/v1.0/count-lines11-wf-noET.cwl v1.0/v1.0/cat-job.json
+[1;30mWARNING[0m [33mWorkflow checker warning:
+v1.0/v1.0/count-lines11-wf-noET.cwl:6:3:  Source 'file1' of type ["null", "File"] may be
+                                          incompatible
+v1.0/v1.0/count-lines11-wf-noET.cwl:17:7:   with sink 'file1' of type "File"[0m
+Test [180/197] nested_workflow_noexp: Test nested workflow, without ExpressionTool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpxl_dbx7e --quiet v1.0/v1.0/count-lines8-wf-noET.cwl v1.0/v1.0/wc-job.json
+Test [181/197] wf_multiplesources_multipletypes_noexp: Test step input with multiple sources with multiple types, without ExpressionTool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp5fuk5vq9 --quiet v1.0/v1.0/sum-wf-noET.cwl v1.0/v1.0/sum-job.json
+Test [182/197] dynamic_resreq_wf_optional_file_default: Within a workflow, test accessing the size attribute of an optional input File as part of a CommandLineTool's ResourceRequirement calculation. The CommandLineTool input has a default value (a local file) and the workflow nor the workflow step does not provide any value for this input.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpgb4f8q89 --quiet v1.0/v1.0/dynresreq-workflow-tooldefault.cwl v1.0/v1.0/empty.json
+[1;30mWARNING[0m [33mWorkflow checker warning:
+v1.0/v1.0/dynresreq-workflow-tooldefault.cwl:6:3:  Source 'special_file' of type ["null", "File"]
+                                                   may be incompatible
+v1.0/v1.0/dynresreq-workflow-tooldefault.cwl:15:7:   with sink 'special_file' of type "File"[0m
+Test [183/197] dynamic_resreq_wf_optional_file_step_default: Within a workflow, test accessing the size attribute of an optional input File as part of a CommandLineTool's ResourceRequirement calculation. The workflow step provides a default value (a local file) for this input and the workflow itself does not provide any value for this input.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpg6mb47jt --quiet v1.0/v1.0/dynresreq-workflow-stepdefault.cwl v1.0/v1.0/empty.json
+[1;30mWARNING[0m [33mWorkflow checker warning:
+v1.0/v1.0/dynresreq-workflow-stepdefault.cwl:6:3:  Source 'special_file' of type ["null", "File"]
+                                                   may be incompatible
+v1.0/v1.0/dynresreq-workflow-stepdefault.cwl:15:7:   with sink 'special_file' of type "File"[0m
+Test [184/197] dynamic_resreq_wf_optional_file_wf_default: Within a workflow, test accessing the size attribute of an optional input File as part of a CommandLineTool's ResourceRequirement calculation. The workflow itelf provides a default value (a local file) for this input.
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpffbeb5nj --quiet v1.0/v1.0/dynresreq-workflow-inputdefault.cwl v1.0/v1.0/empty.json
+Test [185/197] step_input_default_value_overriden_2nd_step: Test default value on step input parameter overridden by provided source. With passthrough first step
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp39xv0kf9 --quiet v1.0/v1.0/count-lines11-extra-step-wf.cwl v1.0/v1.0/cat-job.json
+[1;30mWARNING[0m [33mWorkflow checker warning:
+v1.0/v1.0/count-lines11-extra-step-wf.cwl:6:3:  Source 'file1' of type ["null", "File"] may be
+                                                incompatible
+v1.0/v1.0/count-lines11-extra-step-wf.cwl:17:7:   with sink 'file1' of type "File"[0m
+Test [186/197] step_input_default_value_overriden_2nd_step_noexp: Test default value on step input parameter overridden by provided source. With passthrough first step and no ExpressionTool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp4lc67w2h --quiet v1.0/v1.0/count-lines11-extra-step-wf-noET.cwl v1.0/v1.0/cat-job.json
+[1;30mWARNING[0m [33mWorkflow checker warning:
+v1.0/v1.0/count-lines11-extra-step-wf-noET.cwl:6:3:  Source 'file1' of type ["null", "File"] may be
+                                                     incompatible
+v1.0/v1.0/count-lines11-extra-step-wf-noET.cwl:17:7:   with sink 'file1' of type "File"[0m
+Test [187/197] step_input_default_value_overriden_2nd_step_null: Test default value on step input parameter overridden by provided source. With null producing first step
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp_xllsjdp --quiet v1.0/v1.0/count-lines11-null-step-wf.cwl v1.0/v1.0/empty.json
+Test [188/197] step_input_default_value_overriden_2nd_step_null_noexp: Test default value on step input parameter overridden by provided source. With null producing first step and no ExpressionTool
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp41ybtdgl --quiet v1.0/v1.0/count-lines11-null-step-wf-noET.cwl v1.0/v1.0/empty.json
+Test [189/197] stdin_from_directory_literal_with_local_file: Pipe to stdin from user provided local File via a Directory literal
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpsb0vnoam --quiet v1.0/v1.0/cat-from-dir.cwl v1.0/v1.0/cat-from-dir-job.yaml
+Test [190/197] stdin_from_directory_literal_with_literal_file: Pipe to stdin from literal File via a Directory literal
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpoe_2o_3p --quiet v1.0/v1.0/cat-from-dir.cwl v1.0/v1.0/cat-from-dir-with-literal-file.yaml
+Test [191/197] directory_literal_with_literal_file_nostdin: Test non-stdin reference to literal File via a Directory literal
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp7ivpjm48 --quiet v1.0/v1.0/cat3-from-dir.cwl v1.0/v1.0/cat-from-dir-with-literal-file.yaml
+Test [192/197] no_inputs_commandlinetool: Test CommandLineTool without inputs
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmptaln_li3 --quiet v1.0/v1.0/no-inputs-tool.cwl
+Test [193/197] no_outputs_commandlinetool: Test CommandLineTool without outputs
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmppr8vackp --quiet v1.0/v1.0/no-outputs-tool.cwl v1.0/v1.0/cat-job.json
+Test [194/197] no_inputs_workflow: Test Workflow without inputs
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmp1ocyp1w7 --quiet v1.0/v1.0/no-inputs-wf.cwl
+Test [195/197] no_outputs_workflow: Test Workflow without outputs
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpsn5kk2db --quiet v1.0/v1.0/no-outputs-wf.cwl v1.0/v1.0/cat-job.json
+Test [196/197] anonymous_enum_in_array: Test an anonymous enum inside an array inside a record
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpnn_106ud --quiet v1.0/v1.0/anon_enum_inside_array.cwl v1.0/v1.0/anon_enum_inside_array.yml
+Test [197/197] schema-def_anonymous_enum_in_array: Test an anonymous enum inside an array inside a record, SchemaDefRequirement
+
+Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpkoau27hd --quiet v1.0/v1.0/anon_enum_inside_array_inside_schemadef.cwl v1.0/v1.0/anon_enum_inside_array_inside_schemadef.yml
+Traceback (most recent call last):
+  File "/usr/local/bin/cwltest", line 8, in <module>
+    sys.exit(main())
+  File "/usr/local/lib/python3.10/site-packages/cwltest/main.py", line 236, in main
+    utils.generate_badges(args.badgedir, ntotal, npassed)
+  File "/usr/local/lib/python3.10/site-packages/cwltest/utils.py", line 132, in generate_badges
+    os.mkdir(badgedir)
+FileExistsError: [Errno 17] File exists: '/output/badges-1.0.2'
