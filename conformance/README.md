@@ -9,133 +9,136 @@ The manifests are ready for a minikube local cluster.
 
 ### Classes
 
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.0.2/workflow.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.0.2/command_line_tool.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.0.2/expression_tool.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.0.2/workflow.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.0.2/command_line_tool.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.0.2/expression_tool.json?icon=commonwl)
 
 ### Required features
 
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.0.2/required.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.0.2/required.json?icon=commonwl)
 
 ### Optional features
 
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.0.2/docker.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.0.2/env_var.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.0.2/initial_work_dir.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.0.2/inline_javascript.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.0.2/multiple_input.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.0.2/resource.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.0.2/scatter.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.0.2/schema_def.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.0.2/shell_command.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.0.2/step_input.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.0.2/step_input_expression.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.0.2/subworkflow.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.0.2/docker.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.0.2/env_var.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.0.2/initial_work_dir.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.0.2/inline_javascript.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.0.2/multiple_input.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.0.2/resource.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.0.2/scatter.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.0.2/schema_def.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.0.2/shell_command.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.0.2/step_input.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.0.2/step_input_expression.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.0.2/subworkflow.json?icon=commonwl)
 
 
 ## Conformance tests for CWL v1.1 for the latest release
 
 ### Classes
 
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.1.0/workflow.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.1.0/command_line_tool.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.1.0/expression_tool.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.1.0/workflow.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.1.0/command_line_tool.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.1.0/expression_tool.json?icon=commonwl)
 
 ### Required features
 
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.1.0/required.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.1.0/required.json?icon=commonwl)
 
 ### Optional features
 
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.1.0/docker.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.1.0/env_var.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.1.0/format_checking.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.1.0/initial_work_dir.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.1.0/inline_javascript.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.1.0/inplace_update.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.1.0/input_object_requirements.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.1.0/multiple_input.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.1.0/networkaccess.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.1.0/resource.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.1.0/scatter.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.1.0/schema_def.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.1.0/shell_command.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.1.0/step_input.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.1.0/step_input_expression.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.1.0/subworkflow.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.1.0/timelimit.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.1.0/docker.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.1.0/env_var.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.1.0/format_checking.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.1.0/initial_work_dir.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.1.0/inline_javascript.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.1.0/inplace_update.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.1.0/input_object_requirements.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.1.0/multiple_input.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.1.0/networkaccess.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.1.0/resource.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.1.0/scatter.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.1.0/schema_def.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.1.0/shell_command.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.1.0/step_input.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.1.0/step_input_expression.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.1.0/subworkflow.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.1.0/timelimit.json?icon=commonwl)
 
 
 ## Conformance tests for CWL v1.2.0 for the latest release
 
 ### Classes
 
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.2.0/workflow.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.2.0/command_line_tool.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.2.0/expression_tool.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.2.0/workflow.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.2.0/command_line_tool.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.2.0/expression_tool.json?icon=commonwl)
 
 ### Required features
 
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.2.0/required.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.2.0/required.json?icon=commonwl)
 
 ### Optional features
 
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.2.0/conditional.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.2.0/docker.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.2.0/env_var.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.2.0/format_checking.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.2.0/initial_work_dir.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.2.0/inline_javascript.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.2.0/inplace_update.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.2.0/input_object_requirements.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.2.0/multiple.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.2.0/multiple_input.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.2.0/networkaccess.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.2.0/resource.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.2.0/scatter.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.2.0/schema_def.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.2.0/secondary_files.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.2.0/shell_command.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.2.0/step_input.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.2.0/step_input_expression.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.2.0/subworkflow.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/1.2.0/timelimit.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.2.0/conditional.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.2.0/docker.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.2.0/env_var.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.2.0/format_checking.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.2.0/initial_work_dir.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.2.0/inline_javascript.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.2.0/inplace_update.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.2.0/input_object_requirements.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.2.0/multiple.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.2.0/multiple_input.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.2.0/networkaccess.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.2.0/resource.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.2.0/scatter.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.2.0/schema_def.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.2.0/secondary_files.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.2.0/shell_command.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.2.0/step_input.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.2.0/step_input_expression.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.2.0/subworkflow.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/1.2.0/timelimit.json?icon=commonwl)
  
 
 ## Conformance tests for CWL v1.2.1 (proposed) for the latest release
 
 ### Classes
 
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/badges-1.2.1_proposed/workflow.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/badges-1.2.1_proposed/command_line_tool.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/badges-1.2.1_proposed/expression_tool.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/workflow.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/command_line_tool.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/expression_tool.json?icon=commonwl)
 
 ### Required features
 
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/badges-1.2.1_proposed/required.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/required.json?icon=commonwl)
 
 ### Optional features
 
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/badges-1.2.1_proposed/conditional.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/badges-1.2.1_proposed/docker.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/badges-1.2.1_proposed/env_var.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/badges-1.2.1_proposed/format_checking.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/badges-1.2.1_proposed/initial_work_dir.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/badges-1.2.1_proposed/inline_javascript.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/badges-1.2.1_proposed/inplace_update.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/badges-1.2.1_proposed/input_object_requirements.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/badges-1.2.1_proposed/multiple.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/badges-1.2.1_proposed/multiple_input.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/badges-1.2.1_proposed/networkaccess.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/badges-1.2.1_proposed/resource.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/badges-1.2.1_proposed/scatter.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/badges-1.2.1_proposed/schema_def.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/badges-1.2.1_proposed/secondary_files.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/badges-1.2.1_proposed/shell_command.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/badges-1.2.1_proposed/step_input.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/badges-1.2.1_proposed/step_input_expression.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/badges-1.2.1_proposed/subworkflow.json?icon=commonwl)
-![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/conformance-1.2.1/conformance/badges/badges-1.2.1_proposed/timelimit.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/conditional.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/docker.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/env_var.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/format_checking.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/initial_work_dir.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/inline_javascript.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/inplace_update.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/input_object_requirements.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/json_schema_invalid.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/load_listing.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/multiple.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/multiple_input.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/multiple.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/networkaccess.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/resource.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/scatter.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/schema_def.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/secondary_files.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/shell_command.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/step_input.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/subworkflow.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/timelimit.json?icon=commonwl)
+![test result](https://flat.badgen.net/https/raw.githubusercontent.com/Duke-GCB/calrissian/master/conformance/badges/badges-1.2.1_proposed/work_reuse.json?icon=commonwl)
  
 
 ## Run the conformance tests on Minikube
