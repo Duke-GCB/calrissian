@@ -1,4 +1,4 @@
-FROM python:3.7
+FROM python:3.10.0-slim-buster
 LABEL maintainer="dan.leehr@duke.edu"
 
 # cwltool requires nodejs

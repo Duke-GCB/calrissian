@@ -9,3 +9,4 @@ tests/__pycache__/
 env37
 build
 *.egg
+env-calrissian*
