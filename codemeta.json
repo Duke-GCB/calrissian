@@ -44,9 +44,7 @@
                 "@type": "Organization",
                 "name": "Duke University"
             }
-        }
-    ],
-    "contributor": [
+        },
         {
             "@type": "Person",
             "@id": "https://orcid.org/0009-0007-4519-0804",
@@ -65,6 +63,18 @@
             "affiliation": {
                 "@type": "Organization",
                 "name": "Terradue Srl"
+            }
+        }
+    ],
+    "contributor": [
+        {
+            "@type": "Person",
+            "@id": "https://orcid.org/0000-0001-9107-0714",
+            "givenName": "Hilmar",
+            "familyName": "Lapp",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Duke University"
             }
         }
     ]
