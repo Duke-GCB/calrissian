@@ -4,6 +4,8 @@ CWL on Kubernetes
 
 ![Build Workflow](https://github.com/Duke-GCB/calrissian/actions/workflows/build.yaml/badge.svg)
 
+[![PyPI version](https://badge.fury.io/py/calrissian.svg)](https://badge.fury.io/py/calrissian)
+
 ## Overview
 
 Calrissian is a [CWL](https://www.commonwl.org) implementation designed to run inside a Kubernetes cluster. Its goal is to be highly efficient and scalable, taking advantage of high capacity clusters to run many steps in parallel.
