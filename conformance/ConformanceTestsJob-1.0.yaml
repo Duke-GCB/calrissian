@@ -1,15 +1,3 @@
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: conformance-output-data-1-0
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
----
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -24,16 +12,28 @@ spec:
         command: ["chmod", "777", "/output"]
         volumeMounts:
         - mountPath: /output
-          name: conformance-output-data-1-0
+          name: conformance-test-output
       containers:
       - name: tests-1-0
-        image: calrissian:conformance
+        imagePullPolicy: IfNotPresent
+        image: conformance:latest
         workingDir: "/conformance/common-workflow-language-1.0.2"
-        command: ["./run_test.sh"]
+        command: ["cwltest"]
         args:
-        - "RUNNER=calrissian"
+        - "--test"
+        - "/conformance/common-workflow-language-1.0.2/v1.0/conformance_test_v1.0.yaml"
+        - "--tool"
+        - "calrissian"
+        - "--badgedir"
+        - "/output/badges-1.0.2"
         - "--verbose"
-        - "EXTRA=--max-ram 8G --max-cores 4 --default-container debian:stretch-slim"
+        - "--"
+        - "--max-ram"
+        - "8G"
+        - "--max-cores"
+        - "4"
+        - "--default-container"
+        - "debian:stretch-slim"
         env:
         - name: CALRISSIAN_POD_NAME
           valueFrom:
@@ -41,18 +41,20 @@ spec:
               fieldPath: metadata.name
         - name: TMPDIR
           value: "/output"
+        - name: RETRY_ATTEMPTS
+          value: "1"
         volumeMounts:
         - mountPath: /conformance
-          name: conformance-test-data-1-0
+          name: conformance-test-data
           readOnly: true
         - mountPath: /output
-          name: conformance-output-data-1-0
+          name: conformance-test-output
       restartPolicy: Never
       volumes:
-      - name: conformance-test-data-1-0
+      - name: conformance-test-data
         persistentVolumeClaim:
-          claimName: conformance-test-data-1-0
+          claimName: conformance-test-data
           readOnly: true
-      - name: conformance-output-data-1-0
+      - name: conformance-test-output
         persistentVolumeClaim:
-          claimName: conformance-output-data-1-0
+          claimName: conformance-test-output

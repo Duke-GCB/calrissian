@@ -1,31 +1,31 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: conformance-tests-1-1
+  name: conformance-tests-1-2
 spec:
   backoffLimit: 0
   template:
     spec:
       initContainers:
-      - name: prep-1-1
+      - name: prep-1-2
         image: alpine:3.10
         command: ["chmod", "777", "/output"]
         volumeMounts:
         - mountPath: /output
           name: conformance-test-output
       containers:
-      - name: tests-1-1
+      - name: tests-1-2
         imagePullPolicy: IfNotPresent
         image: conformance:latest
-        workingDir: "/conformance/cwl-v1.1-1.1.0"
+        workingDir: "/conformance/cwl-v1.2-1.2.0"
         command: ["cwltest"]
         args:
         - "--test"
-        - "/conformance/cwl-v1.1-1.1.0/conformance_tests.yaml"
+        - "/conformance/cwl-v1.2-1.2.0/conformance_tests.yaml"
         - "--tool"
         - "calrissian"
         - "--badgedir"
-        - "/output/badges-1.1.0"
+        - "/output/badges-1.2.0"
         - "--verbose"
         - "--"
         - "--max-ram"
