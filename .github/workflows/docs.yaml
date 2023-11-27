@@ -1,14 +1,7 @@
 name: docs
 on:
-  push:
-    branches:
-    - conformance-1.2.1
-    paths:
-    # Only rebuild website when docs have changed
-    - 'README.md'
-    - 'docs/**'
-    - 'mkdocs.yml'
-    - .github/**
+  release:
+    types: [created]
 
 jobs:
   deploy:
