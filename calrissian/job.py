@@ -709,9 +709,11 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             self.make_tmpdir()
         self.populate_env_vars(runtimeContext)
 
-        self._setup(runtimeContext)
         # specific setup for Kubernetes
         self.setup_kubernetes(runtimeContext)
+
+        self._setup(runtimeContext)
+        
         pod = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
         self.execute_kubernetes_pod(pod) # analogous to _execute()
         completion_result = self.wait_for_kubernetes_pod()
