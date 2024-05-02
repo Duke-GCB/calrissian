@@ -481,7 +481,9 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
     # Not yet complete, only checks features of DockerRequirement
     supported_features = {
         'DockerRequirement': ['class', 'dockerPull'],
-        'http://commonwl.org/cwltool#CUDARequirement': ['class', 'cudaDeviceCount', 'cudaDeviceCountMin', 'cudaDeviceCountMax'],
+        'http://commonwl.org/cwltool#CUDARequirement': ['class', 'cudaDeviceCount', 
+                                                        'cudaDeviceCountMin', 'cudaDeviceCountMax', 
+                                                        'cudaVersionMin', 'cudaComputeCapability'],
     }
 
     def check_requirements(self, runtimeContext):
