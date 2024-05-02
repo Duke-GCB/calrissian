@@ -4,7 +4,7 @@ from setuptools import setup
 # version checking derived from https://github.com/levlaz/circleci.py/blob/master/setup.py
 from setuptools.command.install import install
 
-VERSION = '0.17.1'
+VERSION = '0.17.2'
 TAG_ENV_VAR = 'GITHUB_REF_NAME'
 
 with open("README.md", "r") as fh:
