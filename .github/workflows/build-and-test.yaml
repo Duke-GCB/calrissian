@@ -37,5 +37,6 @@ jobs:
       run: hatch build
     - name: Test
       run: |
+        hatch env create default
         hatch env create test 
         hatch -e test run nose2 --verbose
