@@ -95,7 +95,6 @@ class KubernetesClientTestCase(TestCase):
         mock_stream = mock_watch.Watch.return_value.stream
         self.assertEqual(mock_stream.call_args, call(kc.core_api_instance.list_namespaced_pod, kc.namespace,
                                                      field_selector='metadata.name=test123'))
-
     @patch('calrissian.k8s.watch', autospec=True)
     def test_wait_calls_watch_pod_with_imcomplete_status(self, mock_watch, mock_get_namespace, mock_client):
         self.setup_mock_watch(mock_watch)

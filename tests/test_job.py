@@ -520,7 +520,8 @@ class CalrissianCommandLineJobTestCase(TestCase):
         job = self.make_job()
         job.make_tmpdir()
         self.assertTrue(mock_os.path.exists.called)
-        self.assertTrue(mock_os.makedirs.called_with(job.tmpdir))
+        #self.assertTrue(mock_os.makedirs.assert_called_with(job.tmpdir))
+        mock_os.makedirs.assert_called_with(job.tmpdir)
 
     @patch('calrissian.job.os')
     def test_not_make_tmpdir_when_exists(self, mock_os, mock_volume_builder, mock_client):
@@ -681,7 +682,8 @@ class CalrissianCommandLineJobTestCase(TestCase):
         job = self.make_job()
         k8s_pod = Mock()
         job.execute_kubernetes_pod(k8s_pod)
-        self.assertTrue(mock_client.return_value.submit_pod.called_with(k8s_pod))
+        # self.assertTrue(mock_client.return_value.submit_pod.assert_called_with(k8s_pod))
+        mock_client.return_value.submit_pod.assert_called_with(k8s_pod)
 
     def test_add_file_or_directory_volume_ro(self, mock_volume_builder, mock_client):
         mock_add_volume_binding = mock_volume_builder.return_value.add_volume_binding

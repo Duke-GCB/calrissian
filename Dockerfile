@@ -5,9 +5,6 @@ LABEL maintainer="dan.leehr@duke.edu"
 RUN apt-get update && apt-get install -y nodejs
 
 RUN mkdir -p /app
-COPY . /app
-RUN pip install /app
-WORKDIR /app
 
 # Create a default user and home directory
 ENV HOME=/home/calrissian
@@ -19,4 +16,16 @@ RUN useradd -u 1001 -r -g 0 -m -d ${HOME} -s /sbin/nologin \
   chmod g+rwx ${HOME}
 
 USER calrissian
+RUN pip install hatch 
+ENV PATH="${HOME}/.local/bin:${PATH}"
+
+COPY . /app
+WORKDIR /app
+
+ENV VIRTUAL_ENV=/app/envs/calrissian
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+RUN hatch env prune && \
+    hatch env create prod
+
 CMD ["calrissian"]

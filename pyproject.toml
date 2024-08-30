@@ -1,0 +1,90 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "calrissian"
+dynamic = ["version"]
+description = 'CWL runner for Kubernetes'
+readme = "README.md"
+requires-python = ">=3.8"
+license = "MIT"
+keywords = []
+authors = [
+  { name = "Fabrice Brito", email = "fabrice.brito@terradue.com" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = []
+
+[project.urls]
+Documentation = "https://github.com/Duke-GCB/calrissian#readme"
+Issues = "https://github.com/Duke-GCB/calrissian/issues"
+Source = "https://github.com/Duke-GCB/calrissian"
+
+[tool.hatch.version]
+path = "calrissian/__about__.py"
+
+[tool.hatch.envs.types]
+extra-dependencies = [
+  "mypy>=1.0.0",
+]
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:src/calrissian tests}"
+
+[tool.coverage.run]
+source_pkgs = ["calrissian", "tests"]
+branch = true
+parallel = true
+omit = [
+  "calrissian/__about__.py",
+]
+
+[tool.coverage.paths]
+calrissian = ["calrissian"]
+tests = ["tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
+
+
+[tool.hatch.envs.default]
+skip-install = false
+dependencies = [
+  "urllib3==1.26.18",
+  "kubernetes==28.1.0",
+  "cwltool==3.1.20231114134824",
+  "tenacity==8.2.3",
+  "importlib-metadata==6.8.0",
+  "msgpack==1.0.7",
+  "typing-extensions==4.8.0",
+  "freezegun==1.2.2"
+]
+
+[tool.hatch.envs.prod]
+path = "/app/envs/calrissian"
+
+
+
+[project.scripts]
+calrissian = "calrissian.main:main"
+
+[tool.hatch.envs.test]
+skip-install = false
+
+dependencies = [
+  "nose2"
+]
+
+[tool.hatch.envs.test.env-vars]
+RETRY_ATTEMPTS="0"
+
