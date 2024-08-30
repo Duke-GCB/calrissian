@@ -36,4 +36,4 @@ jobs:
     - name: Build
       run: hatch build
     - name: Test
-      run: hatch run test
+      run: hatch -e test run nose2 --verbose
