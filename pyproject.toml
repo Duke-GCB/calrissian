@@ -82,7 +82,16 @@ calrissian = "calrissian.main:main"
 skip-install = false
 
 dependencies = [
-  "nose2"
+  "nose2", 
+   "urllib3==1.26.18",
+  "kubernetes==28.1.0",
+  "cwltool==3.1.20231114134824",
+  "tenacity==8.2.3",
+  "importlib-metadata==6.8.0",
+  "msgpack==1.0.7",
+  "typing-extensions==4.8.0",
+  "freezegun==1.2.2"
+
 ]
 
 [tool.hatch.envs.test.env-vars]
