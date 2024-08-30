@@ -62,7 +62,7 @@ skip-install = false
 dependencies = [
   "urllib3==1.26.18",
   "kubernetes==28.1.0",
-  "cwltool==3.1.20231114134824",
+  "cwltool==3.1.20240708091337",
   "tenacity==8.2.3",
   "importlib-metadata==6.8.0",
   "msgpack==1.0.7",
@@ -83,9 +83,9 @@ skip-install = false
 
 dependencies = [
   "nose2", 
-   "urllib3==1.26.18",
+  "urllib3==1.26.18",
   "kubernetes==28.1.0",
-  "cwltool==3.1.20231114134824",
+  "cwltool==3.1.20240708091337",
   "tenacity==8.2.3",
   "importlib-metadata==6.8.0",
   "msgpack==1.0.7",
