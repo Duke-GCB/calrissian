@@ -66,19 +66,35 @@ When encountering a Kubernetes API exception, Calrissian uses a library to retry
 
 ## For developers
 
-* **Run tests**
+### Installing for Development
+
+Note that for development you can just use [Hatch] directly as described below. 
+
+### Installing Hatch
+
+The main tool that is used for development is [Hatch]. It manages dependencies (in a virtualenv that is created on the fly) and is also the command runner.
+
+So first, [install it][install Hatch]. Ideally in an isolated way with **`pipx install hatch`** (after [installing `pipx`]), or just `pip install hatch` as a more well-known way.
+
+### Running tests
 
 ```
 hatch run test:test
 ```
 
-* **Run test coverage**
+Verbose: 
+
+```
+hatch run test:testv
+```
+
+### Running test coverage
 
 ```
 hatch run test:cov
 ```
 
-* **Run calrissian** 
+### Running calrissian
 
 ```
 hatch run calrissian
