@@ -11,3 +11,4 @@ build
 *.whl
 *.zip
 env-calrissian*
+*.tar.gz
