@@ -63,3 +63,23 @@ When encountering a Kubernetes API exception, Calrissian uses a library to retry
 - `RETRY_MIN`: Default `5`. Minimum interval between retries.
 - `RETRY_MAX`: Default `1200`. Maximum interval between retries.
 - `RETRY_ATTEMPTS`: Default `10`. Max number of retries before giving up.
+
+## For developers
+
+* **Run tests**
+
+```
+hatch run test:test
+```
+
+* **Run test coverage**
+
+```
+hatch run test:cov
+```
+
+* **Run calrissian** 
+
+```
+hatch run calrissian
+```

@@ -16,7 +16,11 @@ authors = [
 classifiers = [
   "Development Status :: 4 - Beta",
   "Programming Language :: Python",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
@@ -83,6 +87,7 @@ skip-install = false
 
 dependencies = [
   "nose2", 
+  "coverage",
   "urllib3==1.26.18",
   "kubernetes==28.1.0",
   "cwltool==3.1.20240708091337",
@@ -91,9 +96,15 @@ dependencies = [
   "msgpack==1.0.7",
   "typing-extensions==4.8.0",
   "freezegun==1.2.2"
-
 ]
 
 [tool.hatch.envs.test.env-vars]
 RETRY_ATTEMPTS="0"
 
+[tool.hatch.envs.default.scripts]
+test = "hatch run nose2"
+testv = "hatch run nose2 --verbose"
+cov = ["coverage run --source=calrissian -m nose2", "coverage report"]
+
+[[tool.hatch.envs.test.matrix]]
+python = ["3.8", "3.9", "3.10", "3.11", "3.12"]
