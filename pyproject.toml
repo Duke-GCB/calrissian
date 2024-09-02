@@ -106,10 +106,22 @@ dependencies = [
 [tool.hatch.envs.test.env-vars]
 RETRY_ATTEMPTS="0"
 
-[tool.hatch.envs.default.scripts]
+[tool.hatch.envs.test.scripts]
 test = "hatch run nose2"
 testv = "hatch run nose2 --verbose"
 cov = ["coverage run --source=calrissian -m nose2", "coverage report"]
 
 [[tool.hatch.envs.test.matrix]]
 python = ["3.8", "3.9", "3.10", "3.11", "3.12"]
+
+[tool.hatch.envs.docs]
+skip-install = false
+
+dependencies = [
+  "pdocs",
+  "mkdocs-material",
+  "mkdocs-jupyter"
+]
+
+[tool.hatch.envs.docs.scripts]
+serve = "mkdocs serve"

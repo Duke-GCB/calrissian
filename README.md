@@ -99,3 +99,9 @@ hatch run test:cov
 ```
 hatch run calrissian
 ```
+
+### Serve the documentation
+
+```
+hatch run docs:serve
+```
