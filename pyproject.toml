@@ -18,7 +18,7 @@ authors = [
 ]
 classifiers = [
   "Development Status :: 4 - Beta",
-  "Environment :: Web Environment",
+  "Environment :: Console",
   "Intended Audience :: Developers",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3.8",
