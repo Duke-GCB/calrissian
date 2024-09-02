@@ -1,31 +1,56 @@
-FROM python:3.10.0-slim-buster
-LABEL maintainer="dan.leehr@duke.edu"
+# Stage 1: Build stage
+FROM rockylinux:9.3-minimal AS build
 
-# cwltool requires nodejs
-RUN apt-get update && apt-get install -y nodejs
+# Install necessary build tools
+RUN microdnf install -y curl tar
 
-RUN mkdir -p /app
+# Download the hatch tar.gz file from GitHub
+RUN curl -L https://github.com/pypa/hatch/releases/latest/download/hatch-x86_64-unknown-linux-gnu.tar.gz -o /tmp/hatch-x86_64-unknown-linux-gnu.tar.gz
 
-# Create a default user and home directory
+# Extract the hatch binary
+RUN tar -xzf /tmp/hatch-x86_64-unknown-linux-gnu.tar.gz -C /tmp/
+
+# Stage 2: Final stage
+FROM rockylinux:9.3-minimal
+
+# Install runtime dependencies
+RUN microdnf install -y --nodocs nodejs && \
+    microdnf clean all
+
+# Set up a default user and home directory
 ENV HOME=/home/calrissian
-# home dir is created by useradd with group (g=0) to comply with
-# https://docs.openshift.com/container-platform/3.11/creating_images/guidelines.html#openshift-specific-guidelines
+
+# Create a user with UID 1001, group root, and a home directory
 RUN useradd -u 1001 -r -g 0 -m -d ${HOME} -s /sbin/nologin \
-      -c "Default Calrissian User" calrissian && \
-  chown -R 1001:0 /app && \
-  chmod g+rwx ${HOME}
+        -c "Default Calrissian User" calrissian && \
+    mkdir -p /app && \
+    mkdir -p /prod && \
+    chown -R 1001:0 /app && \
+    chmod g+rwx ${HOME} /app
 
+# Copy the hatch binary from the build stage
+COPY --from=build /tmp/hatch /usr/bin/hatch
+
+# Ensure the hatch binary is executable
+RUN chmod +x /usr/bin/hatch
+
+# Switch to the non-root user
 USER calrissian
-RUN pip install hatch 
-ENV PATH="${HOME}/.local/bin:${PATH}"
 
-COPY . /app
-WORKDIR /app
+# Copy the application files into the /app directory
+COPY --chown=1001:0 . /tmp
+WORKDIR /tmp
 
+# Set up virtual environment paths
 ENV VIRTUAL_ENV=/app/envs/calrissian
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-RUN hatch env prune && \
-    hatch env create prod
+# Prune any existing environments and create a new production environment
+RUN cd /tmp && hatch env prune && \
+    hatch env create prod && \
+    rm -fr /tmp/* /tmp/.git /tmp/.pytest_cache
 
+WORKDIR /app
+
+# Set the default command to run when the container starts
 CMD ["calrissian"]

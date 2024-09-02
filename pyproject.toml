@@ -76,7 +76,8 @@ dependencies = [
   "importlib-metadata==6.8.0",
   "msgpack==1.0.7",
   "typing-extensions==4.8.0",
-  "freezegun==1.2.2"
+  "freezegun==1.2.2",
+  "setuptools==70.0.0"
 ]
 
 [tool.hatch.envs.prod]
@@ -100,7 +101,8 @@ dependencies = [
   "importlib-metadata==6.8.0",
   "msgpack==1.0.7",
   "typing-extensions==4.8.0",
-  "freezegun==1.2.2"
+  "freezegun==1.2.2",
+  "setuptools==70.0.0"
 ]
 
 [tool.hatch.envs.test.env-vars]
@@ -125,3 +127,4 @@ dependencies = [
 
 [tool.hatch.envs.docs.scripts]
 serve = "mkdocs serve"
+deploy = "mkdocs gh-deploy --force"
