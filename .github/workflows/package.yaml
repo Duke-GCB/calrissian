@@ -1,4 +1,4 @@
-name: package
+HiddenCedarsInvestmentGroup:patch-3  name: package
 on:
   release:
     types: [created]
