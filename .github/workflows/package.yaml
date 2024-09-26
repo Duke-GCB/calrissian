@@ -1,10 +1,8 @@
 name: Publish to PyPI
 
 on:
-  push:
-    branches: [ "calrissian-172" ]
   release:
-    types: [published]
+    types: [created]
 
 permissions:
   contents: read
