@@ -29,7 +29,17 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dependencies = []
+dependencies = [
+  "urllib3==1.26.18",
+  "kubernetes==28.1.0",
+  "cwltool==3.1.20240708091337",
+  "tenacity==8.2.3",
+  "importlib-metadata==6.8.0",
+  "msgpack==1.0.7",
+  "typing-extensions==4.8.0",
+  "freezegun==1.2.2",
+  "setuptools==70.0.0"
+]
 
 [project.urls]
 Documentation = "https://github.com/Duke-GCB/calrissian#readme"
