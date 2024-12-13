@@ -31,15 +31,8 @@ jobs:
     - name: Build package
       run: hatch build
     - name: Test package
-      run: hatch -e test run nose2 --verbose
-    - name: Publish package distributions to Test PyPI
-      if: github.ref != 'refs/heads/master'
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        skip-existing: true
-        repository-url: https://test.pypi.org/legacy/
+      run: hatch -e test run nose2 --verbose 
     - name: Publish package distributions to PyPI
-      if: github.ref == 'refs/heads/master'
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         skip-existing: true
