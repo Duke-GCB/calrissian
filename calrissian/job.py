@@ -198,7 +198,7 @@ class KubernetesVolumeBuilder(object):
 
 class KubernetesPodBuilder(object):
 
-    def __init__(self, name, builder, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, labels, nodeselectors, security_context, serviceaccount, no_network_access_pod_label={}, network_access_pod_label={}):
+    def __init__(self, name, builder, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, labels, nodeselectors, security_context, serviceaccount, no_network_access_pod_labels=None, network_access_pod_labels=None):
         self.name = name
         self.builder = builder
         self.cwl_version = self.builder.cwlVersion
@@ -215,8 +215,8 @@ class KubernetesPodBuilder(object):
         self.nodeselectors = nodeselectors
         self.security_context = security_context
         self.serviceaccount = serviceaccount
-        self.no_network_access_pod_label = no_network_access_pod_label
-        self.network_access_pod_label = network_access_pod_label
+        self.no_network_access_pod_labels = no_network_access_pod_labels
+        self.network_access_pod_labels = network_access_pod_labels
         self.requirements = {} if self.builder.requirements is None else self.builder.requirements
         self.hints = [] if self.builder.hints is None else self.builder.hints
 
@@ -350,15 +350,14 @@ class KubernetesPodBuilder(object):
             network_access = False
 
         for requirement in self.requirements:
-            if requirement["class"] in ["NetworkAccess"]:
-                network_access = requirement.get("networkAccess")
+            if "class" in requirement.keys() and requirement["class"] in ["NetworkAccess"]:
+                network_access = True if requirement.get("networkAccess") == "true" else False
                 break
-        
-        if not network_access and self.no_network_access_pod_label: 
-            self.labels = {**self.labels, **self.no_network_access_pod_label}
+        if not network_access and self.no_network_access_pod_labels: 
+            self.labels = {**self.labels, **self.no_network_access_pod_labels}
 
-        if network_access and self.network_access_pod_label:
-            self.labels = {**self.labels, **self.network_access_pod_label}
+        if network_access and self.network_access_pod_labels:
+            self.labels = {**self.labels, **self.network_access_pod_labels}
 
         return {str(k): str(v) for k, v in self.labels.items()}
     
@@ -536,15 +535,15 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         else:
             return {}
 
-    def get_network_access_pod_label(self, runtimeContext):
-        if runtimeContext.network_access_pod_label:
-            return read_yaml(runtimeContext.network_access_pod_label)
+    def get_network_access_pod_labels(self, runtimeContext):
+        if runtimeContext.network_access_pod_labels:
+            return read_yaml(runtimeContext.network_access_pod_labels)
         else:
             return {}
 
-    def get_no_network_access_pod_label(self, runtimeContext):
-        if runtimeContext.no_network_access_pod_label:
-            return read_yaml(runtimeContext.no_network_access_pod_label)
+    def get_no_network_access_pod_labels(self, runtimeContext):
+        if runtimeContext.no_network_access_pod_labels:
+            return read_yaml(runtimeContext.no_network_access_pod_labels)
         else:
             return {}
 
@@ -621,8 +620,8 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             self.get_pod_nodeselectors(runtimeContext),
             self.get_security_context(runtimeContext),
             self.get_pod_serviceaccount(runtimeContext),
-            self.get_no_network_access_pod_label(runtimeContext),
-            self.get_network_access_pod_label(runtimeContext),
+            self.get_no_network_access_pod_labels(runtimeContext),
+            self.get_network_access_pod_labels(runtimeContext),
         )
         built = k8s_builder.build()
         log.debug('{}\n{}{}\n'.format('-' * 80, yaml.dump(built), '-' * 80))
