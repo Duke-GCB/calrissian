@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v0.18.0] - 2024-12-13
+
+### Changes
+
+- Drop setup.py and requirements.txt in favour of PEP 517 and 518 by @fabricebrito in https://github.com/Duke-GCB/calrissian/pull/177
+
 ## [v0.17.2] - 2024-05-02
 
 ### Changes
