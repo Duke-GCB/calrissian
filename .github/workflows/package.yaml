@@ -5,7 +5,10 @@ on:
     types: [created]
 
 permissions:
+  id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
   contents: read
+  packages: write
+  attestations: write
 
 jobs:
   deploy:
@@ -13,12 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     environment: release
-    permissions:
-      id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
-      contents: read
-      packages: write
-      attestations: write
-      
+     
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python
@@ -46,6 +44,7 @@ jobs:
       with:
         skip-existing: true
         repository-url: https://upload.pypi.org/legacy/
+  
   container-build:
     runs-on: ubuntu-latest
     steps:
