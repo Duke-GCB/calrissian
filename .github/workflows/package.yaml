@@ -27,19 +27,17 @@ jobs:
       run: |
         # python -m pip install --upgrade pip 
         pip install hatch
+
     - name: Build package
       run: hatch build
+    
     - name: Test package
       run: hatch -e test run nose2 --verbose
+    
     - name: Publish package distributions to Test PyPI
-      if: github.ref != 'refs/heads/main'
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        skip-existing: true
-        repository-url: https://test.pypi.org/legacy/
-    - name: Publish package distributions to PyPI
-      if: github.ref == 'refs/heads/master'
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        skip-existing: true
-        repository-url: https://upload.pypi.org/legacy/
+      env:
+          TWINE_USERNAME: __token__ # Use '__token__' as the username
+          TWINE_PASSWORD: ${{ secrets.PYPI_APIKEY }} # PyPI API token stored as a secret
+      run: |
+          hatch build
+          hatch publish
