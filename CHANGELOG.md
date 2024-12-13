@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v0.18.0] - 2024-12-13
+
+### Changes
+
+- Drop setup.py and requirements.txt in favour of PEP 517 and 518 by @fabricebrito in https://github.com/Duke-GCB/calrissian/pull/177
+
+## [v0.17.2] - 2024-05-02
+
+### Changes
+
+- calls `setup_kubernetes` before `_setup` to set `cudaDeviceCount` by @fabricebrito in https://github.com/Duke-GCB/calrissian/pull/170
+
+## [v0.17.1] - 2024-05-02
+
+### Changes
+
+## [v0.17.0] - 2024-05-02
+
+- broken release
+
+### Changes
+
+- Create codemeta.json by @fabricebrito in https://github.com/Duke-GCB/calrissian/pull/163
+- Conformance 1.2.1 by @fabricebrito in https://github.com/Duke-GCB/calrissian/pull/164
+- Update README.md by @fabricebrito in https://github.com/Duke-GCB/calrissian/pull/165
+- adds `cudaVersionMin`, `cudaComputeCapability` in `CUDARequirement` by @fabricebrito in https://github.com/Duke-GCB/calrissian/pull/168
+
 ## [v0.16.0] - 2023-11-23
 
 ### Changes

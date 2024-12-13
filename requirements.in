@@ -1,8 +1,0 @@
-urllib3
-kubernetes
-cwltool
-tenacity
-importlib-metadata
-msgpack
-typing-extensions
-freezegun
