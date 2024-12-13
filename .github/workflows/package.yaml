@@ -36,8 +36,8 @@ jobs:
     
     - name: Publish package distributions to Test PyPI
       env:
-          TWINE_USERNAME: __token__ # Use '__token__' as the username
-          TWINE_PASSWORD: ${{ secrets.PYPI_APIKEY }} # PyPI API token stored as a secret
+          HATCH_INDEX_USER: __token__ # Use '__token__' as the username
+          HATCH_INDEX_AUTH: ${{ secrets.PYPI_APIKEY }} # PyPI API token stored as a secret
       run: |
           hatch build
           hatch publish
