@@ -23,4 +23,6 @@ class CalrissianRuntimeContext(RuntimeContext):
         self.pod_serviceaccount = None
         self.tool_logs_basepath = None
         self.max_gpus = None
+        self.no_network_access_pod_label = None
+        self.network_access_pod_label = None
         return super(CalrissianRuntimeContext, self).__init__(kwargs)

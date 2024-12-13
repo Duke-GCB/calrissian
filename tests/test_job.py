@@ -273,7 +273,12 @@ class KubernetesVolumeBuilderTestCase(TestCase):
 class KubernetesPodBuilderTestCase(TestCase):
 
     def setUp(self):
+        builder = Mock()
+        builder.cwlVersion = "v1.0"
+        builder.requirements = []
+        builder.resources = {'cores': 1, 'ram': 1024}
         self.name = 'PodName'
+        self.builder = builder
         self.container_image = 'dockerimage:1.0'
         self.environment = {'K1':'V1', 'K2':'V2', 'HOME': '/homedir'}
         self.volume_mounts = [Mock(), Mock()]
@@ -282,14 +287,16 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.stdout = 'stdout.txt'
         self.stderr = 'stderr.txt'
         self.stdin = 'stdin.txt'
-        self.resources = {'cores': 1, 'ram': 1024}
         self.labels = {'key1': 'val1', 'key2': 123}
         self.nodeselectors = {'disktype': 'ssd', 'cachelevel': 2}
         self.security_context = { 'runAsUser': os.getuid(),'runAsGroup': os.getgid() }
         self.pod_serviceaccount = "podmanager"
-        self.pod_builder = KubernetesPodBuilder(self.name, self.container_image, self.environment, self.volume_mounts,
+        self.no_network_access_pod_label = {}
+        self.network_access_pod_label = {}
+        self.pod_builder = KubernetesPodBuilder(self.name, self.builder, self.container_image, self.environment, self.volume_mounts,
                                                 self.volumes, self.command_line, self.stdout, self.stderr, self.stdin,
-                                                self.resources, self.labels, self.nodeselectors, self.security_context, self.pod_serviceaccount)
+                                                self.labels, self.nodeselectors, self.security_context, self.pod_serviceaccount, 
+                                                self.no_network_access_pod_label, self.network_access_pod_label)
 
     @patch('calrissian.job.random_tag')
     def test_safe_pod_name(self, mock_random_tag):
@@ -657,6 +664,7 @@ class CalrissianCommandLineJobTestCase(TestCase):
         # creates a KubernetesPodBuilder
         self.assertEqual(mock_pod_builder.call_args, call(
             job.name,
+            job.builder,
             job._get_container_image(),
             job.environment,
             job.volume_builder.volume_mounts,
@@ -665,13 +673,12 @@ class CalrissianCommandLineJobTestCase(TestCase):
             job.stdout,
             job.stderr,
             job.stdin,
-            job.builder.resources,
             mock_read_yaml.return_value,
             mock_read_yaml.return_value,
             job.get_security_context(mock_runtime_context),
             None, 
-            job.builder.requirements,
-            job.builder.hints,
+            mock_read_yaml.return_value,
+            mock_read_yaml.return_value,
         ))
         # calls builder.build
         # returns that

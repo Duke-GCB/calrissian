@@ -198,8 +198,10 @@ class KubernetesVolumeBuilder(object):
 
 class KubernetesPodBuilder(object):
 
-    def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, resources, labels, nodeselectors, security_context, serviceaccount, requirements=None, hints=None):
+    def __init__(self, name, builder, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, labels, nodeselectors, security_context, serviceaccount, no_network_access_pod_label={}, network_access_pod_label={}):
         self.name = name
+        self.builder = builder
+        self.cwl_version = self.builder.cwlVersion
         self.container_image = container_image
         self.environment = environment
         self.volume_mounts = volume_mounts
@@ -208,13 +210,15 @@ class KubernetesPodBuilder(object):
         self.stdout = stdout
         self.stderr = stderr
         self.stdin = stdin
-        self.resources = resources
+        self.resources = self.builder.resources
         self.labels = labels
         self.nodeselectors = nodeselectors
         self.security_context = security_context
         self.serviceaccount = serviceaccount
-        self.requirements = {} if requirements is None else requirements
-        self.hints = [] if hints is None else hints
+        self.no_network_access_pod_label = no_network_access_pod_label
+        self.network_access_pod_label = network_access_pod_label
+        self.requirements = {} if self.builder.requirements is None else self.builder.requirements
+        self.hints = [] if self.builder.hints is None else self.builder.hints
 
     def pod_name(self):
         tag = random_tag()
@@ -340,6 +344,22 @@ class KubernetesPodBuilder(object):
         Submitted labels must be strings
         :return:
         """
+        if self.cwl_version in ["v1.0"]:
+            network_access = True
+        else: 
+            network_access = False
+
+        for requirement in self.requirements:
+            if requirement["class"] in ["NetworkAccess"]:
+                network_access = requirement.get("networkAccess")
+                break
+        
+        if not network_access and self.no_network_access_pod_label: 
+            self.labels = {**self.labels, **self.no_network_access_pod_label}
+
+        if network_access and self.network_access_pod_label:
+            self.labels = {**self.labels, **self.network_access_pod_label}
+
         return {str(k): str(v) for k, v in self.labels.items()}
     
     def pod_nodeselectors(self):
@@ -515,7 +535,19 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             return read_yaml(runtimeContext.pod_labels)
         else:
             return {}
-    
+
+    def get_network_access_pod_label(self, runtimeContext):
+        if runtimeContext.network_access_pod_label:
+            return read_yaml(runtimeContext.network_access_pod_label)
+        else:
+            return {}
+
+    def get_no_network_access_pod_label(self, runtimeContext):
+        if runtimeContext.no_network_access_pod_label:
+            return read_yaml(runtimeContext.no_network_access_pod_label)
+        else:
+            return {}
+
     def get_pod_nodeselectors(self, runtimeContext):
         if runtimeContext.pod_nodeselectors:
             return read_yaml(runtimeContext.pod_nodeselectors)
@@ -576,6 +608,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
 
         k8s_builder = KubernetesPodBuilder(
             self.name,
+            self.builder,
             self._get_container_image(),
             self.environment,
             self.volume_builder.volume_mounts,
@@ -584,13 +617,12 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             self.stdout,
             self.stderr,
             self.stdin,
-            self.builder.resources,
             self.get_pod_labels(runtimeContext),
             self.get_pod_nodeselectors(runtimeContext),
             self.get_security_context(runtimeContext),
             self.get_pod_serviceaccount(runtimeContext),
-            self.builder.requirements,
-            self.builder.hints
+            self.get_no_network_access_pod_label(runtimeContext),
+            self.get_network_access_pod_label(runtimeContext),
         )
         built = k8s_builder.build()
         log.debug('{}\n{}{}\n'.format('-' * 80, yaml.dump(built), '-' * 80))
