@@ -1,0 +1,13 @@
+cwltool==3.1.20220224085855
+freezegun==1.5.1
+kubernetes==31.0.0
+PyYAML==6.0.2
+PyYAML==5.4.1
+PyYAML==6.0.2
+schema_salad==8.5.20240503091721
+schema_salad==8.2.20220103095339
+setuptools==59.6.0
+shellescape==3.4.1
+tenacity==9.0.0
+typing_extensions==3.10.0.2
+urllib3==1.26.5

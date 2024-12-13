@@ -15,6 +15,6 @@ jobs:
         cache: 'pip'
     - name: Install dependencies
       run: |
-        pip install hatch pdocs mkdocs-material mkdocs-jupyter
+        pip install hatch pdocs mkdocs-material mkdocs-jupyter mkdocs-plantuml-local
         hatch build
         mkdocs gh-deploy --force
