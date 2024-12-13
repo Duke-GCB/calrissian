@@ -38,17 +38,20 @@ RUN chmod +x /usr/bin/hatch
 USER calrissian
 
 # Copy the application files into the /app directory
-COPY --chown=1001:0 . /tmp
-WORKDIR /tmp
+COPY --chown=1001:0 . /app
+WORKDIR /app
 
 # Set up virtual environment paths
 ENV VIRTUAL_ENV=/app/envs/calrissian
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Prune any existing environments and create a new production environment
-RUN cd /tmp && hatch env prune && \
+RUN hatch env prune && \
     hatch env create prod && \
-    rm -fr /tmp/* /tmp/.git /tmp/.pytest_cache
+    hatch run prod:calrissian --help && \
+    rm -fr /app/.git /app/.pytest_cache
+
+RUN hatch run prod:calrissian --help
 
 WORKDIR /app
 
