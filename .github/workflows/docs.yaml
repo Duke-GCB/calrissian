@@ -7,18 +7,14 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-
-    - name: Install Conda environment from environment.yml
-      uses: mamba-org/provision-with-micromamba@main
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v4
       with:
-        environment-file: docs/environment.yml
-        environment-name: env_docs
-        channels: terradue,eoepca,conda-forge
-        channel-priority: flexible
-
-    - name: Install project
+        python-version: '3.10'
+        cache: 'pip'
+    - name: Install dependencies
       run: |
-        /home/runner/micromamba-root/envs/env_docs/bin/python setup.py install
-
-    - run: /home/runner/micromamba-root/envs/env_docs/bin/mkdocs gh-deploy --force
+        pip install hatch pdocs mkdocs-material mkdocs-jupyter
+        hatch build
+        mkdocs gh-deploy --force
