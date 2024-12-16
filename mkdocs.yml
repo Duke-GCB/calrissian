@@ -42,4 +42,5 @@ nav:
   - 1.2.0: 'conformance/1.2.0.md'
   - 1.2.1: 'conformance/1.2.1.md'
 - Development:
+  - API Docs: 'apidocs/index.html'
   - Class diagram: 'puml/class.md'
