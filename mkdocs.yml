@@ -16,10 +16,23 @@ markdown_extensions:
 - pymdownx.highlight
 - pymdownx.superfences
 - attr_list
+- markdown_include.include:
+    base_path: docs
 
 plugins:
 - search
 #- mkdocs-jupyter
+- plantuml-local:
+    shortname: puml
+    background_colour: transparent
+    class_name: plantuml-diagram
+    cache: true
+markdown_extensions:
+- pymdownx.superfences:
+    custom_fences:
+    - name: puml
+      class: puml
+      format: !!python/name:pymdownx.superfences.fence_code_format
 
 nav:
 - Introduction: 'index.md'
@@ -30,3 +43,6 @@ nav:
   - 1.1.0: 'conformance/1.1.0.md'
   - 1.2.0: 'conformance/1.2.0.md'
   - 1.2.1: 'conformance/1.2.1.md'
+- Development:
+  - API Docs: 'apidocs/index.html'
+  - Class diagram: 'puml/classes.md'
