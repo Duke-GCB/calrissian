@@ -16,6 +16,8 @@ markdown_extensions:
 - pymdownx.highlight
 - pymdownx.superfences
 - attr_list
+- markdown_include.include:
+    base_path: docs
 
 plugins:
 - search
@@ -43,4 +45,4 @@ nav:
   - 1.2.1: 'conformance/1.2.1.md'
 - Development:
   - API Docs: 'apidocs/index.html'
-  - Class diagram: 'puml/class.md'
+  - Class diagram: 'puml/classes.md'

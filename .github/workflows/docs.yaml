@@ -17,5 +17,6 @@ jobs:
       run: |
         pip install hatch pdocs mkdocs-material mkdocs-jupyter mkdocs-plantuml-local pydoctor
         hatch build
+        pyreverse --all-ancestors --show-builtin --output svg --output-directory ./docs/puml/ --source-roots ./calrissian/ --verbose ./calrissian/
         pydoctor
         mkdocs gh-deploy --force

@@ -16,3 +16,5 @@ env-calrissian*
 .pydevproject
 .cache
 site
+*/apidocs
+*.svg
