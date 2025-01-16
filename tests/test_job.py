@@ -273,7 +273,12 @@ class KubernetesVolumeBuilderTestCase(TestCase):
 class KubernetesPodBuilderTestCase(TestCase):
 
     def setUp(self):
+        builder = Mock()
+        builder.cwlVersion = "v1.2"
+        builder.requirements = []
+        builder.resources = {'cores': 1, 'ram': 1024}
         self.name = 'PodName'
+        self.builder = builder
         self.container_image = 'dockerimage:1.0'
         self.environment = {'K1':'V1', 'K2':'V2', 'HOME': '/homedir'}
         self.volume_mounts = [Mock(), Mock()]
@@ -282,14 +287,16 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.stdout = 'stdout.txt'
         self.stderr = 'stderr.txt'
         self.stdin = 'stdin.txt'
-        self.resources = {'cores': 1, 'ram': 1024}
         self.labels = {'key1': 'val1', 'key2': 123}
         self.nodeselectors = {'disktype': 'ssd', 'cachelevel': 2}
         self.security_context = { 'runAsUser': os.getuid(),'runAsGroup': os.getgid() }
         self.pod_serviceaccount = "podmanager"
-        self.pod_builder = KubernetesPodBuilder(self.name, self.container_image, self.environment, self.volume_mounts,
+        self.no_network_access_pod_labels = {"calrissian-network": "disabled"}
+        self.network_access_pod_labels = {"calrissian-network": "enabled"}
+        self.pod_builder = KubernetesPodBuilder(self.name, self.builder, self.container_image, self.environment, self.volume_mounts,
                                                 self.volumes, self.command_line, self.stdout, self.stderr, self.stdin,
-                                                self.resources, self.labels, self.nodeselectors, self.security_context, self.pod_serviceaccount)
+                                                self.labels, self.nodeselectors, self.security_context, self.pod_serviceaccount, 
+                                                self.no_network_access_pod_labels, self.network_access_pod_labels)
 
     @patch('calrissian.job.random_tag')
     def test_safe_pod_name(self, mock_random_tag):
@@ -375,13 +382,36 @@ class KubernetesPodBuilderTestCase(TestCase):
         }
         self.assertEqual(expected, resources)
 
+    def test_network_access_1_2(self):
+        self.pod_builder.cwl_version = "v1.2"
+        self.pod_builder.requirements = [OrderedDict([("class", "NetworkAccess"), ("networkAccess", "true")])]
+        self.assertEqual(self.pod_builder.pod_labels(), {"calrissian-network": "enabled", 'key1':'val1', 'key2':'123'})
+
+    def test_no_network_access_1_2(self):
+        self.pod_builder.cwl_version = "v1.2"
+        self.pod_builder.requirements = [OrderedDict([("class", "NetworkAccess"), ("networkAccess", "false")])]
+        self.assertEqual(self.pod_builder.pod_labels(), {"calrissian-network": "disabled", 'key1':'val1', 'key2':'123'})
+
+    def test_network_access_1_0(self):
+        self.pod_builder.cwl_version = "v1.0"
+        self.pod_builder.requirements = [OrderedDict([])]
+        self.assertEqual(self.pod_builder.pod_labels(), {"calrissian-network": "enabled", 'key1':'val1', 'key2':'123'})
+
     def test_string_labels(self):
         self.pod_builder.labels = {'key1': 123}
-        self.assertEqual(self.pod_builder.pod_labels(), {'key1':'123'})
+        self.assertEqual(self.pod_builder.pod_labels(), {"calrissian-network": "disabled", 'key1':'123'})
         
     def test_string_nodeselectors(self):
         self.pod_builder.nodeselectors = {'cachelevel': 2}
         self.assertEqual(self.pod_builder.pod_nodeselectors(), {'cachelevel':'2'})
+
+    def test_string_no_network_access_pod_label(self):
+        self.pod_builder.no_network_access_pod_labels = {"calrissian-network": "disabled"}
+        self.assertEqual(self.pod_builder.pod_labels(), {"calrissian-network": "disabled", 'key1': 'val1', 'key2': '123'})
+
+    def test_string_network_access_pod_label(self):
+        self.pod_builder.network_access_pod_labels = {"calrissian-network": "enabled"}
+        self.assertEqual(self.pod_builder.pod_labels(), {"calrissian-network": "disabled", 'key1': 'val1', 'key2': '123'})
 
     def test_init_containers_empty_when_no_stdout_or_stderr(self):
         self.pod_builder.stdout = None
@@ -428,6 +458,7 @@ class KubernetesPodBuilderTestCase(TestCase):
                 'labels': {
                     'key1': 'val1',
                     'key2': '123',
+                    'calrissian-network': 'disabled',
                 }
             },
             'apiVersion': 'v1',
@@ -657,6 +688,7 @@ class CalrissianCommandLineJobTestCase(TestCase):
         # creates a KubernetesPodBuilder
         self.assertEqual(mock_pod_builder.call_args, call(
             job.name,
+            job.builder,
             job._get_container_image(),
             job.environment,
             job.volume_builder.volume_mounts,
@@ -665,13 +697,12 @@ class CalrissianCommandLineJobTestCase(TestCase):
             job.stdout,
             job.stderr,
             job.stdin,
-            job.builder.resources,
             mock_read_yaml.return_value,
             mock_read_yaml.return_value,
             job.get_security_context(mock_runtime_context),
             None, 
-            job.builder.requirements,
-            job.builder.hints,
+            mock_read_yaml.return_value,
+            mock_read_yaml.return_value,
         ))
         # calls builder.build
         # returns that
