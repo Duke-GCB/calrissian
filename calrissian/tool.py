@@ -36,6 +36,9 @@ class CalrissianCommandLineTool(CommandLineTool):
         if not runtimeContext.use_container:
             raise CalrissianCommandLineToolException('Unable to create a CalrissianCommandLineTool - use_container is disabled')
         docker_requirement, _ = self.get_requirement('DockerRequirement')
+        log.info(f"Hints: {self.hints}")
+        dask_requirement, _ = self.get_requirement('https://calrissian-cwl.github.io/schema#DaskGatewayRequirement')
+        log.info(f"DaskGatewayRequirement: {dask_requirement}")
         if not docker_requirement:
             # no docker requirement specified, inject one
             default_container = runtimeContext.find_default_container(self)
@@ -59,6 +62,7 @@ def calrissian_make_tool(spec, loadingContext):
     For other types of documents, return the CWL default_make_tool
     """
     if "class" in spec and spec["class"] == "CommandLineTool":
+        logging.info(loadingContext)
         return CalrissianCommandLineTool(spec, loadingContext)
     else:
         return default_make_tool(spec, loadingContext)

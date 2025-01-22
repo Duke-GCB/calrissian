@@ -49,6 +49,7 @@ def add_arguments(parser):
     parser.add_argument('--stderr', type=Text, nargs='?', help='Output file name to tee standard error to (includes tool logs)')
     parser.add_argument('--tool-logs-basepath', type=Text, nargs='?', help='Base path for saving the tool logs')
     parser.add_argument('--conf', help='Defines the default values for the CLI arguments', action='append')
+    parser.add_argument('--gateway-url', type=Text, nargs='?', help='Defines the Dask Gateway URL')
 
 
 def print_version():
@@ -130,6 +131,7 @@ def main():
     level = get_log_level(parsed_args)
     activate_logging(level)
     install_tees(parsed_args.stdout, parsed_args.stderr)
+    log.info("CALRISSIAN LOG")
     max_ram_megabytes = MemoryParser.parse_to_megabytes(parsed_args.max_ram)
     max_cores = CPUParser.parse(parsed_args.max_cores)
     max_gpus = int(parsed_args.max_gpus) if parsed_args.max_gpus else 0

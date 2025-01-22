@@ -272,6 +272,16 @@ class KubernetesClient(object):
             raise CalrissianJobException("Missing required environment variable ${}".format(POD_NAME_ENV_VARIABLE))
         return self.get_pod_for_name(pod_name)
 
+    @retry_exponential_if_exception_type((ApiException, HTTPError,), log)
+    def create_dask_gateway_cofig_map(self, gateway_url: str):
+        configmap = client.V1ConfigMap(
+            metadata=client.V1ObjectMeta(name="dask-gateway-cm"),
+            data={
+                "gateway.yaml": f"|\ngateway:\n\taddress:{gateway_url}"
+            }
+        )
+
+        self.core_api_instance.create_namespaced_config_map(namespace=self.namespace, body=configmap)   
 
 class PodMonitor(object):
     """

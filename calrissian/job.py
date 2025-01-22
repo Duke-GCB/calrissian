@@ -1,6 +1,5 @@
 from typing import Dict
 from cwltool.job import ContainerCommandLineJob, needs_shell_quoting_re
-
 # override cwltool.cuda.cuda_check
 def _cuda_check(cuda_req, requestCount):
     return 1
@@ -13,6 +12,7 @@ from cwltool.errors import WorkflowException, UnsupportedRequirement
 from calrissian.k8s import KubernetesClient, CompletionResult
 from calrissian.report import Reporter, TimedResourceReport
 from cwltool.builder import Builder
+import sys
 import logging
 import os
 import yaml
@@ -118,6 +118,7 @@ class KubernetesVolumeBuilder(object):
     def __init__(self):
         self.persistent_volume_entries = {}
         self.emptydir_volume_names = []
+        self.configmap_volume_names = []
         self.volume_mounts = []
         self.volumes = []
 
@@ -151,6 +152,14 @@ class KubernetesVolumeBuilder(object):
             'emptyDir': {},
         }
         self.emptydir_volume_names.append(name)
+        self.volumes.append(volume)
+
+    def add_configmap_volume(self, name, cm_name):
+        volume = {
+            'name': name,
+            'configMap': {'name' : cm_name}
+        }
+        self.configmap_volume_names.append(name)
         self.volumes.append(volume)
 
     def find_persistent_volume(self, source):
@@ -195,6 +204,14 @@ class KubernetesVolumeBuilder(object):
         }
         self.volume_mounts.append(volume_mount)
 
+    def add_configmap_volume_binding(self, name, target):
+        if not name in self.configmap_volume_names:
+            raise VolumeBuilderException('Could not find a configMap volume named {}'.format(name))
+        volume_mount = {
+            'name': name,
+            'mountPath': target
+        }
+        self.volume_mounts.append(volume_mount)
 
 class KubernetesPodBuilder(object):
 
@@ -384,6 +401,188 @@ class KubernetesPodBuilder(object):
         return spec
 
 
+class KubernetesDaskPodBuilder(KubernetesPodBuilder):
+
+    def __init__(self,
+                 name,
+                 container_image,
+                 environment,
+                 volume_mounts,
+                 volumes,
+                 command_line,
+                 stdout,
+                 stderr,
+                 stdin,
+                 resources,
+                 labels,
+                 nodeselectors,
+                 security_context,
+                 serviceaccount,
+                 gateway_url,
+                 requirements=None,
+                 hints=None):
+        self.name = name
+        self.container_image = container_image
+        self.environment = environment
+        self.volume_mounts = volume_mounts
+        self.volumes = volumes
+        self.command_line = command_line
+        self.stdout = stdout
+        self.stderr = stderr
+        self.stdin = stdin
+        self.resources = resources
+        self.labels = labels
+        self.nodeselectors = nodeselectors
+        self.security_context = security_context
+        self.serviceaccount = serviceaccount
+        self.gateway_url = gateway_url
+        self.requirements = {} if requirements is None else requirements
+        self.hints = [] if hints is None else hints
+    
+
+# INFO:calrissian.job:ARGS
+# ['--pre-event https://earth-search.aws.element84.com/v0/collections/sentinel-s2-l2a-cogs/items/S2B_10TFK_20210713_0_L2A --post-event https://earth-search.aws.element84.com/v0/collections/sentinel-s2-l2a-cogs/items/S2A_10TFK_20210718_0_L2A']
+# INFO:calrissian.job:['--pre-event https://earth-search.aws.element84.com/v0/collections/sentinel-s2-l2a-cogs/items/S2B_10TFK_20210713_0_L2A --post-event https://earth-search.aws.element84.com/v0/collections/sentinel-s2-l2a-cogs/items/S2A_10TFK_20210718_0_L2A']
+
+# INFO:calrissian.job:COMMAND
+# ['/bin/sh', '-c', ['set -e \\', 'trap touch /shared/completed EXIT \\', 'export DASK_CLUSTER=`cat /shared/dask_cluster_name.txt` \\', 'python -m app'], ['--pre-event https://earth-search.aws.element84.com/v0/collections/sentinel-s2-l2a-cogs/items/S2B_10TFK_20210713_0_L2A --post-event https://earth-search.aws.element84.com/v0/collections/sentinel-s2-l2a-cogs/items/S2A_10TFK_20210718_0_L2A']]
+# INFO:calrissian.job:['/bin/sh', '-c', ['set -e \\', 'trap touch /shared/completed EXIT \\', 'export DASK_CLUSTER=`cat /shared/dask_cluster_name.txt` \\', 'python -m app'], ['--pre-event https://earth-search.aws.element84.com/v0/collections/sentinel-s2-l2a-cogs/items/S2B_10TFK_20210713_0_L2A --post-event https://earth-search.aws.element84.com/v0/collections/sentinel-s2-l2a-cogs/items/S2A_10TFK_20210718_0_L2A']]
+
+    def container_command(self):
+        super_command = super().container_command()
+        super_args = super().container_args()
+        
+        shell_script = f"""\
+set -e;
+trap 'touch /shared/completed' EXIT;
+export DASK_CLUSTER=$(cat /shared/dask_cluster_name.txt);
+python -m app {super_args[0]}
+"""
+        super_command.append(shell_script)
+        return super_command
+
+
+
+    def container_environment(self):
+        environment = []
+        for name, value in sorted(self.environment.items()):
+            environment.append({'name': name, 'value': value})
+        
+        environment.append({'name': 'PYTHONPATH', 'value': '/app'})
+
+        return environment
+
+    def init_containers(self):
+        containers = []
+        # get dirname for any actual paths
+        dirs_to_create = [os.path.dirname(p) for p in [self.stdout, self.stderr] if p]
+        # Remove empty strings
+        dirs_to_create = [d for d in dirs_to_create if d]
+        # Quote if necessary
+        dirs_to_create = quoted_arg_list(dirs_to_create)
+        command_list = ['mkdir -p {};'.format(d) for d in dirs_to_create]
+        if command_list:
+            containers.append({
+                'name': self.init_container_name(),
+                'image':  os.environ.get(INIT_IMAGE_ENV_VARIABLE, DEFAULT_INIT_IMAGE),
+                'command': ['/bin/sh', '-c', ' '.join(command_list)],
+                'workingDir': self.container_workingdir(),
+                'volumeMounts': self.volume_mounts,
+            })
+        
+        dask_requirement = next((elem for elem in self.hints if elem['class'] == 'https://calrissian-cwl.github.io/schema#DaskGatewayRequirement'), None)
+
+        init_dask_command = [
+            'python',
+            '/app/init-dask.py',
+            '--target',
+            '/shared/dask_cluster_name.txt',
+            '--gateway-url',
+            self.gateway_url,
+            '--image',
+            str(dask_requirement['dockerPull']),
+            '--worker-cores',
+            str(dask_requirement["workerCores"]),
+            '--worker-memory',
+            str(dask_requirement["workerMemory"]),
+            '--worker-cores-limit',
+            str(dask_requirement["workerCoresLimit"]),
+            '--max-cores',
+            str(dask_requirement["coresMax"]),
+            '--max-ram',
+            str(dask_requirement["ramMax"])
+        ]
+    
+        log.info(init_dask_command)
+
+        init_dask_cluster = {
+            'name': self.init_container_name(),
+            'image': str(self.container_image),
+            'env': [{'name': 'PYTHONPATH', 'value': '/app'}],
+            'command': init_dask_command,
+            'workingDir': self.container_workingdir(),
+            'volumeMounts': self.volume_mounts
+        }
+
+        containers.append(init_dask_cluster)
+
+        return containers
+
+
+    def build(self):
+
+        sidecar_command = [
+            'python',
+            '/app/dispose-dask.py',
+            '--source',
+            '/shared/dask_cluster_name.txt',
+            '--gateway-url',
+            self.gateway_url,
+            '--signal',
+            '/shared/completed'  
+        ]
+
+        spec = {
+            'metadata': {
+                'name': self.pod_name(),
+                'labels': self.pod_labels(),
+            },
+            'apiVersion': 'v1',
+            'kind':'Pod',
+            'spec': {
+                'initContainers': self.init_containers(),
+                'containers': [
+                    {
+                        'name': 'main-container',
+                        'image': str(self.container_image),
+                        'command': self.container_command(),
+                        'env': self.container_environment(),
+                        'resources': self.container_resources(),
+                        'volumeMounts': self.volume_mounts,
+                        'workingDir': self.container_workingdir(),
+                    }
+                    # {
+                    #     'name': 'sidecar-container',
+                    #     'image': str(self.container_image),
+                    #     'command': sidecar_command,
+                    #     'env': self.container_environment(),
+                    #     'volumeMounts': self.volume_mounts,
+                    #     'workingDir': self.container_workingdir(),
+                    #     }
+                ],
+                'restartPolicy': 'Never',
+                'volumes': self.volumes,
+                'securityContext': self.security_context,
+                'nodeSelector': self.pod_nodeselectors()
+            }
+        }
+        
+        if ( self.serviceaccount ):
+            spec['spec']['serviceAccountName'] = self.serviceaccount
+        
+        return spec
+
+
 # This now subclasses ContainerCommandLineJob, but only uses two of its methods:
 # create_file_and_add_volume and add_volumes
 class CalrissianCommandLineJob(ContainerCommandLineJob):
@@ -507,6 +706,14 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             raise CalrissianCommandLineJobException('Unable to create Job - Please ensure tool has a DockerRequirement with dockerPull or specify a default_container')
         return container_image
 
+    def _get_worker_image(self):
+        docker_requirement, _ = self.get_requirement('https://calrissian-cwl.github.io/schema#DaskGatewayRequirement')
+        if docker_requirement:
+            container_image = docker_requirement['dockerPull']
+        if not container_image:
+            raise CalrissianCommandLineJobException('Unable to create Job - Please ensure tool has a DaskGatewayRequirement with dockerPull')
+        return container_image
+
     def quoted_command_line(self):
         return quoted_arg_list(self.command_line)
 
@@ -541,6 +748,9 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         else:
             return {}
 
+    def get_dask_gateway_url(self, runtimeContext):
+        return runtimeContext.gateway_url
+
     def create_kubernetes_runtime(self, runtimeContext):
         # In cwltool, the runtime list starts as something like ['docker','run'] and these various builder methods
         # append to that list with docker (or singularity) options like volume mount paths
@@ -573,25 +783,60 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
                 tmpdir_prefix=runtimeContext.tmpdir_prefix,
                 secret_store=runtimeContext.secret_store,
                 any_path_okay=any_path_okay)
+        
+        if self.get_requirement('https://calrissian-cwl.github.io/schema#DaskGatewayRequirement'):
 
-        k8s_builder = KubernetesPodBuilder(
-            self.name,
-            self._get_container_image(),
-            self.environment,
-            self.volume_builder.volume_mounts,
-            self.volume_builder.volumes,
-            self.quoted_command_line(),
-            self.stdout,
-            self.stderr,
-            self.stdin,
-            self.builder.resources,
-            self.get_pod_labels(runtimeContext),
-            self.get_pod_nodeselectors(runtimeContext),
-            self.get_security_context(runtimeContext),
-            self.get_pod_serviceaccount(runtimeContext),
-            self.builder.requirements,
-            self.builder.hints
-        )
+            dask_default_conf = '/etc/dask'
+            shared_data = '/shared'
+            
+            # self.client.create_dask_gateway_cofig_map(gateway_url=self.get_dask_gateway_url(runtimeContext))
+            
+            self._add_configmap_volume_and_binding(
+                name='dask-gateway-cm',
+                cm_name='dask-gateway-cm',
+                target=dask_default_conf)
+            
+            self._add_emptydir_volume_and_binding('shared-data', shared_data)
+
+            k8s_builder = KubernetesDaskPodBuilder(
+                self.name,
+                self._get_worker_image(),
+                self.environment,
+                self.volume_builder.volume_mounts,
+                self.volume_builder.volumes,
+                self.quoted_command_line(),
+                self.stdout,
+                self.stderr,
+                self.stdin,
+                self.builder.resources,
+                self.get_pod_labels(runtimeContext),
+                self.get_pod_nodeselectors(runtimeContext),
+                self.get_security_context(runtimeContext),
+                self.get_pod_serviceaccount(runtimeContext),
+                self.get_dask_gateway_url(runtimeContext),
+                requirements=self.builder.requirements,
+                hints=self.builder.hints,
+            )
+
+        else:
+            k8s_builder = KubernetesPodBuilder(
+                self.name,
+                self._get_container_image(),
+                self.environment,
+                self.volume_builder.volume_mounts,
+                self.volume_builder.volumes,
+                self.quoted_command_line(),
+                self.stdout,
+                self.stderr,
+                self.stdin,
+                self.builder.resources,
+                self.get_pod_labels(runtimeContext),
+                self.get_pod_nodeselectors(runtimeContext),
+                self.get_security_context(runtimeContext),
+                self.get_pod_serviceaccount(runtimeContext),
+                self.builder.requirements,
+                self.builder.hints
+            )
         built = k8s_builder.build()
         log.debug('{}\n{}{}\n'.format('-' * 80, yaml.dump(built), '-' * 80))
         # Report an error if anything was added to the runtime list
@@ -608,6 +853,10 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
 
     def _add_volume_binding(self, source, target, writable=False):
         self.volume_builder.add_volume_binding(source, target, writable)
+
+    def _add_configmap_volume_and_binding(self, name, cm_name, target):
+        self.volume_builder.add_configmap_volume(name, cm_name)
+        self.volume_builder.add_configmap_volume_binding(cm_name, target)
 
     # Below are concrete implementations of methods called by add_volumes
     # They are based on https://github.com/common-workflow-language/cwltool/blob/1.0.20181201184214/cwltool/docker.py
@@ -695,7 +944,8 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
     def run(self, runtimeContext, tmpdir_lock=None):
         
         def get_pod_command(pod):
-            return pod['spec']['containers'][0]['args']
+            if 'args' in pod['spec']['containers'][0].keys():
+                return pod['spec']['containers'][0]['args']
             
         def get_pod_name(pod):
             return pod['spec']['containers'][0]['name']

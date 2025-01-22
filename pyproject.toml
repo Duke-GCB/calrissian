@@ -54,7 +54,7 @@ extra-dependencies = [
   "mypy>=1.0.0",
 ]
 [tool.hatch.envs.types.scripts]
-check = "mypy --install-types --non-interactive {args:src/calrissian tests}"
+check = "mypy --install-types --non-interactive {args:calrissian tests}"
 
 [tool.coverage.run]
 source_pkgs = ["calrissian", "tests"]
@@ -112,7 +112,8 @@ dependencies = [
   "msgpack==1.0.7",
   "typing-extensions==4.8.0",
   "freezegun==1.2.2",
-  "setuptools==70.0.0"
+  "setuptools==70.0.0",
+  "coverage[toml]"
 ]
 
 [tool.hatch.envs.test.env-vars]
