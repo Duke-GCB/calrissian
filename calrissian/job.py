@@ -490,7 +490,7 @@ python -m app {super_args[0]}
                 'volumeMounts': self.volume_mounts,
             })
         
-        dask_requirement = next((elem for elem in self.hints if elem['class'] == 'https://calrissian-cwl.github.io/schema#DaskGatewayRequirement'), None)
+        dask_requirement = next((elem for elem in self.requirements if elem['class'] == 'https://calrissian-cwl.github.io/schema#DaskGatewayRequirement'), None)
 
         init_dask_command = [
             'python',
@@ -500,7 +500,7 @@ python -m app {super_args[0]}
             '--gateway-url',
             self.gateway_url,
             '--image',
-            str(dask_requirement['dockerPull']),
+            str(self.container_image),
             '--worker-cores',
             str(dask_requirement["workerCores"]),
             '--worker-memory',
@@ -508,9 +508,9 @@ python -m app {super_args[0]}
             '--worker-cores-limit',
             str(dask_requirement["workerCoresLimit"]),
             '--max-cores',
-            str(dask_requirement["coresMax"]),
+            str(dask_requirement["clustermaxCore"]),
             '--max-ram',
-            str(dask_requirement["ramMax"])
+            str(dask_requirement["clusterMaxMemory"])
         ]
     
         log.info(init_dask_command)
@@ -693,8 +693,6 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
                     if not field in self.supported_features[feature]:
                         raise UnsupportedRequirement('Error: feature {}.{} is not supported'.format(feature, field))
 
-        
-
     def _get_container_image(self):
         docker_requirement, _ = self.get_requirement('DockerRequirement')
         if docker_requirement:
@@ -704,14 +702,6 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             container_image = self.builder.find_default_container()
         if not container_image:
             raise CalrissianCommandLineJobException('Unable to create Job - Please ensure tool has a DockerRequirement with dockerPull or specify a default_container')
-        return container_image
-
-    def _get_worker_image(self):
-        docker_requirement, _ = self.get_requirement('https://calrissian-cwl.github.io/schema#DaskGatewayRequirement')
-        if docker_requirement:
-            container_image = docker_requirement['dockerPull']
-        if not container_image:
-            raise CalrissianCommandLineJobException('Unable to create Job - Please ensure tool has a DaskGatewayRequirement with dockerPull')
         return container_image
 
     def quoted_command_line(self):
@@ -800,7 +790,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
 
             k8s_builder = KubernetesDaskPodBuilder(
                 self.name,
-                self._get_worker_image(),
+                self._get_container_image(),
                 self.environment,
                 self.volume_builder.volume_mounts,
                 self.volume_builder.volumes,

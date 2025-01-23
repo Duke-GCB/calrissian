@@ -1,4 +1,8 @@
 import contextlib
+import re
+
+import cwltool
+from cwltool.process import use_custom_schema, get_schema
 from calrissian.executor import ThreadPoolJobExecutor
 from calrissian.context import CalrissianLoadingContext, CalrissianRuntimeContext
 from calrissian.version import version
@@ -124,6 +128,23 @@ def flush_tees():
     sys.stderr.flush()
 
 
+def add_custom_schema():
+    cwltool.command_line_tool.ACCEPTLIST_EN_RELAXED_RE = re.compile(r".*")
+    cwltool.command_line_tool.ACCEPTLIST_RE = cwltool.command_line_tool.ACCEPTLIST_EN_RELAXED_RE
+    supported_versions = ["v1.0", "v1.1", "v1.2"]
+
+    with open(os.path.join(os.path.dirname(__file__), "custom_schema/schema.yaml")) as f:
+        schema_content = f.read()
+
+    for s in supported_versions:
+        use_custom_schema(s, "https://calrissian-cwl.github.io/schema", schema_content)
+        get_schema(s)
+
+    cwltool.process.supportedProcessRequirements.extend([
+        "https://calrissian-cwl.github.io/schema#DaskGatewayRequirement"
+    ])
+
+
 def main():
     parser = arg_parser()
     add_arguments(parser)
@@ -131,7 +152,6 @@ def main():
     level = get_log_level(parsed_args)
     activate_logging(level)
     install_tees(parsed_args.stdout, parsed_args.stderr)
-    log.info("CALRISSIAN LOG")
     max_ram_megabytes = MemoryParser.parse_to_megabytes(parsed_args.max_ram)
     max_cores = CPUParser.parse(parsed_args.max_cores)
     max_gpus = int(parsed_args.max_gpus) if parsed_args.max_gpus else 0
@@ -146,7 +166,8 @@ def main():
                          loadingContext=CalrissianLoadingContext(),
                          runtimeContext=runtime_context,
                          versionfunc=version,
-                         )
+                         custom_schema_callback=(add_custom_schema if parsed_args.gateway_url else None)
+                        )
     finally:
         # Always clean up after cwlmain
         delete_pods()
