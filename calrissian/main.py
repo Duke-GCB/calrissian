@@ -53,7 +53,7 @@ def add_arguments(parser):
     parser.add_argument('--stderr', type=Text, nargs='?', help='Output file name to tee standard error to (includes tool logs)')
     parser.add_argument('--tool-logs-basepath', type=Text, nargs='?', help='Base path for saving the tool logs')
     parser.add_argument('--conf', help='Defines the default values for the CLI arguments', action='append')
-    parser.add_argument('--gateway-url', type=Text, nargs='?', help='Defines the Dask Gateway URL')
+    parser.add_argument('--gateway-url', type=Text, nargs='?', help='Defines the Dask Gateway URL', required=False)
 
 
 def print_version():

@@ -177,7 +177,7 @@ class KubernetesClient(object):
         log.info('[{}] follow_logs end'.format(pod_name))
 
     @retry_exponential_if_exception_type((ApiException, HTTPError, IncompleteStatusException), log)
-    def wait_for_completion(self) -> CompletionResult:
+    def wait_for_dask_completion(self) -> CompletionResult:
         w = watch.Watch()
         for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_field_selector()):
             pod = event['object']
@@ -221,40 +221,40 @@ class KubernetesClient(object):
         
         return self.completion_result
         
-    # @retry_exponential_if_exception_type((ApiException, HTTPError, IncompleteStatusException), log)
-    # def wait_for_completion(self) -> CompletionResult:
-    #     w = watch.Watch()
-    #     for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_field_selector()):
-    #         pod = event['object']
-    #         status = self.get_first_or_none(pod.status.container_statuses)
-    #         log.info('pod name {} with id {} has status {}'.format(pod.metadata.name, pod.metadata.uid, status))
-    #         if status is None:
-    #             continue
-    #         if self.state_is_waiting(status.state):
-    #             continue
-    #         elif self.state_is_running(status.state):
-    #             # Can only get logs once container is running
-    #             self.follow_logs() # This will not return until pod completes
-    #         elif self.state_is_terminated(status.state):
-    #             log.info('Handling terminated pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
-    #             container = self.get_first_or_none(pod.spec.containers)
-    #             self._handle_completion(status.state, container)
-    #             if self.should_delete_pod():
-    #                 with PodMonitor() as monitor:
-    #                     self.delete_pod_name(pod.metadata.name)
-    #                     monitor.remove(pod)
-    #             self._clear_pod()
-    #             # stop watching for events, our pod is done. Causes wait loop to exit
-    #             w.stop()
-    #         else:
-    #             raise CalrissianJobException('Unexpected pod container status', status)
+    @retry_exponential_if_exception_type((ApiException, HTTPError, IncompleteStatusException), log)
+    def wait_for_completion(self) -> CompletionResult:
+        w = watch.Watch()
+        for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_field_selector()):
+            pod = event['object']
+            status = self.get_first_or_none(pod.status.container_statuses)
+            log.info('pod name {} with id {} has status {}'.format(pod.metadata.name, pod.metadata.uid, status))
+            if status is None:
+                continue
+            if self.state_is_waiting(status.state):
+                continue
+            elif self.state_is_running(status.state):
+                # Can only get logs once container is running
+                self.follow_logs() # This will not return until pod completes
+            elif self.state_is_terminated(status.state):
+                log.info('Handling terminated pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
+                container = self.get_first_or_none(pod.spec.containers)
+                self._handle_completion(status.state, container)
+                if self.should_delete_pod():
+                    with PodMonitor() as monitor:
+                        self.delete_pod_name(pod.metadata.name)
+                        monitor.remove(pod)
+                self._clear_pod()
+                # stop watching for events, our pod is done. Causes wait loop to exit
+                w.stop()
+            else:
+                raise CalrissianJobException('Unexpected pod container status', status)
         
-    #     # When the pod is done we should have a completion result
-    #     # Otherwise it will lead to further exceptions
-    #     if self.completion_result is None:
-    #         raise IncompleteStatusException
+        # When the pod is done we should have a completion result
+        # Otherwise it will lead to further exceptions
+        if self.completion_result is None:
+            raise IncompleteStatusException
 
-    #     return self.completion_result
+        return self.completion_result
 
     def _set_pod(self, pod):
         log.info('k8s pod \'{}\' started'.format(pod.metadata.name))
@@ -282,12 +282,6 @@ class KubernetesClient(object):
 
     @staticmethod
     def get_list_or_none(container_list: List[Union[V1ContainerStatus, V1Container]]) -> Union[V1ContainerStatus, V1Container]:
-        """
-        Check the list. Should be 0 or 1 items. If 0, there's no container yet. If 1, there's a
-        container. If > 1, there's more than 1 container and that's unexpected behavior
-        :param containers_or_container_statuses: list of V1ContainerStatus or V1Container
-        :return: first item if len of list is 1, None if 0, and raises CalrissianJobException if > 1
-        """
         if not container_list: # None or empty list
             return None
         else:
@@ -295,12 +289,6 @@ class KubernetesClient(object):
 
     @staticmethod
     def get_last_or_none(container_list: List[Union[V1ContainerStatus, V1Container]]) -> Union[V1ContainerStatus, V1Container]:
-        """
-        Check the list. Should be 0 or 1 items. If 0, there's no container yet. If 1, there's a
-        container. If > 1, there's more than 1 container and that's unexpected behavior
-        :param containers_or_container_statuses: list of V1ContainerStatus or V1Container
-        :return: first item if len of list is 1, None if 0, and raises CalrissianJobException if > 1
-        """
         if not container_list: # None or empty list
             return None
         else:
