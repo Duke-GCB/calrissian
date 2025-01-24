@@ -512,8 +512,6 @@ python -m app {super_args[0]}
             '--max-ram',
             str(dask_requirement["clusterMaxMemory"])
         ]
-    
-        log.info(init_dask_command)
 
         init_dask_cluster = {
             'name': self.init_container_name(),
@@ -560,15 +558,16 @@ python -m app {super_args[0]}
                         'resources': self.container_resources(),
                         'volumeMounts': self.volume_mounts,
                         'workingDir': self.container_workingdir(),
-                    }
-                    # {
-                    #     'name': 'sidecar-container',
-                    #     'image': str(self.container_image),
-                    #     'command': sidecar_command,
-                    #     'env': self.container_environment(),
-                    #     'volumeMounts': self.volume_mounts,
-                    #     'workingDir': self.container_workingdir(),
-                    #     }
+                    },
+                    {
+                        'name': 'sidecar-container',
+                        'image': str(self.container_image),
+                        'command': sidecar_command,
+                        'env': self.container_environment(),
+                        'resources': self.container_resources(),
+                        'volumeMounts': self.volume_mounts,
+                        'workingDir': self.container_workingdir(),
+                        }
                 ],
                 'restartPolicy': 'Never',
                 'volumes': self.volumes,
