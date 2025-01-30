@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Dict
 from cwltool.job import ContainerCommandLineJob, needs_shell_quoting_re
 

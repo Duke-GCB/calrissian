@@ -34,7 +34,7 @@ def get_log_level(parsed_args):
 
 
 def activate_logging(level):
-    loggers = ['executor','context','tool','job', 'k8s','main']
+    loggers = ['executor','context','tool','job', 'k8s','main', 'dask']
     for logger in loggers:
         logging.getLogger('calrissian.{}'.format(logger)).setLevel(level)
         logging.getLogger('calrissian.{}'.format(logger)).addHandler(logging.StreamHandler())
@@ -53,7 +53,8 @@ def add_arguments(parser):
     parser.add_argument('--stderr', type=Text, nargs='?', help='Output file name to tee standard error to (includes tool logs)')
     parser.add_argument('--tool-logs-basepath', type=Text, nargs='?', help='Base path for saving the tool logs')
     parser.add_argument('--conf', help='Defines the default values for the CLI arguments', action='append')
-    parser.add_argument('--gateway-url', type=Text, nargs='?', help='Defines the Dask Gateway URL', required=False)
+    parser.add_argument('--dask-gateway-url', type=Text, nargs='?', help='Defines the Dask Gateway URL', required=False)
+    parser.add_argument('--dask-gateway-extra-config', type=Text, nargs='?', help='YAML file of extra k8s config for Dask', required=False)
 
 
 def print_version():
@@ -133,7 +134,7 @@ def add_custom_schema():
     cwltool.command_line_tool.ACCEPTLIST_RE = cwltool.command_line_tool.ACCEPTLIST_EN_RELAXED_RE
     supported_versions = ["v1.0", "v1.1", "v1.2"]
 
-    with open(os.path.join(os.path.dirname(__file__), "custom_schema/schema.yaml")) as f:
+    with open(os.path.join(os.path.dirname(__file__), "dask/custom_schema/schema.yaml")) as f:
         schema_content = f.read()
 
     for s in supported_versions:
@@ -160,13 +161,16 @@ def main():
     runtime_context = CalrissianRuntimeContext(vars(parsed_args))
     runtime_context.select_resources = executor.select_resources
     install_signal_handler()
+
+    parsed_args.enable_ext = True
+
     try:
         result = cwlmain(args=parsed_args,
                          executor=executor,
                          loadingContext=CalrissianLoadingContext(),
                          runtimeContext=runtime_context,
                          versionfunc=version,
-                         custom_schema_callback=(add_custom_schema if parsed_args.gateway_url else None)
+                         custom_schema_callback=(add_custom_schema if parsed_args.dask_gateway_url else None)
                         )
     finally:
         # Always clean up after cwlmain
