@@ -122,6 +122,7 @@ RETRY_ATTEMPTS="0"
 [tool.hatch.envs.test.scripts]
 test = "hatch run nose2"
 testv = "hatch run nose2 --verbose"
+testdask = "hatch run nose2 tests.test_dask"
 cov = ["coverage run --source=calrissian -m nose2", "coverage report"]
 
 [[tool.hatch.envs.test.matrix]]

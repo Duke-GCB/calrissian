@@ -16,11 +16,13 @@ from calrissian.executor import IncompleteStatusException
 from calrissian.retry import retry_exponential_if_exception_type
 from calrissian.job import (
     CalrissianCommandLineJob,
-    KubernetesPodBuilder,
+    KubernetesPodBuilder
 )
 from calrissian.job import (
     quoted_arg_list,
-    read_yaml
+    read_yaml,
+    random_tag,
+    k8s_safe_name,
 )
 from calrissian.job import (
     DEFAULT_INIT_IMAGE,
@@ -246,8 +248,6 @@ class CalrissianCommandLineDaskJob(CalrissianCommandLineJob):
     daskGateway_controller_dir = '/controller'
 
     daskGateway_config_dir = '/etc/dask'
-    daskGateway_cm_name = 'dask-gateway-cm'
-    daskGateway_cm = 'dask-gateway-cm'
 
     daskGateway_controller_cm_name = 'dask-cluster-controller-cm'
 
@@ -256,8 +256,14 @@ class CalrissianCommandLineDaskJob(CalrissianCommandLineJob):
         super(CalrissianCommandLineDaskJob, self).__init__(*args, **kwargs)
         self.client = KubernetesDaskClient()
 
-    def wait_for_kubernetes_pod(self):
-        return self.client.wait_for_completion()
+        self.dask_cm_name, self.dask_cm_claim_name = self.dask_configmap_name()
+
+    def dask_configmap_name(self):
+        tag = random_tag()
+        return k8s_safe_name('{}-cm-{}'.format('dask', tag)), k8s_safe_name('{}-cm-{}'.format('dask', tag))
+
+    def wait_for_kubernetes_pod(self, cm_name: str):
+        return self.client.wait_for_completion(cm_name = cm_name)
 
     def get_dask_gateway_url(self, runtimeContext):
         return runtimeContext.dask_gateway_url
@@ -301,7 +307,8 @@ class CalrissianCommandLineDaskJob(CalrissianCommandLineJob):
 
 
         self.client.create_dask_gateway_cofig_map(
-            dask_gateway_url=self.get_dask_gateway_url(runtimeContext))
+            dask_gateway_url=self.get_dask_gateway_url(runtimeContext),
+            cm_name=self.dask_cm_name)
 
         # emptyDir volume at /shared for sharing the Dask cluster name between containers
         self._add_emptydir_volume_and_binding('shared-data', self.container_shared_dir)
@@ -310,8 +317,8 @@ class CalrissianCommandLineDaskJob(CalrissianCommandLineJob):
         # Need this ConfigMap to simplify configuration by providing defaults, 
         # as explained here: https://gateway.dask.org/configuration-user.html
         self._add_configmap_volume_and_binding(
-            name=self.daskGateway_cm,
-            cm_name=self.daskGateway_cm_name,
+            name=self.dask_cm_name,
+            cm_name=self.dask_cm_claim_name,
             target=self.daskGateway_config_dir)
 
 
@@ -375,7 +382,7 @@ class CalrissianCommandLineDaskJob(CalrissianCommandLineJob):
         
         pod = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
         self.execute_kubernetes_pod(pod) # analogous to _execute()
-        completion_result = self.wait_for_kubernetes_pod()
+        completion_result = self.wait_for_kubernetes_pod(cm_name = self.dask_cm_name)
         if completion_result.exit_code != 0:
             log_main.error(f"ERROR the command below failed in pod {get_pod_name(pod)}:")
             log_main.error("\t" + " ".join(get_pod_command(pod)))
@@ -386,6 +393,15 @@ class KubernetesDaskClient(KubernetesClient):
 
     def __init__(self):
         super().__init__()
+
+    @retry_exponential_if_exception_type((ApiException, HTTPError,), log)
+    def submit_pod(self, pod_body):
+        with DaskPodMonitor() as monitor:
+            pod = self.core_api_instance.create_namespaced_pod(self.namespace, pod_body)
+            log.info('Created k8s pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
+            monitor.add(pod)
+            self._set_pod(pod)
+
 
     @retry_exponential_if_exception_type((ApiException, HTTPError,), log)
     def follow_logs(self, status):
@@ -409,7 +425,7 @@ class KubernetesDaskClient(KubernetesClient):
 
 
     @retry_exponential_if_exception_type((ApiException, HTTPError, IncompleteStatusException), log)
-    def wait_for_completion(self) -> CompletionResult:
+    def wait_for_completion(self, cm_name: str) -> CompletionResult:
         w = watch.Watch()
         for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_field_selector()):
             pod = event['object']
@@ -439,7 +455,7 @@ class KubernetesDaskClient(KubernetesClient):
                 if self.should_delete_pod():
                     with DaskPodMonitor() as monitor:
                         self.delete_pod_name(pod.metadata.name)
-                        self.delete_configmap_name(cm_name="dask-gateway-cm")
+                        self.delete_configmap_name(cm_name=cm_name)
                         monitor.remove(pod)
                 self._clear_pod()
                 # stop watching for events, our pod is done. Causes wait loop to exit
@@ -469,11 +485,11 @@ class KubernetesDaskClient(KubernetesClient):
             return container_list[-1]
         
     @retry_exponential_if_exception_type((ApiException, HTTPError,), log)
-    def create_dask_gateway_cofig_map(self, dask_gateway_url: str):
+    def create_dask_gateway_cofig_map(self, dask_gateway_url: str, cm_name: str):
         gateway = {'gateway': {'address': dask_gateway_url}}
 
         configmap = client.V1ConfigMap(
-            metadata=client.V1ObjectMeta(name="dask-gateway-cm"),
+            metadata=client.V1ObjectMeta(name=cm_name),
             data={
                 "gateway.yaml": yaml.dump(gateway)
             }
@@ -518,7 +534,7 @@ class KubernetesDaskClient(KubernetesClient):
 class DaskPodMonitor(PodMonitor):
     def __init__(self):
         super().__init__()
-    
+
     @staticmethod
     def cleanup():
         log.info('Starting Cleanup')
@@ -528,7 +544,6 @@ class DaskPodMonitor(PodMonitor):
                 log.info('PodMonitor deleting pod {}'.format(pod_name))
                 try:
                     k8s_client.delete_pod_name(pod_name)
-                    k8s_client.delete_configmap_name(cm_name="dask-gateway-cm")
                 except Exception:
                     log.error('Error deleting pod named {}, ignoring'.format(pod_name))
             PodMonitor.pod_names = []

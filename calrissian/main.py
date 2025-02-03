@@ -8,6 +8,7 @@ from calrissian.context import CalrissianLoadingContext, CalrissianRuntimeContex
 from calrissian.version import version
 from calrissian.k8s import delete_pods
 from calrissian.report import initialize_reporter, write_report, CPUParser, MemoryParser
+from calrissian.dask import DaskPodMonitor
 from cwltool.main import main as cwlmain
 from cwltool.argparser import arg_parser
 from typing_extensions import Text
@@ -101,7 +102,6 @@ def install_signal_handler():
     """
     signal.signal(signal.SIGTERM, handle_sigterm)
 
-
 def install_tees(stdout_path=None, stderr_path=None):
     """
     Reconnects stdout/stderr to `tee` processes via subprocess.PIPE that can write to user-supplied files
@@ -174,7 +174,10 @@ def main():
                         )
     finally:
         # Always clean up after cwlmain
-        delete_pods()
+        if parsed_args.dask_gateway_url:
+            DaskPodMonitor.cleanup()
+        else:
+            delete_pods()
         if parsed_args.usage_report:
             write_report(parsed_args.usage_report)
         flush_tees()
