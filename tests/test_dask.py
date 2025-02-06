@@ -1,18 +1,29 @@
 import os
 
+import threading
 from unittest import TestCase
-from unittest.mock import patch, call, Mock, mock_open
+from unittest.mock import PropertyMock, create_autospec, patch, call, Mock, mock_open
 import logging
 
 from cwltool.utils import CWLObjectType
-
+from calrissian.context import CalrissianRuntimeContext
+from calrissian.executor import IncompleteStatusException
+from calrissian.job import INIT_IMAGE_ENV_VARIABLE, DEFAULT_INIT_IMAGE
 from calrissian.dask import (
-    KubernetesDaskPodBuilder
+    CalrissianCommandLineDaskJob,
+    KubernetesDaskPodBuilder,
+    KubernetesDaskClient
 )
 
 from calrissian.dask import (
     dask_req_validate,
 )
+from calrissian.k8s import (
+    CalrissianJobException,
+    CompletionResult
+)
+from kubernetes.client.models import V1Pod
+from kubernetes.client.rest import ApiException
 
 
 class ValidateExtensionTestCase(TestCase):
@@ -91,6 +102,19 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
         self.assertEqual(expected_command, self.pod_builder.init_container_command())
 
 
+    def test_sidecar_container_command_with_external_script(self):
+        self.pod_builder.dask_gateway_controller = True
+        self.assertEqual(['python', '/controller/dispose-dask.py'], self.pod_builder.sidecar_container_command())
+
+
+    @patch("builtins.open", new_callable=mock_open, read_data="print('Default script')")
+    @patch("os.path.join", return_value="/mocked/path/dispose-dask.py")  # Mock path join
+    def test_sidecar_container_command_with_default_script(self, mock_path_join, mock_file):
+        self.pod_builder.dask_gateway_controller = False
+        expected_command = ['python', '-c', "print('Default script')"]
+        self.assertEqual(expected_command, self.pod_builder.sidecar_container_command())
+
+
     def test_container_environment(self):
         environment = self.pod_builder.container_environment()
         self.assertEqual(len(self.environment) + 8, len(environment)) # +8 Because the dask related are added at runtime 
@@ -104,3 +128,363 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
         self.assertIn({'name': 'DASK_GATEWAY_URL', 'value': 'http://dask-gateway-url:80'}, environment)
         self.assertIn({'name': 'DASK_GATEWAY_IMAGE', 'value': 'dockerimage:1.0'}, environment)  # Replace with actual image if needed
         self.assertIn({'name': 'DASK_CLUSTER_NAME_PATH', 'value': '/shared/dask_cluster_name.txt'}, environment)
+
+
+    def test_init_containers_when_no_stdout_or_stderr(self):
+        self.pod_builder.stdout = None
+        self.pod_builder.stderr = None
+        self.assertEqual(len(self.pod_builder.init_containers()), 1)
+
+    def test_init_containers_when_stdout_is_local_file(self):
+        self.pod_builder.stdout = 'stdout.txt'
+        self.pod_builder.stderr = None
+        self.assertEqual(len(self.pod_builder.init_containers()), 1)
+
+    def test_init_containers_when_stderr_is_local_file(self):
+        self.pod_builder.stdout = None
+        self.pod_builder.stderr = 'stderr.txt'
+        self.assertEqual(len(self.pod_builder.init_containers()), 1)
+
+    def test_init_containers_when_stdout_has_path(self):
+        self.pod_builder.stdout = 'out/to/stdout.txt'
+        self.pod_builder.stderr = 'err/to/stderr.txt'
+        init_containers = self.pod_builder.init_containers()
+        self.assertEqual(len(init_containers), 2)
+        container = init_containers[0]
+        self.assertEqual(container['name'], 'podname-init')
+        self.assertEqual(container['image'], DEFAULT_INIT_IMAGE)
+        self.assertEqual(container['command'], ['/bin/sh','-c','mkdir -p out/to; mkdir -p err/to;'])
+        self.assertEqual(container['volumeMounts'], self.pod_builder.volume_mounts)
+    
+
+    @patch("builtins.open", new_callable=mock_open, read_data="print('Default script')")
+    @patch("os.path.join", return_value="/mocked/path/dispose-dask.py")  # Mock path join
+    def test_dask_init_container(self, mock_path_join, mock_file):
+        self.pod_builder.stdout = None
+        self.pod_builder.stderr = None
+        init_containers = self.pod_builder.init_containers()
+        self.assertEqual(len(init_containers), 1)
+        container = init_containers[0]
+
+        self.assertEqual(container['env'], self.pod_builder.container_environment())
+
+        expected_command = ['python', '-c', "print('Default script')"]
+        self.assertEqual(container['command'], expected_command)
+        self.assertEqual(container['image'], self.container_image)
+
+    @patch("builtins.open", new_callable=mock_open, read_data="print('Default script')")
+    @patch("os.path.join", return_value="/mocked/path/dispose-dask.py")  # Mock path join
+    def test_dask_init_containers_when_stdout_has_path(self, mock_path_join, mock_file):
+        self.pod_builder.stdout = 'out/to/stdout.txt'
+        self.pod_builder.stderr = 'err/to/stderr.txt'
+        init_containers = self.pod_builder.init_containers()
+        self.assertEqual(len(init_containers), 2)
+        container = init_containers[0]
+        dask_container = init_containers[1]
+
+        self.assertEqual(container['name'], 'podname-init')
+        self.assertEqual(container['image'], DEFAULT_INIT_IMAGE)
+        self.assertEqual(container['command'], ['/bin/sh','-c','mkdir -p out/to; mkdir -p err/to;'])
+        self.assertEqual(container['volumeMounts'], self.pod_builder.volume_mounts)
+
+        self.assertEqual(dask_container['env'], self.pod_builder.container_environment())
+        expected_command = ['python', '-c', "print('Default script')"]
+        self.assertEqual(dask_container['command'], expected_command)
+        self.assertEqual(dask_container['image'], self.container_image)
+
+    
+    def test_dask_init_container_custom_command(self):
+        self.pod_builder.stdout = None
+        self.pod_builder.stderr = None
+        self.pod_builder.dask_gateway_controller = True
+        init_containers = self.pod_builder.init_containers()
+        self.assertEqual(len(init_containers), 1)
+        container = init_containers[0]
+
+        expected_command = ['python', '/controller/init-dask.py']
+        self.assertEqual(container['command'], expected_command)
+
+
+    @patch("builtins.open", new_callable=mock_open, read_data="print('Default script')")
+    @patch("os.path.join", return_value="/mocked/path/file-dask.py")
+    @patch('calrissian.job.random_tag')
+    def test_dask_build(self, mock_random_tag, mock_path_join, mock_file):
+        mock_random_tag.return_value = 'random'
+        expected = {
+            'metadata': {
+                'name': 'podname-pod-random',
+                'labels': {
+                    'key1': 'val1',
+                    'key2': '123'
+                }
+            },
+            'apiVersion': 'v1',
+            'kind': 'Pod',
+            'spec': {
+                'initContainers': [
+                    {
+                        'name': 'podname-init',
+                        'image': 'dockerimage:1.0',
+                        'env': [
+                            {'name': 'HOME', 'value': '/homedir'},
+                            {'name': 'PYTHONPATH', 'value': '/app'},
+                            {'name': 'DASK_GATEWAY_WORKER_CORES', 'value': '2'},
+                            {'name': 'DASK_GATEWAY_WORKER_MEMORY', 'value': '4G'},
+                            {'name': 'DASK_GATEWAY_WORKER_CORES_LIMIT', 'value': '2'}, 
+                            {'name': 'DASK_GATEWAY_CLUSTER_MAX_CORES', 'value': '8'},
+                            {'name': 'DASK_GATEWAY_CLUSTER_MAX_RAM', 'value': '16G'},
+                            {'name': 'DASK_GATEWAY_URL', 'value': 'http://dask-gateway-url:80'},
+                            {'name': 'DASK_GATEWAY_IMAGE', 'value': 'dockerimage:1.0'},
+                            {'name': 'DASK_CLUSTER_NAME_PATH', 'value': '/shared/dask_cluster_name.txt'}
+                        ],
+                        'command': ['python', '-c', "print('Default script')"],
+                        'workingDir': '/homedir',
+                        'volumeMounts': self.volume_mounts,
+                    }
+                ],
+                'containers': [
+                    {
+                        'name': 'main-container',
+                        'image': 'dockerimage:1.0',
+                        'command': ['/bin/sh', '-c'],
+                        'args': ['set -e; trap "touch /shared/completed" EXIT;export DASK_CLUSTER=$(cat /shared/dask_cluster_name.txt) ; cat > stdout.txt 2> stderr.txt < stdin.txt'],
+                        'env': [
+                            {'name': 'HOME', 'value': '/homedir'},
+                            {'name': 'PYTHONPATH', 'value': '/app'},
+                            {'name': 'DASK_GATEWAY_WORKER_CORES', 'value': '2'},
+                            {'name': 'DASK_GATEWAY_WORKER_MEMORY', 'value': '4G'},
+                            {'name': 'DASK_GATEWAY_WORKER_CORES_LIMIT', 'value': '2'}, 
+                            {'name': 'DASK_GATEWAY_CLUSTER_MAX_CORES', 'value': '8'},
+                            {'name': 'DASK_GATEWAY_CLUSTER_MAX_RAM', 'value': '16G'},
+                            {'name': 'DASK_GATEWAY_URL', 'value': 'http://dask-gateway-url:80'},
+                            {'name': 'DASK_GATEWAY_IMAGE', 'value': 'dockerimage:1.0'},
+                            {'name': 'DASK_CLUSTER_NAME_PATH', 'value': '/shared/dask_cluster_name.txt'}
+                        ],
+                        'resources': {
+                            'requests': {
+                                'cpu': '1',
+                                'memory': '1024Mi'
+                            }
+                        },
+                        'volumeMounts': self.volume_mounts,
+                        'workingDir': '/homedir',
+                    },
+                    {
+                        'name': 'sidecar-container',
+                        'image': 'dockerimage:1.0',
+                        'command': ['python', '-c', "print('Default script')"],
+                        'env': [
+                            {'name': 'HOME', 'value': '/homedir'},
+                            {'name': 'PYTHONPATH', 'value': '/app'},
+                            {'name': 'DASK_GATEWAY_WORKER_CORES', 'value': '2'},
+                            {'name': 'DASK_GATEWAY_WORKER_MEMORY', 'value': '4G'},
+                            {'name': 'DASK_GATEWAY_WORKER_CORES_LIMIT', 'value': '2'}, 
+                            {'name': 'DASK_GATEWAY_CLUSTER_MAX_CORES', 'value': '8'},
+                            {'name': 'DASK_GATEWAY_CLUSTER_MAX_RAM', 'value': '16G'},
+                            {'name': 'DASK_GATEWAY_URL', 'value': 'http://dask-gateway-url:80'},
+                            {'name': 'DASK_GATEWAY_IMAGE', 'value': 'dockerimage:1.0'},
+                            {'name': 'DASK_CLUSTER_NAME_PATH', 'value': '/shared/dask_cluster_name.txt'}
+                        ],
+                        'resources': {
+                            'requests': {
+                                'cpu': '1',
+                                'memory': '1024Mi'
+                            }
+                        },
+                        'volumeMounts': self.volume_mounts,
+                        'workingDir': '/homedir',
+                    }
+                ],
+                'restartPolicy': 'Never',
+                'volumes': self.volumes,
+                'securityContext': {
+                    'runAsUser': os.getuid(),
+                    'runAsGroup': os.getgid()
+                },
+                'nodeSelector': {
+                    "disktype": "ssd",
+                    "cachelevel": "2"
+                },
+                'serviceAccountName': 'podmanager'
+            }
+        }
+
+        self.assertEqual(expected, self.pod_builder.build())
+
+        # test build with custom script
+        self.pod_builder.dask_gateway_controller = True
+        expected['spec']['initContainers'][0]['command'] = ['python', '/controller/init-dask.py']
+        expected['spec']['containers'][1]['command'] = ['python', '/controller/dispose-dask.py']
+        self.assertEqual(expected, self.pod_builder.build())
+
+
+@patch('calrissian.dask.KubernetesDaskClient')
+@patch('calrissian.job.KubernetesVolumeBuilder')
+class CalrissianCommandLineDaskJobTestCase(TestCase):
+
+    def setUp(self):
+        self.builder = Mock(outdir='/out')
+        self.joborder = Mock()
+        self.make_path_mapper = Mock()
+        self.requirements = [{'class': 'DockerRequirement', 'dockerPull': 'dockerimage:1.0'}]
+        self.hints = []
+        self.name = 'test-cldj' # test-commandLineDaskJob
+        self.runtime_context = CalrissianRuntimeContext(
+            {'workflow_eval_lock': threading.Lock(),
+             'dask_gateway_url': 'dask_gateway_url'})
+
+
+    @patch('calrissian.k8s.KubernetesClient.get_current_pod', return_value=Mock())
+    # Since the mock_client is the KubernetesDaskClient, that extends KubernetesClient,
+    # I need to mock also the get_current_pod from the superclass
+    def make_job(self, mock_pod):
+
+        job = CalrissianCommandLineDaskJob(
+            self.builder,
+            self.joborder,
+            self.make_path_mapper,
+            self.requirements,
+            self.hints,
+            self.name
+        )
+        mock_collected_outputs = Mock()
+        job.collect_outputs = Mock()
+        job.collect_outputs.return_value = mock_collected_outputs
+        job.output_callback = Mock()
+        return job
+    
+    def make_completion_result(self, exit_code):
+        return create_autospec(CompletionResult, pod_name=self.name, exit_code=exit_code, cpus='1', memory='1', start_time=Mock(),
+                        finish_time=Mock(), pod_log='logs/')
+
+    
+    def test_wait_for_kubernetes_dask_pod(self, mock_volume_builder, mock_client):
+        job = self.make_job()
+        job.wait_for_kubernetes_pod(cm_name='dask-cm-random')
+        
+        self.assertTrue(mock_client.return_value.wait_for_completion.called)  
+
+
+    def test_get_dask_gateway_url(self, mock_volume_builder, mock_client):
+        job = self.make_job()
+        dask_gateway_url = job.get_dask_gateway_url(self.runtime_context)
+        self.assertEqual(dask_gateway_url, 'dask_gateway_url')
+
+
+    def test_dask_configmap_name(self, mock_volume_builder, mock_client):
+        job = self.make_job()
+        self.assertRegex(job.dask_cm_name, r'^dask-cm-[a-zA-Z0-9]{8}$')
+        self.assertRegex(job.dask_cm_claim_name, r'^dask-cm-[a-zA-Z0-9]{8}$')
+
+    
+    def test__add_configmap_volume_and_binding(self, mock_volume_builder, mock_client):
+        job = self.make_job()
+        job._add_configmap_volume_and_binding(
+            job.dask_cm_name, job.dask_cm_claim_name, job.daskGateway_config_dir
+        )
+        self.assertTrue(mock_volume_builder.return_value.add_configmap_volume.called)
+        self.assertTrue(mock_volume_builder.return_value.add_configmap_volume_binding.called)
+
+
+    @patch('calrissian.dask.KubernetesDaskPodBuilder')
+    @patch('calrissian.dask.os')
+    @patch('calrissian.job.read_yaml')
+    def test_create_kubernetes_runtime(self, mock_read_yaml, mock_os, mock_pod_builder, mock_volume_builder, mock_client):
+        def realpath(path):
+            return '/real' + path
+        mock_os.path.realpath = realpath
+        mock_add_volume_binding = Mock()
+        mock_add_emptydir_volume = Mock()
+        mock_add_emptydir_volume_binding = Mock()
+        mock_volume_builder.return_value.add_volume_binding = mock_add_volume_binding
+        mock_volume_builder.return_value.add_emptydir_volume = mock_add_emptydir_volume
+        mock_volume_builder.return_value.add_emptydir_volume_binding = mock_add_emptydir_volume_binding
+
+        mock_pod_builder.return_value.build.return_value = '<built pod>'
+        job = self.make_job()
+        job.outdir = '/outdir'
+        job.tmpdir = '/tmpdir'
+        mock_runtime_context = Mock(tmpdir_prefix='TP', pod_serviceaccount=None)
+        built = job.create_kubernetes_runtime(mock_runtime_context)
+        # Adds volume binding for outdir
+        self.assertEqual(mock_add_volume_binding.call_args, call('/real/outdir', '/out', True))
+        # Adds emptydir binding for shared-data
+        self.assertEqual(mock_add_emptydir_volume.call_args, call('shared-data'))
+        self.assertEqual(mock_add_emptydir_volume_binding.call_args, call('shared-data', '/shared'))
+        # looks at generatemapper
+        # creates a KubernetesPodBuilder
+        self.assertEqual(mock_pod_builder.call_args, call(
+            job.name,
+            job._get_container_image(),
+            job.environment,
+            job.volume_builder.volume_mounts,
+            job.volume_builder.volumes,
+            job.command_line,
+            job.stdout,
+            job.stderr,
+            job.stdin,
+            job.builder.resources,
+            mock_read_yaml.return_value,
+            mock_read_yaml.return_value,
+            job.get_security_context(mock_runtime_context),
+            None,
+            job.get_dask_gateway_url(mock_runtime_context),
+            job.client.get_configmap_from_namespace(job.daskGateway_controller_cm_name),
+            requirements=job.builder.requirements,
+            hints=job.builder.hints,
+        ))
+        # calls builder.build
+        # returns that
+        self.assertTrue(mock_pod_builder.return_value.build.called)
+        self.assertEqual(built, mock_pod_builder.return_value.build.return_value)
+
+    
+    @patch('calrissian.dask.KubernetesDaskPodBuilder')
+    def test_run(self, mock_pod_builder, mock_volume_builder, mock_client):
+        job = self.make_job()
+        job.make_tmpdir = Mock()
+        job.populate_env_vars = Mock()
+        job._setup = Mock()
+        job.create_kubernetes_runtime = Mock()
+        job.execute_kubernetes_pod = Mock()
+        job.wait_for_kubernetes_pod = Mock()
+        job.report = Mock()
+        job.finish = Mock()
+        job.create_kubernetes_runtime = mock_pod_builder
+        
+        job.run(self.runtime_context)
+        self.assertTrue(job.make_tmpdir.called)
+        self.assertTrue(job.populate_env_vars.called)
+        self.assertEqual(job._setup.call_args, call(self.runtime_context))
+        self.assertEqual(job.create_kubernetes_runtime.call_args, call(self.runtime_context))
+        self.assertEqual(job.execute_kubernetes_pod.call_args, call(job.create_kubernetes_runtime.return_value))
+        self.assertTrue(job.wait_for_kubernetes_pod.called)
+        self.assertEqual(job.finish.call_args, call(job.wait_for_kubernetes_pod.return_value, self.runtime_context))
+
+
+@patch('calrissian.k8s.client', autospec=True)
+@patch('calrissian.k8s.load_config_get_namespace', autospec=True)
+class KubernetesDaskClientTestCase(TestCase):
+
+    def test_init(self, mock_get_namespace, mock_client):
+        kc = KubernetesDaskClient()
+        self.assertEqual(kc.namespace, mock_get_namespace.return_value)
+        self.assertEqual(kc.core_api_instance, mock_client.CoreV1Api.return_value)
+        self.assertIsNone(kc.pod)
+        self.assertIsNone(kc.completion_result)
+
+    
+    @patch('calrissian.dask.DaskPodMonitor')
+    def test_submit_pod(self, mock_podmonitor, mock_get_namespace, mock_client):
+        mock_get_namespace.return_value = 'namespace'
+        mock_create_namespaced_pod = Mock()
+        mock_create_namespaced_pod.return_value = Mock(metadata=Mock(uid='123'))
+        mock_client.CoreV1Api.return_value.create_namespaced_pod = mock_create_namespaced_pod
+        kc = KubernetesDaskClient()
+        mock_body = Mock()
+        kc.submit_pod(mock_body)
+        self.assertEqual(kc.pod.metadata.uid, '123')
+        self.assertEqual(mock_create_namespaced_pod.call_args, call('namespace', mock_body))
+        # This is to inspect `with PodMonitor() as monitor`:
+        self.assertTrue(mock_podmonitor.return_value.__enter__.return_value.add.called)
+

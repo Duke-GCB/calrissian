@@ -164,6 +164,7 @@ class KubernetesDaskPodBuilder(KubernetesPodBuilder):
 
         return environment
 
+
     def init_containers(self):
         containers = []
         # get dirname for any actual paths
@@ -252,7 +253,7 @@ class CalrissianCommandLineDaskJob(CalrissianCommandLineJob):
     daskGateway_controller_cm_name = 'dask-cluster-controller-cm'
 
     def __init__(self, *args, **kwargs):
-        super(CalrissianCommandLineJob, self).__init__(*args, **kwargs)
+        # super(CalrissianCommandLineJob, self).__init__(*args, **kwargs)
         super(CalrissianCommandLineDaskJob, self).__init__(*args, **kwargs)
         self.client = KubernetesDaskClient()
 
@@ -360,8 +361,7 @@ class CalrissianCommandLineDaskJob(CalrissianCommandLineJob):
     
     def run(self, runtimeContext, tmpdir_lock=None):
         def get_pod_command(pod):
-            if 'args' in pod['spec']['containers'][0].keys():
-                return pod['spec']['containers'][0]['args']
+            return pod['spec']['containers'][0]['args']
             
         def get_pod_name(pod):
             return pod['spec']['containers'][0]['name']
@@ -429,7 +429,18 @@ class KubernetesDaskClient(KubernetesClient):
         w = watch.Watch()
         for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_field_selector()):
             pod = event['object']
-            # status = self.get_first_or_none(pod.status.container_statuses)
+
+            init_status = self.get_list_or_none(pod.status.init_container_statuses)
+            if init_status and self.state_is_terminated(init_status[0].state):
+                init_status_code = init_status[0].state.terminated.exit_code
+                if init_status_code is not None and init_status_code != 0:
+                    with DaskPodMonitor() as monitor:
+                        self.delete_pod_name(pod.metadata.name)
+                        self.delete_configmap_name(cm_name=cm_name)
+                        monitor.remove(pod)
+                    self._clear_pod()
+                    w.stop()
+            
             last_status = self.get_last_or_none(pod.status.container_statuses)
             if last_status == None or not self.state_is_terminated(last_status.state):
                 statuses = self.get_list_or_none(pod.status.container_statuses)

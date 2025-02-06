@@ -1,5 +1,6 @@
 from unittest import TestCase
 from unittest.mock import Mock, patch, call
+from calrissian.dask import CalrissianCommandLineDaskJob
 from calrissian.tool import CalrissianCommandLineTool, calrissian_make_tool, CalrissianCommandLineToolException
 from calrissian.context import CalrissianLoadingContext
 
@@ -66,3 +67,27 @@ class CalrissianCommandLineToolTestCase(TestCase):
         tool.make_job_runner(runtimeContext)
         self.assertNotIn({'class': 'DockerRequirement', 'dockerPull': 'docker:default-container'}, tool.requirements)
         self.assertIn({'class': 'DockerRequirement', 'dockerPull': 'docker:tool-container'}, tool.requirements)
+
+
+    def test_uses_dask_requirement(self):
+
+        # Set up the tool with a Dask requirement
+        self.toolpath_object['https://calrissian-cwl.github.io/schema#DaskGatewayRequirement'] = [
+            {
+                "workerCores": 2,
+                "workerCoresLimit": 2,
+                "workerMemory": "4G",
+                "clustermaxCore": 8,
+                "clusterMaxMemory": "16G",
+                "class": "https://calrissian-cwl.github.io/schema#DaskGatewayRequirement"  # From cwl
+            }
+        ]
+
+        tool = CalrissianCommandLineTool(self.toolpath_object, self.loadingContext)
+        runtimeContext = Mock(use_container=True)
+        runtimeContext.find_default_container.return_value = 'docker:default-container'
+
+        runner = tool.make_job_runner(runtimeContext)
+
+        self.assertTrue(runner, CalrissianCommandLineDaskJob)
+        
