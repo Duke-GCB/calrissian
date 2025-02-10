@@ -488,3 +488,94 @@ class KubernetesDaskClientTestCase(TestCase):
         # This is to inspect `with PodMonitor() as monitor`:
         self.assertTrue(mock_podmonitor.return_value.__enter__.return_value.add.called)
 
+
+    def setup_mock_watch(self, mock_watch, event_objects=[]):
+        mock_stream = Mock()
+        mock_stop = Mock()
+        stream_events = []
+        for event_object in event_objects:
+            stream_events.append({'object': event_object})
+        mock_stream.return_value = stream_events
+        mock_watch.Watch.return_value.stream = mock_stream
+        mock_watch.Watch.return_value.stop = mock_stop
+
+    def make_mock_pod(self, name):
+        mock_metadata = Mock()
+        # Cannot mock name attribute without a propertymock
+        name_property = PropertyMock(return_value=name)
+        type(mock_metadata).name = name_property
+        mock_pod = create_autospec(V1Pod, metadata=mock_metadata)
+        return mock_pod
+
+    
+    @patch('calrissian.dask.watch', autospec=True)
+    def test_wait_calls_watch_pod_with_pod_name_field_selector(self, mock_watch, mock_get_namespace, mock_client):
+        mock_pod = self.make_mock_pod('test123')
+        mock_pod.status.container_statuses[0].state = Mock(running=None, waiting=None, terminated=Mock(exit_code=0))
+        self.setup_mock_watch(mock_watch, [mock_pod])
+        kc = KubernetesDaskClient()
+        kc._set_pod(mock_pod)
+        kc.wait_for_completion(cm_name='dask-cm-random')
+        mock_stream = mock_watch.Watch.return_value.stream
+        self.assertEqual(mock_stream.call_args, call(kc.core_api_instance.list_namespaced_pod, kc.namespace,
+                                                     field_selector='metadata.name=test123'))
+    
+    @patch('calrissian.dask.watch', autospec=True)
+    def test_wait_calls_watch_pod_with_imcomplete_status(self, mock_watch, mock_get_namespace, mock_client):
+        self.setup_mock_watch(mock_watch)
+        mock_pod = self.make_mock_pod('test123')
+        kc = KubernetesDaskClient()
+        kc._set_pod(mock_pod)
+        # Assert IncompleteStatusException is raised
+        with self.assertRaises(IncompleteStatusException):
+            kc.wait_for_completion(cm_name='dask-cm-random')
+    
+    @patch('calrissian.dask.watch', autospec=True)
+    def test_wait_skips_pod_when_containers_status_is_none(self, mock_watch, mock_get_namespace, mock_client):
+    
+        mock_pod = self.make_mock_pod('test123')
+        mock_pod.status.container_statuses = None
+
+        self.setup_mock_watch(mock_watch, [mock_pod])
+        kc = KubernetesDaskClient()
+        kc._set_pod(Mock())
+        with self.assertRaises(IncompleteStatusException):
+            kc.wait_for_completion(cm_name='dask-cm-random')
+        self.assertFalse(mock_watch.Watch.return_value.stop.called)
+        self.assertFalse(mock_client.CoreV1Api.return_value.delete_namespaced_pod.called)
+        self.assertIsNotNone(kc.pod)
+
+
+    @patch('calrissian.dask.watch', autospec=True)
+    def test_wait_skips_pod_when_state_is_waiting(self, mock_watch, mock_get_namespace, mock_client):
+        mock_pod = create_autospec(V1Pod)
+        mock_pod.status.container_statuses[0].state = Mock(running=None, waiting=True, terminated=None)
+        self.setup_mock_watch(mock_watch, [mock_pod])
+        kc = KubernetesDaskClient()
+        kc._set_pod(Mock())
+        with self.assertRaises(IncompleteStatusException):
+            kc.wait_for_completion(cm_name='dask-cm-random')
+        self.assertFalse(mock_watch.Watch.return_value.stop.called)
+        self.assertFalse(mock_client.CoreV1Api.return_value.delete_namespaced_pod.called)
+        self.assertIsNotNone(kc.pod)
+
+
+    @patch('calrissian.dask.watch', autospec=True)
+    @patch('calrissian.dask.DaskPodMonitor')
+    @patch('calrissian.k8s.KubernetesClient._extract_cpu_memory_requests')
+    def test_wait_finishes_when_pod_state_is_terminated(self, mock_cpu_memory,
+                                                        mock_podmonitor, mock_watch, mock_get_namespace,
+                                                        mock_client):
+        mock_pod = create_autospec(V1Pod)
+        mock_pod.status.container_statuses[0].state = Mock(running=None, waiting=None, terminated=Mock(exit_code=123))
+        mock_cpu_memory.return_value = ('1', '1Mi')
+        self.setup_mock_watch(mock_watch, [mock_pod])
+        kc = KubernetesDaskClient()
+        kc._set_pod(Mock())
+        completion_result = kc.wait_for_completion(cm_name='dask-cm-random')
+        self.assertEqual(completion_result.exit_code, 123)
+        self.assertTrue(mock_watch.Watch.return_value.stop.called)
+        self.assertTrue(mock_client.CoreV1Api.return_value.delete_namespaced_pod.called)
+        self.assertIsNone(kc.pod)
+        # This is to inspect `with PodMonitor() as monitor`:
+        self.assertTrue(mock_podmonitor.return_value.__enter__.return_value.remove.called)
