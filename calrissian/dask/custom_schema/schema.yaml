@@ -34,7 +34,7 @@ $graph:
         - 'cwl:Expression'
       doc: |
         Maximum number of bytes available for a dask worker.
-    clustermaxCore:
+    clusterMaxCore:
       type:
         - 'int'
         - 'cwl:Expression'

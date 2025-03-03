@@ -33,7 +33,7 @@ class ValidateExtensionTestCase(TestCase):
             "workerCores": 2,
             "workerCoresLimit": 2,
             "workerMemory": "4G",
-            "clustermaxCore": 8,
+            "clusterMaxCore": 8,
             "clusterMaxMemory": "16G",
             "class": "https://calrissian-cwl.github.io/schema#DaskGatewayRequirement" # From cwl
         }
@@ -72,7 +72,7 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
             "workerCores": 2,
             "workerCoresLimit": 2,
             "workerMemory": "4G",
-            "clustermaxCore": 8,
+            "clusterMaxCore": 8,
             "clusterMaxMemory": "16G",
             "class": "https://calrissian-cwl.github.io/schema#DaskGatewayRequirement" # From cwl
         }
@@ -404,7 +404,7 @@ class CalrissianCommandLineDaskJobTestCase(TestCase):
         job = self.make_job()
         job.outdir = '/outdir'
         job.tmpdir = '/tmpdir'
-        mock_runtime_context = Mock(tmpdir_prefix='TP', pod_serviceaccount=None)
+        mock_runtime_context = Mock(tmpdir_prefix='TP', pod_serviceaccount=None, )
         built = job.create_kubernetes_runtime(mock_runtime_context)
         # Adds volume binding for outdir
         self.assertEqual(mock_add_volume_binding.call_args, call('/real/outdir', '/out', True))
@@ -429,7 +429,7 @@ class CalrissianCommandLineDaskJobTestCase(TestCase):
             job.get_security_context(mock_runtime_context),
             None,
             job.get_dask_gateway_url(mock_runtime_context),
-            job.client.get_configmap_from_namespace(job.daskGateway_controller_cm_name),
+            job.client.get_configmap_from_namespace(mock_runtime_context),
             requirements=job.builder.requirements,
             hints=job.builder.hints,
         ))

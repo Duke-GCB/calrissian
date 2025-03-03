@@ -77,7 +77,7 @@ class CalrissianCommandLineToolTestCase(TestCase):
                 "workerCores": 2,
                 "workerCoresLimit": 2,
                 "workerMemory": "4G",
-                "clustermaxCore": 8,
+                "clusterMaxCore": 8,
                 "clusterMaxMemory": "16G",
                 "class": "https://calrissian-cwl.github.io/schema#DaskGatewayRequirement"  # From cwl
             }

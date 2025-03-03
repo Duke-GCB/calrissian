@@ -70,7 +70,7 @@ def dask_req_validate(requirement: Optional[CWLObjectType]) -> bool:
     required_keys = ["workerCores", 
                      "workerCoresLimit", 
                      "workerMemory", 
-                     "clustermaxCore", 
+                     "clusterMaxCore", 
                      "clusterMaxMemory", 
                      "class"]
     
@@ -156,7 +156,7 @@ class KubernetesDaskPodBuilder(KubernetesPodBuilder):
         environment.append({'name': 'DASK_GATEWAY_WORKER_CORES', 'value': str(self.dask_requirement.get("workerCores"))})
         environment.append({'name': 'DASK_GATEWAY_WORKER_MEMORY', 'value': str(self.dask_requirement.get("workerMemory"))})
         environment.append({'name': 'DASK_GATEWAY_WORKER_CORES_LIMIT', 'value': str(self.dask_requirement.get("workerCoresLimit"))})
-        environment.append({'name': 'DASK_GATEWAY_CLUSTER_MAX_CORES', 'value': str(self.dask_requirement.get("clustermaxCore"))})
+        environment.append({'name': 'DASK_GATEWAY_CLUSTER_MAX_CORES', 'value': str(self.dask_requirement.get("clusterMaxCore"))})
         environment.append({'name': 'DASK_GATEWAY_CLUSTER_MAX_RAM', 'value': str(self.dask_requirement.get("clusterMaxMemory"))})
         environment.append({'name': 'DASK_GATEWAY_URL', 'value': str(self.dask_gateway_url)})
         environment.append({'name': 'DASK_GATEWAY_IMAGE', 'value': str(self.container_image)})
