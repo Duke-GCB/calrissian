@@ -24,5 +24,5 @@ class CalrissianRuntimeContext(RuntimeContext):
         self.tool_logs_basepath = None
         self.max_gpus = None
         self.dask_gateway_url = None
-        self.dask_gateway_extra_config = None
+        self.dask_script_configmap = None
         return super(CalrissianRuntimeContext, self).__init__(kwargs)

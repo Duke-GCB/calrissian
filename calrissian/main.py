@@ -55,7 +55,7 @@ def add_arguments(parser):
     parser.add_argument('--tool-logs-basepath', type=Text, nargs='?', help='Base path for saving the tool logs')
     parser.add_argument('--conf', help='Defines the default values for the CLI arguments', action='append')
     parser.add_argument('--dask-gateway-url', type=Text, nargs='?', help='Defines the Dask Gateway URL', required=False)
-    parser.add_argument('--dask-gateway-extra-config', type=Text, nargs='?', help='YAML file of extra k8s config for Dask', required=False)
+    parser.add_argument('--dask-script-configmap', type=Text, nargs='?', help='Name of the already existing configmap with custom script for dask', required=False)
 
 
 def print_version():

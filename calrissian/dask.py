@@ -250,8 +250,6 @@ class CalrissianCommandLineDaskJob(CalrissianCommandLineJob):
 
     daskGateway_config_dir = '/etc/dask'
 
-    daskGateway_controller_cm_name = 'dask-cluster-controller-cm'
-
     def __init__(self, *args, **kwargs):
         # super(CalrissianCommandLineJob, self).__init__(*args, **kwargs)
         super(CalrissianCommandLineDaskJob, self).__init__(*args, **kwargs)
@@ -265,6 +263,9 @@ class CalrissianCommandLineDaskJob(CalrissianCommandLineJob):
 
     def wait_for_kubernetes_pod(self, cm_name: str):
         return self.client.wait_for_completion(cm_name = cm_name)
+
+    def get_dask_script_cm_name(self, runtimeContext):
+        return runtimeContext.dask_script_configmap
 
     def get_dask_gateway_url(self, runtimeContext):
         return runtimeContext.dask_gateway_url
@@ -322,12 +323,13 @@ class CalrissianCommandLineDaskJob(CalrissianCommandLineJob):
             cm_name=self.dask_cm_claim_name,
             target=self.daskGateway_config_dir)
 
+        daskGateway_controller_cm_name = self.get_dask_script_cm_name(runtimeContext)
 
-        controller_cm_exists = self.client.get_configmap_from_namespace(name=self.daskGateway_controller_cm_name)
+        controller_cm_exists = self.client.get_configmap_from_namespace(name=daskGateway_controller_cm_name)
         if controller_cm_exists:
             self._add_configmap_volume_and_binding(
-                name=self.daskGateway_controller_cm_name,
-                cm_name=self.daskGateway_controller_cm_name,
+                name=daskGateway_controller_cm_name,
+                cm_name=daskGateway_controller_cm_name,
                 target=self.daskGateway_controller_dir)
         
 
