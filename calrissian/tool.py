@@ -66,7 +66,6 @@ def calrissian_make_tool(spec, loadingContext):
     For other types of documents, return the CWL default_make_tool
     """
     if "class" in spec and spec["class"] == "CommandLineTool":
-        logging.info(loadingContext)
         return CalrissianCommandLineTool(spec, loadingContext)
     else:
         return default_make_tool(spec, loadingContext)

@@ -513,7 +513,6 @@ class KubernetesDaskClient(KubernetesClient):
 
     def get_configmap_from_namespace(self, name):
         if not name or not isinstance(name, str):
-            log.error(f"Invalid ConfigMap name: {name}")
             return False
         try:
             configmap = self.core_api_instance.read_namespaced_config_map(name=name, namespace=self.namespace)
