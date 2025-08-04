@@ -1,0 +1,14 @@
+version: 3
+
+includes:
+  json_utils: https://raw.githubusercontent.com/Terradue/taskfile-utils/refs/heads/main/json.yaml
+
+tasks:
+
+  verify_usage_model:
+    desc: Verifies the usage sample against the defined schema
+    cmds:
+    - task: json_utils:check_instance
+      vars:
+        SCHEMA: './schemas/usage.yaml'
+        INSTANCE: './examples/usage.json'

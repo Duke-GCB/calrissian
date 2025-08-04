@@ -1,0 +1,123 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://duke-gcb.github.io/calrissian/v1/usage.yaml"
+description: "The schema to represent a Calrissian resources usage"
+$ref: "#/$defs/Usage"
+
+$defs:
+
+  ChildUsage:
+    type: object
+    properties: 
+      cpus: 
+        type: number
+        format: double
+        example: 1
+      ram_megabytes: 
+        type: number
+        format: double
+        example: 536.870912
+      disk_megabytes: 
+        type: number
+        format: double
+        example: 99.962848
+      exit_code: 
+        type: integer
+        format: int32
+        example: 0
+      name: 
+        type: string
+        example: node_crop_6
+      start_time: 
+        type: string
+        format: date-time
+        example: 2025-03-11T16:20:37+00:00
+      finish_time: 
+        type: string
+        format: date-time
+        example: 2025-03-11T16:21:25+00:00
+      elapsed_hours: 
+        type: number
+        example: 0.013333333333333334
+      elapsed_seconds: 
+        type: number
+        format: double
+        example: 48
+      ram_megabyte_hours: 
+        type: number
+        format: double
+        example: 7.158278826666667
+      cpu_hours: 
+        type: number
+        format: double
+        example: 0.013333333333333334
+
+  Usage: 
+    type: object
+    properties: 
+      cores_allowed: 
+        type: number
+        format: double
+        example: 8
+      ram_mb_allowed: 
+        type: number
+        format: double
+        example: 4000
+      children: 
+        type: array
+        items:
+          $ref: "#/$defs/ChildUsage"
+        example:
+        - cpus: 1
+          ram_megabytes: 536.870912
+          disk_megabytes: 99.962848
+          exit_code: 0
+          name: node_crop_6
+          start_time: 2025-03-11T16:20:37+00:00
+          finish_time: 2025-03-11T16:21:25+00:00
+          elapsed_hours: 0.013333333333333334
+          elapsed_seconds: 48
+          ram_megabyte_hours: 7.158278826666667
+          cpu_hours: 0.013333333333333334
+      start_time: 
+        type: string
+        format: date-time
+        example: 2025-03-11T16:20:36+00:00
+      finish_time: 
+        type: string
+        format: date-time
+        example: 2025-03-11T16:23:17+00:00
+      elapsed_hours: 
+        type: number
+        format: double
+        example: 0.04472222222222222
+      elapsed_seconds: 
+        type: integer
+        format: int32
+        example: 161
+      total_cpu_hours: 
+        type: number
+        format: double
+        example: 0.21305555555555555
+      total_ram_megabyte_hours: 
+        type: number
+        format: double
+        example: 114.3833304177778
+      total_disk_megabytes: 
+        type: number
+        format: double
+        example: 2490.712061999999
+      total_tasks: 
+        type: integer
+        format: int32
+        example: 25
+      max_parallel_cpus: 
+        type: integer
+        format: int32
+        example: 7
+      max_parallel_ram_megabytes: 
+        type: number
+        format: double
+        example: 3758.0963839999995
+      max_parallel_tasks: 
+        type: integer
+        format: int32
