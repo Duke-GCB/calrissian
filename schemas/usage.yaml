@@ -1,5 +1,5 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
-$id: "https://www.terradue.com/calrissian/v1/usage.yaml"
+$id: "https://duke-gcb.github.io/calrissian/v1/usage.yaml"
 description: "The schema to represent a Calrissian resources usage"
 $ref: "#/$defs/Usage"
 
