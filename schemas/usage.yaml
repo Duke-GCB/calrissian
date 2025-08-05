@@ -7,6 +7,7 @@ $defs:
 
   ChildUsage:
     type: object
+    description: Report of a child process execution used resources.
     properties:
       name:
         type: string
@@ -66,6 +67,7 @@ $defs:
 
   Usage:
     type: object
+    description: Report of a process total used resources.
     properties:
       start_time:
         type: string
