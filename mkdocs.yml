@@ -30,3 +30,16 @@ nav:
   - 1.1.0: 'conformance/1.1.0.md'
   - 1.2.0: 'conformance/1.2.0.md'
   - 1.2.1: 'conformance/1.2.1.md'
+- Development:
+  - uml/classes.md
+  - APIs doc:
+    - api/latest/calrissian/context.md
+    - api/latest/calrissian/executor.md
+    - api/latest/calrissian/index.md
+    - api/latest/calrissian/job.md
+    - api/latest/calrissian/k8s.md
+    - api/latest/calrissian/main.md
+    - api/latest/calrissian/report.md
+    - api/latest/calrissian/retry.md
+    - api/latest/calrissian/tool.md
+    - api/latest/calrissian/version.md
