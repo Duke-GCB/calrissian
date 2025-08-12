@@ -14,10 +14,10 @@ jobs:
         python-version: '3.10'
         cache: 'pip'
     - name: Install dependencies
-      run:
-      - run: pip install mkdocs-material mkdocs-mermaid2-plugin mkdocs-jupyter legacy-cgi pdocs pylint graphviz
-      - run: pip install .
-      - run: pdocs as_markdown --output_dir ./docs/api/latest --exclude_source --overwrite calrissian
-      - run: mkdir -p ./docs/uml/
-      - run: pyreverse --all-ancestors --show-builtin --output svg --output-directory ./docs/uml/ --source-roots ./calrissian/ --verbose ./calrissian/
-      - run: mkdocs gh-deploy --force
+    - run: | 
+        pip install mkdocs-material mkdocs-mermaid2-plugin mkdocs-jupyter legacy-cgi pdocs pylint graphviz
+        pip install .
+        pdocs as_markdown --output_dir ./docs/api/latest --exclude_source --overwrite calrissian
+        mkdir -p ./docs/uml/
+        pyreverse --all-ancestors --show-builtin --output svg --output-directory ./docs/uml/ --source-roots ./calrissian/ --verbose ./calrissian/
+    - run: mkdocs gh-deploy --force
