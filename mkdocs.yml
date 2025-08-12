@@ -33,9 +33,9 @@ nav:
 - Development:
   - uml/classes.md
   - APIs doc:
+    - api/latest/calrissian/index.md
     - api/latest/calrissian/context.md
     - api/latest/calrissian/executor.md
-    - api/latest/calrissian/index.md
     - api/latest/calrissian/job.md
     - api/latest/calrissian/k8s.md
     - api/latest/calrissian/main.md
