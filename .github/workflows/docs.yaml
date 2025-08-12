@@ -1,5 +1,14 @@
 name: docs
 on:
+  push:
+    branches:
+    - master
+    paths:
+    # Only rebuild website when docs have changed
+    - 'README.md'
+    - 'docs/**'
+    - 'mkdocs.yml'
+    - .github/**
   release:
     types: [created]
 
