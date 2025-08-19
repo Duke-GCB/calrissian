@@ -6,7 +6,8 @@ from queue import Queue
 from cwltool.errors import WorkflowException
 from cwltool.executors import JobExecutor
 from schema_salad.validate import ValidationException
-
+import logging
+log = logging.getLogger("calrissian.executor")
 
 class DuplicateJobException(Exception):
     pass
@@ -205,8 +206,17 @@ class ThreadPoolJobExecutor(JobExecutor):
                 requested_min, self.total_resources
             ))
 
-        result = Resources.min(requested_max, self.total_resources)
-        return result.to_dict()
+        rsc_requested = Resources.min(requested_min, self.total_resources)
+        rsc_limit = Resources.min(requested_max, self.total_resources)
+
+        result = rsc_requested.to_dict()
+        result.update({
+            "ramMax": rsc_limit.to_dict().get('ram'),
+            "coresMax": rsc_limit.to_dict().get('cores'),
+            "cudaDeviceCountMax": rsc_limit.to_dict().get('gpus')
+        })
+
+        return result
 
     def job_done_callback(self, rsc, logger, future):
         """
