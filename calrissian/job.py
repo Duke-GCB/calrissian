@@ -215,6 +215,7 @@ class KubernetesPodBuilder(object):
         self.serviceaccount = serviceaccount
         self.priority_class = pod_spec.get("pod_priority_class")
         self.env_from_secret = pod_spec.get("env_from_secret")
+        self.env_from_configmap = pod_spec.get("env_from_configmap")
         self.requirements = {} if requirements is None else requirements
         self.hints = [] if hints is None else hints
 
@@ -353,6 +354,10 @@ class KubernetesPodBuilder(object):
 
     def pod_envfromsecret(self):
         return [{'secretRef': {'name': secret}} for secret in self.env_from_secret]
+    
+    def pod_envfromconfigmap(self):
+        return [{'configMapRef': {'name': configmap}} for configmap in self.env_from_configmap]
+
 
     def build(self):
         spec = {
@@ -389,8 +394,16 @@ class KubernetesPodBuilder(object):
         if ( self.priority_class ):
             spec['spec']['priorityClassName'] = self.priority_class
 
-        if ( self.env_from_secret ):
-            spec['spec']['containers'][0]["envFrom"] = self.pod_envfromsecret()
+        if self.env_from_secret or self.env_from_configmap:
+            envfrom = []
+
+            if self.env_from_secret:
+                envfrom.extend(self.pod_envfromsecret())
+
+            if self.env_from_configmap:
+                envfrom.extend(self.pod_envfromconfigmap())
+
+            spec['spec']['containers'][0]["envFrom"] = envfrom
         
         return spec
 
@@ -557,6 +570,9 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
     
     def get_pod_env_from_secret(self, runtimeContext) -> list:
         return runtimeContext.env_from_secret
+    
+    def get_pod_env_from_configmap(self, runtimeContext) -> list:
+        return runtimeContext.env_from_configmap
 
     def get_pod_spec(self, runtimeContext):
         spec = {}
@@ -566,6 +582,9 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         
         if self.get_pod_env_from_secret(runtimeContext):
             spec["env_from_secret"] = self.get_pod_env_from_secret(runtimeContext)
+        
+        if self.get_pod_env_from_configmap(runtimeContext):
+            spec["env_from_configmap"] = self.get_pod_env_from_configmap(runtimeContext)
         
         return spec
 

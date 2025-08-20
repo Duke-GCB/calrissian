@@ -52,6 +52,7 @@ def add_arguments(parser):
 
     parser.add_argument('--pod-priority-class', type=Text, nargs='?', help='Priority Class Name assigned to the pod')
     parser.add_argument('--env-from-secret', type=Text, action='append', help='Secret Id to set the pod environment')
+    parser.add_argument('--env-from-configmap', type=Text, action='append', help='ConfigMap Id to set the pod environment')
 
 def print_version():
     print(version())

@@ -337,6 +337,22 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.assertIn('calrissian-secret-2', self.pod_builder.env_from_secret)
         self.assertIn('calrissian-secret-3', self.pod_builder.env_from_secret)
 
+    def test_container_env_from_configmap_single(self):
+        self.pod_builder.env_from_configmap = ['calrissian-config-1']
+        env_from_configmap = self.pod_builder.pod_envfromconfigmap()
+
+        self.assertEqual(len(self.pod_builder.env_from_configmap), len(env_from_configmap))
+        self.assertIn('calrissian-config-1', self.pod_builder.env_from_configmap)
+
+    def test_container_env_from_configmap_multiple(self):
+        self.pod_builder.env_from_configmap = ['calrissian-config-1', 'calrissian-config-2', 'calrissian-config-3']
+        env_from_configmap = self.pod_builder.pod_envfromconfigmap()
+
+        self.assertEqual(len(self.pod_builder.env_from_configmap), len(env_from_configmap))
+        self.assertIn('calrissian-config-1', self.pod_builder.env_from_configmap)
+        self.assertIn('calrissian-config-2', self.pod_builder.env_from_configmap)
+        self.assertIn('calrissian-config-3', self.pod_builder.env_from_configmap)
+
     def test_container_workingdir(self):
         workingdir = self.pod_builder.container_workingdir()
         self.assertEqual('/homedir', workingdir)
