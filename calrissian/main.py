@@ -50,6 +50,8 @@ def add_arguments(parser):
     parser.add_argument('--tool-logs-basepath', type=Text, nargs='?', help='Base path for saving the tool logs')
     parser.add_argument('--conf', help='Defines the default values for the CLI arguments', action='append')
 
+    parser.add_argument('--pod-priority-class', type=Text, nargs='?', help='Priority Class Name assigned to the pod')
+    parser.add_argument('--env-from-secret', type=Text, action='append', help='Secret Id to set the pod environment')
 
 def print_version():
     print(version())

@@ -287,9 +287,11 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.nodeselectors = {'disktype': 'ssd', 'cachelevel': 2}
         self.security_context = { 'runAsUser': os.getuid(),'runAsGroup': os.getgid() }
         self.pod_serviceaccount = "podmanager"
+        self.pod_spec = {'pod_priority_class': 'standard-priority'}
         self.pod_builder = KubernetesPodBuilder(self.name, self.container_image, self.environment, self.volume_mounts,
                                                 self.volumes, self.command_line, self.stdout, self.stderr, self.stdin,
-                                                self.resources, self.labels, self.nodeselectors, self.security_context, self.pod_serviceaccount)
+                                                self.resources, self.labels, self.nodeselectors, self.security_context,
+                                                self.pod_serviceaccount, self.pod_spec)
 
     @patch('calrissian.job.random_tag')
     def test_safe_pod_name(self, mock_random_tag):
@@ -318,6 +320,22 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.assertIn({'name': 'K1', 'value': 'V1'}, environment)
         self.assertIn({'name': 'K2', 'value': 'V2'}, environment)
         self.assertIn({'name': 'HOME', 'value': '/homedir'}, environment)
+
+    def test_container_env_from_secret_single(self):
+        self.pod_builder.env_from_secret = ['calrissian-secret-1']
+        env_from_secret = self.pod_builder.pod_envfromsecret()
+
+        self.assertEqual(len(self.pod_builder.env_from_secret), len(env_from_secret))
+        self.assertIn('calrissian-secret-1', self.pod_builder.env_from_secret)
+
+    def test_container_env_from_secret_multiple(self):
+        self.pod_builder.env_from_secret = ['calrissian-secret-1', 'calrissian-secret-2', 'calrissian-secret-3']
+        env_from_secret = self.pod_builder.pod_envfromsecret()
+
+        self.assertEqual(len(self.pod_builder.env_from_secret), len(env_from_secret))
+        self.assertIn('calrissian-secret-1', self.pod_builder.env_from_secret)
+        self.assertIn('calrissian-secret-2', self.pod_builder.env_from_secret)
+        self.assertIn('calrissian-secret-3', self.pod_builder.env_from_secret)
 
     def test_container_workingdir(self):
         workingdir = self.pod_builder.container_workingdir()
@@ -382,6 +400,10 @@ class KubernetesPodBuilderTestCase(TestCase):
     def test_string_nodeselectors(self):
         self.pod_builder.nodeselectors = {'cachelevel': 2}
         self.assertEqual(self.pod_builder.pod_nodeselectors(), {'cachelevel':'2'})
+
+    def test_string_priority_class(self):
+        self.assertIsNotNone(self.pod_builder.priority_class)
+        self.assertEqual(self.pod_builder.priority_class, "standard-priority")
 
     def test_init_containers_empty_when_no_stdout_or_stderr(self):
         self.pod_builder.stdout = None
@@ -465,6 +487,7 @@ class KubernetesPodBuilderTestCase(TestCase):
                     'runAsUser': os.getuid(),
                     'runAsGroup': os.getgid()
                 },
+                'priorityClassName': 'standard-priority',
                 'serviceAccountName': 'podmanager'
             }
         }
@@ -669,7 +692,8 @@ class CalrissianCommandLineJobTestCase(TestCase):
             mock_read_yaml.return_value,
             mock_read_yaml.return_value,
             job.get_security_context(mock_runtime_context),
-            None, 
+            None,
+            job.get_pod_spec(mock_runtime_context),
             job.builder.requirements,
             job.builder.hints,
         ))
