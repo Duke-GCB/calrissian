@@ -287,11 +287,11 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.nodeselectors = {'disktype': 'ssd', 'cachelevel': 2}
         self.security_context = { 'runAsUser': os.getuid(),'runAsGroup': os.getgid() }
         self.pod_serviceaccount = "podmanager"
-        self.pod_spec = {'pod_priority_class': 'standard-priority'}
+        self.pod_additional_spec = {'pod_priority_class': 'standard-priority'}
         self.pod_builder = KubernetesPodBuilder(self.name, self.container_image, self.environment, self.volume_mounts,
                                                 self.volumes, self.command_line, self.stdout, self.stderr, self.stdin,
                                                 self.resources, self.labels, self.nodeselectors, self.security_context,
-                                                self.pod_serviceaccount, self.pod_spec)
+                                                self.pod_serviceaccount, self.pod_additional_spec)
 
     @patch('calrissian.job.random_tag')
     def test_safe_pod_name(self, mock_random_tag):
@@ -709,7 +709,7 @@ class CalrissianCommandLineJobTestCase(TestCase):
             mock_read_yaml.return_value,
             job.get_security_context(mock_runtime_context),
             None,
-            job.get_pod_spec(mock_runtime_context),
+            job.get_pod_additional_spec(mock_runtime_context),
             job.builder.requirements,
             job.builder.hints,
         ))

@@ -198,7 +198,7 @@ class KubernetesVolumeBuilder(object):
 
 class KubernetesPodBuilder(object):
 
-    def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, resources, labels, nodeselectors, security_context, serviceaccount, pod_spec=None, requirements=None, hints=None):
+    def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, resources, labels, nodeselectors, security_context, serviceaccount, pod_additional_spec=None, requirements=None, hints=None):
         self.name = name
         self.container_image = container_image
         self.environment = environment
@@ -213,9 +213,9 @@ class KubernetesPodBuilder(object):
         self.nodeselectors = nodeselectors
         self.security_context = security_context
         self.serviceaccount = serviceaccount
-        self.priority_class = pod_spec.get("pod_priority_class")
-        self.env_from_secret = pod_spec.get("env_from_secret")
-        self.env_from_configmap = pod_spec.get("env_from_configmap")
+        self.priority_class = pod_additional_spec.get("pod_priority_class")
+        self.env_from_secret = pod_additional_spec.get("env_from_secret")
+        self.env_from_configmap = pod_additional_spec.get("env_from_configmap")
         self.requirements = {} if requirements is None else requirements
         self.hints = [] if hints is None else hints
 
@@ -574,7 +574,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
     def get_pod_env_from_configmap(self, runtimeContext) -> list:
         return runtimeContext.env_from_configmap
 
-    def get_pod_spec(self, runtimeContext):
+    def get_pod_additional_spec(self, runtimeContext):
         spec = {}
 
         if self.get_pod_priority_class(runtimeContext):
@@ -621,8 +621,6 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
                 secret_store=runtimeContext.secret_store,
                 any_path_okay=any_path_okay)
 
-        pod_spec = self.get_pod_spec(runtimeContext)
-
         k8s_builder = KubernetesPodBuilder(
             self.name,
             self._get_container_image(),
@@ -638,7 +636,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             self.get_pod_nodeselectors(runtimeContext),
             self.get_security_context(runtimeContext),
             self.get_pod_serviceaccount(runtimeContext),
-            pod_spec,
+            self.get_pod_additional_spec(runtimeContext),
             self.builder.requirements,
             self.builder.hints
         )
