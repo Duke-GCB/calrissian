@@ -198,7 +198,7 @@ class KubernetesVolumeBuilder(object):
 
 class KubernetesPodBuilder(object):
 
-    def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, resources, labels, nodeselectors, security_context, serviceaccount, requirements=None, hints=None):
+    def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, resources, labels, nodeselectors, security_context, serviceaccount, pod_additional_spec=None, requirements=None, hints=None):
         self.name = name
         self.container_image = container_image
         self.environment = environment
@@ -213,6 +213,9 @@ class KubernetesPodBuilder(object):
         self.nodeselectors = nodeselectors
         self.security_context = security_context
         self.serviceaccount = serviceaccount
+        self.priority_class = pod_additional_spec.get("pod_priority_class")
+        self.env_from_secret = pod_additional_spec.get("env_from_secret")
+        self.env_from_configmap = pod_additional_spec.get("env_from_configmap")
         self.requirements = {} if requirements is None else requirements
         self.hints = [] if hints is None else hints
 
@@ -349,6 +352,13 @@ class KubernetesPodBuilder(object):
         """
         return {str(k): str(v) for k, v in self.nodeselectors.items()}
 
+    def pod_envfromsecret(self):
+        return [{'secretRef': {'name': secret}} for secret in self.env_from_secret]
+    
+    def pod_envfromconfigmap(self):
+        return [{'configMapRef': {'name': configmap}} for configmap in self.env_from_configmap]
+
+
     def build(self):
         spec = {
             'metadata': {
@@ -380,6 +390,20 @@ class KubernetesPodBuilder(object):
         
         if ( self.serviceaccount ):
             spec['spec']['serviceAccountName'] = self.serviceaccount
+        
+        if ( self.priority_class ):
+            spec['spec']['priorityClassName'] = self.priority_class
+
+        if self.env_from_secret or self.env_from_configmap:
+            envfrom = []
+
+            if self.env_from_secret:
+                envfrom.extend(self.pod_envfromsecret())
+
+            if self.env_from_configmap:
+                envfrom.extend(self.pod_envfromconfigmap())
+
+            spec['spec']['containers'][0]["envFrom"] = envfrom
         
         return spec
 
@@ -540,6 +564,29 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             return read_yaml(runtimeContext.pod_env_vars)
         else:
             return {}
+    
+    def get_pod_priority_class(self, runtimeContext):
+        return runtimeContext.pod_priority_class
+    
+    def get_pod_env_from_secret(self, runtimeContext) -> list:
+        return runtimeContext.env_from_secret
+    
+    def get_pod_env_from_configmap(self, runtimeContext) -> list:
+        return runtimeContext.env_from_configmap
+
+    def get_pod_additional_spec(self, runtimeContext):
+        spec = {}
+
+        if self.get_pod_priority_class(runtimeContext):
+            spec["pod_priority_class"] = self.get_pod_priority_class(runtimeContext)
+        
+        if self.get_pod_env_from_secret(runtimeContext):
+            spec["env_from_secret"] = self.get_pod_env_from_secret(runtimeContext)
+        
+        if self.get_pod_env_from_configmap(runtimeContext):
+            spec["env_from_configmap"] = self.get_pod_env_from_configmap(runtimeContext)
+        
+        return spec
 
     def create_kubernetes_runtime(self, runtimeContext):
         # In cwltool, the runtime list starts as something like ['docker','run'] and these various builder methods
@@ -589,6 +636,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             self.get_pod_nodeselectors(runtimeContext),
             self.get_security_context(runtimeContext),
             self.get_pod_serviceaccount(runtimeContext),
+            self.get_pod_additional_spec(runtimeContext),
             self.builder.requirements,
             self.builder.hints
         )
