@@ -322,20 +322,20 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.assertIn({'name': 'HOME', 'value': '/homedir'}, environment)
 
     def test_container_env_from_secret_single(self):
-        self.pod_builder.env_from_secret = ['calrissian-secret-1']
+        self.pod_builder.env_from_secret = ['calrissian-example-1']
         env_from_secret = self.pod_builder.pod_envfromsecret()
 
         self.assertEqual(len(self.pod_builder.env_from_secret), len(env_from_secret))
-        self.assertIn('calrissian-secret-1', self.pod_builder.env_from_secret)
+        self.assertIn('calrissian-example-1', self.pod_builder.env_from_secret)
 
     def test_container_env_from_secret_multiple(self):
-        self.pod_builder.env_from_secret = ['calrissian-secret-1', 'calrissian-secret-2', 'calrissian-secret-3']
+        self.pod_builder.env_from_secret = ['calrissian-example-1', 'calrissian-example-2', 'calrissian-example-3']
         env_from_secret = self.pod_builder.pod_envfromsecret()
 
         self.assertEqual(len(self.pod_builder.env_from_secret), len(env_from_secret))
-        self.assertIn('calrissian-secret-1', self.pod_builder.env_from_secret)
-        self.assertIn('calrissian-secret-2', self.pod_builder.env_from_secret)
-        self.assertIn('calrissian-secret-3', self.pod_builder.env_from_secret)
+        self.assertIn('calrissian-example-1', self.pod_builder.env_from_secret)
+        self.assertIn('calrissian-example-2', self.pod_builder.env_from_secret)
+        self.assertIn('calrissian-example-3', self.pod_builder.env_from_secret)
 
     def test_container_env_from_configmap_single(self):
         self.pod_builder.env_from_configmap = ['calrissian-config-1']
