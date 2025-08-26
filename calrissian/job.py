@@ -198,7 +198,7 @@ class KubernetesVolumeBuilder(object):
 
 class KubernetesPodBuilder(object):
 
-    def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, resources, labels, nodeselectors, security_context, serviceaccount, requirements=None, hints=None):
+    def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, resources, labels, nodeselectors, gpu_nodeselectors, security_context, serviceaccount, requirements=None, hints=None):
         self.name = name
         self.container_image = container_image
         self.environment = environment
@@ -211,6 +211,7 @@ class KubernetesPodBuilder(object):
         self.resources = resources
         self.labels = labels
         self.nodeselectors = nodeselectors
+        self.gpu_nodeselectors = gpu_nodeselectors
         self.security_context = security_context
         self.serviceaccount = serviceaccount
         self.requirements = {} if requirements is None else requirements
@@ -342,12 +343,33 @@ class KubernetesPodBuilder(object):
         """
         return {str(k): str(v) for k, v in self.labels.items()}
     
-    def pod_nodeselectors(self):
-        """
-        Submitted node selectors must be strings
-        :return:
-        """
-        return {str(k): str(v) for k, v in self.nodeselectors.items()}
+    # def pod_nodeselectors(self):
+    #     """
+    #     Submitted node selectors must be strings
+    #     :return:
+    #     """
+    #     return {str(k): str(v) for k, v in self.nodeselectors.items()}
+    
+    # def pod_gpu_nodeselectors(self):
+    #     """
+    #     Submitted node selectors must be strings
+    #     :return:
+    #     """
+    #     return {str(k): str(v) for k, v in self.gpu_nodeselectors.items()}
+
+    def check_pod_nodeselectors(self):
+        
+        def _tostring(nodeselectors):
+            return {str(k): str(v) for k, v in nodeselectors.items()}
+
+        return (
+            _tostring(self.gpu_nodeselectors)
+            if any(
+                req['class'] in ['cwltool:CUDARequirement', 'http://commonwl.org/cwltool#CUDARequirement']
+                for req in self.requirements
+            )
+            else _tostring(self.nodeselectors)
+        )
 
     def build(self):
         spec = {
@@ -374,7 +396,7 @@ class KubernetesPodBuilder(object):
                 'restartPolicy': 'Never',
                 'volumes': self.volumes,
                 'securityContext': self.security_context,
-                'nodeSelector': self.pod_nodeselectors()
+                'nodeSelector': self.check_pod_nodeselectors()
             }
         }
         
@@ -521,6 +543,12 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             return read_yaml(runtimeContext.pod_nodeselectors)
         else:
             return {}
+    
+    def get_pod_gpu_nodeselectors(self, runtimeContext):
+        if runtimeContext.pod_gpu_nodeselectors:
+            return read_yaml(runtimeContext.pod_gpu_nodeselectors)
+        else:
+            return {}
 
     def get_pod_serviceaccount(self, runtimeContext):
         return runtimeContext.pod_serviceaccount
@@ -587,6 +615,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             self.builder.resources,
             self.get_pod_labels(runtimeContext),
             self.get_pod_nodeselectors(runtimeContext),
+            self.get_pod_gpu_nodeselectors(runtimeContext),
             self.get_security_context(runtimeContext),
             self.get_pod_serviceaccount(runtimeContext),
             self.builder.requirements,
