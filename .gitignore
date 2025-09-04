@@ -12,3 +12,9 @@ build
 *.zip
 env-calrissian*
 *.tar.gz
+site
+.project
+.pydevproject
+.task
+docs/api
+docs/uml
