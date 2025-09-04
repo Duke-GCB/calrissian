@@ -254,8 +254,21 @@ class ThreadPoolJobExecutorTestCase(TestCase):
         }
 
         result = self.executor.select_resources(request, Mock())
-        self.assertEqual(result['ram'], 1000) # When ram max requested exceeds total, result should be total
-        self.assertEqual(result['cores'], 1) # when cpu max requested is below total, result should be requested
+        self.assertEqual(result['ramMax'], 1000) # When ram max requested exceeds total, result should be total
+        self.assertEqual(result['coresMax'], 1) # when cpu max requested is below total, result should be requested
+
+    def test_requested_and_limit_resources(self):
+        request = {
+            'ramMin': 500,
+            'ramMax': 1000,
+            'coresMin': 1,
+            'coresMax': 2
+        }
+        result = self.executor.select_resources(request, Mock())
+        self.assertEqual(result['ram'], 500)
+        self.assertEqual(result['cores'], 1)
+        self.assertEqual(result['ramMax'], 1000)
+        self.assertEqual(result['coresMax'], 2)
 
     def test_allocate(self):
         resource = Resources(200, 1, 1)

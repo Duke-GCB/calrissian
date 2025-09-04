@@ -216,8 +216,10 @@ class KubernetesVolumeBuilder(object):
 
 class KubernetesPodBuilder(object):
 
-    def __init__(self, name, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, resources, labels, nodeselectors, security_context, serviceaccount, requirements=None, hints=None):
+    def __init__(self, name, builder, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, labels, nodeselectors, security_context, serviceaccount, pod_additional_spec=None, no_network_access_pod_labels=None, network_access_pod_labels=None):
         self.name = name
+        self.builder = builder
+        self.cwl_version = self.builder.cwlVersion
         self.container_image = container_image
         self.environment = environment
         self.volume_mounts = volume_mounts
@@ -226,13 +228,18 @@ class KubernetesPodBuilder(object):
         self.stdout = stdout
         self.stderr = stderr
         self.stdin = stdin
-        self.resources = resources
+        self.resources = self.builder.resources
         self.labels = labels
         self.nodeselectors = nodeselectors
         self.security_context = security_context
         self.serviceaccount = serviceaccount
-        self.requirements = {} if requirements is None else requirements
-        self.hints = [] if hints is None else hints
+        self.no_network_access_pod_labels = no_network_access_pod_labels
+        self.network_access_pod_labels = network_access_pod_labels
+        self.priority_class = pod_additional_spec.get("pod_priority_class")
+        self.env_from_secret = pod_additional_spec.get("env_from_secret")
+        self.env_from_configmap = pod_additional_spec.get("env_from_configmap")
+        self.requirements = {} if self.builder.requirements is None else self.builder.requirements
+        self.hints = [] if self.builder.hints is None else self.builder.hints
 
     def pod_name(self):
         tag = random_tag()
@@ -310,9 +317,9 @@ class KubernetesPodBuilder(object):
 
     @staticmethod
     def resource_type(cwl_field):
-        if cwl_field == 'cores':
+        if cwl_field in [ 'cores', 'coresMax' ]:
             return 'cpu'
-        elif cwl_field == 'ram':
+        elif cwl_field in [ 'ram', 'ramMax' ]:
             return 'memory'
         else:
             return None
@@ -330,13 +337,24 @@ class KubernetesPodBuilder(object):
         log.debug(f'Building resources spec from {self.resources}')
         container_resources = {}
         for cwl_field, cwl_value in self.resources.items():
-            resource_bound = 'requests'
-            resource_type = self.resource_type(cwl_field)
-            resource_value = self.resource_value(resource_type, cwl_value)
-            if resource_type and resource_value:
-                if not container_resources.get(resource_bound):
-                    container_resources[resource_bound] = {}
-                container_resources[resource_bound][resource_type] = resource_value
+
+            if cwl_field in ['cores', 'ram']:
+                resource_bound = 'requests'
+                resource_type = self.resource_type(cwl_field)
+                resource_value = self.resource_value(resource_type, cwl_value)
+                if resource_type and resource_value:
+                    if not container_resources.get(resource_bound):
+                        container_resources[resource_bound] = {}
+                    container_resources[resource_bound][resource_type] = resource_value
+
+            elif cwl_field in ['coresMax', 'ramMax']:
+                resource_bound = 'limits'
+                resource_type = self.resource_type(cwl_field)
+                resource_value = self.resource_value(resource_type, cwl_value)
+                if resource_type and resource_value:
+                    if not container_resources.get(resource_bound):
+                        container_resources[resource_bound] = {}
+                    container_resources[resource_bound][resource_type] = resource_value
 
         # Add CUDA requirements from CWL
         for requirement in self.requirements:
@@ -358,6 +376,21 @@ class KubernetesPodBuilder(object):
         Submitted labels must be strings
         :return:
         """
+        if self.cwl_version in ["v1.0"]:
+            network_access = True
+        else: 
+            network_access = False
+
+        for requirement in self.requirements:
+            if "class" in requirement.keys() and requirement["class"] in ["NetworkAccess"]:
+                network_access = True if requirement.get("networkAccess") == "true" else False
+                break
+        if not network_access and self.no_network_access_pod_labels: 
+            self.labels = {**self.labels, **self.no_network_access_pod_labels}
+
+        if network_access and self.network_access_pod_labels:
+            self.labels = {**self.labels, **self.network_access_pod_labels}
+
         return {str(k): str(v) for k, v in self.labels.items()}
     
     def pod_nodeselectors(self):
@@ -366,6 +399,13 @@ class KubernetesPodBuilder(object):
         :return:
         """
         return {str(k): str(v) for k, v in self.nodeselectors.items()}
+
+    def pod_envfromsecret(self):
+        return [{'secretRef': {'name': secret}} for secret in self.env_from_secret]
+    
+    def pod_envfromconfigmap(self):
+        return [{'configMapRef': {'name': configmap}} for configmap in self.env_from_configmap]
+
 
     def build(self):
         spec = {
@@ -398,6 +438,20 @@ class KubernetesPodBuilder(object):
         
         if ( self.serviceaccount ):
             spec['spec']['serviceAccountName'] = self.serviceaccount
+        
+        if ( self.priority_class ):
+            spec['spec']['priorityClassName'] = self.priority_class
+
+        if self.env_from_secret or self.env_from_configmap:
+            envfrom = []
+
+            if self.env_from_secret:
+                envfrom.extend(self.pod_envfromsecret())
+
+            if self.env_from_configmap:
+                envfrom.extend(self.pod_envfromconfigmap())
+
+            spec['spec']['containers'][0]["envFrom"] = envfrom
         
         return spec
 
@@ -533,7 +587,19 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             return read_yaml(runtimeContext.pod_labels)
         else:
             return {}
-    
+
+    def get_network_access_pod_labels(self, runtimeContext):
+        if runtimeContext.network_access_pod_labels:
+            return read_yaml(runtimeContext.network_access_pod_labels)
+        else:
+            return {}
+
+    def get_no_network_access_pod_labels(self, runtimeContext):
+        if runtimeContext.no_network_access_pod_labels:
+            return read_yaml(runtimeContext.no_network_access_pod_labels)
+        else:
+            return {}
+
     def get_pod_nodeselectors(self, runtimeContext):
         if runtimeContext.pod_nodeselectors:
             return read_yaml(runtimeContext.pod_nodeselectors)
@@ -558,6 +624,29 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             return read_yaml(runtimeContext.pod_env_vars)
         else:
             return {}
+    
+    def get_pod_priority_class(self, runtimeContext):
+        return runtimeContext.pod_priority_class
+    
+    def get_pod_env_from_secret(self, runtimeContext) -> list:
+        return runtimeContext.env_from_secret
+    
+    def get_pod_env_from_configmap(self, runtimeContext) -> list:
+        return runtimeContext.env_from_configmap
+
+    def get_pod_additional_spec(self, runtimeContext):
+        spec = {}
+
+        if self.get_pod_priority_class(runtimeContext):
+            spec["pod_priority_class"] = self.get_pod_priority_class(runtimeContext)
+        
+        if self.get_pod_env_from_secret(runtimeContext):
+            spec["env_from_secret"] = self.get_pod_env_from_secret(runtimeContext)
+        
+        if self.get_pod_env_from_configmap(runtimeContext):
+            spec["env_from_configmap"] = self.get_pod_env_from_configmap(runtimeContext)
+        
+        return spec
 
     def create_kubernetes_runtime(self, runtimeContext):
         # In cwltool, the runtime list starts as something like ['docker','run'] and these various builder methods
@@ -594,6 +683,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
 
         k8s_builder = KubernetesPodBuilder(
             self.name,
+            self.builder,
             self._get_container_image(),
             self.environment,
             self.volume_builder.volume_mounts,
@@ -602,13 +692,13 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             self.stdout,
             self.stderr,
             self.stdin,
-            self.builder.resources,
             self.get_pod_labels(runtimeContext),
             self.get_pod_nodeselectors(runtimeContext),
             self.get_security_context(runtimeContext),
             self.get_pod_serviceaccount(runtimeContext),
-            self.builder.requirements,
-            self.builder.hints
+            self.get_pod_additional_spec(runtimeContext),
+            self.get_no_network_access_pod_labels(runtimeContext),
+            self.get_network_access_pod_labels(runtimeContext),
         )
         built = k8s_builder.build()
         log.debug('{}\n{}{}\n'.format('-' * 80, yaml.dump(built), '-' * 80))

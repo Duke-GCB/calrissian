@@ -23,6 +23,13 @@ class CalrissianRuntimeContext(RuntimeContext):
         self.pod_serviceaccount = None
         self.tool_logs_basepath = None
         self.max_gpus = None
+        self.no_network_access_pod_labels = None
+        self.network_access_pod_labels = None
+
+        self.pod_priority_class = None
+        self.env_from_secret = None
+        self.env_from_configmap = None
+
         self.dask_gateway_url = None
         self.dask_script_configmap = None
         return super(CalrissianRuntimeContext, self).__init__(kwargs)

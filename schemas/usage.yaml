@@ -1,0 +1,152 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: https://duke-gcb.github.io/calrissian/v1/usage.yaml
+description: The schema to represent a Calrissian resources usage
+$ref: '#/$defs/Usage'
+
+$defs:
+
+  ChildUsage:
+    type: object
+    description: Report of a child process execution used resources.
+    properties:
+      name:
+        type: string
+        description: The name of the child process.
+        example: node_crop_6
+      start_time:
+        type: string
+        format: date-time
+        description: |
+          The execution start time, in the date-time notation as defined by [RFC 3339, section 5.6](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6).
+        example: 2025-03-11T16:20:37Z
+      finish_time:
+        type: string
+        format: date-time
+        description: |
+          The execution finish time, in the date-time notation as defined by [RFC 3339, section 5.6](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6).
+        example: 2025-03-11T16:21:25Z
+      elapsed_hours:
+        type: number
+        description: The execution elapsed hour(s).
+        example: 0.013333333333333334
+      elapsed_seconds:
+        type: number
+        description: The execution elapsed second(s).
+        format: double
+        example: 48
+      exit_code:
+        type: integer
+        format: int32
+        description: The executed child process exit code.
+      cpus:
+        type: number
+        format: double
+        description: The number of Central Processing Unit cores used for the execution.
+        example: 1
+      cpu_hours:
+        type: number
+        format: double
+        description: The number of Central Processing Unit cores used per hour for the execution.
+        example: 0.013333333333333334
+      ram_megabytes:
+        type: number
+        format: double
+        description: The size of the RAM used for the execution, in MegaBytes.
+        example: 536.870912
+      ram_megabyte_hours:
+        type: number
+        format: double
+        description: The size of the RAM used per hour for the execution, in MegaBytes.
+        example: 7.158278826666667
+      disk_megabytes:
+        type: number
+        format: double
+        description: The size of the Disk used for the execution, in MegaBytes.
+        example: 99.962848
+
+  Usage:
+    type: object
+    description: Report of a process total used resources.
+    properties:
+      start_time:
+        type: string
+        format: date-time
+        description: |
+          The execution start time, in the date-time notation as defined by [RFC 3339, section 5.6](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6).
+        example: 2025-03-11T16:20:36Z
+      finish_time:
+        type: string
+        format: date-time
+        description: |
+          The execution finish time, in the date-time notation as defined by [RFC 3339, section 5.6](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6).
+        example: 2025-03-11T16:23:17Z
+      elapsed_hours:
+        type: number
+        format: double
+        description: The execution elapsed hour(s).
+        example: 0.04472222222222222
+      elapsed_seconds:
+        type: integer
+        format: int32
+        description: The execution elapsed second(s).
+        example: 161
+      cores_allowed:
+        type: number
+        format: double
+        description: The maximum number of Central Processing Unit cores to use.
+        example: 8
+      max_parallel_cpus:
+        type: integer
+        format: int32
+        description: The maximum number of used Central Processing Unit cores.
+        example: 7
+      total_cpu_hours:
+        type: number
+        format: double
+        description: The number of used Central Processing Unit cores per hour.
+        example: 0.21305555555555555
+      ram_mb_allowed:
+        type: number
+        format: double
+        description: The maximum amount of RAM to use, in MegaBytes.
+        example: 4000
+      total_ram_megabyte_hours:
+        type: number
+        format: double
+        description: The total size of the RAM used per hour for the execution, in MegaBytes.
+        example: 114.3833304177778
+      max_parallel_ram_megabytes:
+        type: number
+        format: double
+        example: 3758.0963839999995
+      total_disk_megabytes:
+        type: number
+        format: double
+        description: The total size of the Disk used per hour for the execution, in MegaBytes.
+        example: 2490.712061999999
+      max_parallel_tasks:
+        type: integer
+        format: int32
+        description: The maximum number of parallel executing tasks.
+      total_tasks:
+        type: integer
+        format: int32
+        description: The total number of executed tasks.
+        example: 25
+      children:
+        type: array
+        items:
+          $ref: '#/$defs/ChildUsage'
+        description: The executed tasks.
+        example:
+        - cpus: 1
+          ram_megabytes: 536.870912
+          disk_megabytes: 99.962848
+          exit_code: 0
+          name: node_crop_6
+          start_time: 2025-03-11T16:20:37Z
+          finish_time: 2025-03-11T16:21:25Z
+          elapsed_hours: 0.013333333333333334
+          elapsed_seconds: 48
+          ram_megabyte_hours: 7.158278826666667
+          cpu_hours: 0.013333333333333334

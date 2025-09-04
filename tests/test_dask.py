@@ -45,7 +45,12 @@ class ValidateExtensionTestCase(TestCase):
 class KubernetesDaskPodBuilderTestCase(TestCase):
 
     def setUp(self):
+        builder = Mock()
+        builder.cwlVersion = "v1.2"
+        builder.requirements = []
+        builder.resources = {'cores': 1, 'ram': 1024}
         self.name = 'PodName'
+        self.builder = builder
         self.container_image = 'dockerimage:1.0'
         self.volume_mounts = [Mock(), Mock()]
         self.volumes = [Mock()]
@@ -53,7 +58,6 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
         self.stdout = 'stdout.txt'
         self.stderr = 'stderr.txt'
         self.stdin = 'stdin.txt'
-        self.resources = {'cores': 1, 'ram': 1024}
         self.labels = {'key1': 'val1', 'key2': 123}
         self.nodeselectors = {'disktype': 'ssd', 'cachelevel': 2}
         self.security_context = { 'runAsUser': os.getuid(),'runAsGroup': os.getgid() }
@@ -64,10 +68,13 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
             'HOME': '/homedir',
             'PYTHONPATH': '/app',
         }
-        self.pod_builder = KubernetesDaskPodBuilder(self.name, self.container_image, self.environment, self.volume_mounts,
-                                                self.volumes, self.command_line, self.stdout, self.stderr, self.stdin,
-                                                self.resources, self.labels, self.nodeselectors, self.security_context, self.pod_serviceaccount,
-                                                self.dask_gateway_url, self.dask_gateway_controller)
+        self.no_network_access_pod_labels = {}
+        self.network_access_pod_labels = {}
+        self.pod_additional_spec = {}
+        self.pod_builder = KubernetesDaskPodBuilder(self.dask_gateway_url, self.dask_gateway_controller, self.name, self.builder, self.container_image,
+                                                    self.environment, self.volume_mounts, self.volumes, self.command_line, self.stdout, self.stderr,
+                                                    self.stdin, self.labels, self.nodeselectors, self.security_context, self.pod_serviceaccount,
+                                                    self.pod_additional_spec, self.no_network_access_pod_labels, self.network_access_pod_labels )
         self.pod_builder.dask_requirement = {
             "workerCores": 2,
             "workerCoresLimit": 2,
@@ -414,7 +421,10 @@ class CalrissianCommandLineDaskJobTestCase(TestCase):
         # looks at generatemapper
         # creates a KubernetesPodBuilder
         self.assertEqual(mock_pod_builder.call_args, call(
+            job.get_dask_gateway_url(mock_runtime_context),
+            job.client.get_configmap_from_namespace(mock_runtime_context),
             job.name,
+            job.builder,
             job._get_container_image(),
             job.environment,
             job.volume_builder.volume_mounts,
@@ -423,15 +433,13 @@ class CalrissianCommandLineDaskJobTestCase(TestCase):
             job.stdout,
             job.stderr,
             job.stdin,
-            job.builder.resources,
             mock_read_yaml.return_value,
             mock_read_yaml.return_value,
             job.get_security_context(mock_runtime_context),
             None,
-            job.get_dask_gateway_url(mock_runtime_context),
-            job.client.get_configmap_from_namespace(mock_runtime_context),
-            requirements=job.builder.requirements,
-            hints=job.builder.hints,
+            job.get_pod_additional_spec(mock_runtime_context),
+            mock_read_yaml.return_value,
+            mock_read_yaml.return_value
         ))
         # calls builder.build
         # returns that

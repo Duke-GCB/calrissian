@@ -78,46 +78,15 @@ def dask_req_validate(requirement: Optional[CWLObjectType]) -> bool:
 
 
 class KubernetesDaskPodBuilder(KubernetesPodBuilder):
+    
+    def __init__(self, dask_gateway_url, dask_gateway_controller, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-    def __init__(self,
-                 name,
-                 container_image,
-                 environment,
-                 volume_mounts,
-                 volumes,
-                 command_line,
-                 stdout,
-                 stderr,
-                 stdin,
-                 resources,
-                 labels,
-                 nodeselectors,
-                 security_context,
-                 serviceaccount,
-                 dask_gateway_url,
-                 dask_gateway_controller,
-                 requirements=None,
-                 hints=None):
-        self.name = name
-        self.container_image = container_image
-        self.environment = environment
-        self.volume_mounts = volume_mounts
-        self.volumes = volumes
-        self.command_line = command_line
-        self.stdout = stdout
-        self.stderr = stderr
-        self.stdin = stdin
-        self.resources = resources
-        self.labels = labels
-        self.nodeselectors = nodeselectors
-        self.security_context = security_context
-        self.serviceaccount = serviceaccount
         self.dask_gateway_url = dask_gateway_url
         self.dask_gateway_controller = dask_gateway_controller
-        self.requirements = {} if requirements is None else requirements
-        self.hints = [] if hints is None else hints
     
         self.dask_requirement = next((elem for elem in self.requirements if elem['class'] == 'https://calrissian-cwl.github.io/schema#DaskGatewayRequirement'), None)
+    
 
     def container_args(self):
         return ['set -e; trap "touch /shared/completed" EXIT;export DASK_CLUSTER=$(cat /shared/dask_cluster_name.txt) ; ' + super().container_args()[0]]
@@ -334,7 +303,10 @@ class CalrissianCommandLineDaskJob(CalrissianCommandLineJob):
         
 
         k8s_builder = KubernetesDaskPodBuilder(
+            self.get_dask_gateway_url(runtimeContext),
+            controller_cm_exists,
             self.name,
+            self.builder,
             self._get_container_image(),
             self.environment,
             self.volume_builder.volume_mounts,
@@ -343,15 +315,13 @@ class CalrissianCommandLineDaskJob(CalrissianCommandLineJob):
             self.stdout,
             self.stderr,
             self.stdin,
-            self.builder.resources,
             self.get_pod_labels(runtimeContext),
             self.get_pod_nodeselectors(runtimeContext),
             self.get_security_context(runtimeContext),
             self.get_pod_serviceaccount(runtimeContext),
-            self.get_dask_gateway_url(runtimeContext),
-            controller_cm_exists,
-            requirements=self.builder.requirements,
-            hints=self.builder.hints,
+            self.get_pod_additional_spec(runtimeContext),
+            self.get_no_network_access_pod_labels(runtimeContext),
+            self.get_network_access_pod_labels(runtimeContext),
         )
 
         built = k8s_builder.build()
