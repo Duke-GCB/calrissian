@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Dict
 from cwltool.job import ContainerCommandLineJob, needs_shell_quoting_re
 
@@ -118,6 +119,7 @@ class KubernetesVolumeBuilder(object):
     def __init__(self):
         self.persistent_volume_entries = {}
         self.emptydir_volume_names = []
+        self.configmap_volume_names = []
         self.volume_mounts = []
         self.volumes = []
 
@@ -151,6 +153,14 @@ class KubernetesVolumeBuilder(object):
             'emptyDir': {},
         }
         self.emptydir_volume_names.append(name)
+        self.volumes.append(volume)
+
+    def add_configmap_volume(self, name, cm_name):
+        volume = {
+            'name': name,
+            'configMap': {'name' : cm_name}
+        }
+        self.configmap_volume_names.append(name)
         self.volumes.append(volume)
 
     def find_persistent_volume(self, source):
@@ -195,6 +205,14 @@ class KubernetesVolumeBuilder(object):
         }
         self.volume_mounts.append(volume_mount)
 
+    def add_configmap_volume_binding(self, name, target):
+        if not name in self.configmap_volume_names:
+            raise VolumeBuilderException('Could not find a configMap volume named {}'.format(name))
+        volume_mount = {
+            'name': name,
+            'mountPath': target
+        }
+        self.volume_mounts.append(volume_mount)
 
 class KubernetesPodBuilder(object):
 

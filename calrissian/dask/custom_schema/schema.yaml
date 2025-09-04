@@ -1,0 +1,48 @@
+$base: https://calrissian-cwl.github.io/schema#
+$namespaces:
+  cwl: "https://w3id.org/cwl/cwl#"
+$graph:
+- $import: https://w3id.org/cwl/CommonWorkflowLanguage.yml
+
+- name: DaskGatewayRequirement
+  type: record
+  extends: cwl:ProcessRequirement
+  inVocab: false
+  doc: "Indicates that a process requires a Dask cluster procured via [Dask Gateway](https://gateway.dask.org/) runtime."
+  fields:
+    class:
+      type: 'string'
+      doc: "Always 'DaskGatewayRequirement'"
+      jsonldPredicate:
+        "_id": "@type"
+        "_type": "@vocab"
+    workerCores:
+      type:
+        - 'int'
+        - 'cwl:Expression'
+      doc: |
+        Number of cpu-cores available for a dask worker.
+    workerCoresLimit:
+      type:
+        - 'int'
+        - 'cwl:Expression'
+      doc: |
+        Maximum number of cpu-cores available for a dask worker.
+    workerMemory:
+      type:
+        - 'string'
+        - 'cwl:Expression'
+      doc: |
+        Maximum amount of memory available for a dask worker.
+    clusterMaxCores:
+      type:
+        - 'int'
+        - 'cwl:Expression'
+      doc: |
+        Maximum number of cores available for the dask cluster
+    clusterMaxMemory:
+      type:
+        - 'string'
+        - 'cwl:Expression'
+      doc: |
+        Maximum amount of memory available for the dask cluster

@@ -3,6 +3,7 @@ from kubernetes import client, config, watch
 from kubernetes.client.models import V1ContainerState, V1Container, V1ContainerStatus
 from kubernetes.client.rest import ApiException
 from kubernetes.config.config_exception import ConfigException
+import yaml
 from calrissian.executor import IncompleteStatusException
 from calrissian.retry import retry_exponential_if_exception_type
 import threading
@@ -156,7 +157,7 @@ class KubernetesClient(object):
         
         log.info('[{}] follow_logs end'.format(pod_name))
 
-
+        
     @retry_exponential_if_exception_type((ApiException, HTTPError, IncompleteStatusException), log)
     def wait_for_completion(self) -> CompletionResult:
         w = watch.Watch()

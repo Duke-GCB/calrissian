@@ -56,7 +56,7 @@ extra-dependencies = [
   "mypy>=1.0.0",
 ]
 [tool.hatch.envs.types.scripts]
-check = "mypy --install-types --non-interactive {args:src/calrissian tests}"
+check = "mypy --install-types --non-interactive {args:calrissian tests}"
 
 [tool.coverage.run]
 source_pkgs = ["calrissian", "tests"]
@@ -118,7 +118,8 @@ dependencies = [
   "freezegun==1.5.1",
   "setuptools==70.0.0",
   "shellescape==3.8.1",
-  "python-dateutil>=2.7"
+  "python-dateutil>=2.7",
+  "coverage[toml]"
 ]
 
 [tool.hatch.envs.test.env-vars]
@@ -127,6 +128,7 @@ RETRY_ATTEMPTS="0"
 [tool.hatch.envs.test.scripts]
 test = "hatch run nose2"
 testv = "hatch run nose2 --verbose"
+testdask = "hatch run nose2 tests.test_dask"
 cov = ["coverage run --source=calrissian -m nose2", "coverage report"]
 
 [[tool.hatch.envs.test.matrix]]

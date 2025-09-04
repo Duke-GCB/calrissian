@@ -1,5 +1,6 @@
 from cwltool.command_line_tool import CommandLineTool
 from cwltool.workflow import default_make_tool
+from calrissian.dask import CalrissianCommandLineDaskJob, dask_req_validate
 from calrissian.job import CalrissianCommandLineJob
 import logging
 
@@ -36,6 +37,7 @@ class CalrissianCommandLineTool(CommandLineTool):
         if not runtimeContext.use_container:
             raise CalrissianCommandLineToolException('Unable to create a CalrissianCommandLineTool - use_container is disabled')
         docker_requirement, _ = self.get_requirement('DockerRequirement')
+
         if not docker_requirement:
             # no docker requirement specified, inject one
             default_container = runtimeContext.find_default_container(self)
@@ -46,6 +48,11 @@ class CalrissianCommandLineTool(CommandLineTool):
                 'class': 'DockerRequirement',
                 'dockerPull': default_container
             })
+        
+        dask_requirement, _ = self.get_requirement('https://calrissian-cwl.github.io/schema#DaskGatewayRequirement')
+        
+        if dask_req_validate(dask_requirement):
+            return CalrissianCommandLineDaskJob
         
         return CalrissianCommandLineJob
 

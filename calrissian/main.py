@@ -1,9 +1,14 @@
 import contextlib
+import re
+
+import cwltool
+from cwltool.process import use_custom_schema, get_schema
 from calrissian.executor import ThreadPoolJobExecutor
 from calrissian.context import CalrissianLoadingContext, CalrissianRuntimeContext
 from calrissian.version import version
 from calrissian.k8s import delete_pods
 from calrissian.report import initialize_reporter, write_report, CPUParser, MemoryParser
+from calrissian.dask import DaskPodMonitor
 from cwltool.main import main as cwlmain
 from cwltool.argparser import arg_parser
 from typing_extensions import Text
@@ -30,7 +35,7 @@ def get_log_level(parsed_args):
 
 
 def activate_logging(level):
-    loggers = ['executor','context','tool','job', 'k8s','main']
+    loggers = ['executor','context','tool','job', 'k8s','main', 'dask']
     for logger in loggers:
         logging.getLogger('calrissian.{}'.format(logger)).setLevel(level)
         logging.getLogger('calrissian.{}'.format(logger)).addHandler(logging.StreamHandler())
@@ -51,6 +56,8 @@ def add_arguments(parser):
     parser.add_argument('--conf', help='Defines the default values for the CLI arguments', action='append')
     parser.add_argument('--no-network-access-pod-label', type=Text, nargs='?', help='YAML file to set the pod label to use for disabling network access')
     parser.add_argument('--network-access-pod-label', type=Text, nargs='?', help='YAML file to set the pod label to use for enabling network access')
+    parser.add_argument('--dask-gateway-url', type=Text, nargs='?', help='Defines the Dask Gateway URL', required=False)
+    parser.add_argument('--dask-script-configmap', type=Text, nargs='?', help='Name of the already existing configmap with custom script for dask', required=False)
 
     parser.add_argument('--pod-priority-class', type=Text, nargs='?', help='Priority Class Name assigned to the pod')
     parser.add_argument('--env-from-secret', type=Text, action='append', help='Secret Id to set the pod environment')
@@ -100,7 +107,6 @@ def install_signal_handler():
     """
     signal.signal(signal.SIGTERM, handle_sigterm)
 
-
 def install_tees(stdout_path=None, stderr_path=None):
     """
     Reconnects stdout/stderr to `tee` processes via subprocess.PIPE that can write to user-supplied files
@@ -128,6 +134,23 @@ def flush_tees():
     sys.stderr.flush()
 
 
+def add_custom_schema():
+    cwltool.command_line_tool.ACCEPTLIST_EN_RELAXED_RE = re.compile(r".*")
+    cwltool.command_line_tool.ACCEPTLIST_RE = cwltool.command_line_tool.ACCEPTLIST_EN_RELAXED_RE
+    supported_versions = ["v1.0", "v1.1", "v1.2"]
+
+    with open(os.path.join(os.path.dirname(__file__), "dask/custom_schema/schema.yaml")) as f:
+        schema_content = f.read()
+
+    for s in supported_versions:
+        use_custom_schema(s, "https://calrissian-cwl.github.io/schema", schema_content)
+        get_schema(s)
+
+    cwltool.process.supportedProcessRequirements.extend([
+        "https://calrissian-cwl.github.io/schema#DaskGatewayRequirement"
+    ])
+
+
 def main():
     parser = arg_parser()
     add_arguments(parser)
@@ -143,16 +166,23 @@ def main():
     runtime_context = CalrissianRuntimeContext(vars(parsed_args))
     runtime_context.select_resources = executor.select_resources
     install_signal_handler()
+
+    parsed_args.enable_ext = True
+
     try:
         result = cwlmain(args=parsed_args,
                          executor=executor,
                          loadingContext=CalrissianLoadingContext(),
                          runtimeContext=runtime_context,
                          versionfunc=version,
-                         )
+                         custom_schema_callback=(add_custom_schema if parsed_args.dask_gateway_url else None)
+                        )
     finally:
         # Always clean up after cwlmain
-        delete_pods()
+        if parsed_args.dask_gateway_url:
+            DaskPodMonitor.cleanup()
+        else:
+            delete_pods()
         if parsed_args.usage_report:
             write_report(parsed_args.usage_report)
         flush_tees()
