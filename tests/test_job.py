@@ -350,7 +350,22 @@ class KubernetesPodBuilderTestCase(TestCase):
             }
         }
         self.assertEqual(expected, resources)
-        
+    
+    def test_container_resources_requests_limits(self):
+        self.pod_builder.resources = {'cores': 2, 'ram': 256, 'ramMax': 4096, 'coresMax': 4}
+        resources = self.pod_builder.container_resources()
+        expected = {
+            'requests': {
+                'cpu': '2',
+                'memory': '256Mi'
+            },
+            'limits': {
+                'cpu': '4',
+                'memory': '4096Mi'
+            }
+        }
+        self.assertEqual(expected, resources)
+
     def test_gpu_hints(self):
         self.pod_builder.resources = {'cores': 2, 'ram': 256 }
         self.pod_builder.requirements = [OrderedDict([("class", "cwltool:CUDARequirement"), ("cudaVersionMin", '10.0'), ("cudaComputeCapability", '3.0'), ("cudaDeviceCountMin", 1), ("cudaDeviceCountMax", 1)])]

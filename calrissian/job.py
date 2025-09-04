@@ -296,9 +296,9 @@ class KubernetesPodBuilder(object):
 
     @staticmethod
     def resource_type(cwl_field):
-        if cwl_field == 'cores':
+        if cwl_field in [ 'cores', 'coresMax' ]:
             return 'cpu'
-        elif cwl_field == 'ram':
+        elif cwl_field in [ 'ram', 'ramMax' ]:
             return 'memory'
         else:
             return None
@@ -316,13 +316,24 @@ class KubernetesPodBuilder(object):
         log.debug(f'Building resources spec from {self.resources}')
         container_resources = {}
         for cwl_field, cwl_value in self.resources.items():
-            resource_bound = 'requests'
-            resource_type = self.resource_type(cwl_field)
-            resource_value = self.resource_value(resource_type, cwl_value)
-            if resource_type and resource_value:
-                if not container_resources.get(resource_bound):
-                    container_resources[resource_bound] = {}
-                container_resources[resource_bound][resource_type] = resource_value
+
+            if cwl_field in ['cores', 'ram']:
+                resource_bound = 'requests'
+                resource_type = self.resource_type(cwl_field)
+                resource_value = self.resource_value(resource_type, cwl_value)
+                if resource_type and resource_value:
+                    if not container_resources.get(resource_bound):
+                        container_resources[resource_bound] = {}
+                    container_resources[resource_bound][resource_type] = resource_value
+
+            elif cwl_field in ['coresMax', 'ramMax']:
+                resource_bound = 'limits'
+                resource_type = self.resource_type(cwl_field)
+                resource_value = self.resource_value(resource_type, cwl_value)
+                if resource_type and resource_value:
+                    if not container_resources.get(resource_bound):
+                        container_resources[resource_bound] = {}
+                    container_resources[resource_bound][resource_type] = resource_value
 
         # Add CUDA requirements from CWL
         for requirement in self.requirements:
