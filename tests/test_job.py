@@ -284,12 +284,13 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.stdin = 'stdin.txt'
         self.resources = {'cores': 1, 'ram': 1024}
         self.labels = {'key1': 'val1', 'key2': 123}
+        self.gpu_nodeselectors = {}
         self.nodeselectors = {'disktype': 'ssd', 'cachelevel': 2}
         self.security_context = { 'runAsUser': os.getuid(),'runAsGroup': os.getgid() }
         self.pod_serviceaccount = "podmanager"
         self.pod_builder = KubernetesPodBuilder(self.name, self.container_image, self.environment, self.volume_mounts,
                                                 self.volumes, self.command_line, self.stdout, self.stderr, self.stdin,
-                                                self.resources, self.labels, self.nodeselectors, self.security_context, self.pod_serviceaccount)
+                                                self.resources, self.labels, self.nodeselectors, self.gpu_nodeselectors, self.security_context, self.pod_serviceaccount)
 
     @patch('calrissian.job.random_tag')
     def test_safe_pod_name(self, mock_random_tag):
@@ -381,7 +382,17 @@ class KubernetesPodBuilderTestCase(TestCase):
         
     def test_string_nodeselectors(self):
         self.pod_builder.nodeselectors = {'cachelevel': 2}
-        self.assertEqual(self.pod_builder.pod_nodeselectors(), {'cachelevel':'2'})
+        self.assertEqual(self.pod_builder.check_pod_nodeselectors(), {'cachelevel':'2'})
+
+    def test_not_gpu_req_nodeselectors(self):
+        self.pod_builder.gpu_nodeselectors = {'gpu': "true"}
+        self.assertNotEqual(self.pod_builder.check_pod_nodeselectors(), {'gpu': "true"})
+    
+    def test_gpu_nodeselectors(self):
+        self.pod_builder.requirements = [OrderedDict([("class", "cwltool:CUDARequirement"), ("cudaVersionMin", '10.0'), ("cudaComputeCapability", '3.0'), ("cudaDeviceCountMin", 2), ("cudaDeviceCountMax", 4)])]
+
+        self.pod_builder.gpu_nodeselectors = {'gpu': "true", 'example.com/gpu.present': "true"}
+        self.assertEqual(self.pod_builder.check_pod_nodeselectors(), {'gpu': "true", 'example.com/gpu.present': "true"})
 
     def test_init_containers_empty_when_no_stdout_or_stderr(self):
         self.pod_builder.stdout = None
