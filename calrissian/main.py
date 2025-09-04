@@ -49,6 +49,8 @@ def add_arguments(parser):
     parser.add_argument('--stderr', type=Text, nargs='?', help='Output file name to tee standard error to (includes tool logs)')
     parser.add_argument('--tool-logs-basepath', type=Text, nargs='?', help='Base path for saving the tool logs')
     parser.add_argument('--conf', help='Defines the default values for the CLI arguments', action='append')
+    parser.add_argument('--no-network-access-pod-label', type=Text, nargs='?', help='YAML file to set the pod label to use for disabling network access')
+    parser.add_argument('--network-access-pod-label', type=Text, nargs='?', help='YAML file to set the pod label to use for enabling network access')
 
     parser.add_argument('--pod-priority-class', type=Text, nargs='?', help='Priority Class Name assigned to the pod')
     parser.add_argument('--env-from-secret', type=Text, action='append', help='Secret Id to set the pod environment')
