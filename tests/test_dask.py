@@ -33,7 +33,7 @@ class ValidateExtensionTestCase(TestCase):
             "workerCores": 2,
             "workerCoresLimit": 2,
             "workerMemory": "4G",
-            "clusterMaxCore": 8,
+            "clusterMaxCores": 8,
             "clusterMaxMemory": "16G",
             "class": "https://calrissian-cwl.github.io/schema#DaskGatewayRequirement" # From cwl
         }
@@ -72,7 +72,7 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
             "workerCores": 2,
             "workerCoresLimit": 2,
             "workerMemory": "4G",
-            "clusterMaxCore": 8,
+            "clusterMaxCores": 8,
             "clusterMaxMemory": "16G",
             "class": "https://calrissian-cwl.github.io/schema#DaskGatewayRequirement" # From cwl
         }
