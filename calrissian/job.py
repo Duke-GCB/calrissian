@@ -198,7 +198,7 @@ class KubernetesVolumeBuilder(object):
 
 class KubernetesPodBuilder(object):
 
-    def __init__(self, name, builder, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, labels, nodeselectors, security_context, serviceaccount, no_network_access_pod_labels=None, network_access_pod_labels=None):
+    def __init__(self, name, builder, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, labels, nodeselectors, security_context, serviceaccount, pod_additional_spec=None, no_network_access_pod_labels=None, network_access_pod_labels=None):
         self.name = name
         self.builder = builder
         self.cwl_version = self.builder.cwlVersion
@@ -217,6 +217,9 @@ class KubernetesPodBuilder(object):
         self.serviceaccount = serviceaccount
         self.no_network_access_pod_labels = no_network_access_pod_labels
         self.network_access_pod_labels = network_access_pod_labels
+        self.priority_class = pod_additional_spec.get("pod_priority_class")
+        self.env_from_secret = pod_additional_spec.get("env_from_secret")
+        self.env_from_configmap = pod_additional_spec.get("env_from_configmap")
         self.requirements = {} if self.builder.requirements is None else self.builder.requirements
         self.hints = [] if self.builder.hints is None else self.builder.hints
 
@@ -379,6 +382,13 @@ class KubernetesPodBuilder(object):
         """
         return {str(k): str(v) for k, v in self.nodeselectors.items()}
 
+    def pod_envfromsecret(self):
+        return [{'secretRef': {'name': secret}} for secret in self.env_from_secret]
+    
+    def pod_envfromconfigmap(self):
+        return [{'configMapRef': {'name': configmap}} for configmap in self.env_from_configmap]
+
+
     def build(self):
         spec = {
             'metadata': {
@@ -410,6 +420,20 @@ class KubernetesPodBuilder(object):
         
         if ( self.serviceaccount ):
             spec['spec']['serviceAccountName'] = self.serviceaccount
+        
+        if ( self.priority_class ):
+            spec['spec']['priorityClassName'] = self.priority_class
+
+        if self.env_from_secret or self.env_from_configmap:
+            envfrom = []
+
+            if self.env_from_secret:
+                envfrom.extend(self.pod_envfromsecret())
+
+            if self.env_from_configmap:
+                envfrom.extend(self.pod_envfromconfigmap())
+
+            spec['spec']['containers'][0]["envFrom"] = envfrom
         
         return spec
 
@@ -582,6 +606,29 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             return read_yaml(runtimeContext.pod_env_vars)
         else:
             return {}
+    
+    def get_pod_priority_class(self, runtimeContext):
+        return runtimeContext.pod_priority_class
+    
+    def get_pod_env_from_secret(self, runtimeContext) -> list:
+        return runtimeContext.env_from_secret
+    
+    def get_pod_env_from_configmap(self, runtimeContext) -> list:
+        return runtimeContext.env_from_configmap
+
+    def get_pod_additional_spec(self, runtimeContext):
+        spec = {}
+
+        if self.get_pod_priority_class(runtimeContext):
+            spec["pod_priority_class"] = self.get_pod_priority_class(runtimeContext)
+        
+        if self.get_pod_env_from_secret(runtimeContext):
+            spec["env_from_secret"] = self.get_pod_env_from_secret(runtimeContext)
+        
+        if self.get_pod_env_from_configmap(runtimeContext):
+            spec["env_from_configmap"] = self.get_pod_env_from_configmap(runtimeContext)
+        
+        return spec
 
     def create_kubernetes_runtime(self, runtimeContext):
         # In cwltool, the runtime list starts as something like ['docker','run'] and these various builder methods
@@ -631,6 +678,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             self.get_pod_nodeselectors(runtimeContext),
             self.get_security_context(runtimeContext),
             self.get_pod_serviceaccount(runtimeContext),
+            self.get_pod_additional_spec(runtimeContext),
             self.get_no_network_access_pod_labels(runtimeContext),
             self.get_network_access_pod_labels(runtimeContext),
         )

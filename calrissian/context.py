@@ -25,4 +25,9 @@ class CalrissianRuntimeContext(RuntimeContext):
         self.max_gpus = None
         self.no_network_access_pod_labels = None
         self.network_access_pod_labels = None
+
+        self.pod_priority_class = None
+        self.env_from_secret = None
+        self.env_from_configmap = None
+
         return super(CalrissianRuntimeContext, self).__init__(kwargs)

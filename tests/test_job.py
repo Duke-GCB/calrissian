@@ -293,9 +293,11 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.pod_serviceaccount = "podmanager"
         self.no_network_access_pod_labels = {"calrissian-network": "disabled"}
         self.network_access_pod_labels = {"calrissian-network": "enabled"}
+        self.pod_additional_spec = {'pod_priority_class': 'standard-priority'}
         self.pod_builder = KubernetesPodBuilder(self.name, self.builder, self.container_image, self.environment, self.volume_mounts,
                                                 self.volumes, self.command_line, self.stdout, self.stderr, self.stdin,
-                                                self.labels, self.nodeselectors, self.security_context, self.pod_serviceaccount, 
+                                                self.labels, self.nodeselectors, self.security_context,
+                                                self.pod_serviceaccount, self.pod_additional_spec, 
                                                 self.no_network_access_pod_labels, self.network_access_pod_labels)
 
     @patch('calrissian.job.random_tag')
@@ -325,6 +327,38 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.assertIn({'name': 'K1', 'value': 'V1'}, environment)
         self.assertIn({'name': 'K2', 'value': 'V2'}, environment)
         self.assertIn({'name': 'HOME', 'value': '/homedir'}, environment)
+
+    def test_container_env_from_secret_single(self):
+        self.pod_builder.env_from_secret = ['calrissian-example-1']
+        env_from_secret = self.pod_builder.pod_envfromsecret()
+
+        self.assertEqual(len(self.pod_builder.env_from_secret), len(env_from_secret))
+        self.assertIn('calrissian-example-1', self.pod_builder.env_from_secret)
+
+    def test_container_env_from_secret_multiple(self):
+        self.pod_builder.env_from_secret = ['calrissian-example-1', 'calrissian-example-2', 'calrissian-example-3']
+        env_from_secret = self.pod_builder.pod_envfromsecret()
+
+        self.assertEqual(len(self.pod_builder.env_from_secret), len(env_from_secret))
+        self.assertIn('calrissian-example-1', self.pod_builder.env_from_secret)
+        self.assertIn('calrissian-example-2', self.pod_builder.env_from_secret)
+        self.assertIn('calrissian-example-3', self.pod_builder.env_from_secret)
+
+    def test_container_env_from_configmap_single(self):
+        self.pod_builder.env_from_configmap = ['calrissian-config-1']
+        env_from_configmap = self.pod_builder.pod_envfromconfigmap()
+
+        self.assertEqual(len(self.pod_builder.env_from_configmap), len(env_from_configmap))
+        self.assertIn('calrissian-config-1', self.pod_builder.env_from_configmap)
+
+    def test_container_env_from_configmap_multiple(self):
+        self.pod_builder.env_from_configmap = ['calrissian-config-1', 'calrissian-config-2', 'calrissian-config-3']
+        env_from_configmap = self.pod_builder.pod_envfromconfigmap()
+
+        self.assertEqual(len(self.pod_builder.env_from_configmap), len(env_from_configmap))
+        self.assertIn('calrissian-config-1', self.pod_builder.env_from_configmap)
+        self.assertIn('calrissian-config-2', self.pod_builder.env_from_configmap)
+        self.assertIn('calrissian-config-3', self.pod_builder.env_from_configmap)
 
     def test_container_workingdir(self):
         workingdir = self.pod_builder.container_workingdir()
@@ -428,6 +462,10 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.pod_builder.network_access_pod_labels = {"calrissian-network": "enabled"}
         self.assertEqual(self.pod_builder.pod_labels(), {"calrissian-network": "disabled", 'key1': 'val1', 'key2': '123'})
 
+    def test_string_priority_class(self):
+        self.assertIsNotNone(self.pod_builder.priority_class)
+        self.assertEqual(self.pod_builder.priority_class, "standard-priority")
+
     def test_init_containers_empty_when_no_stdout_or_stderr(self):
         self.pod_builder.stdout = None
         self.pod_builder.stderr = None
@@ -511,6 +549,7 @@ class KubernetesPodBuilderTestCase(TestCase):
                     'runAsUser': os.getuid(),
                     'runAsGroup': os.getgid()
                 },
+                'priorityClassName': 'standard-priority',
                 'serviceAccountName': 'podmanager'
             }
         }
@@ -715,7 +754,8 @@ class CalrissianCommandLineJobTestCase(TestCase):
             mock_read_yaml.return_value,
             mock_read_yaml.return_value,
             job.get_security_context(mock_runtime_context),
-            None, 
+            None,
+            job.get_pod_additional_spec(mock_runtime_context),
             mock_read_yaml.return_value,
             mock_read_yaml.return_value,
         ))
