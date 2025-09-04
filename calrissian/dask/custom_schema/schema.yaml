@@ -33,16 +33,16 @@ $graph:
         - 'string'
         - 'cwl:Expression'
       doc: |
-        Maximum number of bytes available for a dask worker.
-    clusterMaxCore:
+        Maximum amount of memory available for a dask worker.
+    clusterMaxCores:
       type:
         - 'int'
         - 'cwl:Expression'
       doc: |
-        Maximum number of cores to configure the cluster
+        Maximum number of cores available for the dask cluster
     clusterMaxMemory:
       type:
         - 'string'
         - 'cwl:Expression'
       doc: |
-        Maximum amount of memory to configure the cluster
+        Maximum amount of memory available for the dask cluster
