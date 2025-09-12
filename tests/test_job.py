@@ -591,7 +591,7 @@ class CalrissianCommandLineJobTestCase(TestCase):
 
     def make_completion_result(self, exit_code):
         return create_autospec(CompletionResult, pod_name=self.name, exit_code=exit_code, cpus='1', memory='1', start_time=Mock(),
-                        finish_time=Mock(), pod_log='logs/')
+                        finish_time=Mock(), pod_log='logs/', node_selectors={})
 
     def test_constructor_calculates_persistent_volume_entries(self, mock_volume_builder, mock_client):
         self.make_job()

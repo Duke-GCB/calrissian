@@ -99,7 +99,7 @@ class TimedResourceReportTestCase(TestCase):
 
     def test_create(self):
         name = 'test-job'
-        completion_result = CompletionResult(0, '4', '3G', TIME_1000, TIME_1100, [])
+        completion_result = CompletionResult(0, '4', '3G', TIME_1000, TIME_1100, [], {})
         disk_bytes = 10000000
         report = TimedResourceReport.create(name, completion_result, disk_bytes)
         self.assertEqual(report.cpu_hours(), 4)

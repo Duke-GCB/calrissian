@@ -400,12 +400,14 @@ class CompletionResultTestCase(TestCase):
         self.start_time = Mock()
         self.finish_time = Mock()
         self.tool_log = Mock()
+        self.node_selectors = Mock()
 
     def test_init(self):
-        result = CompletionResult(self.exit_code, self.cpus, self.memory, self.start_time, self.finish_time, self.tool_log)
+        result = CompletionResult(self.exit_code, self.cpus, self.memory, self.start_time, self.finish_time, self.tool_log, self.node_selectors)
         self.assertEqual(result.exit_code, self.exit_code)
         self.assertEqual(result.cpus, self.cpus)
         self.assertEqual(result.memory, self.memory)
         self.assertEqual(result.start_time, self.start_time)
         self.assertEqual(result.finish_time, self.finish_time)
         self.assertEqual(result.tool_log, self.tool_log)
+        self.assertEqual(result.node_selectors, self.node_selectors)
