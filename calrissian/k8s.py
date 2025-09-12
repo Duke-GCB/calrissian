@@ -51,13 +51,14 @@ class CompletionResult(object):
     The CPU and memory values should be in kubernetes units (strings).
     """
 
-    def __init__(self, exit_code, cpus, memory, start_time, finish_time, tool_log):
+    def __init__(self, exit_code, cpus, memory, start_time, finish_time, tool_log, node_selectors):
         self.exit_code = exit_code
         self.cpus = cpus
         self.memory = memory
         self.start_time = start_time
         self.finish_time = finish_time
         self.tool_log = tool_log
+        self.node_selectors = node_selectors
 
 
 class KubernetesClient(object):
@@ -110,7 +111,7 @@ class KubernetesClient(object):
                 # Re-raise
                 raise
 
-    def _handle_completion(self, state: V1ContainerState, container: V1Container):
+    def _handle_completion(self, state: V1ContainerState, container: V1Container, node_selectors):
         """
         Sets self.completion_result to an object containing exit_code, resources, and timingused
         :param state: V1ContainerState
@@ -131,6 +132,7 @@ class KubernetesClient(object):
             start_time,
             finish_time, 
             self.tool_log,
+            node_selectors=node_selectors
         )
         log.info('handling completion with {}'.format(exit_code))
 
@@ -174,7 +176,8 @@ class KubernetesClient(object):
             elif self.state_is_terminated(status.state):
                 log.info('Handling terminated pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
                 container = self.get_first_or_none(pod.spec.containers)
-                self._handle_completion(status.state, container)
+                node_selectors = self._get_pod_node_selector()
+                self._handle_completion(status.state, container, node_selectors)
                 if self.should_delete_pod():
                     with PodMonitor() as monitor:
                         self.delete_pod_name(pod.metadata.name)
@@ -203,6 +206,9 @@ class KubernetesClient(object):
 
     def _get_pod_field_selector(self):
         return 'metadata.name={}'.format(self.pod.metadata.name)
+
+    def _get_pod_node_selector(self):
+        return self.pod.spec.node_selector
 
     @staticmethod
     def state_is_running(state):

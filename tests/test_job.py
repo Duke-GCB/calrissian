@@ -288,6 +288,7 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.stderr = 'stderr.txt'
         self.stdin = 'stdin.txt'
         self.labels = {'key1': 'val1', 'key2': 123}
+        self.gpu_nodeselectors = {}
         self.nodeselectors = {'disktype': 'ssd', 'cachelevel': 2}
         self.security_context = { 'runAsUser': os.getuid(),'runAsGroup': os.getgid() }
         self.pod_serviceaccount = "podmanager"
@@ -296,7 +297,7 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.pod_additional_spec = {'pod_priority_class': 'standard-priority'}
         self.pod_builder = KubernetesPodBuilder(self.name, self.builder, self.container_image, self.environment, self.volume_mounts,
                                                 self.volumes, self.command_line, self.stdout, self.stderr, self.stdin,
-                                                self.labels, self.nodeselectors, self.security_context,
+                                                self.labels, self.nodeselectors, self.gpu_nodeselectors, self.security_context,
                                                 self.pod_serviceaccount, self.pod_additional_spec, 
                                                 self.no_network_access_pod_labels, self.network_access_pod_labels)
 
@@ -452,7 +453,17 @@ class KubernetesPodBuilderTestCase(TestCase):
         
     def test_string_nodeselectors(self):
         self.pod_builder.nodeselectors = {'cachelevel': 2}
-        self.assertEqual(self.pod_builder.pod_nodeselectors(), {'cachelevel':'2'})
+        self.assertEqual(self.pod_builder.check_pod_nodeselectors(), {'cachelevel':'2'})
+
+    def test_not_gpu_req_nodeselectors(self):
+        self.pod_builder.gpu_nodeselectors = {'gpu': "true"}
+        self.assertNotEqual(self.pod_builder.check_pod_nodeselectors(), {'gpu': "true"})
+    
+    def test_gpu_nodeselectors(self):
+        self.pod_builder.requirements = [OrderedDict([("class", "cwltool:CUDARequirement"), ("cudaVersionMin", '10.0'), ("cudaComputeCapability", '3.0'), ("cudaDeviceCountMin", 2), ("cudaDeviceCountMax", 4)])]
+
+        self.pod_builder.gpu_nodeselectors = {'gpu': "true", 'example.com/gpu.present': "true"}
+        self.assertEqual(self.pod_builder.check_pod_nodeselectors(), {'gpu': "true", 'example.com/gpu.present': "true"})
 
     def test_string_no_network_access_pod_label(self):
         self.pod_builder.no_network_access_pod_labels = {"calrissian-network": "disabled"}
@@ -580,7 +591,7 @@ class CalrissianCommandLineJobTestCase(TestCase):
 
     def make_completion_result(self, exit_code):
         return create_autospec(CompletionResult, pod_name=self.name, exit_code=exit_code, cpus='1', memory='1', start_time=Mock(),
-                        finish_time=Mock(), pod_log='logs/')
+                        finish_time=Mock(), pod_log='logs/', node_selectors={})
 
     def test_constructor_calculates_persistent_volume_entries(self, mock_volume_builder, mock_client):
         self.make_job()
@@ -751,6 +762,7 @@ class CalrissianCommandLineJobTestCase(TestCase):
             job.stdout,
             job.stderr,
             job.stdin,
+            mock_read_yaml.return_value,
             mock_read_yaml.return_value,
             mock_read_yaml.return_value,
             job.get_security_context(mock_runtime_context),
