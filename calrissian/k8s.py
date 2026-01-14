@@ -87,17 +87,34 @@ class KubernetesClient(object):
             monitor.add(pod)
             self._set_pod(pod)
 
+    @staticmethod
+    def get_bool_env_var(env_var_name: str, default: bool) -> bool:
+        """
+        Get an environment variable that signals a boolean (true or false) condition.
+        If the environment variable is not defined the default is returned
+        """
+        bool_string_value = os.getenv(env_var_name, f'{default}')
+        if str.lower(bool_string_value) in ['false', 'no', '0']:
+            return False
+        else:
+            return True
+
     def should_delete_pod(self):
         """
         Decide whether or not to delete a pod. Defaults to True if unset.
         Checks the CALRISSIAN_DELETE_PODS environment variable
         :return:
         """
-        delete_pods = os.getenv('CALRISSIAN_DELETE_PODS', '')
-        if str.lower(delete_pods) in ['false', 'no', '0']:
-            return False
-        else:
-            return True
+        return self.get_bool_env_var('CALRISSIAN_DELETE_PODS', default=True)
+    
+    def should_stream_logs(self):
+        """
+        Decide whether to stream cwl worker pod logs. Defaults to True if unset.
+        Checks the CALRISSIAN_STREAM_LOGS environment variable
+
+        When having a log shipper this disablement can be convenient to avoid duplicate logs.
+        """
+        return self.get_bool_env_var('CALRISSIAN_STREAM_LOGS', default=True)
 
     @retry_exponential_if_exception_type((ApiException, HTTPError,), log)
     def delete_pod_name(self, pod_name):
@@ -172,7 +189,8 @@ class KubernetesClient(object):
                 continue
             elif self.state_is_running(status.state):
                 # Can only get logs once container is running
-                self.follow_logs() # This will not return until pod completes
+                if self.should_stream_logs():
+                    self.follow_logs() # This will not return until pod completes
             elif self.state_is_terminated(status.state):
                 log.info('Handling terminated pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
                 container = self.get_first_or_none(pod.spec.containers)
