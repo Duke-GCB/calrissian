@@ -256,7 +256,7 @@ class KubernetesClientTestCase(TestCase):
             kc = KubernetesClient()
             self.assertTrue(kc.should_stream_logs())
 
-    def test_should_stream_pod_logs__reads_env(self, mock_get_namespace, mock_client):
+    def test_should_stream_pod_logs_reads_env(self, mock_get_namespace, mock_client):
         with env_vars(CALRISSIAN_STREAM_LOGS='NO'):
             kc = KubernetesClient()
             self.assertFalse(kc.should_stream_logs())

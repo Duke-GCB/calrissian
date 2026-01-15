@@ -6,7 +6,7 @@ from typing import Optional
 @contextmanager
 def env_vars(**kwargs: Optional[str]):
     """
-    A context manager that temporarly changes environment variables. The call arguments their names are the names of
+    A context manager that temporarily changes environment variables. The call argument names are the names of
     the environment variables and the values are their value. As such the values are expected to be string if provided.
     A value of None signifies that the environment value must not exist.
     """
