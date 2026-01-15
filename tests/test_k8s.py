@@ -6,6 +6,7 @@ from kubernetes.config.config_exception import ConfigException
 from calrissian.executor import IncompleteStatusException
 from calrissian.k8s import load_config_get_namespace, KubernetesClient, CalrissianJobException, PodMonitor
 from calrissian.k8s import CompletionResult, read_file
+from tests.environment_variables import env_vars
 
 
 class ReadFileTestCase(TestCase):
@@ -240,19 +241,25 @@ class KubernetesClientTestCase(TestCase):
             mock_get_namespace.return_value, field_selector='metadata.name=mypod'
         )
 
-    @patch('calrissian.k8s.os')
-    def test_should_delete_pod_defaults_yes(self, mock_os, mock_get_namespace, mock_client):
-        mock_os.getenv.return_value = ''
-        kc = KubernetesClient()
-        self.assertTrue(kc.should_delete_pod())
-        self.assertEqual(mock_os.getenv.call_args, call('CALRISSIAN_DELETE_PODS', ''))
+    def test_should_delete_pod_defaults_yes(self, mock_get_namespace, mock_client):
+        with env_vars(CALRISSIAN_DELETE_PODS=None):
+            kc = KubernetesClient()
+            self.assertTrue(kc.should_delete_pod())
 
-    @patch('calrissian.k8s.os')
-    def test_should_delete_pod_reads_env(self, mock_os, mock_get_namespace, mock_client):
-        mock_os.getenv.return_value = 'NO'
-        kc = KubernetesClient()
-        self.assertFalse(kc.should_delete_pod())
-        self.assertEqual(mock_os.getenv.call_args, call('CALRISSIAN_DELETE_PODS', ''))
+    def test_should_delete_pod_reads_env(self, mock_get_namespace, mock_client):
+        with env_vars(CALRISSIAN_DELETE_PODS="NO"):
+            kc = KubernetesClient()
+            self.assertFalse(kc.should_delete_pod())
+
+    def test_should_stream_pod_logs_defaults_yes(self, mock_get_namespace, mock_client):
+        with env_vars(CALRISSIAN_STREAM_LOGS=None):
+            kc = KubernetesClient()
+            self.assertTrue(kc.should_stream_logs())
+
+    def test_should_stream_pod_logs_reads_env(self, mock_get_namespace, mock_client):
+        with env_vars(CALRISSIAN_STREAM_LOGS='NO'):
+            kc = KubernetesClient()
+            self.assertFalse(kc.should_stream_logs())
 
     def test_delete_pod_name_calls_api(self, mock_get_namespace, mock_client):
         kc = KubernetesClient()
