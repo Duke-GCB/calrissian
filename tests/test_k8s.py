@@ -196,6 +196,29 @@ class KubernetesClientTestCase(TestCase):
         with self.assertRaisesRegex(CalrissianJobException, 'Unexpected pod container status'):
             kc.wait_for_completion()
 
+    @patch('calrissian.k8s.watch', autospec=True)
+    @patch('calrissian.k8s.KubernetesClient._extract_cpu_memory_requests')
+    def test_wait_raises_410_error_when_retries_disabled(self, mock_cpu_memory, mock_watch, mock_get_namespace, mock_client):
+        """Test that 410 errors are raised when retries are disabled (RETRY_ATTEMPTS=0)"""
+        mock_cpu_memory.return_value = ('1', '1Mi')
+        
+        mock_pod = create_autospec(V1Pod)
+        mock_pod.status.container_statuses[0].state = Mock(running=None, waiting=None, terminated=Mock(exit_code=0))
+        
+        # Stream raises 410
+        mock_watch.Watch.return_value.stream.side_effect = ApiException(status=410, reason="Expired: too old resource version")
+        mock_watch.Watch.return_value.stop = Mock()
+        
+        kc = KubernetesClient()
+        kc._set_pod(mock_pod)
+        
+        # With RETRY_ATTEMPTS=0, the 410 should be raised immediately
+        with self.assertRaises(ApiException) as context:
+            kc.wait_for_completion()
+        
+        # The 410 error should be raised (retries disabled in test env)
+        self.assertEqual(context.exception.status, 410)
+
     def test_raises_on_set_second_pod(self, mock_get_namespace, mock_client):
         kc = KubernetesClient()
         kc._set_pod(Mock())
