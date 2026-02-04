@@ -198,12 +198,19 @@ class KubernetesClientTestCase(TestCase):
 
     @patch('calrissian.k8s.watch', autospec=True)
     @patch('calrissian.k8s.KubernetesClient._extract_cpu_memory_requests')
-    def test_wait_raises_410_error_when_retries_disabled(self, mock_cpu_memory, mock_watch, mock_get_namespace, mock_client):
-        """Test that 410 errors are raised when retries are disabled (RETRY_ATTEMPTS=0)"""
+    def test_wait_handles_410_error_from_watch_stream(self, mock_cpu_memory, mock_watch, mock_get_namespace, mock_client):
+        """Test that 410 errors from watch stream are properly handled.
+        
+        In the test environment, RETRY_ATTEMPTS=0 so retries are disabled and the error is raised immediately.
+        In production, RETRY_ATTEMPTS=10 (default) so the watch would be retried automatically.
+        """
         mock_cpu_memory.return_value = ('1', '1Mi')
         
+        # Create a properly structured mock pod
         mock_pod = create_autospec(V1Pod)
-        mock_pod.status.container_statuses[0].state = Mock(running=None, waiting=None, terminated=Mock(exit_code=0))
+        mock_container_status = Mock()
+        mock_container_status.state = Mock(running=None, waiting=None, terminated=Mock(exit_code=0))
+        mock_pod.status.container_statuses = [mock_container_status]
         
         # Stream raises 410
         mock_watch.Watch.return_value.stream.side_effect = ApiException(status=410, reason="Expired: too old resource version")
@@ -212,11 +219,11 @@ class KubernetesClientTestCase(TestCase):
         kc = KubernetesClient()
         kc._set_pod(mock_pod)
         
-        # With RETRY_ATTEMPTS=0, the 410 should be raised immediately
+        # With RETRY_ATTEMPTS=0 (test env), the 410 should be raised immediately
         with self.assertRaises(ApiException) as context:
             kc.wait_for_completion()
         
-        # The 410 error should be raised (retries disabled in test env)
+        # Verify it's a 410 error that would be retried in production
         self.assertEqual(context.exception.status, 410)
 
     def test_raises_on_set_second_pod(self, mock_get_namespace, mock_client):
