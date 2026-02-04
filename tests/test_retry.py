@@ -252,3 +252,39 @@ class RetryTestCase(TestCase):
             wrapped()
 
         self.assertEqual(self.mock.call_count, mock_retry_parameters.ATTEMPTS)
+
+
+    @patch("calrissian.retry.RetryParameters")
+    def test_retry_on_410_gone_error(self, mock_retry_parameters):
+        """410 (Gone) IS 4xx but SHOULD retry due to special handling."""
+        self.setup_mock_retry_parameters(mock_retry_parameters)
+        self.mock.side_effect = FakeApiException(410, "Expired: too old resource version")
+
+        @retry_exponential_if_exception_type(FakeApiException, self.logger)
+        def wrapped():
+            return self.mock()
+
+        with self.assertRaisesRegex(FakeApiException, "Expired"):
+            wrapped()
+
+        # Should retry because 410 is a retryable 4xx
+        self.assertEqual(self.mock.call_count, mock_retry_parameters.ATTEMPTS)
+
+
+    @patch("calrissian.retry.RetryParameters")
+    def test_retry_on_410_eventually_succeeds(self, mock_retry_parameters):
+        """410 should retry and eventually succeed."""
+        self.setup_mock_retry_parameters(mock_retry_parameters)
+        self.mock.side_effect = [
+            FakeApiException(410, "Expired: too old resource version"),
+            FakeApiException(410, "Expired: too old resource version"),
+            "ok",
+        ]
+
+        @retry_exponential_if_exception_type(FakeApiException, self.logger)
+        def wrapped():
+            return self.mock()
+
+        result = wrapped()
+        self.assertEqual(result, "ok")
+        self.assertEqual(self.mock.call_count, 3)

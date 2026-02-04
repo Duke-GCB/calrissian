@@ -18,6 +18,18 @@ def _is_4xx(exc) -> bool:
         return False
 
 
+def _is_retryable_4xx(exc) -> bool:
+    """
+    Check if a 4xx error is retryable.
+    410 (Gone) errors are retryable because they indicate the watch resource version is too old.
+    """
+    status = getattr(exc, "status", None)
+    try:
+        return int(status) == 410
+    except (TypeError, ValueError):
+        return False
+
+
 def retry_exponential_if_exception_type(exc_type, logger):
     """
     Decorator function that returns the tenacity @retry decorator with our commonly-used config
@@ -27,8 +39,9 @@ def retry_exponential_if_exception_type(exc_type, logger):
     """
     retry_on_type = retry_if_exception_type(exc_type)
     retry_not_4xx = retry_if_exception(lambda e: not _is_4xx(e))
+    retry_on_410 = retry_if_exception(_is_retryable_4xx)
 
-    return retry(retry=retry_on_type & retry_not_4xx,
+    return retry(retry=retry_on_type & (retry_not_4xx | retry_on_410),
             wait=wait_exponential(multiplier=RetryParameters.MULTIPLIER, min=RetryParameters.MIN, max=RetryParameters.MAX),
             stop=stop_after_attempt(RetryParameters.ATTEMPTS),
             before_sleep=before_sleep_log(logger, logging.DEBUG),
