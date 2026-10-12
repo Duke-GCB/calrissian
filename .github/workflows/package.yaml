@@ -31,7 +31,7 @@ jobs:
     - name: Build package
       run: hatch build
     - name: Test package
-      run: hatch -e test run nose2 --verbose 
+      run: hatch run test.py3.12:testv
     - name: Publish package distributions to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
