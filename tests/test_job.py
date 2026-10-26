@@ -272,6 +272,31 @@ class KubernetesVolumeBuilderTestCase(TestCase):
 
 class KubernetesPodBuilderTestCase(TestCase):
 
+    def test_build_env_from_sources(self):
+        # Issues #194 and #195: references belong on the main container.
+        cases = [
+            (None, None, None),
+            ([], [], None),
+            (['secret1'], None, [{'secretRef': {'name': 'secret1'}}]),
+            (['secret1', 'secret2'], None,
+             [{'secretRef': {'name': 'secret1'}}, {'secretRef': {'name': 'secret2'}}]),
+            (None, ['configmap1'], [{'configMapRef': {'name': 'configmap1'}}]),
+            (None, ['configmap1', 'configmap2'],
+             [{'configMapRef': {'name': 'configmap1'}}, {'configMapRef': {'name': 'configmap2'}}]),
+            (['secret1'], ['configmap1'],
+             [{'secretRef': {'name': 'secret1'}}, {'configMapRef': {'name': 'configmap1'}}]),
+        ]
+        for secrets, configmaps, expected in cases:
+            with self.subTest(secrets=secrets, configmaps=configmaps):
+                self.pod_builder.env_from_secret = secrets
+                self.pod_builder.env_from_configmap = configmaps
+                container = self.pod_builder.build()['spec']['containers'][0]
+                if expected is None:
+                    self.assertNotIn('envFrom', container)
+                else:
+                    self.assertEqual(container['envFrom'], expected)
+
+
     def setUp(self):
         builder = Mock()
         builder.cwlVersion = "v1.2"
@@ -598,6 +623,16 @@ class CalrissianCommandLineJobTestCase(TestCase):
         mock_volume_builder.return_value.add_persistent_volume_entries_from_pod.assert_called_with(
             mock_client.return_value.get_current_pod.return_value
         )
+
+    def test_env_from_runtime_context_reaches_pod_spec(self, mock_volume_builder, mock_client):
+        job = self.make_job()
+        for source in ('secret', 'configmap'):
+            for names in (None, ['source1'], ['source1', 'source2']):
+                with self.subTest(source=source, names=names):
+                    key = 'env_from_' + source
+                    context = CalrissianRuntimeContext({key: names})
+                    expected = {key: names} if names else {}
+                    self.assertEqual(job.get_pod_additional_spec(context), expected)
 
     def test_check_requirements_raises_with_docker_build(self, mock_volume_builder, mock_client):
         self.requirements = [{'class': 'DockerRequirement', 'dockerBuild': 'FROM ubuntu:latest\n'}]
