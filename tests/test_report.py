@@ -419,6 +419,9 @@ class CPUParserTestCase(TestCase):
 class ReporterTestCase(TestCase):
 
     def setUp(self):
+        reporter_state = patch.object(Reporter, 'timeline_report', None)
+        reporter_state.start()
+        self.addCleanup(reporter_state.stop)
         Reporter.initialize()
 
     def test_add_report(self):
@@ -433,6 +436,11 @@ class ReporterTestCase(TestCase):
 
 
 class ReporterFunctionsTestCase(TestCase):
+
+    def setUp(self):
+        reporter_state = patch.object(Reporter, 'timeline_report', None)
+        reporter_state.start()
+        self.addCleanup(reporter_state.stop)
 
     def test_initialize_reporter(self):
         self.assertIsNone(Reporter.get_report())

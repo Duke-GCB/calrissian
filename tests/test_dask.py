@@ -1,5 +1,5 @@
 import os
-
+from types import SimpleNamespace
 import threading
 from unittest import TestCase
 from unittest.mock import PropertyMock, create_autospec, patch, call, Mock, mock_open
@@ -20,7 +20,7 @@ from calrissian.dask import (
 from calrissian.k8s import (
     CompletionResult,
 )
-from kubernetes.client.models import V1Pod
+from kubernetes.client.models import V1Pod, V1Container, V1ContainerStatus
 
 
 class ValidateExtensionTestCase(TestCase):
@@ -478,7 +478,7 @@ class KubernetesDaskClientTestCase(TestCase):
         self.assertIsNone(kc.pod)
         self.assertIsNone(kc.completion_result)
 
-    
+
     @patch('calrissian.dask.DaskPodMonitor')
     def test_submit_pod(self, mock_podmonitor, mock_get_namespace, mock_client):
         mock_get_namespace.return_value = 'namespace'
@@ -506,27 +506,51 @@ class KubernetesDaskClientTestCase(TestCase):
 
     def make_mock_pod(self, name):
         mock_metadata = Mock()
-        # Cannot mock name attribute without a propertymock
-        name_property = PropertyMock(return_value=name)
-        type(mock_metadata).name = name_property
+        type(mock_metadata).name = PropertyMock(return_value=name)
         mock_pod = create_autospec(V1Pod, metadata=mock_metadata)
         return mock_pod
+
+    def mock_k8s_obj_with_name(self, cls, name: str):
+        obj = create_autospec(cls, instance=True)
+        type(obj).name = PropertyMock(return_value=name)
+        return obj
+
+    def make_mock_container(self, name="main-container"):
+        # Make something that behaves like a k8s container for _extract_cpu_memory_requests
+        # It expects container.resources.requests to exist.
+        return SimpleNamespace(
+            name=name,
+            resources=SimpleNamespace(
+                requests={"cpu": "1", "memory": "1Mi"}
+            )
+        )
 
     
     @patch('calrissian.dask.watch', autospec=True)
     def test_wait_calls_watch_pod_with_pod_name_field_selector(self, mock_watch, mock_get_namespace, mock_client):
         mock_pod = self.make_mock_pod('test123')
+
+        mock_pod.status = Mock()
+        mock_pod.status.init_container_statuses = None
+        mock_pod.status.container_statuses = [Mock()]
+
+        mock_pod.spec = Mock()
+        mock_pod.spec.containers = [self.make_mock_container("main-container")]
+
         mock_pod.status.container_statuses[0].state = Mock(running=None, waiting=None, terminated=Mock(exit_code=0))
+        
         self.setup_mock_watch(mock_watch, [mock_pod])
+
         kc = KubernetesDaskClient()
         kc._set_pod(mock_pod)
         kc.wait_for_completion(cm_name='dask-cm-random')
         mock_stream = mock_watch.Watch.return_value.stream
         self.assertEqual(mock_stream.call_args, call(kc.core_api_instance.list_namespaced_pod, kc.namespace,
                                                      field_selector='metadata.name=test123'))
-    
+
+
     @patch('calrissian.dask.watch', autospec=True)
-    def test_wait_calls_watch_pod_with_imcomplete_status(self, mock_watch, mock_get_namespace, mock_client):
+    def test_wait_calls_watch_pod_with_incomplete_status(self, mock_watch, mock_get_namespace, mock_client):
         self.setup_mock_watch(mock_watch)
         mock_pod = self.make_mock_pod('test123')
         kc = KubernetesDaskClient()
@@ -572,6 +596,12 @@ class KubernetesDaskClientTestCase(TestCase):
                                                         mock_podmonitor, mock_watch, mock_get_namespace,
                                                         mock_client):
         mock_pod = create_autospec(V1Pod)
+        mock_pod.status = Mock()
+        mock_pod.status.init_container_statuses = None
+        mock_pod.status.container_statuses = [Mock()]
+
+        mock_pod.spec = Mock()
+        mock_pod.spec.containers = [self.make_mock_container("main-container")]
         mock_pod.status.container_statuses[0].state = Mock(running=None, waiting=None, terminated=Mock(exit_code=123))
         mock_cpu_memory.return_value = ('1', '1Mi')
         self.setup_mock_watch(mock_watch, [mock_pod])
@@ -584,3 +614,46 @@ class KubernetesDaskClientTestCase(TestCase):
         self.assertIsNone(kc.pod)
         # This is to inspect `with PodMonitor() as monitor`:
         self.assertTrue(mock_podmonitor.return_value.__enter__.return_value.remove.called)
+    
+
+    def test_get_container_by_name_returns_none_when_list_is_none(self, mock_get_namespace, mock_client):
+        res = KubernetesDaskClient.get_container_by_name(None, "whatever")
+        self.assertIsNone(res)
+
+
+    def test_get_container_by_name_returns_none_when_list_is_empty(self, mock_get_namespace, mock_client):
+        res = KubernetesDaskClient.get_container_by_name([], "whatever")
+        self.assertIsNone(res)
+
+
+    def test_get_container_by_name_returns_matching_v1container(self, mock_get_namespace, mock_client):
+        c1 = self.mock_k8s_obj_with_name(V1Container, "a")
+        c2 = self.mock_k8s_obj_with_name(V1Container, "target")
+        c3 = self.mock_k8s_obj_with_name(V1Container, "b")
+
+        res = KubernetesDaskClient.get_container_by_name([c1, c2, c3], "target")
+        self.assertIs(res, c2)
+
+
+    def test_get_container_by_name_returns_matching_v1containerstatus(self, mock_get_namespace, mock_client):
+        s1 = self.mock_k8s_obj_with_name(V1ContainerStatus, "x")
+        s2 = self.mock_k8s_obj_with_name(V1ContainerStatus, "target")
+
+        res = KubernetesDaskClient.get_container_by_name([s1, s2], "target")
+        self.assertIs(res, s2)
+
+
+    def test_get_container_by_name_returns_none_when_not_found(self, mock_get_namespace, mock_client):
+        c1 = self.mock_k8s_obj_with_name(V1Container, "a")
+        c2 = self.mock_k8s_obj_with_name(V1ContainerStatus, "b")
+
+        res = KubernetesDaskClient.get_container_by_name([c1, c2], "missing")
+        self.assertIsNone(res)
+
+
+    def test_get_container_by_name_returns_first_match_if_duplicates(self, mock_get_namespace, mock_client):
+        first = self.mock_k8s_obj_with_name(V1Container, "dup")
+        second = self.mock_k8s_obj_with_name(V1ContainerStatus, "dup")
+
+        res = KubernetesDaskClient.get_container_by_name([first, second], "dup")
+        self.assertIs(res, first)

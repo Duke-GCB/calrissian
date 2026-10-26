@@ -436,7 +436,9 @@ class KubernetesDaskClient(KubernetesClient):
                         raise CalrissianJobException('Unexpected pod container status', status)
             elif self.state_is_terminated(last_status.state):
                 log.info('Handling terminated pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
-                container = self.get_last_or_none(pod.spec.containers)
+                container = self.get_container_by_name(pod.spec.containers, 'main-container')
+                if container is None:
+                    raise CalrissianJobException("Container 'main-container' not found in pod spec", pod)
                 node_selectors = self._get_pod_node_selector()
                 self._handle_completion(last_status.state, container, node_selectors)
                 if self.should_delete_pod():
@@ -470,6 +472,13 @@ class KubernetesDaskClient(KubernetesClient):
             return None
         else:
             return container_list[-1]
+        
+    @staticmethod
+    def get_container_by_name(container_list: Optional[List[Union[V1ContainerStatus, V1Container]]], container_name: str) -> Optional[Union[V1ContainerStatus, V1Container]]:
+        if not container_list:
+            return None
+
+        return next((c for c in container_list if c.name == container_name), None)
         
     @retry_exponential_if_exception_type((ApiException, HTTPError,), log)
     def create_dask_gateway_config_map(self, dask_gateway_url: str, cm_name: str):
