@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: calrissian-network-denied
+spec:
+  podSelector:
+    matchLabels:
+      calrissian.example/network-access: denied
+  policyTypes: [Egress]
+  egress: []
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: calrissian-network-allowed
+spec:
+  podSelector:
+    matchLabels:
+      calrissian.example/network-access: allowed
+  policyTypes: [Egress]
+  egress:
+  - {}

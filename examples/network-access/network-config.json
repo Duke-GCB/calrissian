@@ -1,0 +1,4 @@
+{
+  "network_access_pod_labels": "/etc/calrissian/network/allowed-labels.yaml",
+  "no_network_access_pod_labels": "/etc/calrissian/network/denied-labels.yaml"
+}
