@@ -23,6 +23,7 @@ class CalrissianRuntimeContext(RuntimeContext):
         self.pod_nodeselectors = None
         self.pod_gpu_nodeselectors = None
         self.pod_serviceaccount = None
+        self.pod_automount_service_account_token = False
         self.tool_logs_basepath = None
         self.max_gpus = None
         self.no_network_access_pod_labels = None

@@ -217,6 +217,13 @@ class KubernetesVolumeBuilder(object):
         }
         self.volume_mounts.append(volume_mount)
 
+
+def validate_token_automount(value):
+    if type(value) is not bool:
+        raise WorkflowException('pod_automount_service_account_token must be a JSON boolean (true or false)')
+    return value
+
+
 class KubernetesPodBuilder(object):
 
     def __init__(self, name, builder, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, labels, nodeselectors, gpu_nodeselectors, security_context, serviceaccount, pod_additional_spec=None, no_network_access_pod_labels=None, network_access_pod_labels=None):
@@ -240,6 +247,8 @@ class KubernetesPodBuilder(object):
         self.gpu_nodeselectors = gpu_nodeselectors
         self.security_context = security_context
         self.serviceaccount = serviceaccount
+        self.automount_service_account_token = validate_token_automount(
+            pod_additional_spec.get('automount_service_account_token', False))
         self.no_network_access_pod_labels = no_network_access_pod_labels
         self.network_access_pod_labels = network_access_pod_labels
         self.priority_class = pod_additional_spec.get("pod_priority_class")
@@ -485,6 +494,7 @@ class KubernetesPodBuilder(object):
                         }
                 ],
                 'restartPolicy': 'Never',
+                'automountServiceAccountToken': self.automount_service_account_token,
                 'volumes': self.volumes,
                 'securityContext': self.security_context,
                 'nodeSelector': self.select_pod_nodeselectors()
@@ -725,6 +735,8 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         if self.get_pod_env_from_configmap(runtimeContext):
             spec["env_from_configmap"] = self.get_pod_env_from_configmap(runtimeContext)
         
+        spec['automount_service_account_token'] = validate_token_automount(
+            runtimeContext.pod_automount_service_account_token)
         return spec
 
     def create_kubernetes_runtime(self, runtimeContext):

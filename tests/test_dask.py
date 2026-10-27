@@ -379,6 +379,7 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
                     }
                 ],
                 'restartPolicy': 'Never',
+                'automountServiceAccountToken': False,
                 'volumes': self.volumes,
                 'securityContext': {
                     'runAsUser': os.getuid(),
@@ -485,7 +486,7 @@ class CalrissianCommandLineDaskJobTestCase(TestCase):
         job = self.make_job()
         job.outdir = '/outdir'
         job.tmpdir = '/tmpdir'
-        mock_runtime_context = Mock(tmpdir_prefix='TP', pod_serviceaccount=None, )
+        mock_runtime_context = Mock(tmpdir_prefix='TP', pod_automount_service_account_token=False, pod_serviceaccount=None, )
         built = job.create_kubernetes_runtime(mock_runtime_context)
         # Adds volume binding for outdir
         self.assertEqual(mock_add_volume_binding.call_args, call('/real/outdir', '/out', True))

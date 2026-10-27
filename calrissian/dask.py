@@ -220,6 +220,7 @@ class KubernetesDaskPodBuilder(KubernetesPodBuilder):
                         }
                 ],
                 'restartPolicy': 'Never',
+                'automountServiceAccountToken': self.automount_service_account_token,
                 'volumes': self.volumes,
                 'securityContext': self.security_context,
                 'nodeSelector': self.select_pod_nodeselectors()

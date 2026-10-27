@@ -69,7 +69,7 @@ class CalrissianMainTestCase(TestCase):
     def test_add_arguments(self):
         mock_parser = Mock()
         add_arguments(mock_parser)
-        self.assertEqual(mock_parser.add_argument.call_count, 20)
+        self.assertEqual(mock_parser.add_argument.call_count, 21)
 
     def test_env_from_options_reach_runtime_context(self):
         parser = ArgumentParser()
