@@ -20,6 +20,7 @@ def test_main_failure_is_preserved_after_successful_cleanup():
         client._get_pod_node_selector = Mock(return_value={})
         client.should_delete_pod = Mock(return_value=False)
         client._clear_pod = Mock()
+        client._stop_log_thread = Mock()
         pod = Mock()
         pod.status.init_container_statuses = None
         pod.status.container_statuses = statuses
@@ -54,3 +55,24 @@ def test_requirement_expressions_are_evaluated_without_mutating_workflow():
     assert requirement['workerCores'] == '$(inputs.cores)'
     assert builder.do_eval.call_count == 2
 
+
+def test_dask_logs_follow_main_and_cleanup_independently():
+    import threading
+    from unittest.mock import Mock
+    from calrissian.dask import KubernetesDaskClient
+
+    client = object.__new__(KubernetesDaskClient)
+    client._log_stop = threading.Event()
+    main, cleanup = Mock(), Mock()
+    main.name = 'main-container'
+    cleanup.name = 'sidecar-container'
+    with patch('calrissian.dask.threading.Thread') as thread:
+        client._ensure_log_thread_started(main)
+        client._ensure_log_thread_started(cleanup)
+        client._ensure_log_thread_started(main)
+        assert thread.call_count == 2
+        assert [c.kwargs['args'] for c in thread.call_args_list] == [(main,), (cleanup,)]
+        assert thread.return_value.start.call_count == 2
+        client._stop_log_thread()
+        assert client._log_stop.is_set()
+        assert client._container_log_threads == {}

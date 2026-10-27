@@ -402,28 +402,58 @@ class KubernetesPodBuilder(object):
 
     def select_pod_nodeselectors(self):
         """
-            Return the appropriate Kubernetes node selectors for the pod.
-
-            If the job requirements include a CUDA requirement
-            (either 'cwltool:CUDARequirement' or
-            'http://commonwl.org/cwltool#CUDARequirement'),
-            GPU-specific node selectors are used. Otherwise, the
-            default node selectors are returned.
-
-            :return: A dict of node selector labels (str -> str)
-            """
+        Return Kubernetes node selectors for the pod.
+        Use GPU node selectors when a CUDARequirement is present in requirements or hints.
+        """
+    
+        CUDA_CLASSES = {
+            "cwltool:CUDARequirement",
+            "http://commonwl.org/cwltool#CUDARequirement",
+        }
+    
         def _tostring(nodeselectors):
-            return {str(k): str(v) for k, v in nodeselectors.items()}
-
-        return (
-            _tostring(self.gpu_nodeselectors)
-            if any(
-                'class' in req
-                and req['class'] in ['cwltool:CUDARequirement', 'http://commonwl.org/cwltool#CUDARequirement']
-                for req in self.requirements
-            )
-            else _tostring(self.nodeselectors)
-        )
+            return {str(k): str(v) for k, v in (nodeselectors or {}).items()}
+    
+        def _iter_reqs(obj):
+            """
+            Normalize CWL requirements/hints to an iterable of dict-like objects.
+    
+            Accepts:
+              - list of dicts (already normalized)
+              - dict mapping requirementClass -> requirementObject
+              - None
+            Anything else yields empty.
+            """
+            if obj is None:
+                return []
+    
+            if isinstance(obj, list):
+                return [r for r in obj if isinstance(r, dict)]
+    
+            if isinstance(obj, dict):
+                out = []
+                for k, v in obj.items():
+                    if isinstance(v, dict):
+                        d = dict(v)
+                        d.setdefault("class", k)
+                        out.append(d)
+                    else:
+                        out.append({"class": k})
+                return out
+            return []
+    
+        def _has_cuda(reqs):
+            for req in reqs:
+                cls = req.get("class")
+                if cls in CUDA_CLASSES:
+                    log.debug("CUDA true: using gpu node selectors")
+                    return True
+            return False
+    
+        if _has_cuda(_iter_reqs(self.requirements)) or _has_cuda(_iter_reqs(self.hints)):
+            return _tostring(self.gpu_nodeselectors)
+    
+        return _tostring(self.nodeselectors)
 
     def pod_envfromsecret(self):
         return [{'secretRef': {'name': secret}} for secret in self.env_from_secret]
