@@ -637,6 +637,7 @@ class KubernetesDaskClientTestCase(TestCase):
         mock_pod.status.container_statuses[0].state = Mock(
             running=None, waiting=None, terminated=Mock(exit_code=0)
         )
+        mock_pod.status.container_statuses[0].name = 'main-container'
     
         self.setup_mock_watch(mock_watch, [mock_pod])
     
@@ -665,6 +666,7 @@ class KubernetesDaskClientTestCase(TestCase):
 
         status = Mock()
         status.state = Mock(waiting=None, running=None, terminated=Mock(exit_code=0)        )
+        status.name = "main-container"
         mock_pod.status.container_statuses = [status]
         mock_pod.spec = Mock()
         mock_pod.spec.containers = [self.make_mock_container("main-container")] 
@@ -766,6 +768,7 @@ class KubernetesDaskClientTestCase(TestCase):
         mock_pod.spec = Mock()
         mock_pod.spec.containers = [self.make_mock_container("main-container")]
         mock_pod.status.container_statuses[0].state = Mock(running=None, waiting=None, terminated=Mock(exit_code=123))
+        mock_pod.status.container_statuses[0].name = 'main-container'
         mock_cpu_memory.return_value = ('1', '1Mi')
         self.setup_mock_watch(mock_watch, [mock_pod])
         kc = KubernetesDaskClient()

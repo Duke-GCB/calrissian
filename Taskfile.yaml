@@ -61,3 +61,10 @@ tasks:
     desc: Verify Dask cleanup sidecar resources against the deployed dask profile
     cmds:
     - python3 dask-gateway/test-cleanup.py
+
+  dask:test:
+    desc: Run the Dask extension CWL suite (optionally ID=3)
+    env:
+      DASK_TEST_ID: '{{default "" .ID}}'
+    cmds:
+    - 'python3 dask-gateway/run-tests.py ${DASK_TEST_ID:+--id "$DASK_TEST_ID"}'

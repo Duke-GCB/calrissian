@@ -68,6 +68,14 @@ class KubernetesDaskPodBuilder(KubernetesPodBuilder):
         self.dask_gateway_controller = dask_gateway_controller
     
         self.dask_requirement = next((elem for elem in self.requirements if elem['class'] == 'https://calrissian-cwl.github.io/schema#DaskGatewayRequirement'), None)
+        if self.dask_requirement is not None:
+            # Resolve expressions using this job's inputs without changing the
+            # shared process requirement used by other workflow invocations.
+            self.dask_requirement = {
+                key: self.builder.do_eval(value)
+                if isinstance(value, str) and ('$(' in value or '${' in value) else value
+                for key, value in self.dask_requirement.items()
+            }
     
 
     def container_args(self):
@@ -447,20 +455,25 @@ class KubernetesDaskClient(KubernetesClient):
             log.info('[%s] follow_logs end', pod_name)
 
     def _ensure_log_thread_started(self, status):
-        if self._logs_started:
+        # Main and cleanup containers need independent followers. A single
+        # follower would discard cleanup logs required by the lifecycle checks.
+        if not hasattr(self, '_container_log_threads'):
+            self._container_log_threads = {}
+        if status.name in self._container_log_threads:
             return
-        self._logs_started = True
         self._log_stop.clear()
-        self._log_thread = threading.Thread(target=self.follow_logs, name="pod-log-follower",  args=(status), daemon=True)
-        self._log_thread.start()
+        thread = threading.Thread(target=self.follow_logs,
+                                  name=f"pod-log-follower-{status.name}",
+                                  args=(status,), daemon=True)
+        self._container_log_threads[status.name] = thread
+        thread.start()
 
     def _stop_log_thread(self):
         self._log_stop.set()
-        t = self._log_thread
-        if t and t.is_alive():
-            t.join(timeout=5)
-        self._log_thread = None
-        self._logs_started = False
+        for thread in getattr(self, '_container_log_threads', {}).values():
+            if thread.is_alive():
+                thread.join(timeout=5)
+        self._container_log_threads = {}
 
     @retry_exponential_if_exception_type((ApiException, HTTPError), log)
     def wait_for_completion(self, cm_name: str=None) -> CompletionResult:
@@ -505,8 +518,12 @@ class KubernetesDaskClient(KubernetesClient):
                             self._clear_pod()
                             w.stop()
 
-                    last_status = self.get_last_or_none(pod.status.container_statuses)    
-                    if last_status is None or not self.state_is_terminated(last_status.state):
+                    statuses = self.get_list_or_none(pod.status.container_statuses)
+                    main_status = self.get_container_by_name(statuses, 'main-container')
+                    # Wait for cleanup too, but never use its exit status for CWL.
+                    all_terminated = bool(statuses) and all(
+                        self.state_is_terminated(status.state) for status in statuses)
+                    if not all_terminated:
                         statuses = self.get_list_or_none(pod.status.container_statuses)
                         if statuses is None:
                             continue
@@ -531,7 +548,9 @@ class KubernetesDaskClient(KubernetesClient):
 
                         continue
                     
-                    if self.state_is_terminated(last_status.state):
+                    if main_status is None:
+                        raise CalrissianJobException("Container 'main-container' not found in pod status", pod)
+                    if self.state_is_terminated(main_status.state):
                         log.info("Handling terminated pod %s uid=%s", pod.metadata.name, pod.metadata.uid)
 
                         self._stop_log_thread()
@@ -541,7 +560,7 @@ class KubernetesDaskClient(KubernetesClient):
                             raise CalrissianJobException("Container 'main-container' not found in pod spec", pod)
                         
                         node_selectors = self._get_pod_node_selector()
-                        self._handle_completion(last_status.state, container, node_selectors)
+                        self._handle_completion(main_status.state, container, node_selectors)
 
                         if self.should_delete_pod():
                             with DaskPodMonitor() as monitor:
