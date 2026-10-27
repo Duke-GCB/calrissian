@@ -1,0 +1,28 @@
+{{- if .Values.networkAccess.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: conformance-network-denied
+spec:
+  podSelector:
+    matchLabels:
+      {{- range $key, $value := .Values.networkAccess.deniedLabels }}
+      {{ $key | quote }}: {{ $value | toString | quote }}
+      {{- end }}
+  policyTypes: [Egress]
+  egress: []
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: conformance-network-allowed
+spec:
+  podSelector:
+    matchLabels:
+      {{- range $key, $value := .Values.networkAccess.allowedLabels }}
+      {{ $key | quote }}: {{ $value | toString | quote }}
+      {{- end }}
+  policyTypes: [Egress]
+  egress:
+  - {}
+{{- end }}

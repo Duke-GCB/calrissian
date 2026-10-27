@@ -18,3 +18,7 @@ site
 .task
 docs/api
 docs/uml
+
+# Local Dask integration evidence and Python caches.
+__pycache__/
+/dask-gateway/test-results/

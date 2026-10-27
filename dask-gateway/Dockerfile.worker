@@ -1,0 +1,12 @@
+ARG CALRISSIAN_IMAGE
+FROM ${CALRISSIAN_IMAGE}
+
+# Keep the installed production runtime intact while adding matching Gateway
+# client, scheduler and worker packages for the pinned integration-test chart.
+RUN python -m ensurepip && \
+    python -m pip freeze > /tmp/production-constraints.txt && \
+    python -m pip install --no-cache-dir -c /tmp/production-constraints.txt \
+      dask==2024.1.0 distributed==2024.1.0 dask-gateway==2024.1.0 && \
+    python -m pip check && \
+    python -m pip uninstall --yes pip && \
+    rm /tmp/production-constraints.txt

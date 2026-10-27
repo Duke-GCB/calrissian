@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: stage-conformance-test-data
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  template:
+    spec:
+      containers:
+      {{- range .Values.staging.archives }}
+      - name: {{ .name | quote }}
+        image: alpine:3.10
+        command:
+        - "sh"
+        - "-c"
+        - |
+          set -eu
+          cd /conformance
+          wget -O "${CWL_ARCHIVE_FILE}" "${CWL_ARCHIVE_BASE}/${CWL_ARCHIVE_FILE}"
+          unzip -oq "${CWL_ARCHIVE_FILE}"
+          rm "${CWL_ARCHIVE_FILE}"
+          chmod -R a+rx */
+          ls -l
+        env:
+        - name: CWL_ARCHIVE_BASE
+          value: {{ .baseUrl | quote }}
+        - name: CWL_ARCHIVE_FILE
+          value: {{ .file | quote }}
+        volumeMounts:
+        - mountPath: /conformance
+          name: conformance-test-data
+      {{- end }}
+      restartPolicy: Never
+      volumes:
+      - name: conformance-test-data
+        persistentVolumeClaim:
+          claimName: conformance-test-data
