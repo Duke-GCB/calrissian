@@ -95,3 +95,84 @@ skaffold delete -p dask
 Helm hook Jobs and chart-installed CRDs may remain after uninstall. Deleting the
 dedicated Minikube profile with `task conformance:cluster:delete` removes the
 whole local cluster and its data.
+
+## CWL extension compatibility suite
+
+Deploy the environment above, then run all cases or select one stable ID:
+
+```sh
+skaffold run -p dask
+task dask:test
+task dask:test ID=9
+# Equivalent commands without Task:
+python3 dask-gateway/run-tests.py
+python3 dask-gateway/run-tests.py --id 9 --timeout 600
+```
+
+The suite uses CWL v1.2 fixtures and a standard-library Python controller. It
+runs Calrissian directly rather than requiring `cwltest` in the worker image.
+These are extension compatibility results, separate from official CWL
+conformance results. Fixture definitions and stable IDs live in `tests/`.
+
+| ID | Case | Expected behavior |
+|---|---|---|
+| 1 | Minimal Dask tool | One registered worker computes 6 |
+| 2 | CPU budget | CPU budget limits the cluster to two workers |
+| 3 | Memory budget | Memory budget limits the cluster to two workers |
+| 4 | Combined budgets | Both budgets permit two workers |
+| 5 | Ordinary tool | Computes 6 without a Dask sidecar or cluster |
+| 6 | Command failure | Exit 7 becomes CWL failure; cluster still shuts down |
+| 7 | Workflow | A Dask step returns its computed output |
+| 8 | Sequential workflow | Two dependent steps create and stop separate clusters |
+| 9 | Resource expressions | Input references resolve all five resource fields |
+| 10 | Missing resource field | CWL validation rejects the document |
+| 11 | Invalid resource type | CWL validation rejects the document |
+| 12 | Workflow failure | A failed Dask step fails its workflow and cleans up |
+
+Every case has independent `cwl` and `lifecycle` verdicts. Successful tools must
+produce the expected output, and Dask workloads wait for the expected worker
+count and execute a distributed computation. The controller observes task pods,
+checks the sidecar's default resource specification, reads exact cluster names
+from init/cleanup logs, and waits until owned clusters stop and their scheduler
+and worker pods disappear. It checks the number of distinct clusters against
+the case expectation. Expected failures also require a matching CWL diagnostic;
+a failed Kubernetes Job alone is insufficient.
+
+Each case creates a uniquely named runner Job and ConfigMap. The ConfigMap
+combines the chart's installed controller wrappers with the current local CWL
+fixtures; editing suite fixtures does not require rebuilding the worker image.
+The runner and task default image use the immutable image from the chart's
+session Deployment. Each Job has a deadline (600 seconds by default), no
+retries, and its own output directory. The host has a matching deadline and
+bounded Kubernetes requests. SIGINT and SIGTERM trigger cleanup and stop the
+suite. Cleanup targets only the case's Job, labeled task pods, ConfigMap, and
+cluster names recorded by that case. A forcibly killed controller cannot run
+cleanup; inspect saved identities before manually removing residual resources.
+
+Host artifacts are written under the ignored directory
+`dask-gateway/test-results/suite-<run-id>/`: `results.json` records the deployed
+image and both verdicts, `junit.xml` is suitable for CI, and runner/tool logs
+explain individual failures. Output files remain on the PVC under
+`/output/dask-test-<id>-<run-id>/`. The controller exits nonzero if any case or
+cleanup fails and continues through ordinary failures to collect other results.
+It expects default cleanup resources, as does the existing cleanup smoke test.
+
+Coverage still to add: nonpositive/insufficient budgets, concurrency, external
+cluster failures, resource overrides in real pods, and optional GPU hardware.
+In particular, invalid budgets must be rejected before cluster creation before
+adding those real-cluster cases: the current init script validates some limits
+after provisioning. Expression coverage currently uses input references;
+JavaScript expression blocks need separate cases. Unit tests cover expression
+evaluation without mutation of a shared workflow requirement, status ordering,
+and independence of computation and lifecycle verdicts.
+
+Validated on October 27, 2026 with `skaffold run -p dask` followed by
+`task dask:test`: **12/12 cases passed both verdicts**, including shutdown and
+pod removal for all **10** Dask clusters created by the suite. The single-case
+entry point `task dask:test ID=5` also passed. The final resource audit found no
+active Gateway clusters, suite runner Jobs, or suite ConfigMaps. Unit validation:
+**413 passed, 1 skipped**, with 51 passing subtests. A deliberate Ctrl-C run also
+confirmed ownership recovery and shutdown of the interrupted case's cluster.
+JSON, JUnit, and raw logs for
+the successful full run are in the local ignored directory
+`test-results/suite-91a54e3e/`.

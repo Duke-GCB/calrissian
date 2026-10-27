@@ -1,0 +1,102 @@
+[
+  {
+    "id": 1,
+    "name": "minimal",
+    "tool": "minimal.cwl",
+    "workers": 1,
+    "clusters": 1,
+    "should_fail": false
+  },
+  {
+    "id": 2,
+    "name": "cpu-bound",
+    "tool": "cpu-bound.cwl",
+    "workers": 2,
+    "clusters": 1,
+    "should_fail": false
+  },
+  {
+    "id": 3,
+    "name": "memory-bound",
+    "tool": "memory-bound.cwl",
+    "workers": 2,
+    "clusters": 1,
+    "should_fail": false
+  },
+  {
+    "id": 4,
+    "name": "combined-budget",
+    "tool": "combined-budget.cwl",
+    "workers": 2,
+    "clusters": 1,
+    "should_fail": false
+  },
+  {
+    "id": 5,
+    "name": "ordinary",
+    "tool": "ordinary.cwl",
+    "workers": 1,
+    "clusters": 0,
+    "should_fail": false
+  },
+  {
+    "id": 6,
+    "name": "command-failure",
+    "tool": "command-failure.cwl",
+    "workers": 1,
+    "clusters": 1,
+    "should_fail": true,
+    "failure_marker": "DASK_SUITE_EXPECTED_EXIT_7"
+  },
+  {
+    "id": 7,
+    "name": "workflow",
+    "tool": "workflow.cwl",
+    "workers": 1,
+    "clusters": 1,
+    "should_fail": false
+  },
+  {
+    "id": 8,
+    "name": "sequential-workflow",
+    "tool": "sequential-workflow.cwl",
+    "workers": 1,
+    "clusters": 2,
+    "should_fail": false
+  },
+  {
+    "id": 9,
+    "name": "resource-expressions",
+    "tool": "expressions.cwl",
+    "workers": 1,
+    "clusters": 1,
+    "should_fail": false
+  },
+  {
+    "id": 10,
+    "name": "missing-field",
+    "tool": "missing-field.cwl",
+    "workers": 0,
+    "clusters": 0,
+    "should_fail": true,
+    "failure_pattern": "Tool definition failed validation"
+  },
+  {
+    "id": 11,
+    "name": "invalid-type",
+    "tool": "invalid-type.cwl",
+    "workers": 0,
+    "clusters": 0,
+    "should_fail": true,
+    "failure_pattern": "Tool definition failed validation"
+  },
+  {
+    "id": 12,
+    "name": "workflow-failure",
+    "tool": "workflow-failure.cwl",
+    "workers": 1,
+    "clusters": 1,
+    "should_fail": true,
+    "failure_marker": "DASK_SUITE_EXPECTED_EXIT_7"
+  }
+]
