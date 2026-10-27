@@ -1,3 +1,4 @@
+from calrissian.scheduling import apply_gpu_tolerations, load_gpu_tolerations
 from typing import Dict
 from cwltool.job import ContainerCommandLineJob, needs_shell_quoting_re, relink_initialworkdir
 
@@ -243,6 +244,7 @@ class KubernetesPodBuilder(object):
         self.no_network_access_pod_labels = no_network_access_pod_labels
         self.network_access_pod_labels = network_access_pod_labels
         self.priority_class = pod_additional_spec.get("pod_priority_class")
+        self.gpu_tolerations = pod_additional_spec.get("gpu_tolerations")
         self.env_from_secret = pod_additional_spec.get("env_from_secret")
         self.env_from_configmap = pod_additional_spec.get("env_from_configmap")
         self.requirements = {} if self.builder.requirements is None else self.builder.requirements
@@ -508,7 +510,7 @@ class KubernetesPodBuilder(object):
 
             spec['spec']['containers'][0]["envFrom"] = envfrom
         
-        return spec
+        return apply_gpu_tolerations(spec, self.gpu_tolerations)
 
 
 # This now subclasses ContainerCommandLineJob, but only uses two of its methods:
@@ -715,6 +717,9 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
 
     def get_pod_additional_spec(self, runtimeContext):
         spec = {}
+
+        if runtimeContext.pod_gpu_tolerations:
+            spec["gpu_tolerations"] = load_gpu_tolerations(runtimeContext.pod_gpu_tolerations)
 
         if self.get_pod_priority_class(runtimeContext):
             spec["pod_priority_class"] = self.get_pod_priority_class(runtimeContext)
