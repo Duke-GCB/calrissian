@@ -18,7 +18,13 @@ site
 .task
 docs/api
 docs/uml
-
-# Local Dask integration evidence and Python caches.
 __pycache__/
+
+# Transient single-test runs; full-suite logs are retained separately.
+/conformance/conformance-*.txt
+/conformance/badges/conformance-*/
+# cwltest Markdown badges duplicate the JSON used by the documentation.
+/conformance/badges/**/*.md
+
+# Local Dask integration evidence.
 /dask-gateway/test-results/

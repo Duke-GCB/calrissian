@@ -1,3 +1,5 @@
+from cwltool.command_line_tool import check_adjust
+from cwltool.errors import WorkflowException
 from unittest import TestCase
 from unittest.mock import Mock, patch, call
 from calrissian.dask import CalrissianCommandLineDaskJob
@@ -30,6 +32,24 @@ class CalrissianCommandLineToolTestCase(TestCase):
     def setUp(self):
         self.toolpath_object = {'id': '1', 'inputs': [], 'outputs': []}
         self.loadingContext = CalrissianLoadingContext()
+
+    def test_hash_and_space_in_filename_are_accepted(self):
+        tool = CalrissianCommandLineTool(self.toolpath_object, self.loadingContext)
+        builder = Mock()
+        builder.pathmapper.mapper.return_value = ('/source/item #1.txt', '/container/item #1.txt')
+        file_object = {'class': 'File', 'location': 'file:///source/item%20%231.txt'}
+        adjusted = check_adjust(tool.path_check_mode.value, builder, file_object)
+        self.assertEqual(adjusted['basename'], 'item #1.txt')
+        self.assertEqual(adjusted['path'], '/container/item #1.txt')
+
+    def test_strict_filename_checks_can_be_requested(self):
+        tool = CalrissianCommandLineTool(
+            self.toolpath_object, CalrissianLoadingContext(relax_path_checks=False))
+        builder = Mock()
+        builder.pathmapper.mapper.return_value = ('/source/item #1.txt', '/container/item #1.txt')
+        with self.assertRaisesRegex(WorkflowException, 'Invalid filename'):
+            check_adjust(tool.path_check_mode.value, builder, {
+                'class': 'File', 'location': 'file:///source/item%20%231.txt'})
 
     @patch('calrissian.tool.CalrissianCommandLineJob')
     def test_make_job_runner(self, mock_command_line_job):

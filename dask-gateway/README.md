@@ -80,9 +80,11 @@ guarantee. The test verified the actual sidecar Pod resource specification,
 not just the configured environment. The 256 MiB limit successfully accommodated initialization and
 shutdown; retain configurable limits for larger Python environments.
 
-Validation: **368 unit tests passed, 1 skipped**, including 41 Dask tests and
-9 passing subtests. Default and Dask-profile Helm rendering/lint and Skaffold
-configuration checks also passed.
+Validation after merging the latest `develop`: **406 unit tests passed,
+1 skipped**, with 51 passing subtests. Default and Dask-profile Helm rendering/lint and Skaffold
+configuration checks also passed. After merging `develop`, the rebuilt Skaffold
+profile and direct Python smoke test passed again, with cleanup peak RSS of
+59,520 KiB (58.1 MiB) and the Gateway cluster confirmed stopped.
 
 To remove the test environment:
 
