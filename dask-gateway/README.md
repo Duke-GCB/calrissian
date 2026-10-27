@@ -128,6 +128,7 @@ conformance results. Fixture definitions and stable IDs live in `tests/`.
 | 10 | Missing resource field | CWL validation rejects the document |
 | 11 | Invalid resource type | CWL validation rejects the document |
 | 12 | Workflow failure | A failed Dask step fails its workflow and cleans up |
+| 13 | Nested output | Directory preparation and Dask initialization run with container security settings |
 
 Every case has independent `cwl` and `lifecycle` verdicts. Successful tools must
 produce the expected output, and Dask workloads wait for the expected worker
