@@ -96,10 +96,17 @@ Configure Calrissian with the runtime JSON keys in
 }
 ```
 
-On the current implementation, the singular CLI options
-`--network-access-pod-label` and `--no-network-access-pod-label` are not mapped to
-these plural runtime attributes. Use the JSON keys shown here, as the
-conformance chart does, rather than substituting those flags.
+Alternatively, pass the equivalent CLI options:
+
+```sh
+calrissian \
+  --network-access-pod-label /etc/calrissian/network/allowed-labels.yaml \
+  --no-network-access-pod-label /etc/calrissian/network/denied-labels.yaml \
+  --max-ram 4G --max-cores 2 workflow.cwl inputs.yaml
+```
+
+Both options populate the same plural runtime settings as the JSON configuration.
+Explicit CLI values override the corresponding configuration-file defaults.
 
 For an in-cluster runner, package the files in a ConfigMap:
 
@@ -143,6 +150,8 @@ CNI on an existing cluster.
 task conformance:cluster
 skaffold run
 hatch run test.py3.10:python examples/network-access/check-network.py
+# Repeat using JSON configuration instead of CLI label options:
+hatch run test.py3.10:python examples/network-access/check-network.py --configuration json
 ```
 
 The check requires the chart's `calrissian-session` Deployment with writable
@@ -150,7 +159,8 @@ The check requires the chart's `calrissian-session` Deployment with writable
 and manage test ServiceAccounts, Services, Deployments, policies, and pods.
 Use `--context` and `--namespace` for another compatible test environment.
 
-The helper reuses the example policies with unique names and label values to
+The helper uses the CLI label options by default; `--configuration json` checks
+the equivalent JSON path. It reuses the example policies with unique names and label values to
 avoid changing other tasks' policies. It creates a temporary unprivileged task
 ServiceAccount and a controlled HTTP endpoint using the deployed runner image,
 then executes actual CWL tools in this order:

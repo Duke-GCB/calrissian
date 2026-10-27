@@ -35,6 +35,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--context', default='calrissian-conformance')
     parser.add_argument('--namespace', default='calrissian-conformance')
+    parser.add_argument('--configuration', choices=['cli', 'json'], default='cli')
     args = parser.parse_args()
     kube = ['kubectl', '--context', args.context, '--request-timeout=15s', '-n', args.namespace]
     def command(*arguments, **kwargs):
@@ -89,8 +90,11 @@ def main():
             case_output = output + '/' + case
             arguments = ['calrissian', '--max-ram', '1G', '--max-cores', '1', '--default-container', image,
                 '--pod-serviceaccount', name, '--pod-labels', runner_path + '/' + case + '-pod-labels.yaml',
-                '--conf', runner_path + '/network-config.json',
                 '--outdir', case_output, runner_path + ('/allowed.cwl' if enabled else '/denied.cwl'), '--url', url]
+            settings = (['--conf', runner_path + '/network-config.json'] if args.configuration == 'json' else
+                        ['--network-access-pod-label', runner_path + '/allowed-labels.yaml',
+                         '--no-network-access-pod-label', runner_path + '/denied-labels.yaml'])
+            arguments[1:1] = settings
             observed = False
             with tempfile.TemporaryFile(mode='w+') as logs:
                 pid_path = runner_path + '/' + case + '.pid'
@@ -121,7 +125,7 @@ def main():
                 else:
                     assert 'error' in result and 'permanentFail' in captured, captured
                 results.append({'case': case, **result})
-        print(json.dumps({'passed': True, 'results': results, 'output': output}, indent=2))
+        print(json.dumps({'passed': True, 'configuration': args.configuration, 'results': results, 'output': output}, indent=2))
     finally:
         if process is not None:
             # Stop the remote CLI before removing pods, avoiding creation races.
