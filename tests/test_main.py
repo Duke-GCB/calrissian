@@ -47,6 +47,8 @@ class CalrissianMainTestCase(TestCase):
         self.assertEqual(mock_executor.call_args,
                          call(mock_memory_parser.parse_to_megabytes.return_value, mock_cpu_parser.parse.return_value, 1))
         self.assertTrue(mock_runtime_context.called)
+        mock_loading_context.assert_called_once_with(
+            relax_path_checks=mock_parse_arguments.return_value.relax_path_checks)
         self.assertEqual(mock_cwlmain.call_args, call(args=mock_parse_arguments.return_value,
                                                       executor=mock_executor.return_value,
                                                       loadingContext=mock_loading_context.return_value,

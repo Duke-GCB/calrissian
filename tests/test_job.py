@@ -1,4 +1,8 @@
 import os
+import tempfile
+import subprocess
+from pathlib import Path
+from cwltool.pathmapper import MapperEnt
 from unittest import TestCase, skip
 from unittest.mock import Mock, patch, call, create_autospec
 from calrissian.job import k8s_safe_name, KubernetesVolumeBuilder, VolumeBuilderException, KubernetesPodBuilder, random_tag, read_yaml
@@ -167,6 +171,34 @@ class KubernetesVolumeBuilderTestCase(TestCase):
         self.assertEqual(0, len(self.volume_builder.volume_mounts))
         self.volume_builder.add_volume_binding('/prefix/2/input2', '/input2-target', False)
         self.assertEqual({'name': 'claim2', 'mountPath': '/input2-target', 'readOnly': True, 'subPath': 'input2'}, self.volume_builder.volume_mounts[0])
+
+    def test_volume_binding_resolves_symlink_to_another_pvc(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            data = root / 'data'
+            output = root / 'output'
+            (data / 'testdir' / 'c').mkdir(parents=True)
+            output.mkdir()
+            (output / 'testdir').symlink_to(data / 'testdir')
+            self.volume_builder.add_persistent_volume_entry(str(output), None, 'output-claim', False)
+            self.volume_builder.add_persistent_volume_entry(str(data), 'suite', 'data-claim', True)
+            self.volume_builder.add_volume_binding(str(output / 'testdir' / 'c'), '/task/c', False)
+            self.assertEqual(self.volume_builder.volume_mounts, [{
+                'name': 'data-claim', 'mountPath': '/task/c',
+                'subPath': 'suite/testdir/c', 'readOnly': True,
+            }])
+
+    def test_volume_binding_rejects_symlink_to_unmounted_path(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            output = root / 'output'
+            output.mkdir()
+            outside = root / 'outside'
+            outside.mkdir()
+            (output / 'link').symlink_to(outside)
+            self.volume_builder.add_persistent_volume_entry(str(output), None, 'output-claim', False)
+            with self.assertRaises(VolumeBuilderException):
+                self.volume_builder.add_volume_binding(str(output / 'link'), '/task/input', False)
 
     def test_volume_binding_exception_if_not_found(self):
         self.assertEqual(0, len(self.volume_builder.volumes))
@@ -432,20 +464,62 @@ class KubernetesPodBuilderTestCase(TestCase):
         }
         self.assertEqual(expected, resources)
 
+    def test_pod_limits_do_not_leak_into_runtime_resources(self):
+        from calrissian.executor import ThreadPoolJobExecutor
+        resources = ThreadPoolJobExecutor(1000, 2).select_resources({
+            'ramMin': 256, 'ramMax': 512, 'coresMin': 1, 'coresMax': 2,
+        }, Mock())
+        self.builder.resources = resources
+        pod = KubernetesPodBuilder(
+            self.name, self.builder, self.container_image, self.environment,
+            self.volume_mounts, self.volumes, self.command_line, self.stdout,
+            self.stderr, self.stdin, self.labels, self.nodeselectors,
+            self.gpu_nodeselectors, self.security_context, self.pod_serviceaccount,
+            self.pod_additional_spec)
+        selected = pod.container_resources()
+        self.assertEqual(selected['requests']['memory'], '256Mi')
+        self.assertEqual(selected['limits']['memory'], '512Mi')
+        self.assertEqual(selected['limits']['cpu'], '2')
+        self.assertNotIn('ramMax', resources)
+        self.assertNotIn('coresMax', resources)
+
+    def test_redirect_paths_preserve_spaces_hashes_and_quotes(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "input #1's.txt"
+            output = root / "output #1's.txt"
+            error = root / "error #1's.txt"
+            source.write_text('file contents\n')
+            self.pod_builder.stdin = str(source)
+            self.pod_builder.stdout = str(output)
+            self.pod_builder.stderr = str(error)
+            subprocess.run(self.pod_builder.container_command() +
+                           self.pod_builder.container_args(), check=True)
+            self.assertEqual(output.read_text(), 'file contents\n')
+            self.assertEqual(error.read_text(), '')
+
     def test_network_access_1_2(self):
         self.pod_builder.cwl_version = "v1.2"
-        self.pod_builder.requirements = [OrderedDict([("class", "NetworkAccess"), ("networkAccess", "true")])]
+        self.pod_builder.requirements = [OrderedDict([("class", "NetworkAccess"), ("networkAccess", True)])]
         self.assertEqual(self.pod_builder.pod_labels(), {"calrissian-network": "enabled", 'key1':'val1', 'key2':'123'})
 
     def test_no_network_access_1_2(self):
         self.pod_builder.cwl_version = "v1.2"
-        self.pod_builder.requirements = [OrderedDict([("class", "NetworkAccess"), ("networkAccess", "false")])]
+        self.pod_builder.requirements = [OrderedDict([("class", "NetworkAccess"), ("networkAccess", False)])]
         self.assertEqual(self.pod_builder.pod_labels(), {"calrissian-network": "disabled", 'key1':'val1', 'key2':'123'})
 
     def test_network_access_1_0(self):
         self.pod_builder.cwl_version = "v1.0"
         self.pod_builder.requirements = [OrderedDict([])]
         self.assertEqual(self.pod_builder.pod_labels(), {"calrissian-network": "enabled", 'key1':'val1', 'key2':'123'})
+
+    def test_network_access_defaults(self):
+        for version, expected in [("v1.0", "enabled"), ("v1.1", "disabled"), ("v1.2", "disabled")]:
+            with self.subTest(version=version):
+                self.pod_builder.cwl_version = version
+                self.pod_builder.requirements = []
+                self.assertEqual(self.pod_builder.pod_labels(), {
+                    "calrissian-network": expected, 'key1': 'val1', 'key2': '123'})
 
     def test_string_labels(self):
         self.pod_builder.labels = {'key1': 123}
@@ -605,6 +679,31 @@ class CalrissianCommandLineJobTestCase(TestCase):
         with self.assertRaisesRegex(UnsupportedRequirement, 'DockerRequirement.dockerBuild is not supported'):
             job.check_requirements(self.runtime_context)
 
+    def test_check_requirements_rejects_tool_time_limit(self, mock_volume_builder, mock_client):
+        for limit in [0, 1, '$(inputs.limit)']:
+            with self.subTest(limit=limit):
+                self.requirements = [{'class': 'ToolTimeLimit', 'timelimit': limit}]
+                job = self.make_job()
+                with self.assertRaisesRegex(UnsupportedRequirement, 'ToolTimeLimit is not supported'):
+                    job.check_requirements(self.runtime_context)
+
+    def test_check_requirements_ignores_optional_tool_time_limit(self, mock_volume_builder, mock_client):
+        self.hints = [{'class': 'ToolTimeLimit', 'timelimit': 1}]
+        job = self.make_job()
+        with patch('calrissian.job.log.warning') as warning:
+            job.check_requirements(self.runtime_context)
+        warning.assert_called_once_with(
+            'Ignoring optional ToolTimeLimit hint: execution time limits are not supported')
+
+    def test_required_tool_time_limit_prevents_pod_submission(self, mock_volume_builder, mock_client):
+        self.requirements = [{'class': 'ToolTimeLimit', 'timelimit': 1}]
+        job = self.make_job()
+        job.execute_kubernetes_pod = Mock()
+        with self.assertRaises(UnsupportedRequirement):
+            job.run(self.runtime_context)
+        job.execute_kubernetes_pod.assert_not_called()
+        mock_client.return_value.submit_pod.assert_not_called()
+
     def test_check_requirements_ok_with_empty_requirements(self, mock_volume_builder, mock_client):
         self.requirements = []
         job = self.make_job()
@@ -653,6 +752,77 @@ class CalrissianCommandLineJobTestCase(TestCase):
         job.finish(completion_result, self.runtime_context)
         self.assertEqual(job.collect_outputs.call_args, call(job.outdir, 0))
         job.output_callback.assert_called_with(job.collect_outputs.return_value, 'success')
+
+    def test_finish_collects_initial_workdir_directory_contents(self, mock_volume_builder, mock_client):
+        # Kubernetes mounts exist only in the task pod. Output globbing happens
+        # in the runner, which must be able to traverse these staged directories.
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            outdir = root / 'output'
+            outdir.mkdir()
+            entries = []
+            for directory, filename in [('testdir', 'a'), ('rec', 'B')]:
+                source = root / 'inputs' / directory
+                source.mkdir(parents=True)
+                (source / filename).touch()
+                entries.append((directory, MapperEnt(
+                    str(source), '/out/' + directory, 'Directory', True)))
+            job = self.make_job()
+            job.outdir = str(outdir)
+            job.generatemapper = Mock()
+            job.generatemapper.items_exclude_children.return_value = entries
+            job.report = Mock()
+            self.runtime_context.rm_tmpdir = False
+
+            def collect_outputs(directory, exit_code):
+                files = [Path(directory) / 'testdir' / 'a', Path(directory) / 'rec' / 'B']
+                self.assertTrue(all(path.is_file() for path in files))
+                self.assertEqual([path.read_bytes() for path in files], [b'', b''])
+                return {'output': [{'class': 'File', 'size': 0} for path in files]}
+
+            job.collect_outputs.side_effect = collect_outputs
+            job.finish(self.make_completion_result(0), self.runtime_context)
+            job.output_callback.assert_called_once_with(
+                {'output': [{'class': 'File', 'size': 0}, {'class': 'File', 'size': 0}]}, 'success')
+
+    def test_finish_preserves_inplace_file_and_directory_identity(self, mock_volume_builder, mock_client):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source_file = root / 'value'
+            source_file.write_text('4')
+            source_directory = root / 'directory'
+            source_directory.mkdir()
+            (source_directory / 'blurb').touch()
+            outdir = root / 'output'
+            outdir.mkdir()
+            job = self.make_job()
+            job.outdir = str(outdir)
+            job.inplace_update = True
+            job.generatemapper = Mock()
+            job.generatemapper.items_exclude_children.return_value = [
+                ('file', MapperEnt(str(source_file), '/out/value', 'WritableFile', True)),
+                ('directory', MapperEnt(str(source_directory), '/out/directory', 'WritableDirectory', True)),
+            ]
+            job.report = Mock()
+            self.runtime_context.rm_tmpdir = False
+
+            def collect_outputs(directory, exit_code):
+                linked_file = Path(directory) / 'value'
+                linked_directory = Path(directory) / 'directory'
+                self.assertTrue(linked_file.samefile(source_file))
+                self.assertTrue(linked_directory.samefile(source_directory))
+                self.assertEqual(linked_file.read_text(), '4')
+                self.assertTrue((linked_directory / 'blurb').is_file())
+                # Both references must continue to identify the same objects.
+                linked_file.write_text('5')
+                self.assertEqual(source_file.read_text(), '5')
+                (linked_directory / 'later').touch()
+                self.assertTrue((source_directory / 'later').is_file())
+                return {}
+
+            job.collect_outputs.side_effect = collect_outputs
+            job.finish(self.make_completion_result(0), self.runtime_context)
+            job.output_callback.assert_called_once_with({}, 'success')
 
     @patch('calrissian.job.Reporter')
     def test_finish_looks_up_codes(self, mock_reporter, mock_volume_builder, mock_client):

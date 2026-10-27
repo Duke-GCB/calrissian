@@ -1,5 +1,5 @@
 from typing import Dict
-from cwltool.job import ContainerCommandLineJob, needs_shell_quoting_re
+from cwltool.job import ContainerCommandLineJob, needs_shell_quoting_re, relink_initialworkdir
 
 # override cwltool.cuda.cuda_check
 def _cuda_check(cuda_req, requestCount):
@@ -181,6 +181,10 @@ class KubernetesVolumeBuilder(object):
             return source_without_prefix
 
     def add_volume_binding(self, source, target, writable):
+        # InitialWorkDir outputs may link back to inputs on another PVC.
+        # Kubernetes subPath mounts must use the actual source, not a symlink
+        # expressed in the runner's filesystem namespace.
+        source = os.path.realpath(source)
         # Find the persistent volume claim where this goes
         pv = self.find_persistent_volume(source)
         if not pv:
@@ -227,7 +231,10 @@ class KubernetesPodBuilder(object):
         self.stdout = stdout
         self.stderr = stderr
         self.stdin = stdin
-        self.resources = self.builder.resources
+        # Keep scheduling limits available for Kubernetes without exposing
+        # Calrissian-only fields through CWL's runtime expression object.
+        self.resources = dict(self.builder.resources)
+        self.resources.update(getattr(self.builder.resources, 'limits', {}))
         self.labels = labels
         self.nodeselectors = nodeselectors
         self.gpu_nodeselectors = gpu_nodeselectors
@@ -260,11 +267,11 @@ class KubernetesPodBuilder(object):
     def container_args(self):
         pod_command = self.command_line.copy()
         if self.stdout:
-            pod_command.extend(['>', self.stdout])
+            pod_command.extend(['>', shellescape.quote(self.stdout)])
         if self.stderr:
-            pod_command.extend(['2>', self.stderr])
+            pod_command.extend(['2>', shellescape.quote(self.stderr)])
         if self.stdin:
-            pod_command.extend(['<', self.stdin])
+            pod_command.extend(['<', shellescape.quote(self.stdin)])
         # pod_command is a list of strings. Needs to be turned into a single string
         # and passed as an argument to sh -c. Otherwise we cannot redirect STDIN/OUT/ERR inside a kubernetes container
         # Join everything into a single string and then return a single args list
@@ -383,7 +390,7 @@ class KubernetesPodBuilder(object):
 
         for requirement in self.requirements:
             if "class" in requirement.keys() and requirement["class"] in ["NetworkAccess"]:
-                network_access = True if requirement.get("networkAccess") == "true" else False
+                network_access = requirement.get("networkAccess", False)
                 break
         if not network_access and self.no_network_access_pod_labels: 
             self.labels = {**self.labels, **self.no_network_access_pod_labels}
@@ -548,6 +555,13 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         if runtimeContext.tool_logs_basepath: 
             self.dump_tool_logs(self.name, completion_result, runtimeContext)
 
+        # Task-pod mounts are not visible in the runner's filesystem. Restore
+        # InitialWorkDir input links before collecting outputs, as cwltool does.
+        if self.generatemapper is not None:
+            relink_initialworkdir(
+                self.generatemapper, self.outdir, self.builder.outdir,
+                inplace_update=self.inplace_update)
+
         # collect_outputs (and collect_output) is defined in command_line_tool
         outputs = self.collect_outputs(self.outdir, exit_code)
 
@@ -577,6 +591,12 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
     }
 
     def check_requirements(self, runtimeContext):
+        time_limit, is_required = self.get_requirement('ToolTimeLimit')
+        if time_limit is not None:
+            if is_required:
+                raise UnsupportedRequirement('ToolTimeLimit is not supported by Calrissian')
+            log.warning('Ignoring optional ToolTimeLimit hint: execution time limits are not supported')
+
         for feature in self.supported_features:
             requirement, is_required = self.get_requirement(feature)
             if requirement and is_required:
