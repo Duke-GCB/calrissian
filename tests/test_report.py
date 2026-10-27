@@ -7,6 +7,7 @@ from calrissian.k8s import CompletionResult
 from freezegun import freeze_time
 from unittest.mock import Mock, call, patch
 import datetime
+import json
 
 TIME_1000 = datetime.datetime(2000, 1, 1, 10, 0, 0)
 TIME_1015 = datetime.datetime(2000, 1, 1, 10, 15, 0)
@@ -101,6 +102,23 @@ class TimedResourceReportTestCase(TestCase):
     def test_resources_default_zero(self):
         self.assertEqual(self.report.ram_megabytes, 0)
         self.assertEqual(self.report.cpus, 0)
+
+    def test_zero_duration_resource_usage_serializes_as_zero(self):
+        # Issue #197: Kubernetes can report identical start and finish times.
+        timestamp = datetime.datetime.fromisoformat('2025-07-04T11:39:28+00:00')
+        completion_result = CompletionResult(0, '1', '256Mi', timestamp, timestamp, [], {})
+        report = TimedResourceReport.create('ruff_step', completion_result, 3581)
+
+        self.assertEqual(report.elapsed_hours(), 0)
+        self.assertEqual(report.cpu_hours(), 0)
+        self.assertEqual(report.ram_megabyte_hours(), 0)
+
+        serialized = json.loads(json.dumps(report.to_dict(), default=default_serializer))
+        self.assertEqual(serialized['start_time'], serialized['finish_time'])
+        for metric in ('elapsed_seconds', 'elapsed_hours', 'cpu_hours', 'ram_megabyte_hours'):
+            with self.subTest(metric=metric):
+                self.assertIsInstance(serialized[metric], (int, float))
+                self.assertEqual(serialized[metric], 0)
 
     def test_create(self):
         name = 'test-job'
