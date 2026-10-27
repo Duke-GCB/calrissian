@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: calrissian-sa
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: conformance-runner
+rules:
+- apiGroups: [""]
+  resources: [pods]
+  verbs: [get, create, patch, delete, list, watch]
+- apiGroups: [""]
+  resources: [pods/log]
+  verbs: [get, list]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: conformance-runner
+subjects:
+- kind: ServiceAccount
+  name: calrissian-sa
+- kind: ServiceAccount
+  name: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: conformance-runner

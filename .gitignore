@@ -18,3 +18,10 @@ site
 .task
 docs/api
 docs/uml
+__pycache__/
+
+# Transient single-test runs; curated evidence is retained under docs/comformance/logs.
+/conformance/conformance-*.txt
+/conformance/badges/conformance-*/
+# cwltest Markdown badges duplicate the JSON used by the documentation.
+/conformance/badges/**/*.md
