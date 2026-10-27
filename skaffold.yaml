@@ -1,0 +1,33 @@
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: calrissian-conformance
+build:
+  local:
+    push: false
+  # The existing run-job scripts use conformance:latest.
+  tagPolicy:
+    customTemplate:
+      template: latest
+  artifacts:
+  - image: calrissian
+    context: .
+    docker:
+      dockerfile: Dockerfile
+  - image: conformance
+    context: .
+    docker:
+      dockerfile: conformance/Dockerfile.conformance
+    requires:
+    - image: calrissian
+      alias: CALRISSIAN_IMAGE
+deploy:
+  kubeContext: calrissian-conformance
+  helm:
+    releases:
+    - name: calrissian-conformance
+      chartPath: conformance/chart
+      namespace: calrissian-conformance
+      createNamespace: true
+      setValueTemplates:
+        image: "{{.IMAGE_FULLY_QUALIFIED_conformance}}"

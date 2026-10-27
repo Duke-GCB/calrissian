@@ -254,8 +254,8 @@ class ThreadPoolJobExecutorTestCase(TestCase):
         }
 
         result = self.executor.select_resources(request, Mock())
-        self.assertEqual(result['ramMax'], 1000) # When ram max requested exceeds total, result should be total
-        self.assertEqual(result['coresMax'], 1) # when cpu max requested is below total, result should be requested
+        self.assertEqual(result.limits['ramMax'], 1000) # When ram max requested exceeds total, result should be total
+        self.assertEqual(result.limits['coresMax'], 1) # when cpu max requested is below total, result should be requested
 
     def test_requested_and_limit_resources(self):
         request = {
@@ -267,8 +267,58 @@ class ThreadPoolJobExecutorTestCase(TestCase):
         result = self.executor.select_resources(request, Mock())
         self.assertEqual(result['ram'], 500)
         self.assertEqual(result['cores'], 1)
-        self.assertEqual(result['ramMax'], 1000)
-        self.assertEqual(result['coresMax'], 2)
+        self.assertEqual(result.limits['ramMax'], 1000)
+        self.assertEqual(result.limits['coresMax'], 2)
+
+    def test_select_resources_includes_default_storage_sizes(self):
+        result = self.executor.select_resources({
+            'ramMin': 256, 'ramMax': 256, 'coresMin': 1, 'coresMax': 1,
+            'tmpdirMin': 1024, 'tmpdirMax': 1024,
+            'outdirMin': 1024, 'outdirMax': 1024,
+        }, Mock())
+        self.assertEqual(result['tmpdirSize'], 1024)
+        self.assertEqual(result['outdirSize'], 1024)
+        self.assertIsInstance(result['tmpdirSize'], int)
+        self.assertIsInstance(result['outdirSize'], int)
+
+    def test_select_resources_rounds_memory_and_storage_up(self):
+        result = self.executor.select_resources({
+            'ramMin': 254.1, 'ramMax': 254.9, 'coresMin': 0.5, 'coresMax': 1.5,
+            'tmpdirMin': 255.1, 'tmpdirMax': 255.9,
+            'outdirMin': 256.1, 'outdirMax': 256.9,
+        }, Mock())
+        self.assertEqual(result['ram'], 255)
+        self.assertEqual(result.limits['ramMax'], 255)
+        self.assertEqual(result['tmpdirSize'], 256)
+        self.assertEqual(result['outdirSize'], 257)
+        self.assertEqual(result['cores'], 0.5)
+        self.assertEqual(result.limits['coresMax'], 1.5)
+
+    def test_select_resources_exposes_only_cwl_runtime_fields(self):
+        result = self.executor.select_resources({
+            'ramMin': 256, 'ramMax': 512, 'coresMin': 1, 'coresMax': 2,
+        }, Mock())
+        self.assertEqual(set(result), {'ram', 'cores', 'tmpdirSize', 'outdirSize'})
+        self.assertEqual(result.limits['ramMax'], 512)
+        self.assertEqual(result.limits['coresMax'], 2)
+
+    def test_select_resources_preserves_gpu_accounting(self):
+        result = self.executor.select_resources({
+            'ramMin': 256, 'ramMax': 512, 'coresMin': 1, 'coresMax': 2,
+            'cudaDeviceCountMin': 1, 'cudaDeviceCountMax': 2,
+        }, Mock())
+        self.assertEqual(result['cudaDeviceCount'], 1)
+        self.assertEqual(Resources.from_dict(result).gpus, 1)
+        self.assertEqual(result.limits['cudaDeviceCountMax'], 2)
+        self.assertNotIn('gpus', result)
+
+    def test_select_resources_checks_rounded_memory_against_total(self):
+        self.executor.total_resources = Resources(254.5, 2, 2)
+        with self.assertRaises(WorkflowException):
+            self.executor.select_resources({
+                'ramMin': 254.1, 'ramMax': 254.9,
+                'coresMin': 1, 'coresMax': 1,
+            }, Mock())
 
     def test_allocate(self):
         resource = Resources(200, 1, 1)

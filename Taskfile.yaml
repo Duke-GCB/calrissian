@@ -22,3 +22,37 @@ tasks:
     desc: Run all dask tests
     cmds:
     - hatch run test:testdask
+
+  conformance:cluster:
+    desc: Create the Minikube cluster for CWL conformance tests
+    vars:
+      CPUS: '{{default "6" .CPUS}}'
+      MEMORY: '{{default "12288" .MEMORY}}'
+      DRIVER: '{{default "docker" .DRIVER}}'
+    preconditions:
+    - sh: command -v minikube
+      msg: Install minikube before creating the conformance cluster
+    cmds:
+    - minikube start --profile calrissian-conformance --driver "{{.DRIVER}}" --container-runtime docker --cni calico --cpus "{{.CPUS}}" --memory "{{.MEMORY}}"
+    - minikube --profile calrissian-conformance addons enable storage-provisioner
+    - minikube --profile calrissian-conformance addons enable default-storageclass
+
+  conformance:cluster:stop:
+    desc: Stop the Minikube conformance cluster, preserving its data
+    cmds:
+    - minikube stop --profile calrissian-conformance
+
+  conformance:cluster:delete:
+    desc: Delete the Minikube conformance cluster and its data
+    cmds:
+    - minikube delete --profile calrissian-conformance
+
+  conformance:test:
+    desc: Run one conformance test (VERSION=1.0 ID=173)
+    requires:
+      vars: [VERSION, ID]
+    env:
+      CONFORMANCE_VERSION: '{{.VERSION}}'
+      CONFORMANCE_ID: '{{.ID}}'
+    cmds:
+    - python3 conformance/run-test.py --version "$CONFORMANCE_VERSION" --id "$CONFORMANCE_ID"

@@ -1,5 +1,4 @@
 import contextlib
-import re
 from importlib.resources import files
 import yaml
 
@@ -44,6 +43,9 @@ def activate_logging(level):
 
 
 def add_arguments(parser):
+    # Permit valid input basenames such as "item #1.txt" by default.
+    # Configuration files may still request strict checks explicitly.
+    parser.set_defaults(relax_path_checks=True)
     parser.add_argument('--max-ram', type=str, help='Maximum amount of RAM to use, e.g 1048576, 512Mi or 2G. Follows k8s resource conventions')
     parser.add_argument('--max-cores', type=str, help='Maximum number of CPU cores to use')
     parser.add_argument('--max-gpus', type=str, nargs='?', help='Maximum number of GPU cores to use')
@@ -138,8 +140,6 @@ def flush_tees():
 
 
 def add_custom_schema():
-    cwltool.command_line_tool.ACCEPTLIST_EN_RELAXED_RE = re.compile(r".*")
-    cwltool.command_line_tool.ACCEPTLIST_RE = cwltool.command_line_tool.ACCEPTLIST_EN_RELAXED_RE
     extension_schemas = {
         "v1.0": "extensions.yml",
         "v1.1": "extensions-v1.1.yml",
@@ -187,7 +187,8 @@ def main():
     try:
         result = cwlmain(args=parsed_args,
                          executor=executor,
-                         loadingContext=CalrissianLoadingContext(),
+                         loadingContext=CalrissianLoadingContext(
+                             relax_path_checks=parsed_args.relax_path_checks),
                          runtimeContext=runtime_context,
                          versionfunc=version,
                          custom_schema_callback=(add_custom_schema if parsed_args.dask_gateway_url else None)
