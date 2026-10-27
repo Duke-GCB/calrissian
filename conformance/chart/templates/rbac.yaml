@@ -12,6 +12,9 @@ rules:
   resources: [pods]
   verbs: [get, create, patch, delete, list, watch]
 - apiGroups: [""]
+  resources: [configmaps]
+  verbs: [get, create, delete]
+- apiGroups: [""]
   resources: [pods/log]
   verbs: [get, list]
 ---

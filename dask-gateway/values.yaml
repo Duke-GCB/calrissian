@@ -1,0 +1,32 @@
+# Local integration environment only; not a production authentication setup.
+gateway:
+  auth:
+    type: simple
+  backend:
+    image:
+      pullPolicy: IfNotPresent
+    scheduler:
+      cores:
+        request: 0.1
+        limit: 1
+      memory:
+        request: 256M
+        limit: 512M
+  extraConfig:
+    cluster-options: |
+      from dask_gateway_server.options import Options, String, Float, Integer
+      c.Backend.cluster_options = Options(
+          String("image", default="worker:latest"),
+          Float("worker_cores", default=0.1, min=0.01),
+          Integer("worker_cores_limit", default=1, min=1),
+          String("worker_memory", default="256M"),
+          handler=lambda options: {
+              "image": options.image,
+              "worker_cores": options.worker_cores,
+              "worker_cores_limit": options.worker_cores_limit,
+              "worker_memory": options.worker_memory,
+          },
+      )
+traefik:
+  service:
+    type: ClusterIP

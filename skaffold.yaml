@@ -31,3 +31,40 @@ deploy:
       createNamespace: true
       setValueTemplates:
         image: "{{.IMAGE_FULLY_QUALIFIED_conformance}}"
+
+profiles:
+- name: dask
+  build:
+    artifacts:
+    - image: calrissian
+      context: .
+      docker:
+        dockerfile: Dockerfile
+    - image: worker
+      context: .
+      docker:
+        dockerfile: dask-gateway/Dockerfile.worker
+      requires:
+      - image: calrissian
+        alias: CALRISSIAN_IMAGE
+  deploy:
+    helm:
+      releases:
+      - name: calrissian-conformance
+        chartPath: conformance/chart
+        namespace: calrissian-conformance
+        createNamespace: true
+        valuesFiles:
+        - dask-gateway/session-values.yaml
+        setValueTemplates:
+          image: "{{.IMAGE_FULLY_QUALIFIED_worker}}"
+      - name: dask-gateway
+        remoteChart: https://helm.dask.org/dask-gateway-2024.1.0.tgz
+        namespace: dask-gateway
+        createNamespace: true
+        valuesFiles:
+        - dask-gateway/values.yaml
+        setValueTemplates:
+          gateway.backend.image.name: "{{.IMAGE_REPO_worker}}"
+          gateway.backend.image.tag: "{{.IMAGE_TAG_worker}}"
+          traefik.service.type: "ClusterIP"

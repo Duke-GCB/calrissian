@@ -25,6 +25,10 @@ spec:
         image: {{ .Values.image | quote }}
         command: [sleep, infinity]
         env:
+        {{- range $key, $value := .Values.runnerEnv }}
+        - name: {{ $key | quote }}
+          value: {{ $value | toString | quote }}
+        {{- end }}
         - name: TMPDIR
           value: /output
         - name: CALRISSIAN_POD_NAME
@@ -32,6 +36,11 @@ spec:
             fieldRef:
               fieldPath: metadata.name
         volumeMounts:
+        {{- if .Values.daskSmoke.enabled }}
+        - name: dask-smoke
+          mountPath: /smoke
+          readOnly: true
+        {{- end }}
         - name: network-config
           mountPath: /home/calrissian/.calrissian
           readOnly: true
@@ -41,6 +50,11 @@ spec:
         - name: output
           mountPath: /output
       volumes:
+      {{- if .Values.daskSmoke.enabled }}
+      - name: dask-smoke
+        configMap:
+          name: dask-cleanup-smoke
+      {{- end }}
       - name: network-config
         configMap:
           name: conformance-network-config

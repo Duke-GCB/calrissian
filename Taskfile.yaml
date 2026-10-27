@@ -56,3 +56,8 @@ tasks:
       CONFORMANCE_ID: '{{.ID}}'
     cmds:
     - python3 conformance/run-test.py --version "$CONFORMANCE_VERSION" --id "$CONFORMANCE_ID"
+
+  dask:cleanup:test:
+    desc: Verify Dask cleanup sidecar resources against the deployed dask profile
+    cmds:
+    - python3 dask-gateway/test-cleanup.py

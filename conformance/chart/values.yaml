@@ -32,3 +32,8 @@ networkAccess:
     calrissian-conformance/network-access: "allowed"
   deniedLabels:
     calrissian-conformance/network-access: "denied"
+
+# Settings read by the Calrissian runner while constructing task pods.
+runnerEnv: {}
+daskSmoke:
+  enabled: false

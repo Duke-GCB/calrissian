@@ -25,3 +25,6 @@ __pycache__/
 /conformance/badges/conformance-*/
 # cwltest Markdown badges duplicate the JSON used by the documentation.
 /conformance/badges/**/*.md
+
+# Local Dask integration evidence.
+/dask-gateway/test-results/

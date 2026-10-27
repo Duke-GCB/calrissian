@@ -1,0 +1,12 @@
+{{- if .Values.daskSmoke.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dask-cleanup-smoke
+# Controller wrappers measure the real installed cleanup script, not a substitute.
+data:
+{{- range $path, $_ := .Files.Glob "files/dask-smoke/*" }}
+  {{ base $path }}: |
+{{ $.Files.Get $path | indent 4 }}
+{{- end }}
+{{- end }}
