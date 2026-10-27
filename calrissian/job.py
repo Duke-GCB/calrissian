@@ -639,7 +639,9 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
     # Dictionary of supported features.
     # Not yet complete, only checks features of DockerRequirement
     supported_features = {
-        'DockerRequirement': ['class', 'dockerPull'],
+        # cwltool selects builder.outdir from dockerOutputDirectory; create_kubernetes_runtime
+        # mounts the runner's output directory at that container path.
+        'DockerRequirement': ['class', 'dockerPull', 'dockerOutputDirectory'],
         'http://commonwl.org/cwltool#CUDARequirement': ['class', 'cudaDeviceCount', 
                                                         'cudaDeviceCountMin', 'cudaDeviceCountMax', 
                                                         'cudaVersionMin', 'cudaComputeCapability'],
