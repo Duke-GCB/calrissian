@@ -79,6 +79,15 @@ class CalrissianMainTestCase(TestCase):
                     context = CalrissianRuntimeContext(vars(parser.parse_args(arguments)))
                     self.assertEqual(getattr(context, 'env_from_' + source), names or None)
 
+    def test_pod_priority_class_reaches_runtime_context(self):
+        parser = ArgumentParser()
+        add_arguments(parser)
+        for arguments, expected in [([], None), (['--pod-priority-class', 'high-priority'], 'high-priority')]:
+            with self.subTest(arguments=arguments):
+                parsed = parser.parse_args(arguments)
+                context = CalrissianRuntimeContext(vars(parsed))
+                self.assertEqual(context.pod_priority_class, expected)
+
     @patch('calrissian.main.sys')
     def test_parse_arguments_exits_without_ram_or_cores(self, mock_sys):
         mock_parser = Mock()
