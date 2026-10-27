@@ -69,6 +69,16 @@ class CalrissianMainTestCase(TestCase):
         add_arguments(mock_parser)
         self.assertEqual(mock_parser.add_argument.call_count, 20)
 
+    def test_env_from_options_reach_runtime_context(self):
+        parser = ArgumentParser()
+        add_arguments(parser)
+        for source in ('secret', 'configmap'):
+            for names in ([], ['source1'], ['source1', 'source2']):
+                with self.subTest(source=source, names=names):
+                    arguments = [arg for name in names for arg in ('--env-from-' + source, name)]
+                    context = CalrissianRuntimeContext(vars(parser.parse_args(arguments)))
+                    self.assertEqual(getattr(context, 'env_from_' + source), names or None)
+
     def test_pod_priority_class_reaches_runtime_context(self):
         parser = ArgumentParser()
         add_arguments(parser)
