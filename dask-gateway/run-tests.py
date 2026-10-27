@@ -74,6 +74,8 @@ def run_case(case, image, directory, timeout):
             pods = read_json(*NS, 'get', 'pods', '-l', f'dask-suite-run={name}')['items']
             for task in pods:
                 observed_pods.add(task['metadata']['name'])
+                if task['spec'].get('serviceAccountName') != 'calrissian-workflow':
+                    raise AssertionError('Task did not use the unprivileged workflow ServiceAccount')
                 sidecar = next((c for c in task['spec']['containers'] if c['name'] == 'sidecar-container'), None)
                 if not case['clusters']:
                     if sidecar is not None:

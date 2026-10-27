@@ -9,6 +9,7 @@ spec:
   template:
     spec:
       serviceAccountName: calrissian-sa
+      automountServiceAccountToken: true
       restartPolicy: Never
       initContainers:
       - name: prepare-output
@@ -23,6 +24,8 @@ spec:
         imagePullPolicy: IfNotPresent
         command: [calrissian]
         args:
+        - --pod-serviceaccount
+        - calrissian-workflow
         - --max-ram
         - 2G
         - --max-cores

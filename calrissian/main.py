@@ -55,7 +55,7 @@ def add_arguments(parser):
     parser.add_argument('--pod-gpu-nodeselectors', type=Text, nargs='?', help='YAML file of node selectors to add to Pods submitted that require GPUs')
     parser.add_argument('--pod-automount-service-account-token', action='store_true', default=False, help='Explicitly allow automatic service-account API credentials in spawned task pods')
     parser.add_argument('--pod-gpu-tolerations', type=Text, help='YAML toleration list applied only to task pods allocating nvidia.com/gpu')
-    parser.add_argument('--pod-serviceaccount', type=str, help='Service Account to use for pods management')
+    parser.add_argument('--pod-serviceaccount', type=str, help="ServiceAccount assigned to spawned workflow task pods; defaults to the namespace's default account. Does not configure the Calrissian runner's identity.")
     parser.add_argument('--usage-report', type=Text, nargs='?', help='Output JSON file name to record resource usage')
     parser.add_argument('--stdout', type=Text, nargs='?', help='Output file name to tee standard output (CWL output object)')
     parser.add_argument('--stderr', type=Text, nargs='?', help='Output file name to tee standard error to (includes tool logs)')
