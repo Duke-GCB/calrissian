@@ -98,5 +98,13 @@
     "clusters": 1,
     "should_fail": true,
     "failure_marker": "DASK_SUITE_EXPECTED_EXIT_7"
+  },
+  {
+    "id": 13,
+    "name": "nested-output",
+    "tool": "nested-output.cwl",
+    "workers": 1,
+    "clusters": 1,
+    "should_fail": false
   }
 ]

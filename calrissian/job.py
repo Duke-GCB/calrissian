@@ -1,3 +1,4 @@
+from calrissian.scheduling import apply_gpu_tolerations, load_gpu_tolerations
 from typing import Dict
 from cwltool.job import ContainerCommandLineJob, needs_shell_quoting_re, relink_initialworkdir
 
@@ -14,6 +15,7 @@ from calrissian.k8s import KubernetesClient, CompletionResult
 from calrissian.report import Reporter, TimedResourceReport
 from cwltool.builder import Builder
 import logging
+import copy
 import os
 import yaml
 import shutil
@@ -251,7 +253,13 @@ class KubernetesPodBuilder(object):
             pod_additional_spec.get('automount_service_account_token', False))
         self.no_network_access_pod_labels = no_network_access_pod_labels
         self.network_access_pod_labels = network_access_pod_labels
+        self.container_security_context = pod_additional_spec.get("container_security_context", {
+            'readOnlyRootFilesystem': True,
+            'privileged': False,
+            'allowPrivilegeEscalation': False,
+        })
         self.priority_class = pod_additional_spec.get("pod_priority_class")
+        self.gpu_tolerations = pod_additional_spec.get("gpu_tolerations")
         self.env_from_secret = pod_additional_spec.get("env_from_secret")
         self.env_from_configmap = pod_additional_spec.get("env_from_configmap")
         self.requirements = {} if self.builder.requirements is None else self.builder.requirements
@@ -471,6 +479,12 @@ class KubernetesPodBuilder(object):
         return [{'configMapRef': {'name': configmap}} for configmap in self.env_from_configmap]
 
 
+    def apply_container_security_context(self, pod):
+        for field in ('containers', 'initContainers'):
+            for container in pod['spec'].get(field, []):
+                container['securityContext'] = copy.deepcopy(self.container_security_context)
+        return pod
+
     def build(self):
         spec = {
             'metadata': {
@@ -518,7 +532,8 @@ class KubernetesPodBuilder(object):
 
             spec['spec']['containers'][0]["envFrom"] = envfrom
         
-        return spec
+        return apply_gpu_tolerations(
+            self.apply_container_security_context(spec), self.gpu_tolerations)
 
 
 # This now subclasses ContainerCommandLineJob, but only uses two of its methods:
@@ -703,10 +718,14 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
                 'runAsGroup': os.getgid()
             })
 
-        sc["readOnlyRootFilesystem"] = not runtimeContext.no_read_only
-        sc["privileged"] = False
-        sc["allowPrivilegeEscalation"] = False
         return sc
+
+    def get_container_security_context(self, runtimeContext):
+        return {
+            'readOnlyRootFilesystem': not runtimeContext.no_read_only,
+            'privileged': False,
+            'allowPrivilegeEscalation': False,
+        }
 
     def get_pod_env_vars(self, runtimeContext):
         if runtimeContext.pod_env_vars:
@@ -724,7 +743,10 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         return runtimeContext.env_from_configmap
 
     def get_pod_additional_spec(self, runtimeContext):
-        spec = {}
+        spec = {'container_security_context': self.get_container_security_context(runtimeContext)}
+
+        if runtimeContext.pod_gpu_tolerations:
+            spec["gpu_tolerations"] = load_gpu_tolerations(runtimeContext.pod_gpu_tolerations)
 
         if self.get_pod_priority_class(runtimeContext):
             spec["pod_priority_class"] = self.get_pod_priority_class(runtimeContext)

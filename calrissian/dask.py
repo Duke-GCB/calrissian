@@ -1,3 +1,4 @@
+from calrissian.scheduling import apply_gpu_tolerations
 import os
 import logging
 import yaml
@@ -166,7 +167,7 @@ class KubernetesDaskPodBuilder(KubernetesPodBuilder):
         command_list = ['mkdir -p {};'.format(d) for d in dirs_to_create]
         if command_list:
             containers.append({
-                'name': self.init_container_name(),
+                'name': self.init_container_name() + '-prepare',
                 'image':  os.environ.get(INIT_IMAGE_ENV_VARIABLE, DEFAULT_INIT_IMAGE),
                 'command': ['/bin/sh', '-c', ' '.join(command_list)],
                 'workingDir': self.container_workingdir(),
@@ -244,7 +245,8 @@ class KubernetesDaskPodBuilder(KubernetesPodBuilder):
 
             spec['spec']['containers'][0]["envFrom"] = envfrom
 
-        return spec
+        return apply_gpu_tolerations(
+            self.apply_container_security_context(spec), self.gpu_tolerations)
     
 
 class CalrissianCommandLineDaskJob(CalrissianCommandLineJob):

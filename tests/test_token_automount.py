@@ -33,6 +33,9 @@ def test_task_token_policy(kind, enabled, account):
     assert pod['spec']['containers'][0]['resources']['requests']['cpu'] == '1'
     assert pod['spec']['securityContext'] == {}
     assert pod['spec']['volumes'] == []
+    for container in pod['spec']['containers'] + pod['spec']['initContainers']:
+        assert container['securityContext'] == {
+            'readOnlyRootFilesystem': True, 'privileged': False, 'allowPrivilegeEscalation': False}
 
 
 def test_cli_default_and_opt_in():
