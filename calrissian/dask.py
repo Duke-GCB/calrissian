@@ -1,3 +1,4 @@
+from calrissian.scheduling import apply_gpu_tolerations
 import os
 import logging
 import yaml
@@ -243,7 +244,7 @@ class KubernetesDaskPodBuilder(KubernetesPodBuilder):
 
             spec['spec']['containers'][0]["envFrom"] = envfrom
 
-        return spec
+        return apply_gpu_tolerations(spec, self.gpu_tolerations)
     
 
 class CalrissianCommandLineDaskJob(CalrissianCommandLineJob):
