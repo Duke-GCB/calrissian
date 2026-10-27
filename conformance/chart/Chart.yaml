@@ -1,0 +1,5 @@
+apiVersion: v2
+name: calrissian-conformance
+description: Local CWL conformance development environment
+type: application
+version: 0.1.0

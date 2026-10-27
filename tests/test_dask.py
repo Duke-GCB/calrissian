@@ -41,6 +41,31 @@ class ValidateExtensionTestCase(TestCase):
 
 class KubernetesDaskPodBuilderTestCase(TestCase):
 
+    def test_build_env_from_sources(self):
+        # Issues #194 and #195: references belong on the main container.
+        cases = [
+            (None, None, None),
+            ([], [], None),
+            (['secret1'], None, [{'secretRef': {'name': 'secret1'}}]),
+            (['secret1', 'secret2'], None,
+             [{'secretRef': {'name': 'secret1'}}, {'secretRef': {'name': 'secret2'}}]),
+            (None, ['configmap1'], [{'configMapRef': {'name': 'configmap1'}}]),
+            (None, ['configmap1', 'configmap2'],
+             [{'configMapRef': {'name': 'configmap1'}}, {'configMapRef': {'name': 'configmap2'}}]),
+            (['secret1'], ['configmap1'],
+             [{'secretRef': {'name': 'secret1'}}, {'configMapRef': {'name': 'configmap1'}}]),
+        ]
+        for secrets, configmaps, expected in cases:
+            with self.subTest(secrets=secrets, configmaps=configmaps):
+                self.pod_builder.env_from_secret = secrets
+                self.pod_builder.env_from_configmap = configmaps
+                container = self.pod_builder.build()['spec']['containers'][0]
+                if expected is None:
+                    self.assertNotIn('envFrom', container)
+                else:
+                    self.assertEqual(container['envFrom'], expected)
+
+
     def setUp(self):
         builder = Mock()
         builder.cwlVersion = "v1.2"
@@ -98,6 +123,60 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
         self.pod_builder.dask_gateway_controller = True
         self.assertEqual(['python', '/controller/init-dask.py'], self.pod_builder.init_container_command())
 
+
+    def test_cleanup_resource_defaults(self):
+        with patch.dict(os.environ, {}, clear=True):
+            self.assertEqual(self.pod_builder.sidecar_container_resources(), {
+                'requests': {'cpu': '10m', 'memory': '64Mi'},
+                'limits': {'cpu': '100m', 'memory': '256Mi'},
+            })
+
+    def test_cleanup_resource_overrides(self):
+        with patch.dict(os.environ, {
+            'CALRISSIAN_DASK_CLEANUP_CPU_REQUEST': '20m',
+            'CALRISSIAN_DASK_CLEANUP_CPU_LIMIT': '0.2',
+            'CALRISSIAN_DASK_CLEANUP_MEMORY_REQUEST': '96Mi',
+            'CALRISSIAN_DASK_CLEANUP_MEMORY_LIMIT': '0.5Gi',
+        }, clear=True):
+            self.assertEqual(self.pod_builder.sidecar_container_resources(), {
+                'requests': {'cpu': '20m', 'memory': '96Mi'},
+                'limits': {'cpu': '0.2', 'memory': '0.5Gi'},
+            })
+
+    def test_cleanup_partial_override_and_build_time_lookup(self):
+        with patch.dict(os.environ, {}, clear=True):
+            self.assertEqual(self.pod_builder.sidecar_container_resources()['requests']['cpu'], '10m')
+            os.environ['CALRISSIAN_DASK_CLEANUP_CPU_REQUEST'] = '25m'
+            self.assertEqual(self.pod_builder.sidecar_container_resources()['requests']['cpu'], '25m')
+
+    def test_cleanup_invalid_quantities(self):
+        for value in ['', 'bad', '-1', '0', 'NaN', 'Infinity', '0.0001']:
+            with self.subTest(value=value), patch.dict(os.environ, {
+                'CALRISSIAN_DASK_CLEANUP_CPU_REQUEST': value,
+            }, clear=True):
+                with self.assertRaisesRegex(ValueError, 'CALRISSIAN_DASK_CLEANUP_CPU_REQUEST'):
+                    self.pod_builder.sidecar_container_resources()
+        with patch.dict(os.environ, {'CALRISSIAN_DASK_CLEANUP_MEMORY_LIMIT': '64QQ'}, clear=True):
+            with self.assertRaisesRegex(ValueError, 'CALRISSIAN_DASK_CLEANUP_MEMORY_LIMIT'):
+                self.pod_builder.sidecar_container_resources()
+
+    def test_cleanup_requests_must_fit_limits(self):
+        for resource, value in [('CPU', '1'), ('MEMORY', '1Gi')]:
+            with self.subTest(resource=resource), patch.dict(os.environ, {
+                f'CALRISSIAN_DASK_CLEANUP_{resource}_REQUEST': value,
+            }, clear=True):
+                with self.assertRaisesRegex(ValueError, 'REQUEST must not exceed'):
+                    self.pod_builder.sidecar_container_resources()
+
+    def test_cleanup_does_not_inherit_main_or_gpu_resources(self):
+        self.pod_builder.resources = {'cores': 8, 'ram': 16384, 'gpus': 4}
+        with patch.dict(os.environ, {}, clear=True):
+            result = self.pod_builder.sidecar_container_resources()
+            result['requests']['cpu'] = '99m'
+            self.assertEqual(self.pod_builder.sidecar_container_resources()['requests']['cpu'], '10m')
+            self.assertEqual(set(result['requests']), {'cpu', 'memory'})
+            self.assertEqual(set(result['limits']), {'cpu', 'memory'})
+            self.assertEqual(self.pod_builder.resources['gpus'], 4)
 
     @patch("builtins.open", new_callable=mock_open, read_data="print('Default script')")
     @patch("os.path.join", return_value="/mocked/path/init-dask.py")  # Mock path join
@@ -210,6 +289,7 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
         self.assertEqual(container['command'], expected_command)
 
 
+    @patch.dict(os.environ, {}, clear=True)
     @patch("builtins.open", new_callable=mock_open, read_data="print('Default script')")
     @patch("os.path.join", return_value="/mocked/path/file-dask.py")
     @patch('calrissian.job.random_tag')
@@ -291,10 +371,8 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
                             {'name': 'DASK_CLUSTER_NAME_PATH', 'value': '/shared/dask_cluster_name.txt'}
                         ],
                         'resources': {
-                            'requests': {
-                                'cpu': '1',
-                                'memory': '1024Mi'
-                            }
+                            'requests': {'cpu': '10m', 'memory': '64Mi'},
+                            'limits': {'cpu': '100m', 'memory': '256Mi'},
                         },
                         'volumeMounts': self.volume_mounts,
                         'workingDir': '/homedir',

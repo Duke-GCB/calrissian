@@ -1,24 +1,16 @@
-FROM python:3.10.0-slim-buster
-LABEL maintainer="dan.leehr@duke.edu"
+# Skaffold supplies the image built from the production Dockerfile.
+ARG CALRISSIAN_IMAGE
+FROM ${CALRISSIAN_IMAGE}
 
-# cwltool requires nodejs
-RUN apt-get update && apt-get install -y nodejs
-
-# To run conformance tests we must install cwltest
-RUN pip install cwltest
-
-RUN mkdir -p /app
-COPY . /app
-RUN pip install /app
-WORKDIR /app
-
-# Create a default user and home directory
-ENV HOME=/home/calrissian
-# home dir is created by useradd with group (g=0) to comply with
-# https://docs.openshift.com/container-platform/3.11/creating_images/guidelines.html#openshift-specific-guidelines
-RUN useradd -u 1001 -r -g 0 -m -d ${HOME} -s /sbin/nologin \
-      -c "Default Calrissian User" calrissian && \
-  chown -R 1001:0 /app && \
-  chmod g+rwx ${HOME}
+# The production virtualenv deliberately has no pip. Restore it temporarily,
+# and constrain installed packages so adding cwltest cannot upgrade the runtime.
+COPY --chown=1001:0 scripts/bootstrap-pip.sh /tmp/bootstrap-pip.sh
+RUN python -m ensurepip && \
+    sh /tmp/bootstrap-pip.sh && \
+    python -m pip freeze > /tmp/production-constraints.txt && \
+    python -m pip install --no-cache-dir -c /tmp/production-constraints.txt cwltest && \
+    python -m pip check && \
+    python -m pip uninstall --yes pip && \
+    rm /tmp/production-constraints.txt /tmp/bootstrap-pip.sh
 
 CMD ["bash"]

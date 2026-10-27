@@ -1,4 +1,5 @@
 import functools
+import math
 import threading
 from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED, ALL_COMPLETED
 from queue import Queue
@@ -23,6 +24,14 @@ class InconsistentResourcesException(Exception):
 
 class IncompleteStatusException(Exception):
     pass
+
+
+class SelectedResources(dict):
+    """CWL runtime values with pod limits kept outside the expression namespace."""
+
+    def __init__(self, runtime, limits):
+        super().__init__(runtime)
+        self.limits = limits
 
 
 class Resources(object):
@@ -84,7 +93,7 @@ class Resources(object):
 
     @classmethod
     def from_dict(cls, d):
-        return cls(d.get(cls.RAM, 0), d.get(cls.CORES, 0), d.get(cls.GPUS, 0))
+        return cls(d.get(cls.RAM, 0), d.get(cls.CORES, 0), d.get(cls.GPUS, d.get("cudaDeviceCount", 0)))
 
     @classmethod
     def from_job(cls, job):
@@ -194,12 +203,13 @@ class ThreadPoolJobExecutor(JobExecutor):
         Checks if requested resources fit within the total allocation, raises WorkflowException if not.
         If fits, returns a dictionary of resources that satisfy the requested min/max
 
-        :param request: dict of ramMin, coresMin, ramMax, coresMax
+        :param request: evaluated CPU, RAM, GPU and storage min/max requirements
         :param runtime_context: RuntimeContext, unused
         :return: dict of selected resources
         """
-        requested_min = Resources(request.get('ramMin'), request.get('coresMin'), request.get('cudaDeviceCountMin', 0))
-        requested_max = Resources(request.get('ramMax'), request.get('coresMax'), request.get('cudaDeviceCountMax', 0))
+        # Match cwltool's integer MiB runtime values before checking capacity.
+        requested_min = Resources(math.ceil(request['ramMin']), request.get('coresMin'), request.get('cudaDeviceCountMin', 0))
+        requested_max = Resources(math.ceil(request['ramMax']), request.get('coresMax'), request.get('cudaDeviceCountMax', 0))
 
         if requested_min.exceeds(self.total_resources):
             raise WorkflowException('Requested minimum resources {} exceed total available {}'.format(
@@ -209,11 +219,20 @@ class ThreadPoolJobExecutor(JobExecutor):
         rsc_requested = Resources.min(requested_min, self.total_resources)
         rsc_limit = Resources.min(requested_max, self.total_resources)
 
-        result = rsc_requested.to_dict()
-        result.update({
-            "ramMax": rsc_limit.to_dict().get('ram'),
-            "coresMax": rsc_limit.to_dict().get('cores'),
-            "cudaDeviceCountMax": rsc_limit.to_dict().get('gpus')
+        runtime = {
+            "ram": rsc_requested.ram,
+            "cores": rsc_requested.cores,
+            # Storage is reported to CWL expressions; it is not part of the
+            # executor's CPU/RAM/GPU scheduling pool or a PVC quota.
+            "tmpdirSize": math.ceil(request.get('tmpdirMin', 1024)),
+            "outdirSize": math.ceil(request.get('outdirMin', 1024)),
+        }
+        if 'cudaDeviceCountMin' in request:
+            runtime['cudaDeviceCount'] = rsc_requested.gpus
+        result = SelectedResources(runtime, {
+            "ramMax": rsc_limit.ram,
+            "coresMax": rsc_limit.cores,
+            "cudaDeviceCountMax": rsc_limit.gpus,
         })
 
         return result

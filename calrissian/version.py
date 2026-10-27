@@ -1,11 +1,11 @@
-import pkg_resources  # part of setuptools
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as installed_version
 
 
 def package_version(package_name):
     try:
-        pkg = pkg_resources.require(package_name)
-        return pkg[0].version
-    except pkg_resources.DistributionNotFound:
+        return installed_version(package_name)
+    except PackageNotFoundError:
         return 'unknown'
 
 

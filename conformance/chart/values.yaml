@@ -1,0 +1,39 @@
+image: conformance:latest
+storage:
+  size: 1Gi
+  className: standard
+
+# Archive filenames and upstream URLs used by the staging Job.
+# Changing versions may also require updating the version-specific test Job paths.
+staging:
+  archives:
+    v1_0:
+      name: 1-0
+      baseUrl: https://github.com/common-workflow-language/common-workflow-language/archive
+      file: v1.0.2.zip
+    v1_1:
+      name: 1-1
+      baseUrl: https://github.com/common-workflow-language/cwl-v1.1/archive
+      file: v1.1.0.zip
+    v1_2:
+      name: 1-2
+      baseUrl: https://github.com/common-workflow-language/cwl-v1.2/archive/refs/tags
+      file: v1.2.0.zip
+    v1_2_1:
+      name: 1-2-1
+      baseUrl: https://github.com/common-workflow-language/cwl-v1.2/archive/refs/tags
+      file: v1.2.1.zip
+
+# Labels applied by Calrissian to the CWL task pods it creates.
+# Use distinct values for the same key so the policy selectors cannot overlap.
+networkAccess:
+  enabled: true
+  allowedLabels:
+    calrissian-conformance/network-access: "allowed"
+  deniedLabels:
+    calrissian-conformance/network-access: "denied"
+
+# Settings read by the Calrissian runner while constructing task pods.
+runnerEnv: {}
+daskSmoke:
+  enabled: false

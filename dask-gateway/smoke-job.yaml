@@ -1,0 +1,77 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: dask-cleanup-smoke
+  namespace: calrissian-conformance
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 600
+  template:
+    spec:
+      serviceAccountName: calrissian-sa
+      restartPolicy: Never
+      initContainers:
+      - name: prepare-output
+        image: alpine:3.10
+        command: [chmod, "777", /output]
+        volumeMounts:
+        - name: output
+          mountPath: /output
+      containers:
+      - name: runner
+        image: worker:latest
+        imagePullPolicy: IfNotPresent
+        command: [calrissian]
+        args:
+        - --max-ram
+        - 2G
+        - --max-cores
+        - "2"
+        - --default-container
+        - worker:latest
+        - --dask-gateway-url
+        - http://traefik-dask-gateway.dask-gateway
+        - --dask-script-configmap
+        - dask-cleanup-smoke
+        - --pod-labels
+        - /smoke/pod-labels.yaml
+        - --tool-logs-basepath
+        - /output/dask-cleanup-smoke/logs
+        - --outdir
+        - /output/dask-cleanup-smoke/results
+        - /smoke/cleanup-smoke.cwl
+        env:
+        - name: TMPDIR
+          value: /output
+        - name: CALRISSIAN_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: RETRY_ATTEMPTS
+          value: "1"
+        volumeMounts:
+        - name: data
+          mountPath: /conformance
+          readOnly: true
+        - name: output
+          mountPath: /output
+        - name: smoke
+          mountPath: /smoke
+          readOnly: true
+        - name: network-config
+          mountPath: /home/calrissian/.calrissian
+          readOnly: true
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: conformance-test-data
+          readOnly: true
+      - name: output
+        persistentVolumeClaim:
+          claimName: conformance-test-output
+      - name: smoke
+        configMap:
+          name: dask-cleanup-smoke
+      - name: network-config
+        configMap:
+          name: conformance-network-config

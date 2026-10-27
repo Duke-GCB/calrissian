@@ -17,15 +17,15 @@ spec:
       - name: tests-1-2-1
         imagePullPolicy: IfNotPresent
         image: conformance:latest
-        workingDir: "/conformance/cwl-v1.2-1.2.1_proposed"
+        workingDir: "/conformance/cwl-v1.2-1.2.1"
         command: ["cwltest"]
         args:
         - "--test"
-        - "/conformance/cwl-v1.2-1.2.1_proposed/conformance_tests.yaml"
+        - "/conformance/cwl-v1.2-1.2.1/conformance_tests.yaml"
         - "--tool"
         - "calrissian"
         - "--badgedir"
-        - "/output/badges-1.2.1_proposed"
+        - "/output/badges-1.2.1"
         - "--verbose"
         - "--"
         - "--max-ram"
@@ -42,6 +42,9 @@ spec:
         - name: TMPDIR
           value: "/output"
         volumeMounts:
+        - mountPath: /home/calrissian/.calrissian
+          name: network-config
+          readOnly: true
         - mountPath: /conformance
           name: conformance-test-data
           readOnly: true
@@ -49,6 +52,10 @@ spec:
           name: conformance-test-output
       restartPolicy: Never
       volumes:
+      - name: network-config
+        configMap:
+          name: conformance-network-config
+          optional: true
       - name: conformance-test-data
         persistentVolumeClaim:
           claimName: conformance-test-data

@@ -3,9 +3,6 @@ kind: Pod
 metadata:
   name: inspect-volumes
 spec:
-  volumes:
-  - name: shared-data
-    emptyDir: {}
   containers:
   - name: nginx
     image: nginx:latest
@@ -28,5 +25,3 @@ spec:
   - name: conformance-test-output
     persistentVolumeClaim:
       claimName: conformance-test-output
-  hostNetwork: true
-  dnsPolicy: Default

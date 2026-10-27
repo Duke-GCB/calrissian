@@ -2,6 +2,8 @@ import os
 import logging
 import yaml
 import threading
+from decimal import InvalidOperation
+from kubernetes.utils.quantity import parse_quantity
 
 from typing import List, Optional, Union
 from datetime import datetime
@@ -97,6 +99,37 @@ class KubernetesDaskPodBuilder(KubernetesPodBuilder):
         return ['python', '-c', file_content]
 
 
+    def sidecar_container_resources(self):
+        """Read runner settings for the cleanup container at pod-build time."""
+        defaults = {
+            'requests': {'cpu': '10m', 'memory': '64Mi'},
+            'limits': {'cpu': '100m', 'memory': '256Mi'},
+        }
+        resources = {}
+        quantities = {}
+        for bound, values in defaults.items():
+            resources[bound] = {}
+            for resource, default in values.items():
+                suffix = 'REQUEST' if bound == 'requests' else 'LIMIT'
+                name = f'CALRISSIAN_DASK_CLEANUP_{resource.upper()}_{suffix}'
+                value = os.environ.get(name, default).strip()
+                try:
+                    quantity = parse_quantity(value)
+                    if not quantity.is_finite() or quantity <= 0:
+                        raise ValueError('must be positive and finite')
+                    if resource == 'cpu' and quantity % parse_quantity('1m'):
+                        raise ValueError('CPU must be a multiple of 1m')
+                except (ValueError, InvalidOperation) as error:
+                    raise ValueError(f'Invalid {name}={value!r}: {error}') from error
+                resources[bound][resource] = value
+                quantities[bound, resource] = quantity
+        for resource in ('cpu', 'memory'):
+            if quantities['requests', resource] > quantities['limits', resource]:
+                raise ValueError(
+                    f'CALRISSIAN_DASK_CLEANUP_{resource.upper()}_REQUEST must not exceed '
+                    f'CALRISSIAN_DASK_CLEANUP_{resource.upper()}_LIMIT')
+        return resources
+
     def container_environment(self):
         environment = []
         for name, value in sorted(self.environment.items()):
@@ -173,7 +206,7 @@ class KubernetesDaskPodBuilder(KubernetesPodBuilder):
                         'image': str(self.container_image),
                         'command': self.sidecar_container_command(),
                         'env': self.container_environment(),
-                        'resources': self.container_resources(),
+                        'resources': self.sidecar_container_resources(),
                         'volumeMounts': self.volume_mounts,
                         'workingDir': self.container_workingdir(),
                         }

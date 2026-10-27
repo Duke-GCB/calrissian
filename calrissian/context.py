@@ -8,6 +8,7 @@ class CalrissianLoadingContext(LoadingContext):
 
     def __init__(self, **kwargs):
         kwargs['construct_tool_object'] = calrissian_make_tool
+        kwargs.setdefault('relax_path_checks', True)
         return super(CalrissianLoadingContext, self).__init__(kwargs)
 
 

@@ -1,5 +1,8 @@
 name: ci-main-latest
 
+env:
+  VIRTUALENV_PIP: '26.2.2'
+
 on:
   push:
     branches:
@@ -27,13 +30,14 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install hatch
+          sh scripts/bootstrap-pip.sh
+          python -m pip install "certifi>=2026.10.19" "uv>=0.13.4" hatch
 
       - name: Build package
         run: hatch build
 
       - name: Run tests
-        run: hatch -e test run nose2 --verbose
+        run: hatch run test.py3.12:testv
 
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
@@ -41,6 +45,6 @@ jobs:
       - name: Build & push latest image
         run: |
           IMAGE_ID=ghcr.io/duke-gcb/calrissian/calrissian
-          docker build . --file Dockerfile --tag calrissian:latest
+          docker build --pull --no-cache . --file Dockerfile --tag calrissian:latest
           docker tag calrissian:latest $IMAGE_ID:latest
           docker push $IMAGE_ID:latest

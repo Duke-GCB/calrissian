@@ -1,59 +1,58 @@
-# Stage 1: Build stage
-FROM rockylinux:9.3-minimal AS build
+FROM rockylinux/rockylinux:10.2-minimal AS builder
 
-# Install necessary build tools
-RUN microdnf install -y curl tar
-
-# Download the hatch tar.gz file from GitHub
-RUN curl -L https://github.com/pypa/hatch/releases/latest/download/hatch-x86_64-unknown-linux-gnu.tar.gz -o /tmp/hatch-x86_64-unknown-linux-gnu.tar.gz
-
-# Extract the hatch binary
-RUN tar -xzf /tmp/hatch-x86_64-unknown-linux-gnu.tar.gz -C /tmp/
-
-# Stage 2: Final stage
-FROM rockylinux:9.3-minimal
-
-# Install runtime dependencies
-RUN microdnf install -y --nodocs nodejs git && \
+RUN microdnf -y update && \
+    microdnf -y install ca-certificates python3 python3-pip python3-devel gcc gcc-c++ make git && \
     microdnf clean all
 
-# Set up a default user and home directory
-ENV HOME=/home/calrissian
+RUN python3 -m venv /opt/build-venv
+ENV PATH="/opt/build-venv/bin:${PATH}"
+# Hatch creates additional virtualenvs for isolated builds.
+ENV VIRTUALENV_PIP=26.2.2
 
-# Create a user with UID 1001, group root, and a home directory
-RUN useradd -u 1001 -r -g 0 -m -d ${HOME} -s /sbin/nologin \
+COPY scripts/bootstrap-pip.sh /tmp/bootstrap-pip.sh
+RUN sh /tmp/bootstrap-pip.sh
+
+ARG HATCH_VERSION=1.18.0
+RUN python -m pip install --no-cache-dir "certifi>=2026.10.19" "uv>=0.13.4" "hatch==${HATCH_VERSION}"
+
+WORKDIR /src
+COPY . /src
+
+# Build the application and collect dependency wheels for the runtime image.
+RUN hatch build -t wheel && \
+    python -m pip wheel --no-cache-dir --wheel-dir /wheels "pip==26.2.2" /src/dist/*.whl
+
+FROM rockylinux/rockylinux:10.2-minimal AS runtime
+
+# Use the updated OS trust store instead of Node's bundled CA snapshot.
+ENV NODE_OPTIONS="--use-openssl-ca"
+
+# cwltool uses Node.js to evaluate CWL JavaScript expressions.
+RUN microdnf -y update && \
+    microdnf -y install ca-certificates python3 python3-pip nodejs git libstdc++ sqlite-libs zlib shadow-utils && \
+    microdnf clean all
+
+ENV HOME=/home/calrissian
+RUN /usr/sbin/useradd -u 1001 -r -g 0 -m -d ${HOME} -s /sbin/nologin \
         -c "Default Calrissian User" calrissian && \
-    mkdir -p /app && \
-    mkdir -p /prod && \
+    mkdir -p /app /prod && \
     chown -R 1001:0 /app && \
     chmod g+rwx ${HOME} /app
 
-# Copy the hatch binary from the build stage
-COPY --from=build /tmp/hatch /usr/bin/hatch
-
-# Ensure the hatch binary is executable
-RUN chmod +x /usr/bin/hatch
-
-# Switch to the non-root user
 USER calrissian
-
-# Copy the application files into the /app directory
-COPY --chown=1001:0 . /app
 WORKDIR /app
 
-# Set up virtual environment paths
-ENV VIRTUAL_ENV=/app/envs/calrissian
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+ENV VIRTUAL_ENV=/app/venv
+ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
+RUN python3 -m venv "${VIRTUAL_ENV}"
 
-# Prune any existing environments and create a new production environment
-RUN hatch env prune && \
-    hatch env create prod && \
-    hatch run prod:calrissian --help && \
-    rm -fr /app/.git /app/.pytest_cache
+COPY --from=builder --chown=1001:0 /wheels/ /app/dist/
+RUN python -m pip install --no-cache-dir --no-index --find-links=/app/dist "pip==26.2.2" && \
+    python -m pip install --no-cache-dir --no-index --find-links=/app/dist calrissian && \
+    python -m pip check && \
+    calrissian --help && \
+    node --version && \
+    python -m pip uninstall --yes pip && \
+    rm -rf /app/dist
 
-RUN hatch run prod:calrissian --help
-
-WORKDIR /app
-
-# Set the default command to run when the container starts
 CMD ["calrissian"]
