@@ -66,6 +66,14 @@ class KubernetesDaskPodBuilder(KubernetesPodBuilder):
         self.dask_gateway_controller = dask_gateway_controller
     
         self.dask_requirement = next((elem for elem in self.requirements if elem['class'] == 'https://calrissian-cwl.github.io/schema#DaskGatewayRequirement'), None)
+        if self.dask_requirement is not None:
+            # Resolve expressions using this job's inputs without changing the
+            # shared process requirement used by other workflow invocations.
+            self.dask_requirement = {
+                key: self.builder.do_eval(value)
+                if isinstance(value, str) and ('$(' in value or '${' in value) else value
+                for key, value in self.dask_requirement.items()
+            }
     
 
     def container_args(self):
@@ -449,8 +457,13 @@ class KubernetesDaskClient(KubernetesClient):
                     self._clear_pod()
                     w.stop()
             
-            last_status = self.get_last_or_none(pod.status.container_statuses)
-            if last_status is None or not self.state_is_terminated(last_status.state):
+            statuses = self.get_list_or_none(pod.status.container_statuses)
+            # Kubernetes does not promise container status order. Wait for the
+            # cleanup sidecar too, but report the CWL command's exit status.
+            main_status = self.get_container_by_name(statuses, 'main-container')
+            all_terminated = bool(statuses) and all(
+                self.state_is_terminated(status.state) for status in statuses)
+            if not all_terminated:
                 statuses = self.get_list_or_none(pod.status.container_statuses)
                 if statuses is None:
                     continue
@@ -467,13 +480,13 @@ class KubernetesDaskClient(KubernetesClient):
                         continue
                     else:
                         raise CalrissianJobException('Unexpected pod container status', status)
-            elif self.state_is_terminated(last_status.state):
+            elif main_status is not None:
                 log.info('Handling terminated pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
                 container = self.get_container_by_name(pod.spec.containers, 'main-container')
                 if container is None:
                     raise CalrissianJobException("Container 'main-container' not found in pod spec", pod)
                 node_selectors = self._get_pod_node_selector()
-                self._handle_completion(last_status.state, container, node_selectors)
+                self._handle_completion(main_status.state, container, node_selectors)
                 if self.should_delete_pod():
                     with DaskPodMonitor() as monitor:
                         self.delete_pod_name(pod.metadata.name)
@@ -483,7 +496,7 @@ class KubernetesDaskClient(KubernetesClient):
                 # stop watching for events, our pod is done. Causes wait loop to exit
                 w.stop()
             else:
-                raise CalrissianJobException('Unexpected pod container status', last_status)
+                raise CalrissianJobException("Container 'main-container' not found in pod status", pod)
         
         # When the pod is done we should have a completion result
         # Otherwise it will lead to further exceptions
