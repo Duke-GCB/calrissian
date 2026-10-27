@@ -1,6 +1,9 @@
 name: build-test
 on: [push, pull_request]
 
+env:
+  VIRTUALENV_PIP: '26.2.2'
+
 permissions:
   contents: read
 
@@ -21,8 +24,8 @@ jobs:
         cache: "pip"
     - name: Install dependencies
       run: |
-        # python -m pip install --upgrade pip
-        pip install hatch
+        sh scripts/bootstrap-pip.sh
+        python -m pip install "certifi>=2026.10.19" "uv>=0.13.4" hatch
     - name: Build
       run: hatch build
     - name: Test
