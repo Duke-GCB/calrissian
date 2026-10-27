@@ -654,6 +654,7 @@ class KubernetesPodBuilderTestCase(TestCase):
                      }
                 ],
                 'restartPolicy': 'Never',
+                'automountServiceAccountToken': False,
                 'volumes': self.volumes,
                 'nodeSelector': {
                     "disktype": "ssd",
@@ -712,7 +713,7 @@ class CalrissianCommandLineJobTestCase(TestCase):
                 with self.subTest(source=source, names=names):
                     key = 'env_from_' + source
                     context = CalrissianRuntimeContext({key: names})
-                    expected = {'container_security_context': {
+                    expected = {'automount_service_account_token': False, 'container_security_context': {
                         'readOnlyRootFilesystem': True, 'privileged': False, 'allowPrivilegeEscalation': False}}
                     if names:
                         expected[key] = names
@@ -968,7 +969,7 @@ class CalrissianCommandLineJobTestCase(TestCase):
         job = self.make_job()
         job.outdir = '/outdir'
         job.tmpdir = '/tmpdir'
-        mock_runtime_context = Mock(tmpdir_prefix='TP', pod_gpu_tolerations=None, pod_serviceaccount=None)
+        mock_runtime_context = Mock(tmpdir_prefix='TP', pod_automount_service_account_token=False, pod_gpu_tolerations=None, pod_serviceaccount=None)
         built = job.create_kubernetes_runtime(mock_runtime_context)
         # Adds volume binding for outdir
         self.assertEqual(mock_add_volume_binding.call_args, call('/real/outdir', '/out', True))
