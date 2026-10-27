@@ -224,6 +224,10 @@ Job. To preview the generated Job, use
 
 ### Network access policies
 
+See the [published cluster guide](../docs/cluster-configuration.md#enforcing-cwl-network-access)
+for matching policy/label examples, deployment configuration, and an
+allowed/denied/allowed HTTP validation procedure.
+
 The chart's `networkAccess` values configure `allowedLabels` and `deniedLabels`
 for CWL task pods. Both maps must contain a shared key with different values,
 so the selectors cannot overlap. The chart generates label files and
