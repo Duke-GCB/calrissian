@@ -4,6 +4,8 @@ from calrissian.main import main, add_arguments, parse_arguments
 from calrissian.main import handle_sigterm, install_signal_handler, install_tees, flush_tees
 from calrissian.main import activate_logging, get_log_level, print_version
 import logging
+from argparse import ArgumentParser
+from calrissian.context import CalrissianRuntimeContext
 
 class CalrissianMainTestCase(TestCase):
 
@@ -66,6 +68,15 @@ class CalrissianMainTestCase(TestCase):
         mock_parser = Mock()
         add_arguments(mock_parser)
         self.assertEqual(mock_parser.add_argument.call_count, 20)
+
+    def test_pod_priority_class_reaches_runtime_context(self):
+        parser = ArgumentParser()
+        add_arguments(parser)
+        for arguments, expected in [([], None), (['--pod-priority-class', 'high-priority'], 'high-priority')]:
+            with self.subTest(arguments=arguments):
+                parsed = parser.parse_args(arguments)
+                context = CalrissianRuntimeContext(vars(parsed))
+                self.assertEqual(context.pod_priority_class, expected)
 
     @patch('calrissian.main.sys')
     def test_parse_arguments_exits_without_ram_or_cores(self, mock_sys):

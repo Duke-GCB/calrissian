@@ -477,6 +477,10 @@ class KubernetesPodBuilderTestCase(TestCase):
         self.assertIsNotNone(self.pod_builder.priority_class)
         self.assertEqual(self.pod_builder.priority_class, "standard-priority")
 
+    def test_build_omits_unset_priority_class(self):
+        self.pod_builder.priority_class = None
+        self.assertNotIn('priorityClassName', self.pod_builder.build()['spec'])
+
     def test_init_containers_empty_when_no_stdout_or_stderr(self):
         self.pod_builder.stdout = None
         self.pod_builder.stderr = None
@@ -598,6 +602,17 @@ class CalrissianCommandLineJobTestCase(TestCase):
         mock_volume_builder.return_value.add_persistent_volume_entries_from_pod.assert_called_with(
             mock_client.return_value.get_current_pod.return_value
         )
+
+    def test_runtime_priority_class_reaches_pod_additional_spec(self, mock_volume_builder, mock_client):
+        job = self.make_job()
+        for priority_class in (None, 'high-priority'):
+            with self.subTest(priority_class=priority_class):
+                context = CalrissianRuntimeContext({'pod_priority_class': priority_class})
+                spec = job.get_pod_additional_spec(context)
+                if priority_class is None:
+                    self.assertNotIn('pod_priority_class', spec)
+                else:
+                    self.assertEqual(spec['pod_priority_class'], priority_class)
 
     def test_check_requirements_raises_with_docker_build(self, mock_volume_builder, mock_client):
         self.requirements = [{'class': 'DockerRequirement', 'dockerBuild': 'FROM ubuntu:latest\n'}]
