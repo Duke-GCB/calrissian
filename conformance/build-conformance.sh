@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker build -t calrissian:conformance -f Dockerfile.conformance ..
+docker build --pull --no-cache -t calrissian:conformance -f Dockerfile.conformance ..
