@@ -531,3 +531,25 @@ Review these deployment limits:
 
 See the [Kubernetes NetworkPolicy documentation](https://kubernetes.io/docs/concepts/services-networking/network-policies/)
 for enforcement prerequisites, additive behavior, and implementation limitations.
+
+## Fixed container output directories
+
+Tools can choose a fixed output path inside their container with
+`DockerRequirement.dockerOutputDirectory`:
+
+```yaml
+requirements:
+  DockerRequirement:
+    dockerPull: example/tool:1.0
+    dockerOutputDirectory: /results
+```
+
+Calrissian mounts the task's writable output directory at `/results` and uses
+that path as the container working directory, `HOME`, and `runtime.outdir`.
+The runner retains its own storage path for staging and output collection;
+concurrent tasks can use the same container path with separate output directories.
+This writable volume works with the default read-only container root filesystem.
+Mounting at an existing image directory hides its original contents for that task.
+
+Output bindings still resolve within the designated output directory.
+This feature does not enable Dockerfile builds, image imports, or image loads.
