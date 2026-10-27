@@ -18,3 +18,4 @@ site
 .task
 docs/api
 docs/uml
+__pycache__/
