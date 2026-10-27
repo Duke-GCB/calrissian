@@ -235,7 +235,7 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
         init_containers = self.pod_builder.init_containers()
         self.assertEqual(len(init_containers), 2)
         container = init_containers[0]
-        self.assertEqual(container['name'], 'podname-init')
+        self.assertEqual(container['name'], 'podname-init-prepare')
         self.assertEqual(container['image'], DEFAULT_INIT_IMAGE)
         self.assertEqual(container['command'], ['/bin/sh','-c','mkdir -p out/to; mkdir -p err/to;'])
         self.assertEqual(container['volumeMounts'], self.pod_builder.volume_mounts)
@@ -266,7 +266,7 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
         container = init_containers[0]
         dask_container = init_containers[1]
 
-        self.assertEqual(container['name'], 'podname-init')
+        self.assertEqual(container['name'], 'podname-init-prepare')
         self.assertEqual(container['image'], DEFAULT_INIT_IMAGE)
         self.assertEqual(container['command'], ['/bin/sh','-c','mkdir -p out/to; mkdir -p err/to;'])
         self.assertEqual(container['volumeMounts'], self.pod_builder.volume_mounts)
@@ -392,12 +392,18 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
             }
         }
 
+        for container in expected['spec']['containers'] + expected['spec']['initContainers']:
+            container['securityContext'] = {
+                'readOnlyRootFilesystem': True, 'privileged': False, 'allowPrivilegeEscalation': False}
         self.assertEqual(expected, self.pod_builder.build())
 
         # test build with custom script
         self.pod_builder.dask_gateway_controller = True
         expected['spec']['initContainers'][0]['command'] = ['python', '/controller/init-dask.py']
         expected['spec']['containers'][1]['command'] = ['python', '/controller/dispose-dask.py']
+        for container in expected['spec']['containers'] + expected['spec']['initContainers']:
+            container['securityContext'] = {
+                'readOnlyRootFilesystem': True, 'privileged': False, 'allowPrivilegeEscalation': False}
         self.assertEqual(expected, self.pod_builder.build())
 
 

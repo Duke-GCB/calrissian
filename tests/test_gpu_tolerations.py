@@ -38,6 +38,9 @@ def test_conditional_pod_configuration(kind, configured, resources, expected):
         pod = pod_builder.build()
     assert pod['spec']['nodeSelector'] == {'pool': 'gpu'}
     assert pod['spec']['containers'][0]['resources'] == resources
+    for container in pod['spec']['containers'] + pod['spec']['initContainers']:
+        assert container['securityContext'] == {
+            'readOnlyRootFilesystem': True, 'privileged': False, 'allowPrivilegeEscalation': False}
     if expected and configured:
         assert pod['spec']['tolerations'] == TOLERATIONS
         pod['spec']['tolerations'][0]['key'] = 'modified'
