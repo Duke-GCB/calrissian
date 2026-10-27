@@ -19,9 +19,9 @@ metadata:
 data:
   default.json: |
     {{- if .Values.networkAccess.enabled }}
-    {"network_access_pod_labels": "/home/calrissian/.calrissian/network-allowed.yaml", "no_network_access_pod_labels": "/home/calrissian/.calrissian/network-denied.yaml"}
+    {"pod_serviceaccount": "calrissian-workflow", "network_access_pod_labels": "/home/calrissian/.calrissian/network-allowed.yaml", "no_network_access_pod_labels": "/home/calrissian/.calrissian/network-denied.yaml"}
     {{- else }}
-    {}
+    {"pod_serviceaccount": "calrissian-workflow"}
     {{- end }}
   network-allowed.yaml: |
     {{- range $key, $value := .Values.networkAccess.allowedLabels }}

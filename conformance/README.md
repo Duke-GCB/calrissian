@@ -292,3 +292,21 @@ staged data, permissions, and conformance image.
 Calrissian submits a task pod; optional hints are ignored with a warning.
 Calrissian does not impose a Kubernetes pod deadline as a substitute, since
 pod startup and image-pull time are outside CWL command execution time.
+
+### Runner and task ServiceAccounts
+
+The chart binds management permissions only to `calrissian-sa`, used by the
+interactive session and conformance/Dask runner Jobs. Task pods use
+`calrissian-workflow`, which has token automount disabled and no chart-created
+RoleBindings. `default` is not included in the runner RoleBinding. The chart's
+runner configuration selects the workflow account even when network policies
+are disabled. Use the updated Job manifests when upgrading an existing setup.
+
+After deployment, verify effective namespace and cluster-wide RBAC:
+
+```sh
+python3 examples/service-account-separation/check-permissions.py
+```
+
+See [cluster configuration](../docs/cluster-configuration.md) for a production
+example, account selection, and migration from the old default-account grants.

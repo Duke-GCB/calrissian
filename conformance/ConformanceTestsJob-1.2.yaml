@@ -6,6 +6,8 @@ spec:
   backoffLimit: 0
   template:
     spec:
+      serviceAccountName: calrissian-sa
+      automountServiceAccountToken: true
       initContainers:
       - name: prep-1-2
         image: alpine:3.10
@@ -28,6 +30,8 @@ spec:
         - "/output/badges-1.2.0"
         - "--verbose"
         - "--"
+        - "--pod-serviceaccount"
+        - "calrissian-workflow"
         - "--max-ram"
         - "8G"
         - "--max-cores"

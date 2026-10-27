@@ -13,6 +13,7 @@ spec:
         app: calrissian-session
     spec:
       serviceAccountName: calrissian-sa
+      automountServiceAccountToken: true
       initContainers:
       - name: prepare-output
         image: alpine:3.10
