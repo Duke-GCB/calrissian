@@ -50,7 +50,7 @@ def k8s_safe_name(name):
     Kubernetes does not allow underscores, and in some names/labels no '.'
     DNS-1123 label must consist of lower case alphanumeric characters or '-',
     and must start and end with an alphanumeric character
-    regex used for validation is '[a-z0-9]([-a-z0-9]*[a-z0-9])?'
+    regex used for validation is ``[a-z0-9]([-a-z0-9]*[a-z0-9])?``
 
     :param name:
     :return: a safe name

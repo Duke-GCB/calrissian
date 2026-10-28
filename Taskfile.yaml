@@ -69,7 +69,35 @@ tasks:
     cmds:
     - 'python3 dask-gateway/run-tests.py ${DASK_TEST_ID:+--id "$DASK_TEST_ID"}'
 
+  docs:cli:
+    desc: Refresh the CLI reference from the argument parser
+    cmds:
+    - uv run --no-project --with-editable . python scripts/generate-cli-reference.py
+
+  docs:api:
+    desc: Generate the Python API reference from the current source
+    cmds:
+    - uv run --no-project --with . --with pdocs --with legacy-cgi --with setuptools pdocs as_markdown --output_dir ./docs/api/latest --exclude_source --overwrite calrissian
+    - python3 scripts/fix-api-doc-links.py
+
+  docs:uml:
+    desc: Generate class and package diagrams (requires Graphviz)
+    preconditions:
+    - sh: command -v dot
+      msg: Install Graphviz (dot) before generating UML diagrams
+    cmds:
+    - mkdir -p docs/uml
+    - uv run --no-project --with pylint pyreverse --all-ancestors --show-builtin --output svg --output-directory ./docs/uml/ --source-roots ./calrissian/ --verbose ./calrissian/
+
+  docs:generate:
+    desc: Generate the CLI reference, API reference, and UML diagrams
+    cmds:
+    - task: docs:cli
+    - task: docs:api
+    - task: docs:uml
+
   docs:serve:
     desc: Serve the documentation locally
     cmds:
+    - task: docs:generate
     - uv run --no-project --with mkdocs --with mkdocs-material mkdocs serve

@@ -9,6 +9,11 @@ on:
     - 'README.md'
     - 'docs/**'
     - 'mkdocs.yml'
+    - 'Taskfile.yaml'
+    - 'scripts/fix-api-doc-links.py'
+    - 'scripts/generate-cli-reference.py'
+    - 'pyproject.toml'
+    - 'calrissian/**'
     - '.github/workflows/docs.yaml'
   release:
     types: [created]
@@ -26,9 +31,7 @@ jobs:
         python-version: '3.12'
         cache: 'pip'
     - run: sh scripts/bootstrap-pip.sh
-    - run: python -m pip install "certifi>=2026.10.19" mkdocs-material mkdocs-mermaid2-plugin mkdocs-jupyter legacy-cgi pdocs pylint graphviz
-    - run: pip install .
-    - run: pdocs as_markdown --output_dir ./docs/api/latest --exclude_source --overwrite calrissian
-    - run: mkdir -p ./docs/uml/
-    - run: pyreverse --all-ancestors --show-builtin --output svg --output-directory ./docs/uml/ --source-roots ./calrissian/ --verbose ./calrissian/
+    - uses: arduino/setup-task@v2
+    - run: python -m pip install "certifi>=2026.10.19" "uv>=0.13.4" mkdocs-material mkdocs-mermaid2-plugin mkdocs-jupyter
+    - run: task docs:generate
     - run: mkdocs gh-deploy --force

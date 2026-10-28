@@ -12,7 +12,7 @@ mental models and tradeoffs.
 | Versioned conformance pages | Reference navigation |
 | Former docs/comformance diagnostics | Consolidated full-suite results and limitations under docs/conformance |
 | Dask setup and suite README | Linked from Dask how-to |
-| Missing generated API/class pages | Removed from navigation; source links remain available |
+| Generated API/class pages | Development navigation; generated with `task docs:generate` |
 
 Conformance evidence is consolidated under `docs/conformance/`: one complete-run
 summary, version pages, and cross-suite limitations replace focused-test reports.
@@ -34,6 +34,12 @@ The sources use Smetana layout to avoid a separate Graphviz dependency and use
 bundled includes rather than remote URLs. Commit source and rendering together.
 Build the site with `hatch run docs:mkdocs build`. Keep generated site output
 outside the documentation source tree when reviewing changes.
+
+Before building, run `task docs:generate` to refresh the checked-in CLI table
+and create the Python API reference and class/package diagrams. This requires uv and Graphviz (`dot`).
+`task docs:serve` generates these pages before starting the preview, and the
+deployment workflow uses the same generation task. See
+[project diagrams](../development/diagrams.md) for individual generation tasks.
 
 Conformance badges render the conformance tool's JSON output from
 `conformance/badges/` on the `develop` branch through Badgen. After a complete
