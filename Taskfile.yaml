@@ -68,3 +68,8 @@ tasks:
       DASK_TEST_ID: '{{default "" .ID}}'
     cmds:
     - 'python3 dask-gateway/run-tests.py ${DASK_TEST_ID:+--id "$DASK_TEST_ID"}'
+
+  docs:serve:
+    desc: Serve the documentation locally
+    cmds:
+    - uv run --no-project --with mkdocs --with mkdocs-material mkdocs serve
