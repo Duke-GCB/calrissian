@@ -1,5 +1,9 @@
 ## Installation
 
+Check the [compatibility and verification scope](reference/compatibility.md)
+before choosing an environment. For an existing deployment, follow the
+[upgrade guide](how-to/upgrades.md).
+
 Calrissian is available at: [https://pypi.org/project/calrissian/](https://pypi.org/project/calrissian/)
 
 Install it with:

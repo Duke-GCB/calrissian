@@ -1,5 +1,9 @@
 # Submit and monitor a workflow
 
+For a complete runner Job, identities, shared PVC, and output retrieval commands,
+use the [standalone deployment](deployment.md). To stop a run or remove its
+resources, follow [cancellation and cleanup](cleanup.md).
+
 For an interactive local run, use the [tutorial's chart-managed runner](../tutorials/first-tool.md).
 For a service, batch system, or Argo workflow, submit a Kubernetes Job containing
 the Calrissian runner, its PVC mounts, and the runner ServiceAccount. Set

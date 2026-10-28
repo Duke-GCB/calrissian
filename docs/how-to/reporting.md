@@ -1,5 +1,8 @@
 # Collect results, reports, and provenance
 
+For field definitions, units, calculations, and failure behavior, see the
+[usage-report reference](../reference/usage-report.md).
+
 Use writable persistent destinations accessible to the runner:
 
 ```sh

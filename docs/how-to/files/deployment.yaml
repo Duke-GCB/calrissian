@@ -1,0 +1,179 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: calrissian-example
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: runner
+  namespace: calrissian-example
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: workflow
+  namespace: calrissian-example
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: runner
+  namespace: calrissian-example
+rules:
+- apiGroups: ['']
+  resources: [pods]
+  verbs: [get, list, watch, create, patch, delete]
+- apiGroups: ['']
+  resources: [pods/log]
+  verbs: [get, list]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: runner
+  namespace: calrissian-example
+subjects:
+- kind: ServiceAccount
+  name: runner
+  namespace: calrissian-example
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: runner
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shared
+  namespace: calrissian-example
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: RWX_STORAGE_CLASS
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: smoke-input
+  namespace: calrissian-example
+data:
+  labels.yaml: |
+    calrissian.example/run: smoke-001
+  tool.cwl: |
+    cwlVersion: v1.2
+    class: CommandLineTool
+    requirements:
+      DockerRequirement:
+        dockerPull: debian:bookworm-slim
+      ResourceRequirement:
+        coresMin: 1
+        ramMin: 64
+    baseCommand: [echo, hello from Calrissian]
+    inputs: []
+    stdout: greeting.txt
+    outputs:
+      greeting:
+        type: File
+        outputBinding:
+          glob: greeting.txt
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: smoke-001
+  namespace: calrissian-example
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        calrissian.example/runner: smoke-001
+    spec:
+      serviceAccountName: runner
+      automountServiceAccountToken: true
+      restartPolicy: Never
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsUser: 1001
+        runAsGroup: 0
+        fsGroup: 1001
+      containers:
+      - name: calrissian
+        image: CALRISSIAN_IMAGE
+        command: [/bin/sh, -c]
+        args:
+        - |
+          set -eu
+          mkdir -p /shared/smoke-001/tmp /shared/smoke-001/tmpout /shared/smoke-001/results
+          exec calrissian --max-ram 1G --max-cores 1 \
+            --pod-serviceaccount workflow --pod-labels /config/labels.yaml \
+            --tmpdir-prefix /shared/smoke-001/tmp/ \
+            --tmp-outdir-prefix /shared/smoke-001/tmpout/ \
+            --outdir /shared/smoke-001/results \
+            --stdout /shared/smoke-001/outputs.json \
+            --stderr /shared/smoke-001/runner.log \
+            --usage-report /shared/smoke-001/usage.json \
+            --tool-logs-basepath /shared/smoke-001/tool-logs \
+            /config/tool.cwl
+        env:
+        - name: CALRISSIAN_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: TMPDIR
+          value: /shared/smoke-001/tmp
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            memory: 1Gi
+        volumeMounts:
+        - name: shared
+          mountPath: /shared
+        - name: config
+          mountPath: /config
+          readOnly: true
+      volumes:
+      - name: shared
+        persistentVolumeClaim:
+          claimName: shared
+      - name: config
+        configMap:
+          name: smoke-input
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: results-reader
+  namespace: calrissian-example
+spec:
+  serviceAccountName: workflow
+  automountServiceAccountToken: false
+  restartPolicy: Never
+  securityContext:
+    runAsUser: 1001
+    runAsGroup: 0
+    fsGroup: 1001
+  containers:
+  - name: reader
+    image: CALRISSIAN_IMAGE
+    command: [python, -c, 'import time; time.sleep(86400)']
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+      limits:
+        memory: 128Mi
+    volumeMounts:
+    - name: shared
+      mountPath: /shared
+      readOnly: true
+  volumes:
+  - name: shared
+    persistentVolumeClaim:
+      claimName: shared

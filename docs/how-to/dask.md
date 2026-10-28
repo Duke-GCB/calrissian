@@ -16,6 +16,8 @@ skaffold run -p dask
 
 The profile uses simple authentication for local development. For production,
 configure Gateway authentication, storage, and network policy for your cluster.
+See the [authenticated Gateway integration](dask-production.md) for a worked
+configuration approach, helper-container credential limits, and orphan cleanup.
 
 Configure the Calrissian runner with:
 

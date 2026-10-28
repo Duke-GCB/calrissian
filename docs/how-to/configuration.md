@@ -1,7 +1,9 @@
 # Supply configuration and environment variables
 
-Use repeatable `--conf settings.json` files for runner defaults, or place defaults
+Use one `--conf settings.json` file for runner defaults, or place defaults
 in `~/.calrissian/default.json`. Explicit CLI settings override loaded defaults.
+Although the parser accepts repeated `--conf`, only the first file is loaded.
+See [configuration precedence](../reference/configuration.md#configuration-precedence).
 JSON keys use runtime attribute names:
 
 ```json

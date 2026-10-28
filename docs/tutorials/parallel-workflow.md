@@ -29,5 +29,45 @@ kubectl --context calrissian-conformance -n calrissian-conformance exec deployme
 
 The [reporting guide](../how-to/reporting.md) adds provenance generation.
 The [scheduling explanation](../explanation/execution.md) describes the budgets.
-When finished, stop the development cluster with `task conformance:cluster:stop`.
-To remove it and its data permanently, use `task conformance:cluster:delete`.
+
+## Check and save the results
+
+The workflow should return two output Files. Its four command-line tasks
+(two reverse and two sort tasks) should appear in the usage report with zero
+exit codes. The two-core budget allows at most two of these one-core tasks at a
+time; the report's overlap may be lower for a short run. Completed task pods
+are normally deleted, while the session Deployment remains available.
+
+Save all tutorial inputs, outputs, and the usage report to your host:
+
+```sh
+kubectl --context calrissian-conformance -n calrissian-conformance exec deployment/calrissian-session -c calrissian -- python -c \
+  'import sys, tarfile; t = tarfile.open(fileobj=sys.stdout.buffer, mode="w|"); t.add("/output/docs-tutorial", arcname="docs-tutorial"); t.close()' \
+  > docs-tutorial.tar
+tar -tf docs-tutorial.tar
+```
+
+If the workflow fails, inspect its runner output before output-collection
+errors. Use [troubleshooting](../how-to/validation.md#diagnose-common-failures)
+for scheduling, volume discovery, and image failures, and the
+[usage-report reference](../reference/usage-report.md) to interpret the report.
+
+## Clean up the development environment
+
+After the workflow finishes and you have checked the archive, pause the cluster:
+
+```sh
+task conformance:cluster:stop
+```
+
+This preserves its volumes. Restart with `task conformance:cluster` if you want
+to continue. To remove the entire cluster and its data permanently after saving
+everything you need:
+
+```sh
+task conformance:cluster:delete
+```
+
+These operations affect every workload on the dedicated Minikube profile.
+For an active run or a namespace shared with other workflows, follow
+[cancellation and cleanup](../how-to/cleanup.md) instead.

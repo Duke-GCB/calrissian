@@ -10,6 +10,8 @@ site_url: 'https://Duke-GCB.github.io/calrissian/'
 
 theme:
   name: material
+  features:
+  - content.code.copy
 
 markdown_extensions:
 - admonition
@@ -30,9 +32,12 @@ nav:
 - How-to guides:
   - Overview: how-to/index.md
   - Installation: installation.md
+  - Upgrades: how-to/upgrades.md
+  - Standalone deployment: how-to/deployment.md
   - Cluster configuration: cluster-configuration.md
   - Shared storage: how-to/storage.md
   - Submit and monitor: how-to/execution.md
+  - Cancel and clean up: how-to/cleanup.md
   - Security and networking: how-to/security.md
   - Resources and GPUs: how-to/scheduling.md
   - Node placement: how-to/node-placement.md
@@ -41,10 +46,13 @@ nav:
   - Configuration and environment: how-to/configuration.md
   - Results and provenance: how-to/reporting.md
   - Dask Gateway: how-to/dask.md
+  - Authenticated Dask Gateway: how-to/dask-production.md
   - Validation and troubleshooting: how-to/validation.md
 - Reference:
   - Overview: reference/index.md
   - CLI and configuration: reference/configuration.md
+  - Compatibility: reference/compatibility.md
+  - Usage-report JSON: reference/usage-report.md
   - Storage paths: reference/storage.md
   - Environment variables: reference/environment.md
   - CWL support: reference/cwl-support.md
@@ -53,6 +61,7 @@ nav:
     - Badges: conformance/badges.md
     - Latest full runs: conformance/latest-results.md
     - Limitations: conformance/limitations.md
+    - Historical logs: conformance/historical-results.md
     - CWL 1.0.2: conformance/1.0.2.md
     - CWL 1.1.0: conformance/1.1.0.md
     - CWL 1.2.0: conformance/1.2.0.md
@@ -64,3 +73,19 @@ nav:
   - Execution and scheduling: explanation/execution.md
   - Storage and security boundaries: explanation/boundaries.md
   - Documentation maintenance: explanation/documentation.md
+- Development:
+  - Contributing: development/contributing.md
+  - Project diagrams: development/diagrams.md
+  - Python API:
+    - Package: api/latest/calrissian/index.md
+    - Context: api/latest/calrissian/context.md
+    - Dask: api/latest/calrissian/dask.md
+    - Executor: api/latest/calrissian/executor.md
+    - Job: api/latest/calrissian/job.md
+    - Kubernetes: api/latest/calrissian/k8s.md
+    - Main: api/latest/calrissian/main.md
+    - Report: api/latest/calrissian/report.md
+    - Retry: api/latest/calrissian/retry.md
+    - Scheduling: api/latest/calrissian/scheduling.md
+    - Tool: api/latest/calrissian/tool.md
+    - Version: api/latest/calrissian/version.md

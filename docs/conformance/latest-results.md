@@ -30,6 +30,9 @@ remaining failures and unsupported behavior.
 
 ## Artifacts and interpretation
 
+Older `docs/result-v1-0.txt` captures are retained separately as
+[historical logs](historical-results.md); they are not evidence for these runs.
+
 - Full logs are retained under `conformance/results-v*.txt` in the repository.
 - Category badge JSON files under `conformance/badges/` were refreshed from each run.
 - [Machine-readable run metadata](https://github.com/Duke-GCB/calrissian/blob/develop/conformance/full-results.json)

@@ -51,3 +51,37 @@ elppa
 
 The runner stages data on the output PVC. The tool's `/tmp` is a separate task
 volume. Continue with [a parallel workflow](parallel-workflow.md).
+
+## Check the deployment state
+
+```sh
+kubectl --context calrissian-conformance -n calrissian-conformance get deployment/calrissian-session
+kubectl --context calrissian-conformance -n calrissian-conformance get pvc
+kubectl --context calrissian-conformance -n calrissian-conformance get pods
+```
+
+The session Deployment should have one available replica and its data/output
+claims should be Bound. Completed tool pods are normally deleted; their absence
+after a successful command is expected. The session and chart helper resources
+remain running so you can continue the next tutorial.
+
+If rollout stalls, inspect Pod events. If staging fails, check the deployment,
+namespace, and output PVC. For task scheduling, image pulls, permissions, and
+missing output files, use the [troubleshooting table](../how-to/validation.md#diagnose-common-failures).
+
+## Finish or pause
+
+Keep the cluster running to continue with the parallel workflow. If stopping
+here, first save the result to your host:
+
+```sh
+kubectl --context calrissian-conformance -n calrissian-conformance exec deployment/calrissian-session -c calrissian -- cat /output/docs-tutorial/reverse-results/one.txt.reversed.txt > one.txt.reversed.txt
+task conformance:cluster:stop
+```
+
+Stopping preserves the development cluster and its volumes. Resume it with
+`task conformance:cluster`, then check the session rollout before continuing.
+For permanent removal after saving all needed artifacts, run
+`task conformance:cluster:delete`; this deletes the entire development cluster
+and its data. See [cancellation and cleanup](../how-to/cleanup.md) before stopping
+an active workflow.

@@ -1,3 +1,15 @@
+HISTORICAL CONFORMANCE CAPTURE — NOT CURRENT RESULTS
+
+This capture is retained for historical investigation. Its original repository
+history dates to November 2023; execution date, source image, and cluster are
+not independently established here. The output ends with a badge-generation
+FileExistsError. It is not evidence for the latest documented complete runs.
+
+See the documentation pages conformance/historical-results/ and
+conformance/latest-results/ for interpretation and current evidence.
+
+--- Original captured output follows unchanged ---
+
 Test [1/197] cl_basic_generation: General test of command line generation
 
 Running: calrissian --max-ram 8G --max-cores 4 --default-container debian:stretch-slim --outdir=/output/tmpu6yzwxx9 --quiet v1.0/v1.0/bwa-mem-tool.cwl v1.0/v1.0/bwa-mem-job.json
