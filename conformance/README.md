@@ -4,7 +4,7 @@ Run [CWL conformance tests](https://github.com/common-workflow-language/cwltest)
 on a local Minikube cluster using Task, Skaffold, and the Helm chart. The
 supported suites are CWL v1.0.2, v1.1.0, v1.2.0, and v1.2.1.
 
-See the [latest complete results](../docs/comformance/latest-results.md) for
+See the [latest complete results](../docs/conformance/latest-results.md) for
 verified totals and remaining failures.
 
 

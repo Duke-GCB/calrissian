@@ -107,16 +107,20 @@ negative checks return `yes`. Separate names alone do not enforce least privileg
 The runner's ability to create pods is itself a powerful permission and should
 remain limited to the runner identity.
 
-For an installation following the old guide, create/configure the dedicated
-runner and workflow identities first, then remove the old
-`pod-manager-default-binding` and `log-reader-default-binding` RoleBindings after
-checking that other workloads do not depend on them. Finish or stop runs still using
-`default` before revoking its management bindings. Review any other grants to
-`default`. Updating the guide does not revoke bindings already installed.
-Existing running pods keep their identity; restart runners and rerun tasks to
-apply the new configuration. A Helm upgrade updates the chart's runner binding
-and session Deployment, but externally submitted runner Jobs need the updated
-manifests too.
+### Migrate an existing installation
+
+1. Create and configure dedicated runner and workflow identities.
+2. Finish or stop runs that still use `default`.
+3. Check whether other workloads depend on `pod-manager-default-binding` or
+   `log-reader-default-binding`, then remove those old RoleBindings.
+4. Review other grants to `default`.
+5. Restart runners and rerun tasks to apply the new identities.
+
+Updating documentation does not revoke existing bindings. Running pods keep
+their identities.
+
+A Helm upgrade updates the chart's runner binding and session Deployment.
+Externally submitted runner Jobs also need the updated manifests.
 
 For the local chart, run the read-only permission check after deploying it:
 
@@ -168,15 +172,17 @@ The same setting can be supplied in a `--conf` JSON file as
 `"pod_gpu_tolerations": "/path/to/gpu-tolerations.yaml"`. These paths refer to
 files accessible inside the Calrissian runner, not inside the tool container.
 
-`--pod-gpu-tolerations` has no default toleration: GPU taints are cluster-specific.
-When configured, Calrissian adds the list to `spec.tolerations` only when the
-built task pod has a positive `nvidia.com/gpu` request or limit. CPU-only tasks,
-zero-GPU allocations, and CUDA hints without an actual GPU allocation receive
-no added tolerations. An empty list (`[]`) also adds none. Malformed files,
-unknown fields, invalid Kubernetes key/value syntax, and invalid combinations
-of operator, effect, value, or `tolerationSeconds` fail before pod submission.
-Standard `Equal`/`Exists` operators, effects, and `NoExecute` durations are
-supported.
+GPU taints are cluster-specific, so `--pod-gpu-tolerations` has no default.
+
+- The configured list is added only for a positive `nvidia.com/gpu` request or limit.
+- CPU-only tasks, zero-GPU allocations, and CUDA hints without an actual GPU
+  allocation receive no added tolerations.
+- An empty list (`[]`) adds none.
+- Standard `Equal`/`Exists` operators, effects, and `NoExecute` durations are supported.
+
+Invalid configuration fails before pod submission. This includes malformed
+files, unknown fields, invalid key/value syntax, and invalid combinations of
+operator, effect, value, or `tolerationSeconds`.
 
 Both ordinary and Dask task pods use this behavior. Tolerations apply to the
 whole pod; the Dask cleanup sidecar still has independent CPU/memory resources
@@ -184,20 +190,25 @@ and does not request GPUs. Separately provisioned Dask Gateway schedulers and
 workers require their own Gateway scheduling configuration.
 
 A toleration permits a pod to use a tainted node; it does not reserve that node
-or force placement there. Keep the GPU resource request, appropriate node
-labels/selectors, and matching taint together. Other workloads with matching
-tolerations can also use that node. The cluster must expose GPU resources through
+or force placement there.
+Keep the GPU resource request, appropriate node
+labels/selectors, and matching taint together.
+Other workloads with matching
+tolerations can also use that node.
+
+The cluster must expose GPU resources through
 a suitable device plugin and provide compatible hardware, drivers, and tool
-images. This option does not validate CUDA version or hardware capability.
+images.
+This option does not validate CUDA version or hardware capability.
 
 ### Scheduler-only validation without GPU hardware
 
-The following opt-in check creates a uniquely named synthetic node advertising
-GPU capacity and carrying the GPU taint, plus a temporary test namespace. It
-uses the actual pod builders and verifies that GPU pods with configured
-tolerations are assigned to that node, while GPU pods without tolerations and
-CPU-only pods with the GPU configuration remain unschedulable because of the
-taint. It also checks Dask task-pod scheduling.
+This opt-in check creates a synthetic GPU node and a temporary namespace.
+It uses the actual ordinary and Dask pod builders to verify that:
+
+- GPU pods with configured tolerations are assigned to the tainted node.
+- GPU pods without tolerations remain unschedulable.
+- CPU-only pods remain blocked by the taint, even with GPU configuration supplied.
 
 ```sh
 hatch run test.py3.10:python examples/gpu-tolerations/check-scheduling.py \
@@ -207,7 +218,9 @@ hatch run test.py3.10:python examples/gpu-tolerations/check-scheduling.py \
 Use a disposable test cluster with permission to manage nodes and namespaces.
 The script removes its pods, synthetic node, and namespace in a `finally` block.
 There is no kubelet or GPU device on the synthetic node: this verifies scheduler
-admission only, not container startup or CUDA execution. Real GPU execution
+admission only, not container startup or CUDA execution.
+
+Real GPU execution
 must be validated separately on a GPU-enabled cluster.
 
 ## Task pod and container security
@@ -240,10 +253,14 @@ names when both are present. These settings apply to Calrissian task pods;
 separately provisioned Dask Gateway scheduler/worker pods have their own backend
 configuration.
 
-`--no-read-only` sets `readOnlyRootFilesystem: false` on those containers. It
-does not enable privileged execution or privilege escalation. Writable mounted
+`--no-read-only` sets `readOnlyRootFilesystem: false` on those containers.
+It
+does not enable privileged execution or privilege escalation.
+Writable mounted
 volumes remain usable with a read-only root filesystem: tools should write to
-their declared output directory and temporary directory. Image filesystems are
+their declared output directory and temporary directory.
+
+Image filesystems are
 read-only by default, so tools that need to modify them must be adapted or run
 with the explicit override.
 
@@ -301,18 +318,25 @@ Equivalent `--conf` JSON configuration:
 }
 ```
 
-Use JSON booleans (`true` or `false`), not strings or numbers. Nonboolean values
-are rejected before task-pod submission. Omitting the setting or specifying
-`false` disables automatic mounting. `--pod-serviceaccount` selects an account;
-it does not opt in to token mounting. Configure the account's RBAC permissions
-separately. The opt-in applies to all task pods generated by that runner and to
-all containers in those pods, so use it only for workflows that need API access.
+Token configuration follows these rules:
+
+- Use JSON booleans (`true` or `false`); other types are rejected before submission.
+- Omitting the setting or specifying `false` disables automatic mounting.
+- `--pod-serviceaccount` selects an identity; it does not enable token mounting.
+- Configure the selected account's RBAC permissions separately.
+- Opt-in applies to every task pod generated by that runner and all its containers.
+
+Enable it only for workflows that need API access.
 
 The Calrissian runner retains its own API credentials to create, monitor, and
-delete task pods. This default does not change its Deployment/Job or separately
-provisioned Dask Gateway components. Custom workflow code or Dask controller
+delete task pods.
+This default does not change its Deployment/Job or separately
+provisioned Dask Gateway components.
+Custom workflow code or Dask controller
 scripts that previously relied on automatically mounted task credentials must
-use the explicit opt-in. Standard Gateway HTTP communication does not inherently
+use the explicit opt-in.
+
+Standard Gateway HTTP communication does not inherently
 require a mounted Kubernetes token; cluster-specific authentication may differ.
 
 This controls automatic ServiceAccount token injection. Explicit credential
@@ -327,9 +351,13 @@ hatch run test.py3.10:python examples/task-token-automount/check-runtime.py
 
 The check creates a uniquely named ServiceAccount with automatic mounting
 enabled, validates ordinary and Dask manifests, and runs ordinary task pods to
-check token-file absence by default and presence with opt-in. It never reads or
-prints token contents and removes its pods and ServiceAccount. It also verifies
-that the chart's runner still has a projected token mount. Use
+check token-file absence by default and presence with opt-in.
+It never reads or
+prints token contents and removes its pods and ServiceAccount.
+
+It also verifies
+that the chart's runner still has a projected token mount.
+Use
 `--context <test-context>` to select a compatible test cluster.
 
 ## Enforcing CWL network access
@@ -469,8 +497,11 @@ and manage test ServiceAccounts, Services, Deployments, policies, and pods.
 Use `--context` and `--namespace` for another compatible test environment.
 
 The helper uses the CLI label options by default; `--configuration json` checks
-the equivalent JSON path. It reuses the example policies with unique names and label values to
-avoid changing other tasks' policies. It creates a temporary unprivileged task
+the equivalent JSON path.
+It reuses the example policies with unique names and label values to
+avoid changing other tasks' policies.
+
+It creates a temporary unprivileged task
 ServiceAccount and a controlled HTTP endpoint using the deployed runner image,
 then executes actual CWL tools in this order:
 
@@ -480,18 +511,23 @@ then executes actual CWL tools in this order:
 | `networkAccess: false` | Connection fails, tool fails, and its result records the transport error |
 | `networkAccess: true`, after denial | HTTP 200 from the same endpoint |
 
-The request uses the Service IP directly and disables HTTP proxies. DNS or
-proxy failures therefore cannot stand in for the deny check. HTTP error
-responses still count as connectivity, so a 403/500 response cannot pass as
-isolation. The helper checks observed task labels and requires a result emitted
-by the tool; image-pull, scheduling, or schema failures do not count as a passed
-network-denial test. Commands have bounded timeouts.
+The helper avoids false positives:
+
+- It uses the Service IP directly and disables proxies, avoiding DNS/proxy failures.
+- HTTP error responses count as connectivity; a 403 or 500 does not prove isolation.
+- It checks observed task labels and requires a tool-produced result.
+- Image-pull, scheduling, or schema failures do not count as successful denial.
+- Commands have bounded timeouts.
 
 Successful output reports `passed: true`, with connected values `true`, `false`,
-`true`. Calrissian reporting `permanentFail` for the middle tool is expected.
+`true`.
+Calrissian reporting `permanentFail` for the middle tool is expected.
 The helper removes its policies, endpoint, ServiceAccount, labeled task pods,
-and staged runner files. Result artifacts remain in the output PVC under the
-printed `/output/network-check-<id>/` path. Interrupted or forcibly killed runs
+and staged runner files.
+Result artifacts remain in the output PVC under the
+printed `/output/network-check-<id>/` path.
+
+Interrupted or forcibly killed runs
 may require cleanup of resources bearing that run's unique prefix/label.
 
 This confirms TCP/HTTP enforcement to the selected endpoint on the tested
@@ -509,12 +545,17 @@ existing v1.2.1 negative conformance case:
 task conformance:test VERSION=1.2.1 ID=227
 ```
 
-The [recorded conformance result](comformance/v1.2.1-failures.md) demonstrates
-the disabled-by-default case. It does not alone prove allowed connectivity;
-use the paired controls above. The Dask profile intentionally sets
+The [recorded complete conformance run](conformance/latest-results.md) demonstrates
+the disabled-by-default case.
+It does not alone prove allowed connectivity;
+use the paired controls above.
+The Dask profile intentionally sets
 `networkAccess.enabled: false` so Gateway, scheduler, and worker communication
-can work. Do not use that profile as evidence that ordinary chart network
-isolation is enabled. The isolated helper installs its own scoped policies and
+can work.
+Do not use that profile as evidence that ordinary chart network
+isolation is enabled.
+
+The isolated helper installs its own scoped policies and
 can also validate enforcement in that profile.
 
 Review these deployment limits:
@@ -548,6 +589,7 @@ Calrissian mounts the task's writable output directory at `/results` and uses
 that path as the container working directory, `HOME`, and `runtime.outdir`.
 The runner retains its own storage path for staging and output collection;
 concurrent tasks can use the same container path with separate output directories.
+
 This writable volume works with the default read-only container root filesystem.
 Mounting at an existing image directory hides its original contents for that task.
 

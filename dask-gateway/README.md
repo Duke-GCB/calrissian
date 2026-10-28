@@ -130,50 +130,85 @@ conformance results. Fixture definitions and stable IDs live in `tests/`.
 | 12 | Workflow failure | A failed Dask step fails its workflow and cleans up |
 | 13 | Nested output | Directory preparation and Dask initialization run with container security settings |
 
-Every case has independent `cwl` and `lifecycle` verdicts. Successful tools must
-produce the expected output, and Dask workloads wait for the expected worker
-count and execute a distributed computation. The controller observes task pods,
-checks the sidecar's default resource specification, reads exact cluster names
-from init/cleanup logs, and waits until owned clusters stop and their scheduler
-and worker pods disappear. It checks the number of distinct clusters against
-the case expectation. Expected failures also require a matching CWL diagnostic;
-a failed Kubernetes Job alone is insufficient.
+### What a passing case means
 
-Each case creates a uniquely named runner Job and ConfigMap. The ConfigMap
-combines the chart's installed controller wrappers with the current local CWL
-fixtures; editing suite fixtures does not require rebuilding the worker image.
-The runner and task default image use the immutable image from the chart's
-session Deployment. Each Job has a deadline (600 seconds by default), no
-retries, and its own output directory. The host has a matching deadline and
-bounded Kubernetes requests. SIGINT and SIGTERM trigger cleanup and stop the
-suite. Cleanup targets only the case's Job, labeled task pods, ConfigMap, and
-cluster names recorded by that case. A forcibly killed controller cannot run
-cleanup; inspect saved identities before manually removing residual resources.
+Every case reports independent `cwl` and `lifecycle` verdicts.
 
-Host artifacts are written under the ignored directory
-`dask-gateway/test-results/suite-<run-id>/`: `results.json` records the deployed
-image and both verdicts, `junit.xml` is suitable for CI, and runner/tool logs
-explain individual failures. Output files remain on the PVC under
-`/output/dask-test-<id>-<run-id>/`. The controller exits nonzero if any case or
-cleanup fails and continues through ordinary failures to collect other results.
-It expects default cleanup resources, as does the existing cleanup smoke test.
+- Successful tools produce the expected output.
+- Dask tools wait for the expected worker count and execute a distributed computation.
+- Task pods have the expected cleanup-sidecar resources.
+- Recorded cluster names match the expected number of distinct clusters.
+- Owned clusters stop, and their scheduler/worker pods disappear.
+- Expected failures include a matching CWL diagnostic. A failed Kubernetes Job
+  alone does not count as a passing negative test.
 
-Coverage still to add: nonpositive/insufficient budgets, concurrency, external
-cluster failures, resource overrides in real pods, and optional GPU hardware.
-In particular, invalid budgets must be rejected before cluster creation before
-adding those real-cluster cases: the current init script validates some limits
-after provisioning. Expression coverage currently uses input references;
-JavaScript expression blocks need separate cases. Unit tests cover expression
-evaluation without mutation of a shared workflow requirement, status ordering,
-and independence of computation and lifecycle verdicts.
+### Resources created by the controller
 
-Validated on October 27, 2026 with `skaffold run -p dask` followed by
-`task dask:test`: **12/12 cases passed both verdicts**, including shutdown and
-pod removal for all **10** Dask clusters created by the suite. The single-case
-entry point `task dask:test ID=5` also passed. The final resource audit found no
-active Gateway clusters, suite runner Jobs, or suite ConfigMaps. Unit validation:
-**413 passed, 1 skipped**, with 51 passing subtests. A deliberate Ctrl-C run also
-confirmed ownership recovery and shutdown of the interrupted case's cluster.
-JSON, JUnit, and raw logs for
-the successful full run are in the local ignored directory
+Each case uses a unique runner Job, ConfigMap, and output directory.
+
+- The ConfigMap combines installed controller wrappers with local CWL fixtures.
+  Fixture edits do not require rebuilding the worker image.
+- Runner and default task images use the session Deployment's immutable image.
+- Jobs have no retries and a 600-second deadline by default.
+- Host commands also have deadlines and bounded Kubernetes requests.
+
+### Interruption and cleanup
+
+SIGINT and SIGTERM stop the suite and trigger cleanup of resources owned by the case:
+
+- Its runner Job and ConfigMap.
+- Its labeled task pods.
+- Cluster names recovered from its initialization and cleanup records.
+
+A forcibly killed controller cannot clean up. Use the saved identities to inspect
+residual resources before removing them manually.
+
+### Results and artifacts
+
+Host artifacts are stored under the ignored directory
+`dask-gateway/test-results/suite-<run-id>/`:
+
+- `results.json`: deployed image and both verdicts.
+- `junit.xml`: CI-compatible results.
+- Runner/tool logs: failure details.
+
+Output files remain on the PVC under `/output/dask-test-<id>-<run-id>/`.
+The controller continues through ordinary failures to collect results and exits
+nonzero if any case or cleanup fails.
+
+The suite and cleanup smoke test expect the default cleanup resources.
+
+### Remaining coverage
+
+Additional cases are needed for:
+
+- Nonpositive or insufficient resource budgets.
+- Concurrent workloads and external cluster failures.
+- Cleanup-resource overrides in real pods.
+- Optional GPU hardware.
+- JavaScript expression blocks; current expression cases use input references.
+
+Before adding real-cluster invalid-budget cases, reject those budgets before
+cluster creation. The current initialization script validates some limits after
+provisioning.
+
+Unit tests cover expression evaluation without shared-requirement mutation,
+status ordering, and separate computation/lifecycle verdicts.
+
+### Historical validation
+
+On October 27, 2026, a full run using `skaffold run -p dask` and
+`task dask:test` recorded:
+
+- **12/12 cases** passing both verdicts.
+- Shutdown and pod removal for all **10** Dask clusters created.
+- A passing single-case run with `task dask:test ID=5`.
+- No active Gateway clusters, suite runner Jobs, or suite ConfigMaps in the final audit.
+- **413 unit tests passed**, 1 skipped, plus 51 passing subtests.
+
+A deliberate Ctrl-C run also confirmed cluster-identity recovery and shutdown
+for the interrupted case. Local ignored artifacts are in
 `test-results/suite-91a54e3e/`.
+
+These are historical results for the original 12-case run. The table now includes
+case 13; the historical totals do not describe a new run of all current cases.

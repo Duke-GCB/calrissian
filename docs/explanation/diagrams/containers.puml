@@ -1,0 +1,24 @@
+@startuml
+!pragma layout smetana
+!include <C4/C4_Container>
+title Calrissian - Container view
+Person(submitter, "Author / service")
+System_Boundary(platform, "Calrissian workflow execution") {
+ Container(runner, "Runner", "Python / cwltool", "CWL interpretation, resource budgets, task management")
+ Container(tasks, "Task pods", "Tool images", "Execute commands; optional Dask init and cleanup containers")
+ ContainerDb(data, "Shared data", "PVC-backed filesystem", "Inputs, staging, outputs and reports")
+ ContainerDb(scratch, "Task scratch", "emptyDir", "Per-task /tmp")
+}
+System_Ext(api, "Kubernetes API and scheduler", "Cluster infrastructure")
+System_Ext(gateway, "Dask Gateway", "Optional scheduler/worker lifecycle")
+System_Ext(workers, "Dask scheduler and workers", "Managed by Gateway, not task pod builders")
+Rel(submitter, runner, "Submits CWL and job order")
+Rel(runner, api, "Creates and watches task pods")
+Rel(api, tasks, "Schedules pods and reports state")
+Rel(runner, data, "Stages inputs; collects outputs")
+Rel(tasks, data, "Reads inputs; writes outputs")
+Rel(tasks, scratch, "Uses temporary space")
+Rel(tasks, gateway, "Initializes / stops cluster")
+Rel(gateway, workers, "Provisions")
+Rel(tasks, workers, "Submits distributed computation")
+@enduml

@@ -24,9 +24,12 @@ python -m pip install --upgrade 'certifi>=2026.10.19' calrissian
 ```
 
 The bootstrap script verifies the pip wheel using the SHA256 hash published
-in the advisory. Run it again for each newly created virtual environment,
-including Hatch environments, before installing packages there. Set `PYTHON`
+in the advisory.
+Run it again for each newly created virtual environment,
+including Hatch environments, before installing packages there.
+Set `PYTHON`
 to the environment's Python executable if it is not named `python`.
+
 For new Hatch environments, set `VIRTUALENV_PIP=26.2.2` before running Hatch
 so its virtualenvs are seeded with the fixed pip version.
 

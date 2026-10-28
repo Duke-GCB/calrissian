@@ -1,0 +1,16 @@
+@startuml
+!pragma layout smetana
+!include <C4/C4_Context>
+title Calrissian - System context
+Person(author, "Workflow author / submitting service", "Supplies CWL, inputs and budgets")
+System(calrissian, "Calrissian", "Executes CWL workflows on Kubernetes")
+System_Ext(kubernetes, "Kubernetes", "Schedules and monitors task pods")
+System_Ext(storage, "Shared storage", "Workflow inputs, staging and outputs")
+System_Ext(registry, "Image registry", "Provides runner and task images")
+System_Ext(gateway, "Dask Gateway (optional)", "Manages distributed compute clusters")
+Rel(author, calrissian, "Submits workflows; retrieves results")
+Rel(calrissian, kubernetes, "Creates and watches pods", "Kubernetes API")
+Rel(calrissian, storage, "Reads and writes", "PVC mounts")
+Rel(kubernetes, registry, "Pulls images")
+Rel(calrissian, gateway, "Requests and stops clusters", "Dask extension")
+@enduml

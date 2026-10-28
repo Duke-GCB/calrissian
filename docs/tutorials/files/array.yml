@@ -1,0 +1,5 @@
+sources:
+  - class: File
+    path: one.txt
+  - class: File
+    path: two.txt

@@ -4,7 +4,7 @@ site_description: 'CWL runner for Kubernetes'
 
 repo_name: 'Duke-GCB/calrissian'
 repo_url: 'https://github.com/Duke-GCB/calrissian.git'
-edit_uri: 'blob/main/docs/'
+edit_uri: 'edit/develop/docs/'
 site_url: 'https://Duke-GCB.github.io/calrissian/'
 
 
@@ -22,24 +22,45 @@ plugins:
 #- mkdocs-jupyter
 
 nav:
-- Introduction: 'index.md'
-- Installation: 'installation.md'
-- Cluster Configuration: 'cluster-configuration.md'
-- Conformance:
-  - 1.0.2: 'conformance/1.0.2.md'
-  - 1.1.0: 'conformance/1.1.0.md'
-  - 1.2.0: 'conformance/1.2.0.md'
-  - 1.2.1: 'conformance/1.2.1.md'
-- Development:
-  - uml/classes.md
-  - APIs doc:
-    - api/latest/calrissian/index.md
-    - api/latest/calrissian/context.md
-    - api/latest/calrissian/executor.md
-    - api/latest/calrissian/job.md
-    - api/latest/calrissian/k8s.md
-    - api/latest/calrissian/main.md
-    - api/latest/calrissian/report.md
-    - api/latest/calrissian/retry.md
-    - api/latest/calrissian/tool.md
-    - api/latest/calrissian/version.md
+- Home: index.md
+- Tutorials:
+  - Overview: tutorials/index.md
+  - First CWL v1.2 tool: tutorials/first-tool.md
+  - Parallel workflow: tutorials/parallel-workflow.md
+- How-to guides:
+  - Overview: how-to/index.md
+  - Installation: installation.md
+  - Cluster configuration: cluster-configuration.md
+  - Shared storage: how-to/storage.md
+  - Submit and monitor: how-to/execution.md
+  - Security and networking: how-to/security.md
+  - Resources and GPUs: how-to/scheduling.md
+  - Node placement: how-to/node-placement.md
+  - Task labels: how-to/labels.md
+  - Save tool logs: how-to/tool-logs.md
+  - Configuration and environment: how-to/configuration.md
+  - Results and provenance: how-to/reporting.md
+  - Dask Gateway: how-to/dask.md
+  - Validation and troubleshooting: how-to/validation.md
+- Reference:
+  - Overview: reference/index.md
+  - CLI and configuration: reference/configuration.md
+  - Storage paths: reference/storage.md
+  - Environment variables: reference/environment.md
+  - CWL support: reference/cwl-support.md
+  - Provenance: reference/provenance.md
+  - Conformance evidence:
+    - Badges: conformance/badges.md
+    - Latest full runs: conformance/latest-results.md
+    - Limitations: conformance/limitations.md
+    - CWL 1.0.2: conformance/1.0.2.md
+    - CWL 1.1.0: conformance/1.1.0.md
+    - CWL 1.2.0: conformance/1.2.0.md
+    - CWL 1.2.1: conformance/1.2.1.md
+- Explanation:
+  - Overview: explanation/index.md
+  - Background: explanation/background.md
+  - C4 architecture: explanation/architecture.md
+  - Execution and scheduling: explanation/execution.md
+  - Storage and security boundaries: explanation/boundaries.md
+  - Documentation maintenance: explanation/documentation.md

@@ -1,0 +1,24 @@
+@startuml
+!pragma layout smetana
+!include <C4/C4_Component>
+title Calrissian - Runner components
+Container_Boundary(runner, "Calrissian runner") {
+ Component(cli, "CLI and context", "main.py / context.py", "Configuration, logging and reporting setup")
+ Component(cwl, "CWL interpreter", "cwltool / tool.py", "Dependencies, expressions and tool factory")
+ Component(executor, "Resource executor", "executor.py", "Queue, CPU/RAM/GPU reservations and futures")
+ Component(builder, "Task builders", "job.py / dask.py", "Pod manifests, volume mappings and security")
+ Component(client, "Pod clients", "k8s.py / dask.py", "Submission, watches, logs and cleanup")
+ Component(output, "Output and reporting", "cwltool / report.py", "Output collection, usage and requested provenance")
+}
+System_Ext(api, "Kubernetes API")
+System_Ext(storage, "Shared storage")
+Rel(cli, cwl, "Invokes")
+Rel(cli, executor, "Configures budgets")
+Rel(cwl, executor, "Yields ready jobs")
+Rel(executor, builder, "Runs selected jobs")
+Rel(builder, client, "Submits manifests; awaits completion")
+Rel(client, api, "Creates, watches, reads logs, deletes")
+Rel(builder, storage, "Stages and maps files")
+Rel(builder, output, "Collects completed outputs")
+Rel(output, storage, "Reads / writes artifacts")
+@enduml

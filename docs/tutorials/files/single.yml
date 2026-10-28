@@ -1,0 +1,3 @@
+source:
+  class: File
+  path: one.txt
