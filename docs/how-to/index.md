@@ -14,6 +14,7 @@ first run, start with the [tutorials](../tutorials/index.md).
 | Configure identities, filesystem restrictions, and networking | [Security](security.md) |
 | Configure resources, GPUs, node placement, and priority | [Scheduling](scheduling.md) |
 | Supply environment variables, ConfigMaps, and Secrets | [Configuration](configuration.md) |
+| Pass CWL secrets with `cwltool:Secrets` | [CWL secrets](cwl-secrets.md) |
 | Label and query task pods | [Task labels](labels.md) |
 | Choose CPU/GPU node pools | [Node placement](node-placement.md) |
 | Save collected task logs | [Tool logs](tool-logs.md) |

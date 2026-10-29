@@ -1,0 +1,5 @@
+env_secret: example-env-secret
+argument_secret: example-argument-secret
+binding_secret: example-input-binding-secret
+staged_secret: example-staged-file-secret
+writable_staged_secret: example-writable-staged-file-secret

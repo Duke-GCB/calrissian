@@ -561,6 +561,90 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         volume_builder = KubernetesVolumeBuilder()
         volume_builder.add_persistent_volume_entries_from_pod(self.runner_pod)
         self.volume_builder = volume_builder
+        self.secret_staged_files = set()
+
+    @staticmethod
+    def redact_secrets(value, secret_store):
+        """Replace resolved secret values in runner-generated diagnostics."""
+        if secret_store is None:
+            return value
+        secrets = getattr(secret_store, 'secrets', {})
+        if not isinstance(secrets, dict):
+            return value
+        if isinstance(value, str):
+            for secret in sorted(secrets.values(), key=len, reverse=True):
+                if secret:
+                    value = value.replace(secret, '[REDACTED]')
+            return value
+        if isinstance(value, dict):
+            return {key: CalrissianCommandLineJob.redact_secrets(item, secret_store)
+                    for key, item in value.items()}
+        if isinstance(value, list):
+            return [CalrissianCommandLineJob.redact_secrets(item, secret_store)
+                    for item in value]
+        if isinstance(value, tuple):
+            return tuple(CalrissianCommandLineJob.redact_secrets(item, secret_store)
+                         for item in value)
+        return value
+
+    def resolve_secrets(self, value, secret_store):
+        secrets = getattr(secret_store, 'secrets', {})
+        if secret_store is None or not isinstance(secrets, dict) or not secrets:
+            return copy.deepcopy(value)
+        return secret_store.retrieve(copy.deepcopy(value))
+
+    @staticmethod
+    def environment_without_secrets(environment, secret_store):
+        """Return task environment entries that are safe for Dask helpers."""
+        if secret_store is None or not isinstance(getattr(secret_store, 'secrets', None), dict):
+            return copy.deepcopy(environment)
+        return {
+            name: value for name, value in environment.items()
+            if not secret_store.has_secret(value)
+        }
+
+    def add_kubernetes_volumes(self, pathmapper, runtime, runtime_context, any_path_okay):
+        """Stage volumes and remember generated files that contain secrets."""
+        secrets = getattr(runtime_context.secret_store, 'secrets', {})
+        try:
+            path_entries = list(pathmapper.items())
+        except (AttributeError, TypeError):
+            path_entries = []
+        secret_file_keys = {
+            key for key, volume in path_entries
+            if volume.type in ('CreateFile', 'CreateWritableFile')
+            and isinstance(secrets, dict) and secrets
+            and runtime_context.secret_store.has_secret(volume.resolved)
+        }
+        try:
+            self.add_volumes(
+                pathmapper,
+                runtime,
+                tmpdir_prefix=runtime_context.tmpdir_prefix,
+                secret_store=runtime_context.secret_store,
+                any_path_okay=any_path_okay,
+            )
+        finally:
+            for key in secret_file_keys:
+                try:
+                    staged_path = pathmapper[key].resolved
+                except (KeyError, TypeError, AttributeError):
+                    continue
+                if os.path.isfile(staged_path):
+                    self.secret_staged_files.add(staged_path)
+
+    def cleanup_secret_staged_files(self):
+        """Remove generated secret files after output collection or on errors."""
+        for path in self.secret_staged_files:
+            try:
+                os.remove(path)
+            except FileNotFoundError:
+                pass
+        self.secret_staged_files.clear()
+
+    def log_pod_diagnostic(self, pod, secret_store):
+        safe_pod = self.redact_secrets(pod, secret_store)
+        log.debug('{}\n{}{}\n'.format('-' * 80, yaml.dump(safe_pod), '-' * 80))
             
     def make_tmpdir(self):
         # Doing this because cwltool.job does it
@@ -604,7 +688,8 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
                 
         with open(log_filename, 'w') as f:
             for log_entry in completion_result.tool_log:
-                f.write(f"{log_entry['timestamp']} - {log_entry['pod']} - {log_entry['entry']}\n")
+                safe_entry = self.redact_secrets(log_entry, runtime_context.secret_store)
+                f.write(f"{safe_entry['timestamp']} - {safe_entry['pod']} - {safe_entry['entry']}\n")
 
     def finish(self, completion_result: CompletionResult, runtimeContext):
         exit_code = completion_result.exit_code
@@ -632,6 +717,10 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
 
         # collect_outputs (and collect_output) is defined in command_line_tool
         outputs = self.collect_outputs(self.outdir, exit_code)
+
+        # cwltool removes generated files containing secrets after collecting
+        # outputs. Preserve that order so task outputs are collected first.
+        self.cleanup_secret_staged_files()
 
         disk_bytes = total_size(outputs)
         self.report(completion_result, disk_bytes)
@@ -791,32 +880,23 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         self._add_emptydir_volume_and_binding('tmpdir', self.container_tmpdir)
 
         # Call the ContainerCommandLineJob add_volumes method
-        self.add_volumes(self.pathmapper,
-                         runtime,
-                         tmpdir_prefix=runtimeContext.tmpdir_prefix,
-                         secret_store=runtimeContext.secret_store,
-                         any_path_okay=True)
+        self.add_kubernetes_volumes(self.pathmapper, runtime, runtimeContext, any_path_okay=True)
 
         if self.generatemapper is not None:
             # Seems to be true if docker is a hard requirement
             # This evaluates to true if docker_is_required is true
             # Used only for generatemapper add volumes
             any_path_okay = self.builder.get_requirement("DockerRequirement")[1] or False
-            self.add_volumes(
-                self.generatemapper,
-                runtime,
-                tmpdir_prefix=runtimeContext.tmpdir_prefix,
-                secret_store=runtimeContext.secret_store,
-                any_path_okay=any_path_okay)
+            self.add_kubernetes_volumes(self.generatemapper, runtime, runtimeContext, any_path_okay)
 
         k8s_builder = KubernetesPodBuilder(
             self.name,
             self.builder,
             self._get_container_image(),
-            self.environment,
+            self.resolve_secrets(self.environment, runtimeContext.secret_store),
             self.volume_builder.volume_mounts,
             self.volume_builder.volumes,
-            self.quoted_command_line(),
+            quoted_arg_list(self.resolve_secrets(self.command_line, runtimeContext.secret_store)),
             self.stdout,
             self.stderr,
             self.stdin,
@@ -831,7 +911,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             self.owner_reference,
         )
         built = k8s_builder.build()
-        log.debug('{}\n{}{}\n'.format('-' * 80, yaml.dump(built), '-' * 80))
+        self.log_pod_diagnostic(built, runtimeContext.secret_store)
         # Report an error if anything was added to the runtime list
         if runtime:
             log.error('Runtime list is not empty. k8s does not use that, so you should see who put something there:\n{}'.format(' '.join(runtime)))
@@ -952,13 +1032,19 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
 
         self._setup(runtimeContext)
         
-        pod = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
-        self.execute_kubernetes_pod(pod) # analogous to _execute()
-        completion_result = self.wait_for_kubernetes_pod()
-        if completion_result.exit_code != 0:
-            log_main.error(f"ERROR the command below failed in pod {get_pod_name(pod)}:")
-            log_main.error("\t" + " ".join(get_pod_command(pod)))
-        self.finish(completion_result, runtimeContext)
+        try:
+            pod = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
+            self.client.set_secret_store(runtimeContext.secret_store)
+            self.execute_kubernetes_pod(pod) # analogous to _execute()
+            completion_result = self.wait_for_kubernetes_pod()
+            if completion_result.exit_code != 0:
+                log_main.error(f"ERROR the command below failed in pod {get_pod_name(pod)}:")
+                safe_command = self.redact_secrets(get_pod_command(pod), runtimeContext.secret_store)
+                log_main.error("\t" + " ".join(safe_command))
+            self.finish(completion_result, runtimeContext)
+        finally:
+            self.cleanup_secret_staged_files()
+            self.client.set_secret_store(None)
     
     def setup_kubernetes(self, runtime_context):
         cuda_req, _ = self.get_requirement("http://commonwl.org/cwltool#CUDARequirement")

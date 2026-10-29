@@ -44,6 +44,7 @@ nav:
   - Task labels: how-to/labels.md
   - Save tool logs: how-to/tool-logs.md
   - Configuration and environment: how-to/configuration.md
+  - CWL secrets: how-to/cwl-secrets.md
   - Results and provenance: how-to/reporting.md
   - Dask Gateway: how-to/dask.md
   - Authenticated Dask Gateway: how-to/dask-production.md

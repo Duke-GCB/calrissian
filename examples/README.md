@@ -5,6 +5,10 @@ The walkthrough below is historical: its default-ServiceAccount RBAC examples
 should not be copied into a new deployment. Use the [current cluster guide](../docs/cluster-configuration.md)
 for separate runner/task identities.
 
+The [`cwltool:Secrets` examples](cwl-secrets/README.md) cover environment,
+command-line, and generated staged-file substitutions, with instructions for
+running them on the conformance Minikube cluster.
+
 These examples demonstrate how to run a CWL workflow in a Kubernetes cluster using Calrissian.
 
 ## Requirements

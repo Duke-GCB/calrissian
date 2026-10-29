@@ -81,6 +81,19 @@ class KubernetesClient(object):
         self._log_stop = threading.Event()
         self._log_thread = None
         self._logs_started = False
+        self._secret_values = ()
+
+    def set_secret_store(self, secret_store):
+        """Configure redaction for tool output captured by the runner."""
+        secrets = getattr(secret_store, 'secrets', {})
+        self._secret_values = tuple(sorted(
+            (value for value in secrets.values() if value), key=len, reverse=True
+        )) if isinstance(secrets, dict) else ()
+
+    def redact_log_line(self, line):
+        for secret in self._secret_values:
+            line = line.replace(secret, '[REDACTED]')
+        return line
 
     @retry_exponential_if_exception_type((ApiException, HTTPError,), log)
     def submit_pod(self, pod_body):
@@ -178,7 +191,7 @@ class KubernetesClient(object):
             for raw in resp.stream():
                 if self._log_stop.is_set():
                     break
-                line = raw.decode("utf-8", errors="ignore").rstrip()
+                line = self.redact_log_line(raw.decode("utf-8", errors="ignore").rstrip())
                 log.debug('[%s] %s', pod_name, line)
                 self.tool_log.append(self.format_log_entry(pod_name, line))
         finally:
