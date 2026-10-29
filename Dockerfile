@@ -7,12 +7,12 @@ RUN microdnf -y update && \
 # Use the concrete interpreter path so venv can resolve sys._base_executable
 # when Kaniko runs the layer command.
 RUN /usr/bin/python3.12 -m venv /opt/build-venv
-ENV PATH="/opt/build-venv/bin:${PATH}"
+ENV PATH="/opt/build-venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 # Hatch creates additional virtualenvs for isolated builds.
 ENV VIRTUALENV_PIP=26.2.2
 
 COPY scripts/bootstrap-pip.sh /tmp/bootstrap-pip.sh
-RUN sh /tmp/bootstrap-pip.sh
+RUN /bin/sh /tmp/bootstrap-pip.sh
 
 ARG HATCH_VERSION=1.18.0
 RUN python -m pip install --no-cache-dir "certifi>=2026.10.19" "uv>=0.13.4" "hatch==${HATCH_VERSION}"
@@ -45,7 +45,7 @@ USER calrissian
 WORKDIR /app
 
 ENV VIRTUAL_ENV=/app/venv
-ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
+ENV PATH="${VIRTUAL_ENV}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 RUN /usr/bin/python3.12 -m venv "${VIRTUAL_ENV}"
 
 COPY --from=builder --chown=1001:0 /wheels/ /app/dist/
