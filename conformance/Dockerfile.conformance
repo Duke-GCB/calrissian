@@ -6,7 +6,7 @@ FROM ${CALRISSIAN_IMAGE}
 # and constrain installed packages so adding cwltest cannot upgrade the runtime.
 COPY --chown=1001:0 scripts/bootstrap-pip.sh /tmp/bootstrap-pip.sh
 RUN python -m ensurepip && \
-    sh /tmp/bootstrap-pip.sh && \
+    /bin/sh /tmp/bootstrap-pip.sh && \
     python -m pip freeze > /tmp/production-constraints.txt && \
     python -m pip install --no-cache-dir -c /tmp/production-constraints.txt cwltest && \
     python -m pip check && \
