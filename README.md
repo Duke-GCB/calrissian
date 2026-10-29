@@ -2,7 +2,7 @@
 
 CWL on Kubernetes
 
-![Build Workflow](https://github.com/Duke-GCB/calrissian/actions/workflows/build.yaml/badge.svg)
+![Build Workflow](https://github.com/Duke-GCB/calrissian/actions/workflows/build-and-test.yaml/badge.svg)
 
 [![PyPI version](https://badge.fury.io/py/calrissian.svg)](https://badge.fury.io/py/calrissian)
 

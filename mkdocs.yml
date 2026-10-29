@@ -75,6 +75,7 @@ nav:
   - Documentation maintenance: explanation/documentation.md
 - Development:
   - Contributing: development/contributing.md
+  - CI and image security: development/ci.md
   - Project diagrams: development/diagrams.md
   - Python API:
     - Package: api/latest/calrissian/index.md

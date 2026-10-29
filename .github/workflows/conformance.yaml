@@ -1,0 +1,131 @@
+name: conformance
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Published conformance image tag to test
+        required: true
+        default: latest-dev
+        type: string
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  cwl-conformance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    permissions:
+      contents: read
+    env:
+      MINIKUBE_PROFILE: calrissian-ci
+      NAMESPACE: calrissian-conformance
+      GHCR_IMAGE: ghcr.io/duke-gcb/calrissian/conformance
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Select conformance image tag
+        id: image
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          DISPATCH_TAG: ${{ inputs.image_tag }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" == release ]]; then
+            tag="${RELEASE_TAG#v}"
+          else
+            tag="$DISPATCH_TAG"
+          fi
+          if [[ ! "$tag" =~ ^[A-Za-z0-9_][A-Za-z0-9_.-]*$ ]]; then
+            echo "Invalid image tag: $tag" >&2
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Install pinned Kubernetes tools
+        env:
+          MINIKUBE_VERSION: v1.36.0
+          KUBERNETES_VERSION: v1.35.1
+          HELM_VERSION: v3.22.1
+        run: |
+          set -euo pipefail
+          curl -fsSLo minikube "https://storage.googleapis.com/minikube/releases/${MINIKUBE_VERSION}/minikube-linux-amd64"
+          sudo install minikube /usr/local/bin/minikube
+          curl -fsSLo kubectl "https://dl.k8s.io/release/${KUBERNETES_VERSION}/bin/linux/amd64/kubectl"
+          sudo install kubectl /usr/local/bin/kubectl
+          curl -fsSLo helm.tar.gz "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz"
+          tar -xzf helm.tar.gz
+          sudo install linux-amd64/helm /usr/local/bin/helm
+          minikube version
+          kubectl version --client
+          helm version
+
+      - name: Load the conformance image
+        env:
+          IMAGE_TAG: ${{ steps.image.outputs.tag }}
+        run: |
+          set -euo pipefail
+          docker pull "${GHCR_IMAGE}:${IMAGE_TAG}"
+          docker tag "${GHCR_IMAGE}:${IMAGE_TAG}" conformance:latest
+          docker tag "${GHCR_IMAGE}:${IMAGE_TAG}" conformance:ci
+
+      - name: Start the conformance Kubernetes cluster
+        run: |
+          set -euo pipefail
+          minikube start --profile "$MINIKUBE_PROFILE" \
+            --driver=docker --container-runtime=docker --cni=calico \
+            --kubernetes-version=v1.35.1 --cpus=4 --memory=12288
+          minikube --profile "$MINIKUBE_PROFILE" addons enable storage-provisioner
+          minikube --profile "$MINIKUBE_PROFILE" addons enable default-storageclass
+          minikube --profile "$MINIKUBE_PROFILE" image load conformance:latest
+          minikube --profile "$MINIKUBE_PROFILE" image load conformance:ci
+          kubectl config use-context "$MINIKUBE_PROFILE"
+          kubectl wait --for=condition=Ready node --all --timeout=5m
+
+      - name: Deploy conformance environment
+        run: |
+          helm upgrade --install calrissian-conformance conformance/chart \
+            --namespace "$NAMESPACE" --create-namespace \
+            --set image=conformance:ci --wait --timeout 20m
+          kubectl --namespace "$NAMESPACE" wait \
+            --for=condition=Ready pod/inspect-volumes --timeout=5m
+
+      - name: Run CWL conformance suites
+        working-directory: conformance
+        run: |
+          set -euo pipefail
+          sh run-job-1-0.sh
+          sh run-job-1-1.sh
+          sh run-job-1-2.sh
+          sh run-job-1-2-1.sh
+
+      - name: Collect cluster diagnostics
+        if: always()
+        run: |
+          mkdir -p conformance/ci-diagnostics
+          kubectl get nodes,pods,jobs,pvc --all-namespaces -o wide \
+            > conformance/ci-diagnostics/resources.txt 2>&1 || true
+          kubectl describe pods,jobs --namespace "$NAMESPACE" \
+            > conformance/ci-diagnostics/workload-details.txt 2>&1 || true
+
+      - name: Upload conformance results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: conformance-results-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            conformance/results-v*.txt
+            conformance/badges/**/*.json
+            conformance/ci-diagnostics/*
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Remove temporary cluster
+        if: always()
+        run: minikube delete --profile "$MINIKUBE_PROFILE" || true

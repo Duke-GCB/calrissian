@@ -1,7 +1,7 @@
 version: 3
 
 includes:
-  json_utils: https://raw.githubusercontent.com/Terradue/taskfile-utils/refs/heads/main/json.yaml
+  json_utils: https://raw.githubusercontent.com/Terradue/taskfile-utils/c7bdf467fbfc45c38319940b617c7c0535233556/json.yaml
 
 tasks:
 
