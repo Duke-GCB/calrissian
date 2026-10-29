@@ -8,7 +8,9 @@ token and has no package-write permission.
 Trusted pushes to `develop` publish `latest-dev`; pushes to `main` or `master`
 publish `latest`. Version tags such as `v1.2.3` and `v1.2.3-rc1` publish the
 matching normalized version tag. Each published image also receives a tag with
-the full source commit SHA. The runtime and conformance images are built with
+the full source commit SHA. Before any image build begins, this workflow reuses
+the Python build and test matrix on Python 3.10 through 3.14; a failed job blocks
+scanning and publishing. The runtime and conformance images are built with
 Kaniko, exported as archives, scanned, and then copied to GHCR with Skopeo.
 The conformance image is built from the locally staged runtime image so the
 published pair comes from the same workflow run.
