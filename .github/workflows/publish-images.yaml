@@ -24,8 +24,8 @@ jobs:
     env:
       IMAGE_NAMESPACE: ghcr.io/duke-gcb/calrissian
       KANIKO_IMAGE: ghcr.io/osscontainertools/kaniko:v1.28.5
-      TRIVY_IMAGE: aquasec/trivy:0.74.0
-      SKOPEO_IMAGE: quay.io/skopeo/stable:v1.24.1
+      TRIVY_IMAGE: aquasec/trivy:0.76.1
+      SKOPEO_IMAGE: quay.io/skopeo/stable:v1.22.3-immutable
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
