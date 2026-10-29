@@ -16,10 +16,12 @@ kubectl -n calrissian-example get pods -l calrissian.example/run=smoke-001 -o ya
 ```
 
 Task pods are normally deleted when their termination is observed. For a
-future diagnostic run, set `CALRISSIAN_DELETE_PODS=false` on the runner to retain
-completed task pods. This setting does not disable all cleanup paths: shutdown
-cleanup still attempts to remove tracked active pods. Use persistent
-`--tool-logs-basepath` and `--stderr` destinations for retained logs.
+diagnostic run, set `CALRISSIAN_DELETE_PODS=false` on the runner to retain
+completed task pods while the runner Pod exists. Each task Pod is owned by the
+runner Pod, so Kubernetes garbage collection can remove retained task Pods after
+the runner Pod is deleted. This setting does not disable graceful shutdown
+cleanup of tracked active pods. Use persistent `--tool-logs-basepath` and
+`--stderr` destinations for logs that should outlive Pods.
 
 ## Stop the runner, then inspect tasks
 
@@ -37,16 +39,19 @@ The example uses `exec calrissian` so the runner receives the signal directly.
 Forced termination, node loss, missing API permissions, or exhausted grace time
 can prevent cleanup.
 
-Task pods are created directly and have no owner reference to the runner Job.
-Cascading Job deletion therefore does not by itself guarantee their removal.
-Review the selected pods, then remove remaining tasks for this run:
+Task Pods have an owner reference to the runner Pod. When a runner Pod is managed
+by a Job, deleting the Job removes its runner Pod; Kubernetes garbage collection
+then removes dependent task Pods. This may take time. Review the selected pods,
+then remove remaining tasks for this run if needed:
 
 ```sh
 kubectl -n calrissian-example delete pods -l calrissian.example/run=smoke-001 --wait=true
 kubectl -n calrissian-example get pods -l calrissian.example/run=smoke-001
 ```
 
-Use the exact run selector. Keep the PVC and results reader while retrieving
+Use the exact run selector. Owner references only react to deletion of the
+runner Pod object. A process failure while its Pod remains does not trigger
+garbage collection; node/API failures can delay cleanup. Keep the PVC and results reader while retrieving
 outputs. Terminating a tool can leave incomplete files and cannot undo external
 side effects. For Dask runs, also check Gateway for orphaned clusters using your
 Gateway administration procedure; deleting task pods does not prove that remote
