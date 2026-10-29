@@ -1,0 +1,165 @@
+name: publish-images
+
+on:
+  push:
+    branches: [main, master, develop]
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  build-scan-publish:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    env:
+      IMAGE_NAMESPACE: ghcr.io/duke-gcb/calrissian
+      KANIKO_IMAGE: ghcr.io/osscontainertools/kaniko:v1.28.5
+      TRIVY_IMAGE: aquasec/trivy:0.74.0
+      SKOPEO_IMAGE: quay.io/skopeo/stable:v1.24.1
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Select image tags
+        id: tags
+        shell: bash
+        run: |
+          set -euo pipefail
+          tags=("$GITHUB_SHA")
+          if [[ "$GITHUB_REF_TYPE" == branch ]]; then
+            case "$GITHUB_REF_NAME" in
+              main|master) tags+=(latest) ;;
+              develop) tags+=(latest-dev) ;;
+            esac
+          else
+            version="${GITHUB_REF_NAME#v}"
+            if [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?$ ]]; then
+              echo "Unsupported image release tag: $GITHUB_REF_NAME" >&2
+              exit 1
+            fi
+            tags+=("$version")
+          fi
+          {
+            echo 'tags<<EOF'
+            printf '%s\n' "${tags[@]}"
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Start a temporary registry for the conformance base image
+        run: |
+          docker run --detach --name local-image-registry --publish 5000:5000 registry:3.0.0
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:5000/v2/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "The temporary image registry did not become ready" >&2
+          exit 1
+
+      - name: Build runtime image archive with Kaniko
+        run: |
+          docker run --rm --network host \
+            --volume "$GITHUB_WORKSPACE:/workspace:ro" \
+            --volume "$RUNNER_TEMP:/out" \
+            "$KANIKO_IMAGE" \
+            --context=dir:///workspace \
+            --dockerfile=/workspace/Dockerfile \
+            --destination=localhost:5000/calrissian:build \
+            --tar-path=/out/calrissian.tar \
+            --insecure-registry=localhost:5000
+
+      - name: Build conformance image archive with Kaniko
+        run: |
+          docker run --rm --network host \
+            --volume "$GITHUB_WORKSPACE:/workspace:ro" \
+            --volume "$RUNNER_TEMP:/out" \
+            "$KANIKO_IMAGE" \
+            --context=dir:///workspace \
+            --dockerfile=/workspace/conformance/Dockerfile.conformance \
+            --build-arg=CALRISSIAN_IMAGE=localhost:5000/calrissian:build \
+            --destination=localhost:5000/conformance:build \
+            --tar-path=/out/conformance.tar \
+            --insecure-registry=localhost:5000
+
+      - name: Generate CycloneDX SBOMs
+        run: |
+          docker run --rm --volume "$RUNNER_TEMP:/work" "$TRIVY_IMAGE" image \
+            --input /work/calrissian.tar --format cyclonedx --output /work/calrissian.cdx.json
+          docker run --rm --volume "$RUNNER_TEMP:/work" "$TRIVY_IMAGE" image \
+            --input /work/conformance.tar --format cyclonedx --output /work/conformance.cdx.json
+
+      - name: Scan runtime image archive
+        id: scan-runtime
+        continue-on-error: true
+        run: |
+          docker run --rm \
+            --volume "$RUNNER_TEMP:/work" \
+            --volume "$GITHUB_WORKSPACE/.trivyignore.yaml:/work/.trivyignore.yaml:ro" \
+            "$TRIVY_IMAGE" image --input /work/calrissian.tar \
+            --ignorefile /work/.trivyignore.yaml --scanners vuln \
+            --severity HIGH,CRITICAL --exit-code 1 \
+            --format json --output /work/calrissian-trivy.json
+
+      - name: Scan conformance image archive
+        id: scan-conformance
+        continue-on-error: true
+        run: |
+          docker run --rm \
+            --volume "$RUNNER_TEMP:/work" \
+            --volume "$GITHUB_WORKSPACE/.trivyignore.yaml:/work/.trivyignore.yaml:ro" \
+            "$TRIVY_IMAGE" image --input /work/conformance.tar \
+            --ignorefile /work/.trivyignore.yaml --scanners vuln \
+            --severity HIGH,CRITICAL --exit-code 1 \
+            --format json --output /work/conformance-trivy.json
+
+      - name: Upload image archives, SBOMs, and scan reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: image-security-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/calrissian.tar
+            ${{ runner.temp }}/conformance.tar
+            ${{ runner.temp }}/*.cdx.json
+            ${{ runner.temp }}/*-trivy.json
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Enforce image vulnerability policy
+        if: always()
+        env:
+          RUNTIME_SCAN: ${{ steps.scan-runtime.outcome }}
+          CONFORMANCE_SCAN: ${{ steps.scan-conformance.outcome }}
+        run: |
+          test "$RUNTIME_SCAN" = success && test "$CONFORMANCE_SCAN" = success
+
+      - name: Authenticate Skopeo to GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s' "$GHCR_TOKEN" | docker run --rm -i \
+            --volume "$RUNNER_TEMP:/auth" "$SKOPEO_IMAGE" login \
+            --authfile /auth/ghcr-auth.json --username "$GITHUB_ACTOR" \
+            --password-stdin ghcr.io
+
+      - name: Publish scanned image archives with Skopeo
+        env:
+          IMAGE_TAGS: ${{ steps.tags.outputs.tags }}
+        run: |
+          set -euo pipefail
+          mapfile -t image_tags <<< "$IMAGE_TAGS"
+          for image in calrissian conformance; do
+            for tag in "${image_tags[@]}"; do
+              docker run --rm --volume "$RUNNER_TEMP:/work" "$SKOPEO_IMAGE" copy \
+                --dest-authfile /work/ghcr-auth.json \
+                "docker-archive:/work/${image}.tar" \
+                "docker://${IMAGE_NAMESPACE}/${image}:${tag}"
+            done
+          done
