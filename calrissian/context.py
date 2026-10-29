@@ -8,6 +8,7 @@ class CalrissianLoadingContext(LoadingContext):
 
     def __init__(self, **kwargs):
         kwargs['construct_tool_object'] = calrissian_make_tool
+        kwargs.setdefault('relax_path_checks', True)
         return super(CalrissianLoadingContext, self).__init__(kwargs)
 
 
@@ -21,7 +22,9 @@ class CalrissianRuntimeContext(RuntimeContext):
         self.pod_env_vars = None
         self.pod_nodeselectors = None
         self.pod_gpu_nodeselectors = None
+        self.pod_gpu_tolerations = None
         self.pod_serviceaccount = None
+        self.pod_automount_service_account_token = False
         self.tool_logs_basepath = None
         self.max_gpus = None
         self.no_network_access_pod_labels = None

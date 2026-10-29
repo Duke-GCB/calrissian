@@ -1,5 +1,10 @@
 # Calrissian Examples
 
+For the current guided introduction, use the [CWL v1.2 tutorials](../docs/tutorials/index.md).
+The walkthrough below is historical: its default-ServiceAccount RBAC examples
+should not be copied into a new deployment. Use the [current cluster guide](../docs/cluster-configuration.md)
+for separate runner/task identities.
+
 These examples demonstrate how to run a CWL workflow in a Kubernetes cluster using Calrissian.
 
 ## Requirements

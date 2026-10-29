@@ -1,17 +1,22 @@
 # Calrissian
 
-CWL on Kubernetes
+Calrissian executes Common Workflow Language (CWL) tools and workflows on
+Kubernetes. It uses cwltool to interpret CWL and creates task pods while managing
+workflow dependencies and aggregate resource budgets.
 
-## Overview
+Choose a documentation path for your task:
 
-Calrissian is a [CWL](https://www.commonwl.org) implementation designed to run inside a Kubernetes cluster. Its goal is to be highly efficient and scalable, taking advantage of high capacity clusters to run many steps in parallel.
+| Section | Purpose | Start here |
+|---|---|---|
+| [Tutorials](tutorials/index.md) | Learn by running a small workflow | CWL v1.2 reverse and sort |
+| [How-to guides](how-to/index.md) | Complete a specific deployment or execution task | Storage, security, GPU, Dask, provenance |
+| [Reference](reference/index.md) | Look up options and supported behavior | Configuration and CWL support |
+| [Explanation](explanation/index.md) | Understand architecture and design choices | C4 model, scheduling, storage boundaries |
 
-## Cluster Requirements
+For production, provide shared persistent storage usable by the runner and task
+pods, namespace-scoped runner permissions, and cluster policy appropriate to the
+workload. The single-node Minikube tutorial is a development environment, not a
+multi-node storage or security certification.
 
-Calrissian requires a [Kubernetes](https://kubernetes.io) cluster, configured to provision [PersistentVolumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/) with the [ReadWriteMany](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes) access mode. 
-
-## Scalability / Resource Requirements
-
-Calrissian is designed to issue tasks in parallel if they are independent, and thanks to Kubernetes, should be able to run very large parallel workloads.
-
-When running `calrissian`, you must provide a limit the the number of CPU cores (`--max-cores`) and RAM megabytes (`--max-ram`) to use concurrently. Calrissian will use CWL [ResourceRequirements](https://www.commonwl.org/v1.0/CommandLineTool.html#ResourceRequirement) to track usage and stay within the limits provided. We highly recommend using accurate ResourceRequirements in your workloads, so that they can be scheduled efficiently and are less likely to be terminated or refused by the cluster.
+Existing [installation](installation.md), [cluster configuration](cluster-configuration.md),
+and [recorded conformance results](conformance/latest-results.md) remain available.

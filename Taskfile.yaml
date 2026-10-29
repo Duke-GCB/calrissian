@@ -1,7 +1,7 @@
 version: 3
 
 includes:
-  json_utils: https://raw.githubusercontent.com/Terradue/taskfile-utils/refs/heads/main/json.yaml
+  json_utils: https://raw.githubusercontent.com/Terradue/taskfile-utils/c7bdf467fbfc45c38319940b617c7c0535233556/json.yaml
 
 tasks:
 
@@ -22,3 +22,82 @@ tasks:
     desc: Run all dask tests
     cmds:
     - hatch run test:testdask
+
+  conformance:cluster:
+    desc: Create the Minikube cluster for CWL conformance tests
+    vars:
+      CPUS: '{{default "6" .CPUS}}'
+      MEMORY: '{{default "12288" .MEMORY}}'
+      DRIVER: '{{default "docker" .DRIVER}}'
+    preconditions:
+    - sh: command -v minikube
+      msg: Install minikube before creating the conformance cluster
+    cmds:
+    - minikube start --profile calrissian-conformance --driver "{{.DRIVER}}" --container-runtime docker --cni calico --cpus "{{.CPUS}}" --memory "{{.MEMORY}}"
+    - minikube --profile calrissian-conformance addons enable storage-provisioner
+    - minikube --profile calrissian-conformance addons enable default-storageclass
+
+  conformance:cluster:stop:
+    desc: Stop the Minikube conformance cluster, preserving its data
+    cmds:
+    - minikube stop --profile calrissian-conformance
+
+  conformance:cluster:delete:
+    desc: Delete the Minikube conformance cluster and its data
+    cmds:
+    - minikube delete --profile calrissian-conformance
+
+  conformance:test:
+    desc: Run one conformance test (VERSION=1.0 ID=173)
+    requires:
+      vars: [VERSION, ID]
+    env:
+      CONFORMANCE_VERSION: '{{.VERSION}}'
+      CONFORMANCE_ID: '{{.ID}}'
+    cmds:
+    - python3 conformance/run-test.py --version "$CONFORMANCE_VERSION" --id "$CONFORMANCE_ID"
+
+  dask:cleanup:test:
+    desc: Verify Dask cleanup sidecar resources against the deployed dask profile
+    cmds:
+    - python3 dask-gateway/test-cleanup.py
+
+  dask:test:
+    desc: Run the Dask extension CWL suite (optionally ID=3)
+    env:
+      DASK_TEST_ID: '{{default "" .ID}}'
+    cmds:
+    - 'python3 dask-gateway/run-tests.py ${DASK_TEST_ID:+--id "$DASK_TEST_ID"}'
+
+  docs:cli:
+    desc: Refresh the CLI reference from the argument parser
+    cmds:
+    - uv run --no-project --with-editable . python scripts/generate-cli-reference.py
+
+  docs:api:
+    desc: Generate the Python API reference from the current source
+    cmds:
+    - uv run --no-project --with . --with pdocs --with legacy-cgi --with setuptools pdocs as_markdown --output_dir ./docs/api/latest --exclude_source --overwrite calrissian
+    - python3 scripts/fix-api-doc-links.py
+
+  docs:uml:
+    desc: Generate class and package diagrams (requires Graphviz)
+    preconditions:
+    - sh: command -v dot
+      msg: Install Graphviz (dot) before generating UML diagrams
+    cmds:
+    - mkdir -p docs/uml
+    - uv run --no-project --with pylint pyreverse --all-ancestors --show-builtin --output svg --output-directory ./docs/uml/ --source-roots ./calrissian/ --verbose ./calrissian/
+
+  docs:generate:
+    desc: Generate the CLI reference, API reference, and UML diagrams
+    cmds:
+    - task: docs:cli
+    - task: docs:api
+    - task: docs:uml
+
+  docs:serve:
+    desc: Serve the documentation locally
+    cmds:
+    - task: docs:generate
+    - uv run --no-project --with mkdocs --with mkdocs-material mkdocs serve

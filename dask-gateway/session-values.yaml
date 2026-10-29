@@ -1,0 +1,5 @@
+# This profile tests Gateway connectivity, not NetworkAccess conformance.
+networkAccess:
+  enabled: false
+daskSmoke:
+  enabled: true

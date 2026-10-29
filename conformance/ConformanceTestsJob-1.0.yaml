@@ -6,6 +6,8 @@ spec:
   backoffLimit: 0
   template:
     spec:
+      serviceAccountName: calrissian-sa
+      automountServiceAccountToken: true
       initContainers:
       - name: prep-1-0
         image: alpine:3.10
@@ -28,6 +30,8 @@ spec:
         - "/output/badges-1.0.2"
         - "--verbose"
         - "--"
+        - "--pod-serviceaccount"
+        - "calrissian-workflow"
         - "--max-ram"
         - "8G"
         - "--max-cores"
@@ -44,6 +48,9 @@ spec:
         - name: RETRY_ATTEMPTS
           value: "1"
         volumeMounts:
+        - mountPath: /home/calrissian/.calrissian
+          name: network-config
+          readOnly: true
         - mountPath: /conformance
           name: conformance-test-data
           readOnly: true
@@ -51,6 +58,10 @@ spec:
           name: conformance-test-output
       restartPolicy: Never
       volumes:
+      - name: network-config
+        configMap:
+          name: conformance-network-config
+          optional: true
       - name: conformance-test-data
         persistentVolumeClaim:
           claimName: conformance-test-data

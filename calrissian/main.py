@@ -1,5 +1,6 @@
 import contextlib
-import re
+from importlib.resources import files
+import yaml
 
 import cwltool
 from cwltool.process import use_custom_schema, get_schema
@@ -42,6 +43,9 @@ def activate_logging(level):
 
 
 def add_arguments(parser):
+    # Permit valid input basenames such as "item #1.txt" by default.
+    # Configuration files may still request strict checks explicitly.
+    parser.set_defaults(relax_path_checks=True)
     parser.add_argument('--max-ram', type=str, help='Maximum amount of RAM to use, e.g 1048576, 512Mi or 2G. Follows k8s resource conventions')
     parser.add_argument('--max-cores', type=str, help='Maximum number of CPU cores to use')
     parser.add_argument('--max-gpus', type=str, nargs='?', help='Maximum number of GPU cores to use')
@@ -49,14 +53,16 @@ def add_arguments(parser):
     parser.add_argument('--pod-env-vars', type=Text, nargs='?', help='YAML file of environment variables to add at runtime to Pods submitted')
     parser.add_argument('--pod-nodeselectors', type=Text, nargs='?', help='YAML file of node selectors to add to Pods submitted')
     parser.add_argument('--pod-gpu-nodeselectors', type=Text, nargs='?', help='YAML file of node selectors to add to Pods submitted that require GPUs')
-    parser.add_argument('--pod-serviceaccount', type=str, help='Service Account to use for pods management')
+    parser.add_argument('--pod-automount-service-account-token', action='store_true', default=False, help='Explicitly allow automatic service-account API credentials in spawned task pods')
+    parser.add_argument('--pod-gpu-tolerations', type=Text, help='YAML toleration list applied only to task pods allocating nvidia.com/gpu')
+    parser.add_argument('--pod-serviceaccount', type=str, help="ServiceAccount assigned to spawned workflow task pods; defaults to the namespace's default account. Does not configure the Calrissian runner's identity.")
     parser.add_argument('--usage-report', type=Text, nargs='?', help='Output JSON file name to record resource usage')
     parser.add_argument('--stdout', type=Text, nargs='?', help='Output file name to tee standard output (CWL output object)')
     parser.add_argument('--stderr', type=Text, nargs='?', help='Output file name to tee standard error to (includes tool logs)')
     parser.add_argument('--tool-logs-basepath', type=Text, nargs='?', help='Base path for saving the tool logs')
     parser.add_argument('--conf', help='Defines the default values for the CLI arguments', action='append')
-    parser.add_argument('--no-network-access-pod-label', type=Text, nargs='?', help='YAML file to set the pod label to use for disabling network access')
-    parser.add_argument('--network-access-pod-label', type=Text, nargs='?', help='YAML file to set the pod label to use for enabling network access')
+    parser.add_argument('--no-network-access-pod-label', dest='no_network_access_pod_labels', type=Text, nargs='?', help='YAML file to set the pod label to use for disabling network access')
+    parser.add_argument('--network-access-pod-label', dest='network_access_pod_labels', type=Text, nargs='?', help='YAML file to set the pod label to use for enabling network access')
     parser.add_argument('--dask-gateway-url', type=Text, nargs='?', help='Defines the Dask Gateway URL', required=False)
     parser.add_argument('--dask-script-configmap', type=Text, nargs='?', help='Name of the already existing configmap with custom script for dask', required=False)
 
@@ -136,20 +142,30 @@ def flush_tees():
 
 
 def add_custom_schema():
-    cwltool.command_line_tool.ACCEPTLIST_EN_RELAXED_RE = re.compile(r".*")
-    cwltool.command_line_tool.ACCEPTLIST_RE = cwltool.command_line_tool.ACCEPTLIST_EN_RELAXED_RE
-    supported_versions = ["v1.0", "v1.1", "v1.2"]
+    extension_schemas = {
+        "v1.0": "extensions.yml",
+        "v1.1": "extensions-v1.1.yml",
+        "v1.2": "extensions-v1.2.yml",
+    }
 
     with open(os.path.join(os.path.dirname(__file__), "dask/custom_schema/schema.yaml")) as f:
-        schema_content = f.read()
+        dask_schema = yaml.safe_load(f)
 
-    for s in supported_versions:
-        use_custom_schema(s, "https://calrissian-cwl.github.io/schema", schema_content)
+    for s, extension_file in extension_schemas.items():
+        # A custom schema replaces cwltool's extension schema. Preserve those
+        # definitions (including CUDA) and add Dask under its original URI.
+        schema = yaml.safe_load(files("cwltool").joinpath(extension_file).read_text("utf-8"))
+        for definition in dask_schema["$graph"]:
+            if "name" in definition:
+                schema["$graph"].append(dict(
+                    definition, name=dask_schema["$base"] + definition["name"]
+                ))
+        use_custom_schema(s, "http://commonwl.org/cwltool", yaml.safe_dump(schema))
         get_schema(s)
 
-    cwltool.process.supportedProcessRequirements.extend([
-        "https://calrissian-cwl.github.io/schema#DaskGatewayRequirement"
-    ])
+    requirement = "https://calrissian-cwl.github.io/schema#DaskGatewayRequirement"
+    if requirement not in cwltool.process.supportedProcessRequirements:
+        cwltool.process.supportedProcessRequirements.append(requirement)
 
 
 def main():
@@ -173,7 +189,8 @@ def main():
     try:
         result = cwlmain(args=parsed_args,
                          executor=executor,
-                         loadingContext=CalrissianLoadingContext(),
+                         loadingContext=CalrissianLoadingContext(
+                             relax_path_checks=parsed_args.relax_path_checks),
                          runtimeContext=runtime_context,
                          versionfunc=version,
                          custom_schema_callback=(add_custom_schema if parsed_args.dask_gateway_url else None)

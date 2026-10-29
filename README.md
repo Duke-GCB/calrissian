@@ -1,107 +1,51 @@
 # Calrissian
 
-CWL on Kubernetes
+[![Build and test](https://github.com/Duke-GCB/calrissian/actions/workflows/build-and-test.yaml/badge.svg)](https://github.com/Duke-GCB/calrissian/actions/workflows/build-and-test.yaml)
+[![PyPI version](https://badge.fury.io/py/calrissian.svg)](https://pypi.org/project/calrissian/)
 
-![Build Workflow](https://github.com/Duke-GCB/calrissian/actions/workflows/build.yaml/badge.svg)
+Calrissian runs [Common Workflow Language (CWL)](https://www.commonwl.org/)
+tools and workflows on Kubernetes. It uses `cwltool` to interpret CWL and runs
+workflow steps in Kubernetes pods, scheduling independent steps in parallel
+within configured CPU and memory budgets.
 
-[![PyPI version](https://badge.fury.io/py/calrissian.svg)](https://badge.fury.io/py/calrissian)
+## Get started
 
-## Overview
+Install Calrissian in the Python environment used to run workflows:
 
-Calrissian is a [CWL](https://www.commonwl.org) implementation designed to run inside a Kubernetes cluster. Its goal is to be highly efficient and scalable, taking advantage of high capacity clusters to run many steps in parallel.
-
-## Cluster Requirements
-
-Calrissian requires a [Kubernetes](https://kubernetes.io) or [Openshift](https://www.openshift.com)/[OKD](https://www.okd.io) cluster, configured to provision [PersistentVolumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/) with the `ReadWriteMany` access mode. Kubernetes installers and cloud providers don't usually include this type of storage, so it may require additional configuration.
-
-Calrissian has been tested with NFS using the [nfs-client-provisioner](https://github.com/kubernetes-incubator/external-storage/tree/master/nfs-client) and with GlusterFS using [OKD Containerized GlusterFS](https://docs.okd.io/3.11/install_config/persistent_storage/persistent_storage_glusterfs.html). Many cloud providers have an NFS offering, which integrates easily using the nfs-client-provisioner.
-
-## Scalability / Resource Requirements
-
-Calrissian is designed to issue tasks in parallel if they are independent, and thanks to Kubernetes, should be able to run very large parallel workloads.
-
-When running `calrissian`, you must provide a limit the the number of CPU cores (`--max-cores`) and RAM megabytes (`--max-ram`) to use concurrently. Calrissian will use CWL [ResourceRequirements](https://www.commonwl.org/v1.0/CommandLineTool.html#ResourceRequirement) to track usage and stay within the limits provided. We highly recommend using accurate ResourceRequirements in your workloads, so that they can be scheduled efficiently and are less likely to be terminated or refused by the cluster.
-
-`calrissian` parameters can be provided via a JSON configuration file either stored under `~/.calrissian/default.json` or provided via the `--conf` option.
-
-Below an example of such a file:
-
-```json
-{
-    "max_ram": "16G",
-    "max_cores": "10",
-    "outdir": "/calrissian",
-    "tmpdir_prefix": "/calrissian/tmp"
-}
+```sh
+pip install calrissian
 ```
 
-## CWL Conformance
+Calrissian needs access to a Kubernetes cluster, including OpenShift.
+Production deployments should provide shared persistent storage that can be
+mounted by the runner and task pods, and permissions scoped to the namespace
+where workflows run. See the [installation guide](docs/installation.md) and
+[deployment guide](docs/how-to/deployment.md) for requirements and setup.
 
-Calrissian leverages [cwltool](https://github.com/common-workflow-language/cwltool) heavily and most conformance tests for CWL v1.0. Please see [conformance](conformance) for further details and processes.
+To try Calrissian on a local Minikube cluster, follow the
+[first-tool tutorial](docs/tutorials/first-tool.md).
 
-To view open issues related to conformance, see the [conformance](https://github.com/Duke-GCB/calrissian/issues?q=is%3Aopen+is%3Aissue+label%3Aconformance) label on the issue tracker.
+## Documentation
 
-## Setup
+- [Tutorials](docs/tutorials/index.md) for running tools and workflows.
+- [How-to guides](docs/how-to/index.md) for deployment, storage, security, and
+  supported extensions.
+- [Reference](docs/reference/index.md) for CLI options, configuration, and CWL
+  support.
+- [Architecture and concepts](docs/explanation/index.md) for execution,
+  scheduling, storage, and design.
+- [CWL conformance results](docs/conformance/latest-results.md), including
+  versioned results and badges.
 
-Please see [examples](examples) for installation and setup instructions.
+The rendered documentation is available at
+[duke-gcb.github.io/calrissian](https://duke-gcb.github.io/calrissian/).
 
-## Environment Variables
+## Development
 
-Calrissian's behaviors can be customized by setting the following environment variables in the container specification.
+See the [contributor guide](docs/development/contributing.md) for environment
+setup, tests, integration checks, and documentation tasks. The project uses
+Hatch for Python environments and Task for repository workflows.
 
-### Pod lifecycle
+## License
 
-By default, pods for a job step will be deleted after termination
-
-- `CALRISSIAN_DELETE_PODS`: Default `true`. If `false`, job step pods will not be deleted.
-
-### Kubernetes API retries
-
-When encountering a Kubernetes API exception, Calrissian uses a library to retry API calls with an exponential backoff. See the [tenacity documentation](https://tenacity.readthedocs.io/en/latest/index.html#waiting-before-retrying) for details.
-
-- `RETRY_MULTIPLIER`: Default `5`. Unit for multiplying the exponent interval.
-- `RETRY_MIN`: Default `5`. Minimum interval between retries.
-- `RETRY_MAX`: Default `1200`. Maximum interval between retries.
-- `RETRY_ATTEMPTS`: Default `10`. Max number of retries before giving up.
-
-## For developers
-
-### Installing for Development
-
-Note that for development you can just use [Hatch] directly as described below. 
-
-### Installing Hatch
-
-The main tool that is used for development is [Hatch]. It manages dependencies (in a virtualenv that is created on the fly) and is also the command runner.
-
-So first, [install it][install Hatch]. Ideally in an isolated way with **`pipx install hatch`** (after [installing `pipx`]), or just `pip install hatch` as a more well-known way.
-
-### Running tests
-
-```
-hatch run test:test
-```
-
-Verbose: 
-
-```
-hatch run test:testv
-```
-
-### Running test coverage
-
-```
-hatch run test:cov
-```
-
-### Running calrissian
-
-```
-hatch run calrissian
-```
-
-### Serve the documentation
-
-```
-hatch run docs:serve
-```
+Calrissian is distributed under the [MIT License](LICENSE).

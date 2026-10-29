@@ -4,6 +4,8 @@ from calrissian.main import main, add_arguments, parse_arguments
 from calrissian.main import handle_sigterm, install_signal_handler, install_tees, flush_tees
 from calrissian.main import activate_logging, get_log_level, print_version
 import logging
+from argparse import ArgumentParser
+from calrissian.context import CalrissianRuntimeContext
 
 class CalrissianMainTestCase(TestCase):
 
@@ -47,6 +49,8 @@ class CalrissianMainTestCase(TestCase):
         self.assertEqual(mock_executor.call_args,
                          call(mock_memory_parser.parse_to_megabytes.return_value, mock_cpu_parser.parse.return_value, 1))
         self.assertTrue(mock_runtime_context.called)
+        mock_loading_context.assert_called_once_with(
+            relax_path_checks=mock_parse_arguments.return_value.relax_path_checks)
         self.assertEqual(mock_cwlmain.call_args, call(args=mock_parse_arguments.return_value,
                                                       executor=mock_executor.return_value,
                                                       loadingContext=mock_loading_context.return_value,
@@ -65,7 +69,26 @@ class CalrissianMainTestCase(TestCase):
     def test_add_arguments(self):
         mock_parser = Mock()
         add_arguments(mock_parser)
-        self.assertEqual(mock_parser.add_argument.call_count, 20)
+        self.assertEqual(mock_parser.add_argument.call_count, 22)
+
+    def test_env_from_options_reach_runtime_context(self):
+        parser = ArgumentParser()
+        add_arguments(parser)
+        for source in ('secret', 'configmap'):
+            for names in ([], ['source1'], ['source1', 'source2']):
+                with self.subTest(source=source, names=names):
+                    arguments = [arg for name in names for arg in ('--env-from-' + source, name)]
+                    context = CalrissianRuntimeContext(vars(parser.parse_args(arguments)))
+                    self.assertEqual(getattr(context, 'env_from_' + source), names or None)
+
+    def test_pod_priority_class_reaches_runtime_context(self):
+        parser = ArgumentParser()
+        add_arguments(parser)
+        for arguments, expected in [([], None), (['--pod-priority-class', 'high-priority'], 'high-priority')]:
+            with self.subTest(arguments=arguments):
+                parsed = parser.parse_args(arguments)
+                context = CalrissianRuntimeContext(vars(parsed))
+                self.assertEqual(context.pod_priority_class, expected)
 
     @patch('calrissian.main.sys')
     def test_parse_arguments_exits_without_ram_or_cores(self, mock_sys):

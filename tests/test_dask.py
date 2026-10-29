@@ -41,6 +41,31 @@ class ValidateExtensionTestCase(TestCase):
 
 class KubernetesDaskPodBuilderTestCase(TestCase):
 
+    def test_build_env_from_sources(self):
+        # Issues #194 and #195: references belong on the main container.
+        cases = [
+            (None, None, None),
+            ([], [], None),
+            (['secret1'], None, [{'secretRef': {'name': 'secret1'}}]),
+            (['secret1', 'secret2'], None,
+             [{'secretRef': {'name': 'secret1'}}, {'secretRef': {'name': 'secret2'}}]),
+            (None, ['configmap1'], [{'configMapRef': {'name': 'configmap1'}}]),
+            (None, ['configmap1', 'configmap2'],
+             [{'configMapRef': {'name': 'configmap1'}}, {'configMapRef': {'name': 'configmap2'}}]),
+            (['secret1'], ['configmap1'],
+             [{'secretRef': {'name': 'secret1'}}, {'configMapRef': {'name': 'configmap1'}}]),
+        ]
+        for secrets, configmaps, expected in cases:
+            with self.subTest(secrets=secrets, configmaps=configmaps):
+                self.pod_builder.env_from_secret = secrets
+                self.pod_builder.env_from_configmap = configmaps
+                container = self.pod_builder.build()['spec']['containers'][0]
+                if expected is None:
+                    self.assertNotIn('envFrom', container)
+                else:
+                    self.assertEqual(container['envFrom'], expected)
+
+
     def setUp(self):
         builder = Mock()
         builder.cwlVersion = "v1.2"
@@ -99,6 +124,60 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
         self.assertEqual(['python', '/controller/init-dask.py'], self.pod_builder.init_container_command())
 
 
+    def test_cleanup_resource_defaults(self):
+        with patch.dict(os.environ, {}, clear=True):
+            self.assertEqual(self.pod_builder.sidecar_container_resources(), {
+                'requests': {'cpu': '10m', 'memory': '64Mi'},
+                'limits': {'cpu': '100m', 'memory': '256Mi'},
+            })
+
+    def test_cleanup_resource_overrides(self):
+        with patch.dict(os.environ, {
+            'CALRISSIAN_DASK_CLEANUP_CPU_REQUEST': '20m',
+            'CALRISSIAN_DASK_CLEANUP_CPU_LIMIT': '0.2',
+            'CALRISSIAN_DASK_CLEANUP_MEMORY_REQUEST': '96Mi',
+            'CALRISSIAN_DASK_CLEANUP_MEMORY_LIMIT': '0.5Gi',
+        }, clear=True):
+            self.assertEqual(self.pod_builder.sidecar_container_resources(), {
+                'requests': {'cpu': '20m', 'memory': '96Mi'},
+                'limits': {'cpu': '0.2', 'memory': '0.5Gi'},
+            })
+
+    def test_cleanup_partial_override_and_build_time_lookup(self):
+        with patch.dict(os.environ, {}, clear=True):
+            self.assertEqual(self.pod_builder.sidecar_container_resources()['requests']['cpu'], '10m')
+            os.environ['CALRISSIAN_DASK_CLEANUP_CPU_REQUEST'] = '25m'
+            self.assertEqual(self.pod_builder.sidecar_container_resources()['requests']['cpu'], '25m')
+
+    def test_cleanup_invalid_quantities(self):
+        for value in ['', 'bad', '-1', '0', 'NaN', 'Infinity', '0.0001']:
+            with self.subTest(value=value), patch.dict(os.environ, {
+                'CALRISSIAN_DASK_CLEANUP_CPU_REQUEST': value,
+            }, clear=True):
+                with self.assertRaisesRegex(ValueError, 'CALRISSIAN_DASK_CLEANUP_CPU_REQUEST'):
+                    self.pod_builder.sidecar_container_resources()
+        with patch.dict(os.environ, {'CALRISSIAN_DASK_CLEANUP_MEMORY_LIMIT': '64QQ'}, clear=True):
+            with self.assertRaisesRegex(ValueError, 'CALRISSIAN_DASK_CLEANUP_MEMORY_LIMIT'):
+                self.pod_builder.sidecar_container_resources()
+
+    def test_cleanup_requests_must_fit_limits(self):
+        for resource, value in [('CPU', '1'), ('MEMORY', '1Gi')]:
+            with self.subTest(resource=resource), patch.dict(os.environ, {
+                f'CALRISSIAN_DASK_CLEANUP_{resource}_REQUEST': value,
+            }, clear=True):
+                with self.assertRaisesRegex(ValueError, 'REQUEST must not exceed'):
+                    self.pod_builder.sidecar_container_resources()
+
+    def test_cleanup_does_not_inherit_main_or_gpu_resources(self):
+        self.pod_builder.resources = {'cores': 8, 'ram': 16384, 'gpus': 4}
+        with patch.dict(os.environ, {}, clear=True):
+            result = self.pod_builder.sidecar_container_resources()
+            result['requests']['cpu'] = '99m'
+            self.assertEqual(self.pod_builder.sidecar_container_resources()['requests']['cpu'], '10m')
+            self.assertEqual(set(result['requests']), {'cpu', 'memory'})
+            self.assertEqual(set(result['limits']), {'cpu', 'memory'})
+            self.assertEqual(self.pod_builder.resources['gpus'], 4)
+
     @patch("builtins.open", new_callable=mock_open, read_data="print('Default script')")
     @patch("os.path.join", return_value="/mocked/path/init-dask.py")  # Mock path join
     def test_init_container_command_with_default_script(self, mock_path_join, mock_file):
@@ -156,7 +235,7 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
         init_containers = self.pod_builder.init_containers()
         self.assertEqual(len(init_containers), 2)
         container = init_containers[0]
-        self.assertEqual(container['name'], 'podname-init')
+        self.assertEqual(container['name'], 'podname-init-prepare')
         self.assertEqual(container['image'], DEFAULT_INIT_IMAGE)
         self.assertEqual(container['command'], ['/bin/sh','-c','mkdir -p out/to; mkdir -p err/to;'])
         self.assertEqual(container['volumeMounts'], self.pod_builder.volume_mounts)
@@ -187,7 +266,7 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
         container = init_containers[0]
         dask_container = init_containers[1]
 
-        self.assertEqual(container['name'], 'podname-init')
+        self.assertEqual(container['name'], 'podname-init-prepare')
         self.assertEqual(container['image'], DEFAULT_INIT_IMAGE)
         self.assertEqual(container['command'], ['/bin/sh','-c','mkdir -p out/to; mkdir -p err/to;'])
         self.assertEqual(container['volumeMounts'], self.pod_builder.volume_mounts)
@@ -210,6 +289,7 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
         self.assertEqual(container['command'], expected_command)
 
 
+    @patch.dict(os.environ, {}, clear=True)
     @patch("builtins.open", new_callable=mock_open, read_data="print('Default script')")
     @patch("os.path.join", return_value="/mocked/path/file-dask.py")
     @patch('calrissian.job.random_tag')
@@ -291,16 +371,15 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
                             {'name': 'DASK_CLUSTER_NAME_PATH', 'value': '/shared/dask_cluster_name.txt'}
                         ],
                         'resources': {
-                            'requests': {
-                                'cpu': '1',
-                                'memory': '1024Mi'
-                            }
+                            'requests': {'cpu': '10m', 'memory': '64Mi'},
+                            'limits': {'cpu': '100m', 'memory': '256Mi'},
                         },
                         'volumeMounts': self.volume_mounts,
                         'workingDir': '/homedir',
                     }
                 ],
                 'restartPolicy': 'Never',
+                'automountServiceAccountToken': False,
                 'volumes': self.volumes,
                 'securityContext': {
                     'runAsUser': os.getuid(),
@@ -314,12 +393,18 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
             }
         }
 
+        for container in expected['spec']['containers'] + expected['spec']['initContainers']:
+            container['securityContext'] = {
+                'readOnlyRootFilesystem': True, 'privileged': False, 'allowPrivilegeEscalation': False}
         self.assertEqual(expected, self.pod_builder.build())
 
         # test build with custom script
         self.pod_builder.dask_gateway_controller = True
         expected['spec']['initContainers'][0]['command'] = ['python', '/controller/init-dask.py']
         expected['spec']['containers'][1]['command'] = ['python', '/controller/dispose-dask.py']
+        for container in expected['spec']['containers'] + expected['spec']['initContainers']:
+            container['securityContext'] = {
+                'readOnlyRootFilesystem': True, 'privileged': False, 'allowPrivilegeEscalation': False}
         self.assertEqual(expected, self.pod_builder.build())
 
 
@@ -407,7 +492,7 @@ class CalrissianCommandLineDaskJobTestCase(TestCase):
         job = self.make_job()
         job.outdir = '/outdir'
         job.tmpdir = '/tmpdir'
-        mock_runtime_context = Mock(tmpdir_prefix='TP', pod_serviceaccount=None, )
+        mock_runtime_context = Mock(tmpdir_prefix='TP', pod_automount_service_account_token=False, pod_gpu_tolerations=None, pod_serviceaccount=None, )
         built = job.create_kubernetes_runtime(mock_runtime_context)
         # Adds volume binding for outdir
         self.assertEqual(mock_add_volume_binding.call_args, call('/real/outdir', '/out', True))
@@ -436,7 +521,8 @@ class CalrissianCommandLineDaskJobTestCase(TestCase):
             None,
             job.get_pod_additional_spec(mock_runtime_context),
             mock_read_yaml.return_value,
-            mock_read_yaml.return_value
+            mock_read_yaml.return_value,
+            job.owner_reference,
         ))
         # calls builder.build
         # returns that
@@ -500,15 +586,34 @@ class KubernetesDaskClientTestCase(TestCase):
         stream_events = []
         for event_object in event_objects:
             stream_events.append({'object': event_object})
-        mock_stream.return_value = stream_events
+        mock_stream.return_value = iter(stream_events) 
         mock_watch.Watch.return_value.stream = mock_stream
         mock_watch.Watch.return_value.stop = mock_stop
 
     def make_mock_pod(self, name):
         mock_metadata = Mock()
-        type(mock_metadata).name = PropertyMock(return_value=name)
+        # Cannot mock name attribute without a propertymock
+        name_property = PropertyMock(return_value=name)
+        type(mock_metadata).name = name_property
         mock_pod = create_autospec(V1Pod, metadata=mock_metadata)
         return mock_pod
+    
+    def make_mock_pod_with_state(self, name, *, running=False, waiting=False, terminated=False, exit_code=0):
+        pod = self.make_mock_pod(name)
+
+        cs = Mock()
+        cs.state = Mock(
+            waiting=Mock() if waiting else None,
+            running=Mock() if running else None,
+            terminated=Mock(exit_code=exit_code) if terminated else None,
+        )
+        pod.status.container_statuses = [cs]
+
+        container = Mock()
+        container.resources = Mock()
+        container.resources.requests = {"cpu": "1", "memory": "1Gi"}  # strings like real k8s quantities
+        pod.spec.containers = [container]
+        return pod
 
     def mock_k8s_obj_with_name(self, cls, name: str):
         obj = create_autospec(cls, instance=True)
@@ -529,62 +634,130 @@ class KubernetesDaskClientTestCase(TestCase):
     @patch('calrissian.dask.watch', autospec=True)
     def test_wait_calls_watch_pod_with_pod_name_field_selector(self, mock_watch, mock_get_namespace, mock_client):
         mock_pod = self.make_mock_pod('test123')
-
+    
         mock_pod.status = Mock()
         mock_pod.status.init_container_statuses = None
         mock_pod.status.container_statuses = [Mock()]
+    
+        mock_pod.spec = Mock()
+        mock_pod.spec.containers = [self.make_mock_container("main-container")]
+    
+        mock_pod.status.container_statuses[0].state = Mock(
+            running=None, waiting=None, terminated=Mock(exit_code=0)
+        )
+        mock_pod.status.container_statuses[0].name = 'main-container'
+    
+        self.setup_mock_watch(mock_watch, [mock_pod])
+    
+        kc = KubernetesDaskClient()
+        kc._set_pod(mock_pod)
+        kc.wait_for_completion(cm_name='dask-cm-random')
+    
+        mock_stream = mock_watch.Watch.return_value.stream
+    
+        expected_rv = kc.core_api_instance.list_namespaced_pod.return_value.metadata.resource_version
+    
+        self.assertEqual(
+            mock_stream.call_args,
+            call(
+                func=kc.core_api_instance.list_namespaced_pod,
+                namespace=kc.namespace,
+                field_selector='metadata.name=test123',
+                resource_version=expected_rv,
+                timeout_seconds=30,
+            ),
+        )
+
+    @patch('calrissian.dask.watch', autospec=True)
+    def test_wait_calls_watch_pod_with_incomplete_status(self, mock_watch, mock_get_namespace, mock_client):
+        mock_pod = self.make_mock_pod('test123')
+
+        status = Mock()
+        status.state = Mock(waiting=None, running=None, terminated=Mock(exit_code=0)        )
+        status.name = "main-container"
+        mock_pod.status.container_statuses = [status]
+        mock_pod.spec = Mock()
+        mock_pod.spec.containers = [self.make_mock_container("main-container")] 
+        self.setup_mock_watch(mock_watch, [mock_pod])
+
+        kc = KubernetesDaskClient()
+        kc._set_pod(mock_pod)
+        kc._handle_completion = Mock(return_value=None)
+
+        # Assert IncompleteStatusException is raised
+        with self.assertRaises(IncompleteStatusException):
+            kc.wait_for_completion(cm_name='dask-cm-random')
+
+    @patch('calrissian.dask.watch', autospec=True)
+    def test_wait_skips_pod_when_containers_status_is_none(self, mock_watch, mock_get_namespace, mock_client):
+        
+        class StopTest(Exception):
+            pass
+        mock_pod = self.make_mock_pod('test123')
+        mock_pod.metadata.uid = "u1"
+        mock_pod.metadata.resource_version = "1"
+
+        mock_pod.status.init_container_statuses = None
+        mock_pod.status.container_statuses = None
 
         mock_pod.spec = Mock()
         mock_pod.spec.containers = [self.make_mock_container("main-container")]
 
-        mock_pod.status.container_statuses[0].state = Mock(running=None, waiting=None, terminated=Mock(exit_code=0))
-        
-        self.setup_mock_watch(mock_watch, [mock_pod])
+        w = mock_watch.Watch.return_value
+        w.stop = Mock()
+
+        def gen():
+            yield {"object": mock_pod}
+            raise StopTest()
+
+        w.stream.side_effect = lambda **kwargs: gen()
 
         kc = KubernetesDaskClient()
         kc._set_pod(mock_pod)
-        kc.wait_for_completion(cm_name='dask-cm-random')
-        mock_stream = mock_watch.Watch.return_value.stream
-        self.assertEqual(mock_stream.call_args, call(kc.core_api_instance.list_namespaced_pod, kc.namespace,
-                                                     field_selector='metadata.name=test123'))
 
-
-    @patch('calrissian.dask.watch', autospec=True)
-    def test_wait_calls_watch_pod_with_incomplete_status(self, mock_watch, mock_get_namespace, mock_client):
-        self.setup_mock_watch(mock_watch)
-        mock_pod = self.make_mock_pod('test123')
-        kc = KubernetesDaskClient()
-        kc._set_pod(mock_pod)
-        # Assert IncompleteStatusException is raised
-        with self.assertRaises(IncompleteStatusException):
+        with self.assertRaises(StopTest):
             kc.wait_for_completion(cm_name='dask-cm-random')
-    
-    @patch('calrissian.dask.watch', autospec=True)
-    def test_wait_skips_pod_when_containers_status_is_none(self, mock_watch, mock_get_namespace, mock_client):
-    
-        mock_pod = self.make_mock_pod('test123')
-        mock_pod.status.container_statuses = None
 
-        self.setup_mock_watch(mock_watch, [mock_pod])
-        kc = KubernetesDaskClient()
-        kc._set_pod(Mock())
-        with self.assertRaises(IncompleteStatusException):
-            kc.wait_for_completion(cm_name='dask-cm-random')
-        self.assertFalse(mock_watch.Watch.return_value.stop.called)
+        self.assertFalse(w.stop.called)
         self.assertFalse(mock_client.CoreV1Api.return_value.delete_namespaced_pod.called)
         self.assertIsNotNone(kc.pod)
 
 
+
     @patch('calrissian.dask.watch', autospec=True)
     def test_wait_skips_pod_when_state_is_waiting(self, mock_watch, mock_get_namespace, mock_client):
-        mock_pod = create_autospec(V1Pod)
-        mock_pod.status.container_statuses[0].state = Mock(running=None, waiting=True, terminated=None)
-        self.setup_mock_watch(mock_watch, [mock_pod])
+        
+        class StopTest(Exception):
+            pass
+        
+        mock_pod = self.make_mock_pod('test123')
+        mock_pod.metadata.uid = "u1"
+        mock_pod.metadata.resource_version = "1"
+    
+        mock_pod.status.init_container_statuses = None
+        st = Mock()
+        st.state = Mock(waiting=Mock(), running=None, terminated=None)  # waiting object, not True
+        mock_pod.status.container_statuses = [st]
+    
+        mock_pod.spec = Mock()
+        mock_pod.spec.containers = [self.make_mock_container("main-container")]
+    
+        w = mock_watch.Watch.return_value
+        w.stop = Mock()
+    
+        def gen_once_then_stop():
+            yield {"object": mock_pod}
+            raise StopTest()
+    
+        w.stream.side_effect = lambda **kwargs: gen_once_then_stop()
+    
         kc = KubernetesDaskClient()
-        kc._set_pod(Mock())
-        with self.assertRaises(IncompleteStatusException):
+        kc._set_pod(mock_pod)
+    
+        with self.assertRaises(StopTest):
             kc.wait_for_completion(cm_name='dask-cm-random')
-        self.assertFalse(mock_watch.Watch.return_value.stop.called)
+    
+        self.assertFalse(w.stop.called)
         self.assertFalse(mock_client.CoreV1Api.return_value.delete_namespaced_pod.called)
         self.assertIsNotNone(kc.pod)
 
@@ -603,6 +776,7 @@ class KubernetesDaskClientTestCase(TestCase):
         mock_pod.spec = Mock()
         mock_pod.spec.containers = [self.make_mock_container("main-container")]
         mock_pod.status.container_statuses[0].state = Mock(running=None, waiting=None, terminated=Mock(exit_code=123))
+        mock_pod.status.container_statuses[0].name = 'main-container'
         mock_cpu_memory.return_value = ('1', '1Mi')
         self.setup_mock_watch(mock_watch, [mock_pod])
         kc = KubernetesDaskClient()

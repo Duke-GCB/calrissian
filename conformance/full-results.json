@@ -1,0 +1,48 @@
+{
+  "completed_utc": "2026-10-27T19:27:29.023796+00:00",
+  "source_commit": "a79ce4f8bfac9141c949dff3aab9250c347c8106",
+  "branch": "feature/issue-244-documentation",
+  "image": "conformance:947fddbd2975f4a441a73667c8e1cca88ce788a92ea8ca2a9f602bb7acb98192",
+  "suites": [
+    {
+      "version": "1.0",
+      "suite": "1.0.2",
+      "job": "full-1-0-a4680087",
+      "image": "conformance:947fddbd2975f4a441a73667c8e1cca88ce788a92ea8ca2a9f602bb7acb98192",
+      "exit_code": 1,
+      "passed": 196,
+      "failed": 1,
+      "unsupported": 0
+    },
+    {
+      "version": "1.1",
+      "suite": "1.1.0",
+      "job": "full-1-1-a4680087",
+      "image": "conformance:947fddbd2975f4a441a73667c8e1cca88ce788a92ea8ca2a9f602bb7acb98192",
+      "exit_code": 1,
+      "passed": 246,
+      "failed": 2,
+      "unsupported": 5
+    },
+    {
+      "version": "1.2",
+      "suite": "1.2.0",
+      "job": "full-1-2-a4680087",
+      "image": "conformance:947fddbd2975f4a441a73667c8e1cca88ce788a92ea8ca2a9f602bb7acb98192",
+      "exit_code": 1,
+      "passed": 330,
+      "failed": 1,
+      "unsupported": 5
+    },
+    {
+      "version": "1.2.1",
+      "suite": "1.2.1",
+      "job": "full-1-2-1-a4680087",
+      "image": "conformance:947fddbd2975f4a441a73667c8e1cca88ce788a92ea8ca2a9f602bb7acb98192",
+      "exit_code": 1,
+      "passed": 370,
+      "failed": 1,
+      "unsupported": 7
+    }
+  ]
+}

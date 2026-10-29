@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: calrissian-session
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: calrissian-session
+  template:
+    metadata:
+      labels:
+        app: calrissian-session
+    spec:
+      serviceAccountName: calrissian-sa
+      automountServiceAccountToken: true
+      initContainers:
+      - name: prepare-output
+        image: alpine:3.10
+        command: [chmod, "777", /output]
+        volumeMounts:
+        - name: output
+          mountPath: /output
+      containers:
+      - name: calrissian
+        image: {{ .Values.image | quote }}
+        command: [sleep, infinity]
+        env:
+        {{- range $key, $value := .Values.runnerEnv }}
+        - name: {{ $key | quote }}
+          value: {{ $value | toString | quote }}
+        {{- end }}
+        - name: TMPDIR
+          value: /output
+        - name: CALRISSIAN_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        volumeMounts:
+        {{- if .Values.daskSmoke.enabled }}
+        - name: dask-smoke
+          mountPath: /smoke
+          readOnly: true
+        {{- end }}
+        - name: network-config
+          mountPath: /home/calrissian/.calrissian
+          readOnly: true
+        - name: data
+          mountPath: /conformance
+          readOnly: true
+        - name: output
+          mountPath: /output
+      volumes:
+      {{- if .Values.daskSmoke.enabled }}
+      - name: dask-smoke
+        configMap:
+          name: dask-cleanup-smoke
+      {{- end }}
+      - name: network-config
+        configMap:
+          name: conformance-network-config
+      - name: data
+        persistentVolumeClaim:
+          claimName: conformance-test-data
+          readOnly: true
+      - name: output
+        persistentVolumeClaim:
+          claimName: conformance-test-output

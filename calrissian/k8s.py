@@ -4,9 +4,9 @@ import os
 from typing import List, Union
 from kubernetes import client, config, watch
 from kubernetes.client.models import V1ContainerState, V1Container, V1ContainerStatus
-from kubernetes.client.rest import ApiException
 from kubernetes.config.config_exception import ConfigException
 from calrissian.executor import IncompleteStatusException
+from kubernetes.client.exceptions import ApiException
 from calrissian.retry import retry_exponential_if_exception_type
 from urllib3.exceptions import HTTPError
 from datetime import datetime
@@ -78,6 +78,9 @@ class KubernetesClient(object):
         self.namespace = load_config_get_namespace()
         self.core_api_instance = client.CoreV1Api()
         self.tool_log = []
+        self._log_stop = threading.Event()
+        self._log_thread = None
+        self._logs_started = False
 
     @retry_exponential_if_exception_type((ApiException, HTTPError,), log)
     def submit_pod(self, pod_body):
@@ -160,58 +163,130 @@ class KubernetesClient(object):
     @retry_exponential_if_exception_type((ApiException, HTTPError,), log)
     def follow_logs(self):
         pod_name = self.pod.metadata.name
+        log.info('[%s] follow_logs start', pod_name)
 
-        log.info('[{}] follow_logs start'.format(pod_name))
-        for line in self.core_api_instance.read_namespaced_pod_log(self.pod.metadata.name, self.namespace, follow=True,
-                                                                   _preload_content=False).stream():
-            # .stream() is only available if _preload_content=False
-            # .stream() returns a generator, each iteration yields bytes.
-            # kubernetes-client decodes them as utf-8 when _preload_content is True
-            # https://github.com/kubernetes-client/python/blob/fcda6fe96beb21cd05522c17f7f08c5a7c0e3dc3/kubernetes/client/rest.py#L215-L216
-            # So we do the same here
-            line = line.decode('utf-8', errors="ignore").rstrip()
-            log.debug('[{}] {}'.format(pod_name, line))
-            self.tool_log.append(self.format_log_entry(pod_name, line))
-        
-        log.info('[{}] follow_logs end'.format(pod_name))
+        resp = self.core_api_instance.read_namespaced_pod_log(
+            name=pod_name,
+            namespace=self.namespace,
+            follow=True,
+            _preload_content=False,
+            timestamps=False,
+            tail_lines=200,
+        )
 
-        
-    @retry_exponential_if_exception_type((ApiException, HTTPError, IncompleteStatusException), log)
+        try:
+            for raw in resp.stream():
+                if self._log_stop.is_set():
+                    break
+                line = raw.decode("utf-8", errors="ignore").rstrip()
+                log.debug('[%s] %s', pod_name, line)
+                self.tool_log.append(self.format_log_entry(pod_name, line))
+        finally:
+            try:
+                resp.close()
+            except Exception:
+                pass
+            log.info('[%s] follow_logs end', pod_name)
+
+    def _ensure_log_thread_started(self):
+        if self._logs_started:
+            return
+        self._logs_started = True
+        self._log_stop.clear()
+        self._log_thread = threading.Thread(target=self.follow_logs, name="pod-log-follower", daemon=True)
+        self._log_thread.start()
+
+    def _stop_log_thread(self):
+        self._log_stop.set()
+        t = self._log_thread
+        if t and t.is_alive():
+            t.join(timeout=5)
+        self._log_thread = None
+        self._logs_started = False
+
+    @retry_exponential_if_exception_type((ApiException, HTTPError), log)
     def wait_for_completion(self) -> CompletionResult:
-        w = watch.Watch()
-        for event in w.stream(self.core_api_instance.list_namespaced_pod, self.namespace, field_selector=self._get_pod_field_selector()):
-            pod = event['object']
-            status = self.get_first_or_none(pod.status.container_statuses)
-            log.info('pod name {} with id {} has status {}'.format(pod.metadata.name, pod.metadata.uid, status))
-            if status is None:
-                continue
-            if self.state_is_waiting(status.state):
-                continue
-            elif self.state_is_running(status.state):
-                # Can only get logs once container is running
-                if self.should_stream_logs():
-                    self.follow_logs() # This will not return until pod completes
-            elif self.state_is_terminated(status.state):
-                log.info('Handling terminated pod name {} with id {}'.format(pod.metadata.name, pod.metadata.uid))
-                container = self.get_first_or_none(pod.spec.containers)
-                node_selectors = self._get_pod_node_selector()
-                self._handle_completion(status.state, container, node_selectors)
-                if self.should_delete_pod():
-                    with PodMonitor() as monitor:
-                        self.delete_pod_name(pod.metadata.name)
-                        monitor.remove(pod)
-                self._clear_pod()
-                # stop watching for events, our pod is done. Causes wait loop to exit
-                w.stop()
-            else:
-                raise CalrissianJobException('Unexpected pod container status', status)
-        
-        # When the pod is done we should have a completion result
-        # Otherwise it will lead to further exceptions
-        if self.completion_result is None:
-            raise IncompleteStatusException
+        resource_version = None
 
-        return self.completion_result
+        while True:
+            try:
+                w = watch.Watch()
+
+                pod_list = self.core_api_instance.list_namespaced_pod(
+                    namespace=self.namespace,
+                    field_selector=self._get_pod_field_selector(),
+                    limit=1
+                )
+
+                if pod_list.items:
+                    resource_version = pod_list.metadata.resource_version
+
+                events_seen = False
+
+                for event in w.stream(
+                    func=self.core_api_instance.list_namespaced_pod,
+                    namespace=self.namespace,
+                    field_selector=self._get_pod_field_selector(),
+                    resource_version=resource_version,
+                    timeout_seconds=30
+                ):
+                    events_seen = True
+                    pod = event["object"]
+                    resource_version = pod.metadata.resource_version
+
+                    status = self.get_first_or_none(pod.status.container_statuses)
+                    log.info("pod %s uid=%s status=%s", pod.metadata.name, pod.metadata.uid, status)
+
+                    if status is None:
+                        continue
+
+                    if self.state_is_waiting(status.state):
+                        continue
+
+                    if self.state_is_running(status.state):
+                        if self.should_stream_logs():
+                            self._ensure_log_thread_started()
+                        continue
+
+                    if self.state_is_terminated(status.state):
+                        log.info("Handling terminated pod %s uid=%s", pod.metadata.name, pod.metadata.uid)
+
+                        self._stop_log_thread()
+
+                        container = self.get_first_or_none(pod.spec.containers)
+                        node_selectors = self._get_pod_node_selector()
+                        self._handle_completion(status.state, container, node_selectors)
+
+                        if self.should_delete_pod():
+                            with PodMonitor() as monitor:
+                                self.delete_pod_name(pod.metadata.name)
+                                monitor.remove(pod)
+
+                        self._clear_pod()
+                        w.stop()
+
+                        if self.completion_result is None:
+                            raise IncompleteStatusException
+                        return self.completion_result
+
+                    log.warning(
+                        "Unexpected container state for pod %s uid=%s: %s",
+                        pod.metadata.name,
+                        pod.metadata.uid,
+                        status.state,
+                    )
+                    w.stop()
+                    raise IncompleteStatusException
+
+                if not events_seen:
+                    continue
+
+            except ApiException as e:
+                if e.status == 410:
+                    log.warning("Watch expired (410 Gone). Re-listing and restarting watch.")
+                    resource_version = None
+                    continue
+                raise
 
     def _set_pod(self, pod):
         log.info('k8s pod \'{}\' started'.format(pod.metadata.name))

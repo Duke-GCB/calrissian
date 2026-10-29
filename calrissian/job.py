@@ -1,5 +1,6 @@
+from calrissian.scheduling import apply_gpu_tolerations, load_gpu_tolerations
 from typing import Dict
-from cwltool.job import ContainerCommandLineJob, needs_shell_quoting_re
+from cwltool.job import ContainerCommandLineJob, needs_shell_quoting_re, relink_initialworkdir
 
 # override cwltool.cuda.cuda_check
 def _cuda_check(cuda_req, requestCount):
@@ -14,6 +15,7 @@ from calrissian.k8s import KubernetesClient, CompletionResult
 from calrissian.report import Reporter, TimedResourceReport
 from cwltool.builder import Builder
 import logging
+import copy
 import os
 import yaml
 import shutil
@@ -48,7 +50,7 @@ def k8s_safe_name(name):
     Kubernetes does not allow underscores, and in some names/labels no '.'
     DNS-1123 label must consist of lower case alphanumeric characters or '-',
     and must start and end with an alphanumeric character
-    regex used for validation is '[a-z0-9]([-a-z0-9]*[a-z0-9])?'
+    regex used for validation is ``[a-z0-9]([-a-z0-9]*[a-z0-9])?``
 
     :param name:
     :return: a safe name
@@ -181,6 +183,10 @@ class KubernetesVolumeBuilder(object):
             return source_without_prefix
 
     def add_volume_binding(self, source, target, writable):
+        # InitialWorkDir outputs may link back to inputs on another PVC.
+        # Kubernetes subPath mounts must use the actual source, not a symlink
+        # expressed in the runner's filesystem namespace.
+        source = os.path.realpath(source)
         # Find the persistent volume claim where this goes
         pv = self.find_persistent_volume(source)
         if not pv:
@@ -213,9 +219,16 @@ class KubernetesVolumeBuilder(object):
         }
         self.volume_mounts.append(volume_mount)
 
+
+def validate_token_automount(value):
+    if type(value) is not bool:
+        raise WorkflowException('pod_automount_service_account_token must be a JSON boolean (true or false)')
+    return value
+
+
 class KubernetesPodBuilder(object):
 
-    def __init__(self, name, builder, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, labels, nodeselectors, gpu_nodeselectors, security_context, serviceaccount, pod_additional_spec=None, no_network_access_pod_labels=None, network_access_pod_labels=None):
+    def __init__(self, name, builder, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, labels, nodeselectors, gpu_nodeselectors, security_context, serviceaccount, pod_additional_spec=None, no_network_access_pod_labels=None, network_access_pod_labels=None, owner_reference=None):
         self.name = name
         self.builder = builder
         self.cwl_version = self.builder.cwlVersion
@@ -227,15 +240,27 @@ class KubernetesPodBuilder(object):
         self.stdout = stdout
         self.stderr = stderr
         self.stdin = stdin
-        self.resources = self.builder.resources
+        # Keep scheduling limits available for Kubernetes without exposing
+        # Calrissian-only fields through CWL's runtime expression object.
+        self.resources = dict(self.builder.resources)
+        self.resources.update(getattr(self.builder.resources, 'limits', {}))
         self.labels = labels
         self.nodeselectors = nodeselectors
         self.gpu_nodeselectors = gpu_nodeselectors
         self.security_context = security_context
         self.serviceaccount = serviceaccount
+        self.automount_service_account_token = validate_token_automount(
+            pod_additional_spec.get('automount_service_account_token', False))
         self.no_network_access_pod_labels = no_network_access_pod_labels
         self.network_access_pod_labels = network_access_pod_labels
+        self.owner_reference = owner_reference
+        self.container_security_context = pod_additional_spec.get("container_security_context", {
+            'readOnlyRootFilesystem': True,
+            'privileged': False,
+            'allowPrivilegeEscalation': False,
+        })
         self.priority_class = pod_additional_spec.get("pod_priority_class")
+        self.gpu_tolerations = pod_additional_spec.get("gpu_tolerations")
         self.env_from_secret = pod_additional_spec.get("env_from_secret")
         self.env_from_configmap = pod_additional_spec.get("env_from_configmap")
         self.requirements = {} if self.builder.requirements is None else self.builder.requirements
@@ -260,11 +285,11 @@ class KubernetesPodBuilder(object):
     def container_args(self):
         pod_command = self.command_line.copy()
         if self.stdout:
-            pod_command.extend(['>', self.stdout])
+            pod_command.extend(['>', shellescape.quote(self.stdout)])
         if self.stderr:
-            pod_command.extend(['2>', self.stderr])
+            pod_command.extend(['2>', shellescape.quote(self.stderr)])
         if self.stdin:
-            pod_command.extend(['<', self.stdin])
+            pod_command.extend(['<', shellescape.quote(self.stdin)])
         # pod_command is a list of strings. Needs to be turned into a single string
         # and passed as an argument to sh -c. Otherwise we cannot redirect STDIN/OUT/ERR inside a kubernetes container
         # Join everything into a single string and then return a single args list
@@ -383,7 +408,7 @@ class KubernetesPodBuilder(object):
 
         for requirement in self.requirements:
             if "class" in requirement.keys() and requirement["class"] in ["NetworkAccess"]:
-                network_access = True if requirement.get("networkAccess") == "true" else False
+                network_access = requirement.get("networkAccess", False)
                 break
         if not network_access and self.no_network_access_pod_labels: 
             self.labels = {**self.labels, **self.no_network_access_pod_labels}
@@ -395,28 +420,58 @@ class KubernetesPodBuilder(object):
 
     def select_pod_nodeselectors(self):
         """
-            Return the appropriate Kubernetes node selectors for the pod.
-
-            If the job requirements include a CUDA requirement
-            (either 'cwltool:CUDARequirement' or
-            'http://commonwl.org/cwltool#CUDARequirement'),
-            GPU-specific node selectors are used. Otherwise, the
-            default node selectors are returned.
-
-            :return: A dict of node selector labels (str -> str)
-            """
+        Return Kubernetes node selectors for the pod.
+        Use GPU node selectors when a CUDARequirement is present in requirements or hints.
+        """
+    
+        CUDA_CLASSES = {
+            "cwltool:CUDARequirement",
+            "http://commonwl.org/cwltool#CUDARequirement",
+        }
+    
         def _tostring(nodeselectors):
-            return {str(k): str(v) for k, v in nodeselectors.items()}
-
-        return (
-            _tostring(self.gpu_nodeselectors)
-            if any(
-                'class' in req
-                and req['class'] in ['cwltool:CUDARequirement', 'http://commonwl.org/cwltool#CUDARequirement']
-                for req in self.requirements
-            )
-            else _tostring(self.nodeselectors)
-        )
+            return {str(k): str(v) for k, v in (nodeselectors or {}).items()}
+    
+        def _iter_reqs(obj):
+            """
+            Normalize CWL requirements/hints to an iterable of dict-like objects.
+    
+            Accepts:
+              - list of dicts (already normalized)
+              - dict mapping requirementClass -> requirementObject
+              - None
+            Anything else yields empty.
+            """
+            if obj is None:
+                return []
+    
+            if isinstance(obj, list):
+                return [r for r in obj if isinstance(r, dict)]
+    
+            if isinstance(obj, dict):
+                out = []
+                for k, v in obj.items():
+                    if isinstance(v, dict):
+                        d = dict(v)
+                        d.setdefault("class", k)
+                        out.append(d)
+                    else:
+                        out.append({"class": k})
+                return out
+            return []
+    
+        def _has_cuda(reqs):
+            for req in reqs:
+                cls = req.get("class")
+                if cls in CUDA_CLASSES:
+                    log.debug("CUDA true: using gpu node selectors")
+                    return True
+            return False
+    
+        if _has_cuda(_iter_reqs(self.requirements)) or _has_cuda(_iter_reqs(self.hints)):
+            return _tostring(self.gpu_nodeselectors)
+    
+        return _tostring(self.nodeselectors)
 
     def pod_envfromsecret(self):
         return [{'secretRef': {'name': secret}} for secret in self.env_from_secret]
@@ -424,6 +479,12 @@ class KubernetesPodBuilder(object):
     def pod_envfromconfigmap(self):
         return [{'configMapRef': {'name': configmap}} for configmap in self.env_from_configmap]
 
+
+    def apply_container_security_context(self, pod):
+        for field in ('containers', 'initContainers'):
+            for container in pod['spec'].get(field, []):
+                container['securityContext'] = copy.deepcopy(self.container_security_context)
+        return pod
 
     def build(self):
         spec = {
@@ -448,11 +509,15 @@ class KubernetesPodBuilder(object):
                         }
                 ],
                 'restartPolicy': 'Never',
+                'automountServiceAccountToken': self.automount_service_account_token,
                 'volumes': self.volumes,
                 'securityContext': self.security_context,
                 'nodeSelector': self.select_pod_nodeselectors()
             }
         }
+
+        if self.owner_reference:
+            spec['metadata']['ownerReferences'] = [self.owner_reference]
         
         if ( self.serviceaccount ):
             spec['spec']['serviceAccountName'] = self.serviceaccount
@@ -471,7 +536,8 @@ class KubernetesPodBuilder(object):
 
             spec['spec']['containers'][0]["envFrom"] = envfrom
         
-        return spec
+        return apply_gpu_tolerations(
+            self.apply_container_security_context(spec), self.gpu_tolerations)
 
 
 # This now subclasses ContainerCommandLineJob, but only uses two of its methods:
@@ -483,8 +549,17 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
     def __init__(self, *args, **kwargs):
         super(CalrissianCommandLineJob, self).__init__(*args, **kwargs)
         self.client = KubernetesClient()
+        self.runner_pod = self.client.get_current_pod()
+        self.owner_reference = {
+            'apiVersion': 'v1',
+            'kind': 'Pod',
+            'name': self.runner_pod.metadata.name,
+            'uid': self.runner_pod.metadata.uid,
+            'controller': False,
+            'blockOwnerDeletion': False,
+        }
         volume_builder = KubernetesVolumeBuilder()
-        volume_builder.add_persistent_volume_entries_from_pod(self.client.get_current_pod())
+        volume_builder.add_persistent_volume_entries_from_pod(self.runner_pod)
         self.volume_builder = volume_builder
             
     def make_tmpdir(self):
@@ -548,6 +623,13 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         if runtimeContext.tool_logs_basepath: 
             self.dump_tool_logs(self.name, completion_result, runtimeContext)
 
+        # Task-pod mounts are not visible in the runner's filesystem. Restore
+        # InitialWorkDir input links before collecting outputs, as cwltool does.
+        if self.generatemapper is not None:
+            relink_initialworkdir(
+                self.generatemapper, self.outdir, self.builder.outdir,
+                inplace_update=self.inplace_update)
+
         # collect_outputs (and collect_output) is defined in command_line_tool
         outputs = self.collect_outputs(self.outdir, exit_code)
 
@@ -570,13 +652,21 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
     # Dictionary of supported features.
     # Not yet complete, only checks features of DockerRequirement
     supported_features = {
-        'DockerRequirement': ['class', 'dockerPull'],
+        # cwltool selects builder.outdir from dockerOutputDirectory; create_kubernetes_runtime
+        # mounts the runner's output directory at that container path.
+        'DockerRequirement': ['class', 'dockerPull', 'dockerOutputDirectory'],
         'http://commonwl.org/cwltool#CUDARequirement': ['class', 'cudaDeviceCount', 
                                                         'cudaDeviceCountMin', 'cudaDeviceCountMax', 
                                                         'cudaVersionMin', 'cudaComputeCapability'],
     }
 
     def check_requirements(self, runtimeContext):
+        time_limit, is_required = self.get_requirement('ToolTimeLimit')
+        if time_limit is not None:
+            if is_required:
+                raise UnsupportedRequirement('ToolTimeLimit is not supported by Calrissian')
+            log.warning('Ignoring optional ToolTimeLimit hint: execution time limits are not supported')
+
         for feature in self.supported_features:
             requirement, is_required = self.get_requirement(feature)
             if requirement and is_required:
@@ -643,10 +733,14 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
                 'runAsGroup': os.getgid()
             })
 
-        sc["readOnlyRootFilesystem"] = not runtimeContext.no_read_only
-        sc["privileged"] = False
-        sc["allowPrivilegeEscalation"] = False
         return sc
+
+    def get_container_security_context(self, runtimeContext):
+        return {
+            'readOnlyRootFilesystem': not runtimeContext.no_read_only,
+            'privileged': False,
+            'allowPrivilegeEscalation': False,
+        }
 
     def get_pod_env_vars(self, runtimeContext):
         if runtimeContext.pod_env_vars:
@@ -664,7 +758,10 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         return runtimeContext.env_from_configmap
 
     def get_pod_additional_spec(self, runtimeContext):
-        spec = {}
+        spec = {'container_security_context': self.get_container_security_context(runtimeContext)}
+
+        if runtimeContext.pod_gpu_tolerations:
+            spec["gpu_tolerations"] = load_gpu_tolerations(runtimeContext.pod_gpu_tolerations)
 
         if self.get_pod_priority_class(runtimeContext):
             spec["pod_priority_class"] = self.get_pod_priority_class(runtimeContext)
@@ -675,6 +772,8 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
         if self.get_pod_env_from_configmap(runtimeContext):
             spec["env_from_configmap"] = self.get_pod_env_from_configmap(runtimeContext)
         
+        spec['automount_service_account_token'] = validate_token_automount(
+            runtimeContext.pod_automount_service_account_token)
         return spec
 
     def create_kubernetes_runtime(self, runtimeContext):
@@ -729,6 +828,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             self.get_pod_additional_spec(runtimeContext),
             self.get_no_network_access_pod_labels(runtimeContext),
             self.get_network_access_pod_labels(runtimeContext),
+            self.owner_reference,
         )
         built = k8s_builder.build()
         log.debug('{}\n{}{}\n'.format('-' * 80, yaml.dump(built), '-' * 80))

@@ -1,0 +1,33 @@
+{{- if .Values.networkAccess.enabled }}
+{{- if or (empty .Values.networkAccess.allowedLabels) (empty .Values.networkAccess.deniedLabels) }}
+{{- fail "networkAccess allowedLabels and deniedLabels must not be empty" }}
+{{- end }}
+{{- $distinct := false }}
+{{- range $key, $value := .Values.networkAccess.allowedLabels }}
+{{- if and (hasKey $.Values.networkAccess.deniedLabels $key) (ne (toString $value) (toString (index $.Values.networkAccess.deniedLabels $key))) }}
+{{- $distinct = true }}
+{{- end }}
+{{- end }}
+{{- if not $distinct }}
+{{- fail "networkAccess label maps must have a common key with different values to prevent overlapping policies" }}
+{{- end }}
+{{- end }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: conformance-network-config
+data:
+  default.json: |
+    {{- if .Values.networkAccess.enabled }}
+    {"pod_serviceaccount": "calrissian-workflow", "network_access_pod_labels": "/home/calrissian/.calrissian/network-allowed.yaml", "no_network_access_pod_labels": "/home/calrissian/.calrissian/network-denied.yaml"}
+    {{- else }}
+    {"pod_serviceaccount": "calrissian-workflow"}
+    {{- end }}
+  network-allowed.yaml: |
+    {{- range $key, $value := .Values.networkAccess.allowedLabels }}
+    {{ $key | quote }}: {{ $value | toString | quote }}
+    {{- end }}
+  network-denied.yaml: |
+    {{- range $key, $value := .Values.networkAccess.deniedLabels }}
+    {{ $key | quote }}: {{ $value | toString | quote }}
+    {{- end }}
