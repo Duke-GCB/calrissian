@@ -4,7 +4,9 @@ RUN microdnf -y update && \
     microdnf -y install ca-certificates python3 python3-pip python3-devel gcc gcc-c++ make git && \
     microdnf clean all
 
-RUN python3 -m venv /opt/build-venv
+# Use the concrete interpreter path so venv can resolve sys._base_executable
+# when Kaniko runs the layer command.
+RUN /usr/bin/python3.12 -m venv /opt/build-venv
 ENV PATH="/opt/build-venv/bin:${PATH}"
 # Hatch creates additional virtualenvs for isolated builds.
 ENV VIRTUALENV_PIP=26.2.2
@@ -44,7 +46,7 @@ WORKDIR /app
 
 ENV VIRTUAL_ENV=/app/venv
 ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
-RUN python3 -m venv "${VIRTUAL_ENV}"
+RUN /usr/bin/python3.12 -m venv "${VIRTUAL_ENV}"
 
 COPY --from=builder --chown=1001:0 /wheels/ /app/dist/
 RUN python -m pip install --no-cache-dir --no-index --find-links=/app/dist "pip==26.2.2" && \
