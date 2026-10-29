@@ -9,8 +9,14 @@ permissions:
   contents: read
 
 jobs:
+  test:
+    uses: ./.github/workflows/build-and-test.yaml
+    permissions:
+      contents: read
+
   build-scan-publish:
-    if: github.event_name == 'push'
+    needs: test
+    if: github.event_name == 'push' && needs.test.result == 'success'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
