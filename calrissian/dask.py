@@ -360,6 +360,7 @@ class CalrissianCommandLineDaskJob(CalrissianCommandLineJob):
             self.get_pod_additional_spec(runtimeContext),
             self.get_no_network_access_pod_labels(runtimeContext),
             self.get_network_access_pod_labels(runtimeContext),
+            self.owner_reference,
         )
 
         built = k8s_builder.build()

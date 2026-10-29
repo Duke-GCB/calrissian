@@ -228,7 +228,7 @@ def validate_token_automount(value):
 
 class KubernetesPodBuilder(object):
 
-    def __init__(self, name, builder, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, labels, nodeselectors, gpu_nodeselectors, security_context, serviceaccount, pod_additional_spec=None, no_network_access_pod_labels=None, network_access_pod_labels=None):
+    def __init__(self, name, builder, container_image, environment, volume_mounts, volumes, command_line, stdout, stderr, stdin, labels, nodeselectors, gpu_nodeselectors, security_context, serviceaccount, pod_additional_spec=None, no_network_access_pod_labels=None, network_access_pod_labels=None, owner_reference=None):
         self.name = name
         self.builder = builder
         self.cwl_version = self.builder.cwlVersion
@@ -253,6 +253,7 @@ class KubernetesPodBuilder(object):
             pod_additional_spec.get('automount_service_account_token', False))
         self.no_network_access_pod_labels = no_network_access_pod_labels
         self.network_access_pod_labels = network_access_pod_labels
+        self.owner_reference = owner_reference
         self.container_security_context = pod_additional_spec.get("container_security_context", {
             'readOnlyRootFilesystem': True,
             'privileged': False,
@@ -514,6 +515,9 @@ class KubernetesPodBuilder(object):
                 'nodeSelector': self.select_pod_nodeselectors()
             }
         }
+
+        if self.owner_reference:
+            spec['metadata']['ownerReferences'] = [self.owner_reference]
         
         if ( self.serviceaccount ):
             spec['spec']['serviceAccountName'] = self.serviceaccount
@@ -545,8 +549,17 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
     def __init__(self, *args, **kwargs):
         super(CalrissianCommandLineJob, self).__init__(*args, **kwargs)
         self.client = KubernetesClient()
+        self.runner_pod = self.client.get_current_pod()
+        self.owner_reference = {
+            'apiVersion': 'v1',
+            'kind': 'Pod',
+            'name': self.runner_pod.metadata.name,
+            'uid': self.runner_pod.metadata.uid,
+            'controller': False,
+            'blockOwnerDeletion': False,
+        }
         volume_builder = KubernetesVolumeBuilder()
-        volume_builder.add_persistent_volume_entries_from_pod(self.client.get_current_pod())
+        volume_builder.add_persistent_volume_entries_from_pod(self.runner_pod)
         self.volume_builder = volume_builder
             
     def make_tmpdir(self):
@@ -815,6 +828,7 @@ class CalrissianCommandLineJob(ContainerCommandLineJob):
             self.get_pod_additional_spec(runtimeContext),
             self.get_no_network_access_pod_labels(runtimeContext),
             self.get_network_access_pod_labels(runtimeContext),
+            self.owner_reference,
         )
         built = k8s_builder.build()
         log.debug('{}\n{}{}\n'.format('-' * 80, yaml.dump(built), '-' * 80))

@@ -1,7 +1,7 @@
 """Exercise cwltool preparation and Kubernetes mapping of a fixed output path."""
 import json
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 from ruamel.yaml import YAML
@@ -36,7 +36,11 @@ def test_fixed_output_directory(tmp_path, output_path):
     })
     spec = YAML().load(json.dumps(spec))
     spec['arguments'].lc.filename = 'file:///tool.cwl'
-    with patch('calrissian.job.KubernetesClient'), patch('calrissian.job.KubernetesVolumeBuilder'):
+    with patch('calrissian.job.KubernetesClient') as mock_client, patch('calrissian.job.KubernetesVolumeBuilder'):
+        runner_pod = Mock()
+        runner_pod.metadata.name = 'runner'
+        runner_pod.metadata.uid = 'runner-uid'
+        mock_client.return_value.get_current_pod.return_value = runner_pod
         tool = CalrissianCommandLineTool(
             spec, CalrissianLoadingContext(metadata={'cwlVersion': INTERNAL_VERSION}))
         job = next(tool.job({}, lambda *args: None, runtime))
