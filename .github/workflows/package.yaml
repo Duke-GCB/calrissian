@@ -18,7 +18,7 @@ jobs:
     environment: release
      
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Set up Python
       uses: actions/setup-python@v7
       with:
@@ -41,7 +41,7 @@ jobs:
   container-build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4   
+    - uses: actions/checkout@v7   
     - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
     - name: build & push image
       run: |
