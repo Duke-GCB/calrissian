@@ -549,7 +549,8 @@ class KubernetesDaskClient(KubernetesClient):
                                 continue
 
                             if self.state_is_running(status.state):
-                                self._ensure_log_thread_started(status)
+                                if self.should_stream_logs():
+                                    self._ensure_log_thread_started(status)
                                 continue
 
                             if self.state_is_terminated(status.state):

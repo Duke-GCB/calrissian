@@ -52,6 +52,15 @@ def make_pod(exit_code, dask=False):
                  status=V1PodStatus(container_statuses=statuses))
 
 
+def make_running_pod(dask=False):
+    pod = make_pod(0, dask=dask)
+    statuses = pod.status.container_statuses
+    statuses[0].state = SimpleNamespace(running=True, waiting=None, terminated=None)
+    if dask:
+        statuses[1].state = SimpleNamespace(running=None, waiting=True, terminated=None)
+    return pod
+
+
 def wait(monitor):
     if isinstance(monitor, KubernetesDaskClient):
         return monitor.wait_for_completion(cm_name='task-config')
@@ -105,6 +114,40 @@ def test_watch_recovery(monitor, monkeypatch, exit_code, delete, interruptions):
     assert monitor.core_api_instance.delete_namespaced_pod.call_count == int(delete)
     if isinstance(monitor, KubernetesDaskClient):
         assert monitor.core_api_instance.delete_namespaced_config_map.call_count == int(delete)
+
+
+@pytest.mark.parametrize('stream_logs', [True, False])
+def test_log_streaming_setting_is_respected_across_watch_recovery(monitor, monkeypatch, stream_logs):
+    monkeypatch.setenv('CALRISSIAN_STREAM_LOGS', str(stream_logs).lower())
+    running_pod = make_running_pod(isinstance(monitor, KubernetesDaskClient))
+    completed_pod = make_pod(0, isinstance(monitor, KubernetesDaskClient))
+    monitor._ensure_log_thread_started = Mock()
+    monitor.core_api_instance.list_namespaced_pod.side_effect = [
+        SimpleNamespace(items=[monitor.pod], metadata=SimpleNamespace(resource_version='100')),
+        SimpleNamespace(items=[monitor.pod], metadata=SimpleNamespace(resource_version='200')),
+    ]
+
+    def stream_then_expire(**kwargs):
+        assert kwargs['resource_version'] == '100'
+        yield {'object': running_pod}
+        raise ApiException(status=410)
+
+    def stream_to_completion(**kwargs):
+        assert kwargs['resource_version'] == '200'
+        yield {'object': completed_pod}
+
+    first_watch = Mock()
+    first_watch.stream.side_effect = stream_then_expire
+    second_watch = Mock()
+    second_watch.stream.side_effect = stream_to_completion
+    module = 'calrissian.dask' if isinstance(monitor, KubernetesDaskClient) else 'calrissian.k8s'
+
+    with patch(module + '.watch.Watch', side_effect=[first_watch, second_watch]):
+        result = wait(monitor)
+
+    assert result.exit_code == 0
+    assert monitor._ensure_log_thread_started.call_count == int(stream_logs)
+    assert monitor.pod is None
 
 
 def test_nonrecoverable_watch_error(monitor):
