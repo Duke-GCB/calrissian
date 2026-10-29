@@ -114,6 +114,18 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
         self.pod_builder.stdin = None
         self.assertEqual(['set -e; trap "touch /shared/completed" EXIT;export DASK_CLUSTER=$(cat /shared/dask_cluster_name.txt) ; cat' ], self.pod_builder.container_args())
 
+    def test_cwl_secret_environment_is_only_on_main_container(self):
+        self.pod_builder.environment = {'HOME': '/homedir', 'TOKEN': 'resolved-secret'}
+        self.pod_builder.helper_environment = {'HOME': '/homedir'}
+
+        pod = self.pod_builder.build()
+        containers = pod['spec']['containers']
+        init_container = pod['spec']['initContainers'][0]
+
+        self.assertIn({'name': 'TOKEN', 'value': 'resolved-secret'}, containers[0]['env'])
+        self.assertNotIn({'name': 'TOKEN', 'value': 'resolved-secret'}, containers[1]['env'])
+        self.assertNotIn({'name': 'TOKEN', 'value': 'resolved-secret'}, init_container['env'])
+
     
     def test_container_args_with_redirects(self):
         self.assertEqual(['set -e; trap "touch /shared/completed" EXIT;export DASK_CLUSTER=$(cat /shared/dask_cluster_name.txt) ; cat > stdout.txt 2> stderr.txt < stdin.txt'], self.pod_builder.container_args())

@@ -16,7 +16,7 @@ they do not claim full conformance.
 | Image ENTRYPOINT | Known compatibility gap, #207 |
 | NetworkAccess | Labels plus operator-installed enforcing policy; documented literal requirement coverage |
 | ToolTimeLimit | Required feature explicitly unsupported |
-| cwltool:Secrets | Incomplete, #145; different from Kubernetes envFrom Secrets |
+| cwltool:Secrets | Substitutes secret placeholders in task environment variables, command arguments, and staged generated files. Runner logs redact matching values; Pod specs and staged files contain resolved values during execution. Tool-produced output can still expose a secret. |
 | CUDARequirement | NVIDIA resource allocation/placement; actual hardware and drivers are deployment responsibilities |
 | DaskGatewayRequirement | Calrissian extension with a separate compatibility suite |
 

@@ -6,6 +6,7 @@ from kubernetes.config.config_exception import ConfigException
 from calrissian.executor import IncompleteStatusException
 from calrissian.k8s import load_config_get_namespace, KubernetesClient, CalrissianJobException, PodMonitor
 from calrissian.k8s import CompletionResult, read_file
+from cwltool.secrets import SecretStore
 
 
 class ReadFileTestCase(TestCase):
@@ -356,6 +357,23 @@ class KubernetesClientTestCase(TestCase):
             call('[%s] follow_logs start', 'logging-pod-123'),
             call('[%s] follow_logs end', 'logging-pod-123')
         ])
+
+    @patch('calrissian.k8s.log')
+    def test_follow_logs_redacts_cwl_secrets(self, mock_log, mock_get_namespace, mock_client):
+        mock_get_namespace.return_value = 'logging-ns'
+        mock_client.CoreV1Api.return_value.read_namespaced_pod_log.return_value.stream.return_value = [
+            b'credential=top-secret-value\n'
+        ]
+        kc = KubernetesClient()
+        secret_store = SecretStore()
+        secret_store.add('top-secret-value')
+        kc.set_secret_store(secret_store)
+        kc._set_pod(self.make_mock_pod('logging-pod-123'))
+
+        kc.follow_logs()
+
+        self.assertEqual(kc.tool_log[0]['entry'], 'credential=[REDACTED]')
+        self.assertNotIn('top-secret-value', repr(mock_log.debug.call_args_list))
 
 
 class KubernetesClientStateTestCase(TestCase):

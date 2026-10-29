@@ -63,7 +63,10 @@ def dask_req_validate(requirement: Optional[CWLObjectType]) -> bool:
 class KubernetesDaskPodBuilder(KubernetesPodBuilder):
     
     def __init__(self, dask_gateway_url, dask_gateway_controller, *args, **kwargs):
+        self.helper_environment = kwargs.pop('helper_environment', None)
         super().__init__(*args, **kwargs)
+        if self.helper_environment is None:
+            self.helper_environment = getattr(self, 'environment', {})
 
         self.dask_gateway_url = dask_gateway_url
         self.dask_gateway_controller = dask_gateway_controller
@@ -139,21 +142,22 @@ class KubernetesDaskPodBuilder(KubernetesPodBuilder):
                     f'CALRISSIAN_DASK_CLEANUP_{resource.upper()}_LIMIT')
         return resources
 
-    def container_environment(self):
-        environment = []
-        for name, value in sorted(self.environment.items()):
-            environment.append({'name': name, 'value': value})
+    def container_environment(self, environment=None):
+        env_entries = []
+        source_environment = self.environment if environment is None else environment
+        for name, value in sorted(source_environment.items()):
+            env_entries.append({'name': name, 'value': value})
         
-        environment.append({'name': 'DASK_GATEWAY_WORKER_CORES', 'value': str(self.dask_requirement.get("workerCores"))})
-        environment.append({'name': 'DASK_GATEWAY_WORKER_MEMORY', 'value': str(self.dask_requirement.get("workerMemory"))})
-        environment.append({'name': 'DASK_GATEWAY_WORKER_CORES_LIMIT', 'value': str(self.dask_requirement.get("workerCoresLimit"))})
-        environment.append({'name': 'DASK_GATEWAY_CLUSTER_MAX_CORES', 'value': str(self.dask_requirement.get("clusterMaxCores"))})
-        environment.append({'name': 'DASK_GATEWAY_CLUSTER_MAX_RAM', 'value': str(self.dask_requirement.get("clusterMaxMemory"))})
-        environment.append({'name': 'DASK_GATEWAY_URL', 'value': str(self.dask_gateway_url)})
-        environment.append({'name': 'DASK_GATEWAY_IMAGE', 'value': str(self.container_image)})
-        environment.append({'name': 'DASK_CLUSTER_NAME_PATH', 'value': '/shared/dask_cluster_name.txt'})
+        env_entries.append({'name': 'DASK_GATEWAY_WORKER_CORES', 'value': str(self.dask_requirement.get("workerCores"))})
+        env_entries.append({'name': 'DASK_GATEWAY_WORKER_MEMORY', 'value': str(self.dask_requirement.get("workerMemory"))})
+        env_entries.append({'name': 'DASK_GATEWAY_WORKER_CORES_LIMIT', 'value': str(self.dask_requirement.get("workerCoresLimit"))})
+        env_entries.append({'name': 'DASK_GATEWAY_CLUSTER_MAX_CORES', 'value': str(self.dask_requirement.get("clusterMaxCores"))})
+        env_entries.append({'name': 'DASK_GATEWAY_CLUSTER_MAX_RAM', 'value': str(self.dask_requirement.get("clusterMaxMemory"))})
+        env_entries.append({'name': 'DASK_GATEWAY_URL', 'value': str(self.dask_gateway_url)})
+        env_entries.append({'name': 'DASK_GATEWAY_IMAGE', 'value': str(self.container_image)})
+        env_entries.append({'name': 'DASK_CLUSTER_NAME_PATH', 'value': '/shared/dask_cluster_name.txt'})
 
-        return environment
+        return env_entries
 
 
     def init_containers(self):
@@ -177,7 +181,7 @@ class KubernetesDaskPodBuilder(KubernetesPodBuilder):
         init_dask_cluster = {
             'name': self.init_container_name(),
             'image': str(self.container_image),
-            'env': self.container_environment(),
+            'env': self.container_environment(self.helper_environment),
             'command': self.init_container_command(),
             'workingDir': self.container_workingdir(),
             'volumeMounts': self.volume_mounts
@@ -214,7 +218,7 @@ class KubernetesDaskPodBuilder(KubernetesPodBuilder):
                         'name': 'sidecar-container',
                         'image': str(self.container_image),
                         'command': self.sidecar_container_command(),
-                        'env': self.container_environment(),
+                        'env': self.container_environment(self.helper_environment),
                         'resources': self.sidecar_container_resources(),
                         'volumeMounts': self.volume_mounts,
                         'workingDir': self.container_workingdir(),
@@ -295,23 +299,14 @@ class CalrissianCommandLineDaskJob(CalrissianCommandLineJob):
         self._add_emptydir_volume_and_binding('tmpdir', self.container_tmpdir)
 
         # Call the ContainerCommandLineJob add_volumes method
-        self.add_volumes(self.pathmapper,
-                         runtime,
-                         tmpdir_prefix=runtimeContext.tmpdir_prefix,
-                         secret_store=runtimeContext.secret_store,
-                         any_path_okay=True)
+        self.add_kubernetes_volumes(self.pathmapper, runtime, runtimeContext, any_path_okay=True)
 
         if self.generatemapper is not None:
             # Seems to be true if docker is a hard requirement
             # This evaluates to true if docker_is_required is true
             # Used only for generatemapper add volumes
             any_path_okay = self.builder.get_requirement("DockerRequirement")[1] or False
-            self.add_volumes(
-                self.generatemapper,
-                runtime,
-                tmpdir_prefix=runtimeContext.tmpdir_prefix,
-                secret_store=runtimeContext.secret_store,
-                any_path_okay=any_path_okay)
+            self.add_kubernetes_volumes(self.generatemapper, runtime, runtimeContext, any_path_okay)
 
 
         self.client.create_dask_gateway_config_map(
@@ -339,16 +334,22 @@ class CalrissianCommandLineDaskJob(CalrissianCommandLineJob):
                 target=self.dask_gateway_controller_dir)
         
 
+        resolved_environment = self.resolve_secrets(self.environment, runtimeContext.secret_store)
+        helper_environment = self.environment_without_secrets(self.environment, runtimeContext.secret_store)
+        builder_options = {}
+        if helper_environment != resolved_environment:
+            builder_options['helper_environment'] = helper_environment
+
         k8s_builder = KubernetesDaskPodBuilder(
             self.get_dask_gateway_url(runtimeContext),
             controller_cm_exists,
             self.name,
             self.builder,
             self._get_container_image(),
-            self.environment,
+            resolved_environment,
             self.volume_builder.volume_mounts,
             self.volume_builder.volumes,
-            self.quoted_command_line(),
+            quoted_arg_list(self.resolve_secrets(self.command_line, runtimeContext.secret_store)),
             self.stdout,
             self.stderr,
             self.stdin,
@@ -361,10 +362,11 @@ class CalrissianCommandLineDaskJob(CalrissianCommandLineJob):
             self.get_no_network_access_pod_labels(runtimeContext),
             self.get_network_access_pod_labels(runtimeContext),
             self.owner_reference,
+            **builder_options,
         )
 
         built = k8s_builder.build()
-        log.debug('{}\n{}{}\n'.format('-' * 80, yaml.dump(built), '-' * 80))
+        self.log_pod_diagnostic(built, runtimeContext.secret_store)
         # Report an error if anything was added to the runtime list
         if runtime:
             log.error('Runtime list is not empty. k8s does not use that, so you should see who put something there:\n{}'.format(' '.join(runtime)))
@@ -394,13 +396,19 @@ class CalrissianCommandLineDaskJob(CalrissianCommandLineJob):
 
         self._setup(runtimeContext)
         
-        pod = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
-        self.execute_kubernetes_pod(pod) # analogous to _execute()
-        completion_result = self.wait_for_kubernetes_pod(cm_name = self.dask_cm_name)
-        if completion_result.exit_code != 0:
-            log_main.error(f"ERROR the command below failed in pod {get_pod_name(pod)}:")
-            log_main.error("\t" + " ".join(get_pod_command(pod)))
-        self.finish(completion_result, runtimeContext)
+        try:
+            pod = self.create_kubernetes_runtime(runtimeContext) # analogous to create_runtime()
+            self.client.set_secret_store(runtimeContext.secret_store)
+            self.execute_kubernetes_pod(pod) # analogous to _execute()
+            completion_result = self.wait_for_kubernetes_pod(cm_name = self.dask_cm_name)
+            if completion_result.exit_code != 0:
+                log_main.error(f"ERROR the command below failed in pod {get_pod_name(pod)}:")
+                safe_command = self.redact_secrets(get_pod_command(pod), runtimeContext.secret_store)
+                log_main.error("\t" + " ".join(safe_command))
+            self.finish(completion_result, runtimeContext)
+        finally:
+            self.cleanup_secret_staged_files()
+            self.client.set_secret_store(None)
 
 
 class KubernetesDaskClient(KubernetesClient):

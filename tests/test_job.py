@@ -4,11 +4,12 @@ import subprocess
 from pathlib import Path
 from cwltool.pathmapper import MapperEnt
 from unittest import TestCase, skip
-from unittest.mock import Mock, patch, call, create_autospec
+from unittest.mock import MagicMock, Mock, patch, call, create_autospec
 from calrissian.job import k8s_safe_name, KubernetesVolumeBuilder, VolumeBuilderException, KubernetesPodBuilder, random_tag, read_yaml
 from calrissian.job import CalrissianCommandLineJob, KubernetesPodVolumeInspector, CalrissianCommandLineJobException, total_size, quoted_arg_list
 from calrissian.job import INIT_IMAGE_ENV_VARIABLE, DEFAULT_INIT_IMAGE
 from cwltool.errors import UnsupportedRequirement
+from cwltool.secrets import SecretStore
 from calrissian.context import CalrissianRuntimeContext
 from calrissian.k8s import CompletionResult
 import threading
@@ -707,6 +708,54 @@ class CalrissianCommandLineJobTestCase(TestCase):
         job.output_callback = Mock()
         return job
 
+    def test_resolves_and_redacts_cwl_secrets(self, mock_volume_builder, mock_client):
+        job = self.make_job()
+        secret_store = SecretStore()
+        placeholder = secret_store.add('top-secret-value')
+
+        self.assertEqual(
+            job.resolve_secrets({'AWS_ACCESS_KEY_ID': placeholder}, secret_store),
+            {'AWS_ACCESS_KEY_ID': 'top-secret-value'},
+        )
+        self.assertEqual(
+            job.resolve_secrets(['--password', placeholder], secret_store),
+            ['--password', 'top-secret-value'],
+        )
+        self.assertEqual(
+            job.redact_secrets({'value': 'prefix-top-secret-value-suffix'}, secret_store),
+            {'value': 'prefix-[REDACTED]-suffix'},
+        )
+
+    def test_tracks_and_cleans_secret_generated_files(self, mock_volume_builder, mock_client):
+        job = self.make_job()
+        secret_store = SecretStore()
+        placeholder = secret_store.add('top-secret-value')
+        generated_files = {
+            'secret-file': tempfile.NamedTemporaryFile(delete=False),
+            'writable-secret-file': tempfile.NamedTemporaryFile(delete=False),
+        }
+        for generated_file in generated_files.values():
+            generated_file.close()
+        pathmapper = MagicMock()
+        pathmapper.items.return_value = [
+            ('secret-file', Mock(type='CreateFile', resolved=placeholder)),
+            ('writable-secret-file', Mock(type='CreateWritableFile', resolved=placeholder)),
+        ]
+        pathmapper.__getitem__.side_effect = lambda key: Mock(resolved=generated_files[key].name)
+        job.add_volumes = Mock()
+
+        job.add_kubernetes_volumes(
+            pathmapper, [],
+            Mock(secret_store=secret_store, tmpdir_prefix='/tmp'),
+            any_path_okay=True,
+        )
+        for generated_file in generated_files.values():
+            self.assertIn(generated_file.name, job.secret_staged_files)
+        job.cleanup_secret_staged_files()
+        for generated_file in generated_files.values():
+            self.assertFalse(os.path.exists(generated_file.name))
+        self.assertFalse(job.secret_staged_files)
+
     def test_runner_pod_owner_reference_is_added_to_task_pod(self, mock_volume_builder, mock_client):
         runner_pod = Mock()
         runner_pod.metadata.name = 'runner-123'
@@ -1036,6 +1085,40 @@ class CalrissianCommandLineJobTestCase(TestCase):
         # returns that
         self.assertTrue(mock_pod_builder.return_value.build.called)
         self.assertEqual(built, mock_pod_builder.return_value.build.return_value)
+
+    @patch('calrissian.job.KubernetesPodBuilder')
+    @patch('calrissian.job.os')
+    @patch('calrissian.job.read_yaml')
+    def test_create_kubernetes_runtime_resolves_secret_env_and_command(self, mock_read_yaml, mock_os,
+                                                                        mock_pod_builder, mock_volume_builder,
+                                                                        mock_client):
+        mock_os.path.realpath.side_effect = lambda path: path
+        secret_store = SecretStore()
+        placeholder = secret_store.add('top-secret-value')
+        job = self.make_job()
+        job.outdir = '/outdir'
+        job.tmpdir = '/tmpdir'
+        job.environment = {'TOKEN': placeholder, 'NORMAL': 'visible'}
+        job.command_line = ['run-tool', '--token', placeholder]
+        mock_pod_builder.return_value.build.return_value = {
+            'spec': {'containers': [{
+                'env': [{'name': 'TOKEN', 'value': 'top-secret-value'}],
+                'args': ['--token top-secret-value'],
+            }]}
+        }
+        runtime_context = Mock(
+            tmpdir_prefix='TP', secret_store=secret_store,
+            pod_automount_service_account_token=False,
+            pod_gpu_tolerations=None, pod_serviceaccount=None,
+        )
+
+        with patch('calrissian.job.log') as mock_log:
+            job.create_kubernetes_runtime(runtime_context)
+
+        pod_builder_args = mock_pod_builder.call_args.args
+        self.assertEqual(pod_builder_args[3], {'TOKEN': 'top-secret-value', 'NORMAL': 'visible'})
+        self.assertEqual(pod_builder_args[6], quoted_arg_list(['run-tool', '--token', 'top-secret-value']))
+        self.assertNotIn('top-secret-value', repr(mock_log.debug.call_args))
 
     def test_execute_kubernetes_pod(self, mock_volume_builder, mock_client):
         job = self.make_job()
