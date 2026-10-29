@@ -53,6 +53,8 @@ The manifest creates a dedicated `calrissian-example` namespace, separate runner
 and workflow accounts, management RBAC, a 10 GiB RWX claim, CWL/configuration
 files, the runner Job, and a read-only results reader. The runner is its Pod's
 first container, matching PVC discovery. Temporary files are also on the PVC.
+Task Pods refer to the runner Pod as their owner, allowing Kubernetes garbage
+collection to remove them when the runner Pod is deleted.
 
 `backoffLimit: 0` prevents automatic whole-workflow retries. Runner memory
 limits are separate from the `--max-ram` task budget. The example is a standard

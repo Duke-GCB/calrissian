@@ -304,6 +304,17 @@ class KubernetesVolumeBuilderTestCase(TestCase):
 
 class KubernetesPodBuilderTestCase(TestCase):
 
+    def test_build_sets_runner_owner_reference(self):
+        self.pod_builder.owner_reference = {
+            'apiVersion': 'v1', 'kind': 'Pod', 'name': 'runner-123',
+            'uid': 'runner-uid', 'controller': False,
+            'blockOwnerDeletion': False,
+        }
+        self.assertEqual(
+            self.pod_builder.build()['metadata']['ownerReferences'],
+            [self.pod_builder.owner_reference],
+        )
+
     def test_build_env_from_sources(self):
         # Issues #194 and #195: references belong on the main container.
         cases = [
@@ -696,6 +707,28 @@ class CalrissianCommandLineJobTestCase(TestCase):
         job.output_callback = Mock()
         return job
 
+    def test_runner_pod_owner_reference_is_added_to_task_pod(self, mock_volume_builder, mock_client):
+        runner_pod = Mock()
+        runner_pod.metadata.name = 'runner-123'
+        runner_pod.metadata.uid = 'runner-uid'
+        mock_client.return_value.get_current_pod.return_value = runner_pod
+        job = self.make_job()
+        job.builder.requirements = []
+        job.builder.resources = {'cores': 1, 'ram': 64}
+        job.environment['HOME'] = '/out'
+        mock_runtime_context = CalrissianRuntimeContext()
+        job.outdir = '/out'
+        job.tmpdir = '/tmp'
+        job.volume_builder.volume_mounts = []
+        job.volume_builder.volumes = []
+        with patch.object(job, 'add_volumes'):
+            pod = job.create_kubernetes_runtime(mock_runtime_context)
+        self.assertEqual(pod['metadata']['ownerReferences'], [{
+            'apiVersion': 'v1', 'kind': 'Pod', 'name': 'runner-123',
+            'uid': 'runner-uid', 'controller': False,
+            'blockOwnerDeletion': False,
+        }])
+
     def make_completion_result(self, exit_code):
         return create_autospec(CompletionResult, pod_name=self.name, exit_code=exit_code, cpus='1', memory='1', start_time=Mock(),
                         finish_time=Mock(), pod_log='logs/', node_selectors={})
@@ -997,6 +1030,7 @@ class CalrissianCommandLineJobTestCase(TestCase):
             job.get_pod_additional_spec(mock_runtime_context),
             mock_read_yaml.return_value,
             mock_read_yaml.return_value,
+            job.owner_reference,
         ))
         # calls builder.build
         # returns that

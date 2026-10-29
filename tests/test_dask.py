@@ -521,7 +521,8 @@ class CalrissianCommandLineDaskJobTestCase(TestCase):
             None,
             job.get_pod_additional_spec(mock_runtime_context),
             mock_read_yaml.return_value,
-            mock_read_yaml.return_value
+            mock_read_yaml.return_value,
+            job.owner_reference,
         ))
         # calls builder.build
         # returns that
