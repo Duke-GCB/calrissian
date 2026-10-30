@@ -16,10 +16,15 @@ Gateway backend configured to accept the cluster options `image`, `worker_cores`
 `worker_cores_limit`, and `worker_memory`. The built-in initialization script sets
 those option names; an arbitrary Gateway installation may not expose them.
 
-Build task and worker images with compatible Dask, Distributed, and Gateway
-clients. The repository's tested local profile uses 2024.1.0. Consult the target
-Gateway release documentation before changing versions. Its server backend
-must permit the chosen worker image and resource values.
+Use the `ghcr.io/duke-gcb/calrissian-dask` image, or install the
+`calrissian-dask` package in your runner environment, to enable the extension.
+The ordinary `ghcr.io/duke-gcb/calrissian` image contains core Calrissian only.
+Task images that execute Dask lifecycle scripts need a compatible
+`dask-gateway` client; Gateway scheduler and worker images need compatible Dask
+and Distributed packages. The local compatibility matrix and its tested
+versions are listed in [`dask-gateway/versions.json`](https://github.com/Duke-GCB/calrissian/blob/develop/dask-gateway/versions.json).
+Consult the target Gateway release documentation before changing versions. Its
+server backend must permit the chosen worker image and resource values.
 
 Storage and network settings are separate for the Calrissian task, Gateway
 scheduler, and workers. Any files read by distributed workers need paths and
@@ -50,7 +55,9 @@ above authentication argument. Keep the rest of their lifecycle logic:
 
 ```sh
 mkdir -p /tmp/calrissian-gateway-scripts
-cp calrissian/dask/init-dask.py calrissian/dask/dispose-dask.py /tmp/calrissian-gateway-scripts/
+cp calrissian-dask/src/calrissian_dask/resources/init-dask.py \
+  calrissian-dask/src/calrissian_dask/resources/dispose-dask.py \
+  /tmp/calrissian-gateway-scripts/
 # Edit both copies to import JupyterHubAuth and pass auth= as shown above.
 kubectl -n YOUR_NAMESPACE create configmap authenticated-dask-scripts \
   --from-file=/tmp/calrissian-gateway-scripts/init-dask.py \
