@@ -84,7 +84,7 @@ jobs:
           set -euo pipefail
           minikube start --profile "$MINIKUBE_PROFILE" \
             --driver=docker --container-runtime=docker --cni=calico \
-            --kubernetes-version=v1.35.1 --cpus=4 --memory=12288
+            --kubernetes-version=v1.35.1 --cpus=2 --memory=2048
           minikube --profile "$MINIKUBE_PROFILE" addons enable storage-provisioner
           minikube --profile "$MINIKUBE_PROFILE" addons enable default-storageclass
           kubectl config use-context "$MINIKUBE_PROFILE"
