@@ -35,14 +35,15 @@ required for this test.
 
 ```sh
 task conformance:cluster
-skaffold run -p dask
+task dask:deploy
 task dask:cleanup:test
 ```
 
 The `dask` profile builds the current production Dockerfile and a derived
-`worker` image containing matching Dask, Distributed, and Gateway clients
-(version 2024.1.0). It installs the requested
-`https://helm.dask.org/dask-gateway-2024.1.0.tgz` chart in namespace
+`worker` image containing the selected Dask and Distributed release, plus the
+Dask Gateway client configured in `versions.json`. That file also selects the
+Helm chart version and the Dask/Distributed releases. The profile installs the
+configured chart in namespace
 `dask-gateway`, with Traefik exposed as ClusterIP, and the conformance chart in
 `calrissian-conformance`. Gateway's backend image name/tag are populated from
 Skaffold's `worker` artifact. This is a local integration setup using simple
@@ -101,9 +102,15 @@ whole local cluster and its data.
 Deploy the environment above, then run all cases or select one stable ID:
 
 ```sh
-skaffold run -p dask
+task dask:deploy
 task dask:test
 task dask:test ID=9
+# Run each version in dask-gateway/versions.json sequentially
+task dask:test:matrix
+# Run only case 9 against each configured version
+task dask:test:matrix ID=9
+# Select a smaller version list
+task dask:test:matrix VERSIONS=2025.3.1
 # Equivalent commands without Task:
 python3 dask-gateway/run-tests.py
 python3 dask-gateway/run-tests.py --id 9 --timeout 600
@@ -113,6 +120,23 @@ The suite uses CWL v1.2 fixtures and a standard-library Python controller. It
 runs Calrissian directly rather than requiring `cwltest` in the worker image.
 These are extension compatibility results, separate from official CWL
 conformance results. Fixture definitions and stable IDs live in `tests/`.
+
+The version matrix is in `versions.json`. `task dask:deploy` reads the Gateway
+client/chart versions from that file. Choose a Dask release with
+`task dask:deploy DASK_VERSION=2026.8.0`. The suite checks the deployed Dask,
+Distributed, Gateway client, and Helm chart versions against the file and fails
+before running cases if any value differs. The matrix task rebuilds and deploys
+each tuple sequentially and runs the complete suite. It removes Gateway between
+versions while retaining the conformance release and its PVCs, avoiding a race
+between PVC deletion and the next staging Job. It removes both releases and
+their PVCs when the matrix finishes. It uses the dedicated local conformance
+cluster.
+
+The real-cluster matrix passed on October 30, 2026: **13/13 cases** passed for
+Dask/Distributed 2024.1.0, 2025.3.1, and 2026.8.0, using Gateway client and
+Helm chart 2026.3.0. Each release leg verified its deployed versions and
+completed cleanup. The matrix results and per-release logs are in
+`test-results/matrix-86a79184/`.
 
 | ID | Case | Expected behavior |
 |---|---|---|

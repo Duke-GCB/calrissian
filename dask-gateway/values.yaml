@@ -27,6 +27,10 @@ gateway:
               "worker_memory": options.worker_memory,
           },
       )
+    dask-cli-commands: |
+      # Use unified CLI commands across the Dask releases in this matrix.
+      c.KubeClusterConfig.scheduler_cmd = ["dask", "scheduler"]
+      c.KubeClusterConfig.worker_cmd = ["dask", "worker"]
 traefik:
   service:
     type: ClusterIP

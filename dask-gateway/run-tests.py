@@ -3,13 +3,17 @@
 import argparse
 import importlib.util
 import json
+import os
 from pathlib import Path
 import re
 import signal
 import subprocess
+import sys
 import time
 import uuid
 import xml.etree.ElementTree as ET
+
+from version_config import load_version_config, validate_deployed_versions
 
 ROOT = Path(__file__).resolve().parent
 spec = importlib.util.spec_from_file_location('cleanup', ROOT / 'test-cleanup.py')
@@ -27,6 +31,33 @@ def command(*args, **kwargs):
 
 def remote_file(path):
     return command(*NS, 'exec', 'deployment/calrissian-session', '--', 'cat', path)
+
+
+def deployed_package_version(package):
+    expression = (
+        'from importlib.metadata import version; '
+        f'print(version({package!r}))'
+    )
+    return command(
+        *NS, 'exec', 'deployment/calrissian-session', '--', 'python', '-c', expression
+    ).strip()
+
+
+def deployed_gateway_chart_version():
+    context = cleanup.KUBECTL[cleanup.KUBECTL.index('--context') + 1]
+    releases = subprocess.check_output([
+        'helm', '--kube-context', context, '--namespace', 'dask-gateway',
+        'list', '--output', 'json',
+    ], text=True)
+    release = next(
+        (item for item in json.loads(releases) if item.get('name') == 'dask-gateway'),
+        None,
+    )
+    chart = release.get('chart', '') if release else ''
+    prefix = 'dask-gateway-'
+    if not chart.startswith(prefix):
+        raise RuntimeError(f"Could not determine deployed Dask Gateway chart version: {chart!r}")
+    return chart.removeprefix(prefix)
 
 
 def stopped(name):
@@ -212,11 +243,36 @@ def main():
     command('-n', 'dask-gateway', 'wait', '--for=condition=Available', 'deployment', '--all', '--timeout=120s')
     deployment = read_json(*NS, 'get', 'deployment', 'calrissian-session')
     image = deployment['spec']['template']['spec']['containers'][0]['image']
+    config = load_version_config()
+    dask_version = deployed_package_version('dask')
+    distributed_version = deployed_package_version('distributed')
+    gateway_client_version = deployed_package_version('dask-gateway')
+    gateway_chart_version = deployed_gateway_chart_version()
+    actual_versions, errors = validate_deployed_versions(
+        config, dask_version, distributed_version,
+        gateway_client_version, gateway_chart_version,
+    )
+    expected_version = os.environ.get('DASK_VERSION')
+    if expected_version and dask_version != expected_version:
+        errors.append(
+            f"Deployed Dask {dask_version} does not match selected DASK_VERSION {expected_version}"
+        )
+    print(f"Deployed versions: {json.dumps(actual_versions, sort_keys=True)}", flush=True)
+    if errors:
+        print('Version contract failed:', file=sys.stderr)
+        for error in errors:
+            print(f'- {error}', file=sys.stderr)
+        print('Deploy the configured versions with `task dask:deploy`.', file=sys.stderr)
+        return 1
+
     directory = ROOT / 'test-results' / ('suite-' + uuid.uuid4().hex[:8])
     directory.mkdir(parents=True)
-    (directory / 'suite.json').write_text(json.dumps(cases, indent=2) + '\n')
+    (directory / 'suite.json').write_text(json.dumps({
+        **actual_versions,
+        'cases': cases,
+    }, indent=2) + '\n')
     results = []
-    suite = ET.Element('testsuite', name='dask-gateway-extension')
+    suite = ET.Element('testsuite', name=f'dask-gateway-extension-{dask_version}')
     try:
         for case in cases:
             print(f'Running {case["id"]}: {case["name"]}', flush=True)
@@ -229,7 +285,11 @@ def main():
             if result.get('interrupted'):
                 break
     finally:
-        (directory / 'results.json').write_text(json.dumps({'image': image, 'results': results}, indent=2) + '\n')
+        (directory / 'results.json').write_text(json.dumps({
+            'image': image,
+            **actual_versions,
+            'results': results,
+        }, indent=2) + '\n')
         suite.set('tests', str(len(results)))
         suite.set('failures', str(len(suite.findall('testcase/failure'))))
         ET.ElementTree(suite).write(directory / 'junit.xml', encoding='unicode')

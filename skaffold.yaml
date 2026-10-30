@@ -14,6 +14,13 @@ build:
     context: .
     docker:
       dockerfile: Dockerfile
+  - image: calrissian-dask
+    context: .
+    docker:
+      dockerfile: Dockerfile.dask
+    requires:
+    - image: calrissian
+      alias: CALRISSIAN_IMAGE
   - image: conformance
     context: .
     docker:
@@ -35,17 +42,30 @@ deploy:
 profiles:
 - name: dask
   build:
+    tagPolicy:
+      envTemplate:
+        template: '{{if eq .IMAGE_NAME "worker"}}{{if .DASK_WORKER_TAG}}{{.DASK_WORKER_TAG}}{{else}}dask-2024.1.0-gateway-client-2024.1.0-chart-2024.1.0{{end}}{{else}}latest{{end}}'
     artifacts:
     - image: calrissian
       context: .
       docker:
         dockerfile: Dockerfile
+    - image: calrissian-dask
+      context: .
+      docker:
+        dockerfile: Dockerfile.dask
+      requires:
+      - image: calrissian
+        alias: CALRISSIAN_IMAGE
     - image: worker
       context: .
       docker:
         dockerfile: dask-gateway/Dockerfile.worker
+        buildArgs:
+          DASK_VERSION: "{{if .DASK_VERSION}}{{.DASK_VERSION}}{{else}}2024.1.0{{end}}"
+          DASK_GATEWAY_VERSION: "{{if .DASK_GATEWAY_CLIENT_VERSION}}{{.DASK_GATEWAY_CLIENT_VERSION}}{{else}}2024.1.0{{end}}"
       requires:
-      - image: calrissian
+      - image: calrissian-dask
         alias: CALRISSIAN_IMAGE
   deploy:
     helm:
@@ -59,7 +79,10 @@ profiles:
         setValueTemplates:
           image: "{{.IMAGE_FULLY_QUALIFIED_worker}}"
       - name: dask-gateway
-        remoteChart: https://helm.dask.org/dask-gateway-2024.1.0.tgz
+        remoteChart: dask-gateway
+        repo: https://helm.dask.org
+        version: "{{if .DASK_GATEWAY_CHART_VERSION}}{{.DASK_GATEWAY_CHART_VERSION}}{{else}}2024.1.0{{end}}"
+        upgradeOnChange: true
         namespace: dask-gateway
         createNamespace: true
         valuesFiles:

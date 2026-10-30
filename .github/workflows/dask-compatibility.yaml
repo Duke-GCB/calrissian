@@ -1,0 +1,119 @@
+name: dask-compatibility
+
+on:
+  pull_request:
+    paths:
+      - 'Dockerfile'
+      - 'Dockerfile.dask'
+      - 'skaffold.yaml'
+      - 'Taskfile.yaml'
+      - 'calrissian/**'
+      - 'calrissian-dask/**'
+      - 'dask-gateway/**'
+      - '.github/workflows/dask-compatibility.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    outputs:
+      dask_versions: ${{ steps.versions.outputs.matrix }}
+      gateway_client: ${{ steps.versions.outputs.gateway_client }}
+      gateway_chart: ${{ steps.versions.outputs.gateway_chart }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - id: versions
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          from pathlib import Path
+          config = json.loads(Path("dask-gateway/versions.json").read_text())
+          print("matrix=" + json.dumps(config["dask_releases"]))
+          print("gateway_client=" + config["gateway_client"])
+          print("gateway_chart=" + config["gateway_chart"])
+          PY
+
+  matrix:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        dask-version: ${{ fromJSON(needs.prepare.outputs.dask_versions) }}
+    env:
+      DASK_VERSION: ${{ matrix.dask-version }}
+      DASK_GATEWAY_CLIENT_VERSION: ${{ needs.prepare.outputs.gateway_client }}
+      DASK_GATEWAY_CHART_VERSION: ${{ needs.prepare.outputs.gateway_chart }}
+      MINIKUBE_PROFILE: calrissian-conformance
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Install pinned Kubernetes tools
+        env:
+          MINIKUBE_VERSION: v1.36.0
+          KUBERNETES_VERSION: v1.35.1
+          HELM_VERSION: v3.22.1
+          SKAFFOLD_VERSION: v2.25.0
+        run: |
+          set -euo pipefail
+          curl -fsSLo minikube "https://storage.googleapis.com/minikube/releases/${MINIKUBE_VERSION}/minikube-linux-amd64"
+          sudo install minikube /usr/local/bin/minikube
+          curl -fsSLo kubectl "https://dl.k8s.io/release/${KUBERNETES_VERSION}/bin/linux/amd64/kubectl"
+          sudo install kubectl /usr/local/bin/kubectl
+          curl -fsSLo helm.tar.gz "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz"
+          tar -xzf helm.tar.gz
+          sudo install linux-amd64/helm /usr/local/bin/helm
+          curl -fsSLo skaffold "https://storage.googleapis.com/skaffold/releases/${SKAFFOLD_VERSION}/skaffold-linux-amd64"
+          sudo install skaffold /usr/local/bin/skaffold
+          minikube version
+          kubectl version --client
+          helm version
+          skaffold version
+
+      - name: Start Minikube
+        run: |
+          set -euo pipefail
+          minikube start --profile "$MINIKUBE_PROFILE" \
+            --driver=docker --container-runtime=docker --cni=calico \
+            --kubernetes-version=v1.35.1 --cpus=4 --memory=12288
+          minikube --profile "$MINIKUBE_PROFILE" addons enable storage-provisioner
+          minikube --profile "$MINIKUBE_PROFILE" addons enable default-storageclass
+          kubectl config use-context "$MINIKUBE_PROFILE"
+          kubectl wait --for=condition=Ready node --all --timeout=5m
+
+      - name: Deploy Dask Gateway and Calrissian
+        run: python3 dask-gateway/run-deploy.py --dask-version "$DASK_VERSION"
+
+      - name: Run the CWL and lifecycle suite
+        run: python3 dask-gateway/run-tests.py
+
+      - name: Collect cluster diagnostics
+        if: always()
+        run: |
+          mkdir -p dask-gateway/test-results/ci-diagnostics
+          kubectl get nodes,pods,jobs,pvc --all-namespaces -o wide \
+            > dask-gateway/test-results/ci-diagnostics/resources-${DASK_VERSION}.txt 2>&1 || true
+          kubectl describe pods,jobs --namespace calrissian-conformance \
+            > dask-gateway/test-results/ci-diagnostics/workloads-${DASK_VERSION}.txt 2>&1 || true
+
+      - name: Upload Dask compatibility results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: dask-compatibility-${{ matrix.dask-version }}-${{ github.run_id }}
+          path: dask-gateway/test-results/**
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Remove Minikube cluster
+        if: always()
+        run: minikube delete --profile "$MINIKUBE_PROFILE" || true
