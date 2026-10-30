@@ -1,4 +1,4 @@
-ARG CALRISSIAN_IMAGE=ghcr.io/duke-gcb/calrissian:latest
+ARG CALRISSIAN_IMAGE
 FROM rockylinux/rockylinux:10.2-minimal AS extension-builder
 RUN microdnf -y update && \
     microdnf -y install ca-certificates python3 python3-pip python3-devel gcc gcc-c++ make git && \
