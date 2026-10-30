@@ -29,7 +29,7 @@ jobs:
         sh scripts/bootstrap-pip.sh
         python -m pip install "certifi>=2026.10.19" "uv>=0.13.4" hatch
     - name: Build
-      run: hatch build
+      run: hatch build --all
     - name: Test
       run: |
         hatch run test.py${{ matrix.python-version }}:testv

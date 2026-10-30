@@ -12,7 +12,7 @@ from kubernetes.client import (
 )
 from kubernetes.client.exceptions import ApiException
 
-from calrissian.dask import KubernetesDaskClient
+from calrissian_dask.dask import KubernetesDaskClient
 from calrissian.executor import Resources, ThreadPoolJobExecutor
 from calrissian.k8s import KubernetesClient
 
@@ -92,7 +92,7 @@ def script_watch(monitor, outcomes, exit_code=0, while_waiting=lambda: None):
         watch = Mock()
         watch.stream.side_effect = lambda outcome=outcome, version=version, **kw: stream(outcome, version, **kw)
         watches.append(watch)
-    module = 'calrissian.dask' if isinstance(monitor, KubernetesDaskClient) else 'calrissian.k8s'
+    module = 'calrissian_dask.dask' if isinstance(monitor, KubernetesDaskClient) else 'calrissian.k8s'
     return patch(module + '.watch.Watch', side_effect=watches)
 
 
@@ -140,7 +140,7 @@ def test_log_streaming_setting_is_respected_across_watch_recovery(monitor, monke
     first_watch.stream.side_effect = stream_then_expire
     second_watch = Mock()
     second_watch.stream.side_effect = stream_to_completion
-    module = 'calrissian.dask' if isinstance(monitor, KubernetesDaskClient) else 'calrissian.k8s'
+    module = 'calrissian_dask.dask' if isinstance(monitor, KubernetesDaskClient) else 'calrissian.k8s'
 
     with patch(module + '.watch.Watch', side_effect=[first_watch, second_watch]):
         result = wait(monitor)

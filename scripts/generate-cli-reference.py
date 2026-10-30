@@ -8,11 +8,13 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from calrissian.main import add_arguments
+from calrissian.extensions import ExtensionManager
 
 
 def main():
     parser = argparse.ArgumentParser(add_help=False)
     add_arguments(parser)
+    ExtensionManager.discover().register_arguments(parser)
     rows = [
         '| Option | JSON key | Value / repetition | Parser default | Description |',
         '|---|---|---|---|---|',

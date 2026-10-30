@@ -14,7 +14,7 @@ every combination of dependency, Kubernetes version, and storage driver.
 | Shared storage | Runner/task paths must map to discovered PVC mounts | Multi-node use normally requires RWX. Single-node results do not validate NFS/CSI permissions, concurrency, or performance on another cluster. |
 | Network isolation | Requires matching policies and an enforcing CNI | Test allowed and denied traffic on your cluster; labels alone do not enforce CWL NetworkAccess. |
 | GPUs | NVIDIA device allocation and conditional placement settings | Scheduler simulations do not establish CUDA/driver compatibility or hardware performance. |
-| Dask extension | Local profile pins Gateway, Dask, and Distributed to 2024.1.0 | Local integration results use simple authentication. Authenticated production deployments require separate verification. |
+| Dask extension | Installed as the separate `calrissian-dask` distribution; `dask-gateway/versions.json` is the integration version contract | The recorded Minikube matrix passed all 13 cases with Dask/Distributed 2024.1.0, 2025.3.1, and 2026.8.0, using Gateway client/chart 2026.3.0 and simple authentication. Tool images provide `dask-gateway`; authenticated production deployments require separate verification. |
 
 The authoritative dependency constraints are in
 [pyproject.toml](https://github.com/Duke-GCB/calrissian/blob/develop/pyproject.toml).

@@ -1,6 +1,5 @@
 from cwltool.command_line_tool import CommandLineTool
 from cwltool.workflow import default_make_tool
-from calrissian.dask import CalrissianCommandLineDaskJob, dask_req_validate
 from calrissian.job import CalrissianCommandLineJob
 import logging
 
@@ -49,10 +48,11 @@ class CalrissianCommandLineTool(CommandLineTool):
                 'dockerPull': default_container
             })
         
-        dask_requirement, _ = self.get_requirement('https://calrissian-cwl.github.io/schema#DaskGatewayRequirement')
-        
-        if dask_req_validate(dask_requirement):
-            return CalrissianCommandLineDaskJob
+        extension_manager = getattr(self, 'extension_manager', None)
+        if extension_manager:
+            extension_runner = extension_manager.make_job_runner(self, runtimeContext)
+            if extension_runner:
+                return extension_runner
         
         return CalrissianCommandLineJob
 
@@ -66,7 +66,9 @@ def calrissian_make_tool(spec, loadingContext):
     For other types of documents, return the CWL default_make_tool
     """
     if "class" in spec and spec["class"] == "CommandLineTool":
-        return CalrissianCommandLineTool(spec, loadingContext)
+        tool = CalrissianCommandLineTool(spec, loadingContext)
+        tool.extension_manager = getattr(loadingContext, 'extension_manager', None)
+        return tool
     else:
         return default_make_tool(spec, loadingContext)
 

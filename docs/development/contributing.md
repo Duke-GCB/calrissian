@@ -29,9 +29,10 @@ hatch run test.py3.12:python -m pytest -q tests/test_k8s.py
 hatch run test.py3.12:python -m pytest -q tests/test_report.py
 ```
 
-Then run the complete unit suite. CI builds the distribution and runs tests
-across its configured Python matrix; a local test run covers only your selected
-interpreter. Build the package with `hatch build` before reviewing packaging changes.
+Then run the complete unit suite. CI builds the workspace distributions and
+runs tests across its configured Python matrix; a local test run covers only your
+selected interpreter. Build all packages with `hatch build --all` before
+reviewing packaging changes.
 
 ## Find the implementation
 
@@ -42,10 +43,11 @@ interpreter. Build the package with `hatch build` before reviewing packaging cha
 | Task construction | `job.py`, `tool.py` | Commands, mounts, identities, security, environment |
 | Kubernetes monitoring | `k8s.py`, `retry.py` | API errors, watch restarts, completion, cleanup |
 | Reporting | `report.py` | Units, intervals, totals, serialization |
-| Dask extension | `dask.py`, `dask/` | Init/main/cleanup contracts and Gateway lifecycle |
+| Dask extension | `calrissian-dask/` | Entry-point registration, job integration, and lifecycle resources |
 
 See the generated API reference and [diagrams](diagrams.md) for class relationships,
-and [execution](../explanation/execution.md) for runtime responsibilities.
+and [execution](../explanation/execution.md) for runtime responsibilities. See
+[extension packages](extensions.md) for the plugin hooks and packaging contract.
 
 ## Run integration checks when relevant
 

@@ -8,7 +8,7 @@ import uuid
 
 from kubernetes import client, config
 
-from calrissian.dask import KubernetesDaskPodBuilder
+from calrissian_dask.dask import KubernetesDaskPodBuilder
 from calrissian.job import KubernetesPodBuilder
 from calrissian.scheduling import load_gpu_tolerations
 from pathlib import Path

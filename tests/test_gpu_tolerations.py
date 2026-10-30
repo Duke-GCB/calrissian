@@ -8,7 +8,7 @@ import yaml
 from cwltool.errors import WorkflowException
 
 from calrissian.context import CalrissianRuntimeContext
-from calrissian.dask import KubernetesDaskPodBuilder
+from calrissian_dask.dask import KubernetesDaskPodBuilder
 from calrissian.job import CalrissianCommandLineJob, KubernetesPodBuilder
 from calrissian.main import add_arguments
 from calrissian.scheduling import load_gpu_tolerations

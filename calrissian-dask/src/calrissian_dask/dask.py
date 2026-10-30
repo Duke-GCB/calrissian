@@ -3,6 +3,7 @@ import os
 import logging
 import yaml
 import threading
+from importlib.resources import files
 from decimal import InvalidOperation
 from kubernetes.utils.quantity import parse_quantity
 
@@ -92,9 +93,7 @@ class KubernetesDaskPodBuilder(KubernetesPodBuilder):
         """
         if self.dask_gateway_controller:
             return ['python', '/controller/init-dask.py']
-        src = os.path.join(os.path.dirname(__file__), "dask/init-dask.py")
-        with open(src, 'r') as f:
-            file_content = f.read()
+        file_content = files("calrissian_dask.resources").joinpath("init-dask.py").read_text("utf-8")
         return ['python', '-c', file_content]
 
 
@@ -104,10 +103,7 @@ class KubernetesDaskPodBuilder(KubernetesPodBuilder):
         """
         if self.dask_gateway_controller:
             return ['python', '/controller/dispose-dask.py']
-        src = os.path.join(os.path.dirname(__file__), "dask/dispose-dask.py")
-
-        with open(src, 'r') as f:
-            file_content = f.read()
+        file_content = files("calrissian_dask.resources").joinpath("dispose-dask.py").read_text("utf-8")
         return ['python', '-c', file_content]
 
 
@@ -275,10 +271,12 @@ class CalrissianCommandLineDaskJob(CalrissianCommandLineJob):
         return self.client.wait_for_completion(cm_name=cm_name)
 
     def get_dask_script_cm_name(self, runtimeContext):
-        return runtimeContext.dask_script_configmap
+        options = getattr(runtimeContext, 'extension_options', {}).get('dask_gateway', {})
+        return options.get('script_configmap', getattr(runtimeContext, 'dask_script_configmap', None))
 
     def get_dask_gateway_url(self, runtimeContext):
-        return runtimeContext.dask_gateway_url
+        options = getattr(runtimeContext, 'extension_options', {}).get('dask_gateway', {})
+        return options.get('url', getattr(runtimeContext, 'dask_gateway_url', None))
 
     def _add_configmap_volume_and_binding(self, name, cm_name, target):
         self.volume_builder.add_configmap_volume(name, cm_name)
@@ -523,12 +521,34 @@ class KubernetesDaskClient(KubernetesClient):
                     if init_status and self.state_is_terminated(init_status[0].state):
                         init_status_code = init_status[0].state.terminated.exit_code
                         if init_status_code is not None and init_status_code != 0:
+                            init_name = init_status[0].name
+                            init_log = ""
+                            try:
+                                init_log = self.core_api_instance.read_namespaced_pod_log(
+                                    name=pod.metadata.name,
+                                    namespace=self.namespace,
+                                    container=init_name,
+                                    tail_lines=100,
+                                )
+                                if isinstance(init_log, bytes):
+                                    init_log = init_log.decode("utf-8", errors="replace")
+                                init_log = self.redact_log_line(str(init_log).strip())[-12000:]
+                            except Exception as error:
+                                log.warning(
+                                    "Could not read failed init container %s logs for pod %s: %s",
+                                    init_name, pod.metadata.name, error,
+                                )
                             with DaskPodMonitor() as monitor:
                                 self.delete_pod_name(pod.metadata.name)
                                 self.delete_configmap_name(cm_name=cm_name)
                                 monitor.remove(pod)
                             self._clear_pod()
                             w.stop()
+                            detail = f"; init log: {init_log}" if init_log else ""
+                            raise CalrissianJobException(
+                                f"Dask task pod {pod.metadata.name} init container "
+                                f"failed with exit code {init_status_code}{detail}"
+                            )
 
                     statuses = self.get_list_or_none(pod.status.container_statuses)
                     main_status = self.get_container_by_name(statuses, 'main-container')

@@ -1,5 +1,18 @@
 # Run the Dask Gateway extension
 
+Install `calrissian-dask` in the Calrissian runner environment to enable the
+extension. The standard Python `calrissian` distribution does not include it:
+
+```sh
+python -m pip install calrissian-dask
+```
+
+The task image must provide a compatible `dask-gateway` client; it does not
+need the `calrissian-dask` package. The standard `ghcr.io/duke-gcb/calrissian`
+image contains the Calrissian runtime without the extension. Use
+`ghcr.io/duke-gcb/calrissian-dask` for a runner image with the extension already
+installed.
+
 Calrissian can provision a Dask cluster for a tool declaring its
 `DaskGatewayRequirement` extension. This is separate from standard CWL conformance.
 The [architecture](../explanation/architecture.md) distinguishes Calrissian task
@@ -76,7 +89,7 @@ The extension fields describe worker/cluster allocations:
 
 The schema allows expressions for these fields. For implementation details, see:
 
-- [Extension schema](https://github.com/Duke-GCB/calrissian/blob/develop/calrissian/dask/custom_schema/schema.yaml).
+- [Extension schema](https://github.com/Duke-GCB/calrissian/blob/develop/calrissian-dask/src/calrissian_dask/resources/schema.yaml).
 - [Minimal computation fixture](https://github.com/Duke-GCB/calrissian/blob/develop/dask-gateway/tests/minimal.cwl).
 
 `NetworkAccess: true` expresses tool intent. Cluster policy must also allow

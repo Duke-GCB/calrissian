@@ -77,11 +77,12 @@ nav:
 - Development:
   - Contributing: development/contributing.md
   - CI and image security: development/ci.md
+  - Extension packages: development/extensions.md
   - Project diagrams: development/diagrams.md
   - Python API:
     - Package: api/latest/calrissian/index.md
     - Context: api/latest/calrissian/context.md
-    - Dask: api/latest/calrissian/dask.md
+    - Dask extension: api/latest/calrissian_dask/index.md
     - Executor: api/latest/calrissian/executor.md
     - Job: api/latest/calrissian/job.md
     - Kubernetes: api/latest/calrissian/k8s.md

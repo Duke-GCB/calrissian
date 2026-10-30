@@ -1,15 +1,11 @@
 import contextlib
-from importlib.resources import files
-import yaml
 
-import cwltool
-from cwltool.process import use_custom_schema, get_schema
 from calrissian.executor import ThreadPoolJobExecutor
 from calrissian.context import CalrissianLoadingContext, CalrissianRuntimeContext
+from calrissian.extensions import ExtensionManager
 from calrissian.version import version
 from calrissian.k8s import PodMonitor
 from calrissian.report import initialize_reporter, write_report, CPUParser, MemoryParser
-from calrissian.dask import DaskPodMonitor
 from cwltool.main import main as cwlmain
 from cwltool.argparser import arg_parser
 from typing_extensions import Text
@@ -22,6 +18,7 @@ import shlex
 import json
 
 log = logging.getLogger("calrissian.main")
+_ACTIVE_EXTENSION_MANAGER = None
 
 
 def get_log_level(parsed_args):
@@ -35,8 +32,10 @@ def get_log_level(parsed_args):
     return level
 
 
-def activate_logging(level):
-    loggers = ['executor','context','tool','job', 'k8s','main', 'dask']
+def activate_logging(level, extension_manager=None):
+    loggers = ['executor','context','tool','job', 'k8s','main']
+    if extension_manager:
+        loggers.extend(extension_manager.logger_names())
     for logger in loggers:
         logging.getLogger('calrissian.{}'.format(logger)).setLevel(level)
         logging.getLogger('calrissian.{}'.format(logger)).addHandler(logging.StreamHandler())
@@ -63,9 +62,6 @@ def add_arguments(parser):
     parser.add_argument('--conf', help='Defines the default values for the CLI arguments', action='append')
     parser.add_argument('--no-network-access-pod-label', dest='no_network_access_pod_labels', type=Text, nargs='?', help='YAML file to set the pod label to use for disabling network access')
     parser.add_argument('--network-access-pod-label', dest='network_access_pod_labels', type=Text, nargs='?', help='YAML file to set the pod label to use for enabling network access')
-    parser.add_argument('--dask-gateway-url', type=Text, nargs='?', help='Defines the Dask Gateway URL', required=False)
-    parser.add_argument('--dask-script-configmap', type=Text, nargs='?', help='Name of the already existing configmap with custom script for dask', required=False)
-
     parser.add_argument('--pod-priority-class', type=Text, nargs='?', help='Priority Class Name assigned to the pod')
     parser.add_argument('--env-from-secret', type=Text, action='append', help='Secret Id to set the pod environment')
     parser.add_argument('--env-from-configmap', type=Text, action='append', help='ConfigMap Id to set the pod environment')
@@ -102,7 +98,9 @@ def parse_arguments(parser):
 
 def handle_sigterm(signum, frame):
     log.error('Received signal {}, deleting pods'.format(signum))
-    PodMonitor.cleanup()
+    handled = _ACTIVE_EXTENSION_MANAGER.cleanup() if _ACTIVE_EXTENSION_MANAGER else False
+    if not handled:
+        PodMonitor.cleanup()
     sys.exit(signum)
 
 
@@ -141,39 +139,15 @@ def flush_tees():
     sys.stderr.flush()
 
 
-def add_custom_schema():
-    extension_schemas = {
-        "v1.0": "extensions.yml",
-        "v1.1": "extensions-v1.1.yml",
-        "v1.2": "extensions-v1.2.yml",
-    }
-
-    with open(os.path.join(os.path.dirname(__file__), "dask/custom_schema/schema.yaml")) as f:
-        dask_schema = yaml.safe_load(f)
-
-    for s, extension_file in extension_schemas.items():
-        # A custom schema replaces cwltool's extension schema. Preserve those
-        # definitions (including CUDA) and add Dask under its original URI.
-        schema = yaml.safe_load(files("cwltool").joinpath(extension_file).read_text("utf-8"))
-        for definition in dask_schema["$graph"]:
-            if "name" in definition:
-                schema["$graph"].append(dict(
-                    definition, name=dask_schema["$base"] + definition["name"]
-                ))
-        use_custom_schema(s, "http://commonwl.org/cwltool", yaml.safe_dump(schema))
-        get_schema(s)
-
-    requirement = "https://calrissian-cwl.github.io/schema#DaskGatewayRequirement"
-    if requirement not in cwltool.process.supportedProcessRequirements:
-        cwltool.process.supportedProcessRequirements.append(requirement)
-
-
 def main():
+    global _ACTIVE_EXTENSION_MANAGER
+    extension_manager = ExtensionManager.discover()
     parser = arg_parser()
     add_arguments(parser)
+    extension_manager.register_arguments(parser)
     parsed_args = parse_arguments(parser)
     level = get_log_level(parsed_args)
-    activate_logging(level)
+    activate_logging(level, extension_manager)
     install_tees(parsed_args.stdout, parsed_args.stderr)
     max_ram_megabytes = MemoryParser.parse_to_megabytes(parsed_args.max_ram)
     max_cores = CPUParser.parse(parsed_args.max_cores)
@@ -181,6 +155,8 @@ def main():
     executor = ThreadPoolJobExecutor(max_ram_megabytes, max_cores, max_gpus)
     initialize_reporter(max_ram_megabytes, max_cores)
     runtime_context = CalrissianRuntimeContext(vars(parsed_args))
+    extension_manager.configure_runtime(parsed_args, runtime_context)
+    _ACTIVE_EXTENSION_MANAGER = extension_manager
     runtime_context.select_resources = executor.select_resources
     install_signal_handler()
 
@@ -190,17 +166,17 @@ def main():
         result = cwlmain(args=parsed_args,
                          executor=executor,
                          loadingContext=CalrissianLoadingContext(
-                             relax_path_checks=parsed_args.relax_path_checks),
+                             relax_path_checks=parsed_args.relax_path_checks,
+                             extension_manager=extension_manager),
                          runtimeContext=runtime_context,
                          versionfunc=version,
-                         custom_schema_callback=(add_custom_schema if parsed_args.dask_gateway_url else None)
+                         custom_schema_callback=extension_manager.custom_schema_callback()
                         )
     finally:
         # Always clean up after cwlmain
-        if parsed_args.dask_gateway_url:
-            DaskPodMonitor.cleanup()
-        else:
+        if not extension_manager.cleanup():
             PodMonitor.cleanup()
+        _ACTIVE_EXTENSION_MANAGER = None
         if parsed_args.usage_report:
             write_report(parsed_args.usage_report)
         flush_tees()
