@@ -30,7 +30,9 @@ class CalrissianMakeToolTestCase(TestCase):
 class CalrissianCommandLineToolTestCase(TestCase):
 
     def setUp(self):
-        self.toolpath_object = {'id': '1', 'inputs': [], 'outputs': []}
+        self.toolpath_object = {
+            'class': 'CommandLineTool', 'id': '1', 'inputs': [], 'outputs': []
+        }
         self.loadingContext = CalrissianLoadingContext()
 
     def test_hash_and_space_in_filename_are_accepted(self):
@@ -104,7 +106,7 @@ class CalrissianCommandLineToolTestCase(TestCase):
             }
         ]
 
-        tool = CalrissianCommandLineTool(self.toolpath_object, self.loadingContext)
+        tool = calrissian_make_tool(self.toolpath_object, self.loadingContext)
         runtimeContext = Mock(use_container=True)
         runtimeContext.find_default_container.return_value = 'docker:tool-container'
 
@@ -125,7 +127,7 @@ class CalrissianCommandLineToolTestCase(TestCase):
             }
         ]
 
-        tool = CalrissianCommandLineTool(self.toolpath_object, self.loadingContext)
+        tool = calrissian_make_tool(self.toolpath_object, self.loadingContext)
         runtimeContext = Mock(use_container=True)
         runtimeContext.find_default_container.return_value = 'docker:tool-container'
 

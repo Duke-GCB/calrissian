@@ -2,7 +2,7 @@ import os
 from types import SimpleNamespace
 import threading
 from unittest import TestCase
-from unittest.mock import PropertyMock, create_autospec, patch, call, Mock, mock_open
+from unittest.mock import PropertyMock, create_autospec, patch, call, Mock
 
 from cwltool.utils import CWLObjectType
 from calrissian.context import CalrissianRuntimeContext
@@ -190,10 +190,10 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
             self.assertEqual(set(result['limits']), {'cpu', 'memory'})
             self.assertEqual(self.pod_builder.resources['gpus'], 4)
 
-    @patch("builtins.open", new_callable=mock_open, read_data="print('Default script')")
-    @patch("os.path.join", return_value="/mocked/path/init-dask.py")  # Mock path join
-    def test_init_container_command_with_default_script(self, mock_path_join, mock_file):
+    @patch("calrissian_dask.dask.files")
+    def test_init_container_command_with_default_script(self, mock_files):
         self.pod_builder.dask_gateway_controller = False
+        mock_files.return_value.joinpath.return_value.read_text.return_value = "print('Default script')"
         expected_command = ['python', '-c', "print('Default script')"]
         self.assertEqual(expected_command, self.pod_builder.init_container_command())
 
@@ -203,10 +203,10 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
         self.assertEqual(['python', '/controller/dispose-dask.py'], self.pod_builder.sidecar_container_command())
 
 
-    @patch("builtins.open", new_callable=mock_open, read_data="print('Default script')")
-    @patch("os.path.join", return_value="/mocked/path/dispose-dask.py")  # Mock path join
-    def test_sidecar_container_command_with_default_script(self, mock_path_join, mock_file):
+    @patch("calrissian_dask.dask.files")
+    def test_sidecar_container_command_with_default_script(self, mock_files):
         self.pod_builder.dask_gateway_controller = False
+        mock_files.return_value.joinpath.return_value.read_text.return_value = "print('Default script')"
         expected_command = ['python', '-c', "print('Default script')"]
         self.assertEqual(expected_command, self.pod_builder.sidecar_container_command())
 
@@ -253,11 +253,11 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
         self.assertEqual(container['volumeMounts'], self.pod_builder.volume_mounts)
     
 
-    @patch("builtins.open", new_callable=mock_open, read_data="print('Default script')")
-    @patch("os.path.join", return_value="/mocked/path/dispose-dask.py")  # Mock path join
-    def test_dask_init_container(self, mock_path_join, mock_file):
+    @patch("calrissian_dask.dask.files")
+    def test_dask_init_container(self, mock_files):
         self.pod_builder.stdout = None
         self.pod_builder.stderr = None
+        mock_files.return_value.joinpath.return_value.read_text.return_value = "print('Default script')"
         init_containers = self.pod_builder.init_containers()
         self.assertEqual(len(init_containers), 1)
         container = init_containers[0]
@@ -268,11 +268,11 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
         self.assertEqual(container['command'], expected_command)
         self.assertEqual(container['image'], self.container_image)
 
-    @patch("builtins.open", new_callable=mock_open, read_data="print('Default script')")
-    @patch("os.path.join", return_value="/mocked/path/dispose-dask.py")  # Mock path join
-    def test_dask_init_containers_when_stdout_has_path(self, mock_path_join, mock_file):
+    @patch("calrissian_dask.dask.files")
+    def test_dask_init_containers_when_stdout_has_path(self, mock_files):
         self.pod_builder.stdout = 'out/to/stdout.txt'
         self.pod_builder.stderr = 'err/to/stderr.txt'
+        mock_files.return_value.joinpath.return_value.read_text.return_value = "print('Default script')"
         init_containers = self.pod_builder.init_containers()
         self.assertEqual(len(init_containers), 2)
         container = init_containers[0]
@@ -302,11 +302,11 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
 
 
     @patch.dict(os.environ, {}, clear=True)
-    @patch("builtins.open", new_callable=mock_open, read_data="print('Default script')")
-    @patch("os.path.join", return_value="/mocked/path/file-dask.py")
+    @patch("calrissian_dask.dask.files")
     @patch('calrissian.job.random_tag')
-    def test_dask_build(self, mock_random_tag, mock_path_join, mock_file):
+    def test_dask_build(self, mock_random_tag, mock_files):
         mock_random_tag.return_value = 'random'
+        mock_files.return_value.joinpath.return_value.read_text.return_value = "print('Default script')"
         expected = {
             'metadata': {
                 'name': 'podname-pod-random',

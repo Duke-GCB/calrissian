@@ -2,12 +2,20 @@
 import importlib.util
 import json
 from pathlib import Path
+import sys
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location('dask_suite', ROOT / 'dask-gateway/run-tests.py')
+DASK_GATEWAY_DIR = ROOT / 'dask-gateway'
+sys.path.insert(0, str(DASK_GATEWAY_DIR))
+spec = importlib.util.spec_from_file_location(
+    'dask_suite', DASK_GATEWAY_DIR / 'run-tests.py'
+)
 suite = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(suite)
+try:
+    spec.loader.exec_module(suite)
+finally:
+    sys.path.remove(str(DASK_GATEWAY_DIR))
 
 
 def test_cluster_shutdown_checks_exact_identity():
