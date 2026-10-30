@@ -9,7 +9,7 @@ import uuid
 
 from calrissian.context import CalrissianRuntimeContext
 from calrissian.job import CalrissianCommandLineJob, KubernetesPodBuilder
-from calrissian.dask import KubernetesDaskPodBuilder
+from calrissian_dask.dask import KubernetesDaskPodBuilder
 
 PROBE = r'''
 import errno, json, os

@@ -8,13 +8,13 @@ from cwltool.utils import CWLObjectType
 from calrissian.context import CalrissianRuntimeContext
 from calrissian.executor import IncompleteStatusException
 from calrissian.job import DEFAULT_INIT_IMAGE
-from calrissian.dask import (
+from calrissian_dask.dask import (
     CalrissianCommandLineDaskJob,
     KubernetesDaskPodBuilder,
     KubernetesDaskClient
 )
 
-from calrissian.dask import (
+from calrissian_dask.dask import (
     dask_req_validate,
 )
 from calrissian.k8s import (
@@ -420,7 +420,7 @@ class KubernetesDaskPodBuilderTestCase(TestCase):
         self.assertEqual(expected, self.pod_builder.build())
 
 
-@patch('calrissian.dask.KubernetesDaskClient')
+@patch('calrissian_dask.dask.KubernetesDaskClient')
 @patch('calrissian.job.KubernetesVolumeBuilder')
 class CalrissianCommandLineDaskJobTestCase(TestCase):
 
@@ -434,6 +434,9 @@ class CalrissianCommandLineDaskJobTestCase(TestCase):
         self.runtime_context = CalrissianRuntimeContext(
             {'workflow_eval_lock': threading.Lock(),
              'dask_gateway_url': 'dask_gateway_url'})
+        self.runtime_context.extension_options['dask_gateway'] = {
+            'url': 'dask_gateway_url', 'script_configmap': None,
+        }
 
     @patch('calrissian.k8s.load_config_get_namespace', return_value='default')
     @patch('calrissian.k8s.KubernetesClient.get_current_pod', return_value=Mock())
@@ -486,8 +489,8 @@ class CalrissianCommandLineDaskJobTestCase(TestCase):
         self.assertTrue(mock_volume_builder.return_value.add_configmap_volume_binding.called)
 
 
-    @patch('calrissian.dask.KubernetesDaskPodBuilder')
-    @patch('calrissian.dask.os')
+    @patch('calrissian_dask.dask.KubernetesDaskPodBuilder')
+    @patch('calrissian_dask.dask.os')
     @patch('calrissian.job.read_yaml')
     def test_create_kubernetes_runtime(self, mock_read_yaml, mock_os, mock_pod_builder, mock_volume_builder, mock_client):
         def realpath(path):
@@ -542,7 +545,7 @@ class CalrissianCommandLineDaskJobTestCase(TestCase):
         self.assertEqual(built, mock_pod_builder.return_value.build.return_value)
 
     
-    @patch('calrissian.dask.KubernetesDaskPodBuilder')
+    @patch('calrissian_dask.dask.KubernetesDaskPodBuilder')
     def test_run(self, mock_pod_builder, mock_volume_builder, mock_client):
         job = self.make_job()
         job.make_tmpdir = Mock()
@@ -577,7 +580,7 @@ class KubernetesDaskClientTestCase(TestCase):
         self.assertIsNone(kc.completion_result)
 
 
-    @patch('calrissian.dask.DaskPodMonitor')
+    @patch('calrissian_dask.dask.DaskPodMonitor')
     def test_submit_pod(self, mock_podmonitor, mock_get_namespace, mock_client):
         mock_get_namespace.return_value = 'namespace'
         mock_create_namespaced_pod = Mock()
@@ -643,7 +646,7 @@ class KubernetesDaskClientTestCase(TestCase):
         )
 
     
-    @patch('calrissian.dask.watch', autospec=True)
+    @patch('calrissian_dask.dask.watch', autospec=True)
     def test_wait_calls_watch_pod_with_pod_name_field_selector(self, mock_watch, mock_get_namespace, mock_client):
         mock_pod = self.make_mock_pod('test123')
     
@@ -680,7 +683,7 @@ class KubernetesDaskClientTestCase(TestCase):
             ),
         )
 
-    @patch('calrissian.dask.watch', autospec=True)
+    @patch('calrissian_dask.dask.watch', autospec=True)
     def test_wait_calls_watch_pod_with_incomplete_status(self, mock_watch, mock_get_namespace, mock_client):
         mock_pod = self.make_mock_pod('test123')
 
@@ -700,7 +703,7 @@ class KubernetesDaskClientTestCase(TestCase):
         with self.assertRaises(IncompleteStatusException):
             kc.wait_for_completion(cm_name='dask-cm-random')
 
-    @patch('calrissian.dask.watch', autospec=True)
+    @patch('calrissian_dask.dask.watch', autospec=True)
     def test_wait_skips_pod_when_containers_status_is_none(self, mock_watch, mock_get_namespace, mock_client):
         
         class StopTest(Exception):
@@ -736,7 +739,7 @@ class KubernetesDaskClientTestCase(TestCase):
 
 
 
-    @patch('calrissian.dask.watch', autospec=True)
+    @patch('calrissian_dask.dask.watch', autospec=True)
     def test_wait_skips_pod_when_state_is_waiting(self, mock_watch, mock_get_namespace, mock_client):
         
         class StopTest(Exception):
@@ -774,8 +777,8 @@ class KubernetesDaskClientTestCase(TestCase):
         self.assertIsNotNone(kc.pod)
 
 
-    @patch('calrissian.dask.watch', autospec=True)
-    @patch('calrissian.dask.DaskPodMonitor')
+    @patch('calrissian_dask.dask.watch', autospec=True)
+    @patch('calrissian_dask.dask.DaskPodMonitor')
     @patch('calrissian.k8s.KubernetesClient._extract_cpu_memory_requests')
     def test_wait_finishes_when_pod_state_is_terminated(self, mock_cpu_memory,
                                                         mock_podmonitor, mock_watch, mock_get_namespace,

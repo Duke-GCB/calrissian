@@ -2,10 +2,10 @@ from cwltool.command_line_tool import check_adjust
 from cwltool.errors import WorkflowException
 from unittest import TestCase
 from unittest.mock import Mock, patch, call
-from calrissian.dask import CalrissianCommandLineDaskJob
+from calrissian_dask.dask import CalrissianCommandLineDaskJob
 from calrissian.tool import CalrissianCommandLineTool, calrissian_make_tool, CalrissianCommandLineToolException
 from calrissian.context import CalrissianLoadingContext
-from calrissian.main import add_custom_schema
+from calrissian_dask.plugin import register_dask_schema
 
 
 class CalrissianMakeToolTestCase(TestCase):
@@ -91,7 +91,7 @@ class CalrissianCommandLineToolTestCase(TestCase):
 
 
     def test_uses_dask_requirement(self):
-        add_custom_schema()
+        register_dask_schema()
         # Set up the tool with a Dask requirement
         self.toolpath_object['requirements'] = [
             {
