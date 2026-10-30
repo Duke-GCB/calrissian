@@ -110,6 +110,7 @@ calrissian = "calrissian.main:main"
 
 [tool.hatch.envs.test]
 skip-install = false
+workspace.members = ["calrissian-dask"]
 
 dependencies = [
   "pytest",
@@ -130,10 +131,10 @@ dependencies = [
 RETRY_ATTEMPTS="0"
 
 [tool.hatch.envs.test.scripts]
-test = ["python -m pip install --no-deps --editable ./calrissian-dask", "pytest"]
-testv = ["python -m pip install --no-deps --editable ./calrissian-dask", "pytest --verbose"]
-testdask = ["python -m pip install --no-deps --editable ./calrissian-dask", "pytest tests/test_dask.py"]
-cov = ["python -m pip install --no-deps --editable ./calrissian-dask", "coverage run --source=calrissian -m pytest", "coverage report"]
+test = "pytest"
+testv = "pytest --verbose"
+testdask = "pytest tests/test_dask.py"
+cov = ["coverage run --source=calrissian -m pytest", "coverage report"]
 
 [[tool.hatch.envs.test.matrix]]
 python = ["3.10", "3.11", "3.12", "3.13", "3.14"]
