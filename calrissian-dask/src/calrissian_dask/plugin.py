@@ -78,4 +78,3 @@ class DaskGatewayExtension:
 
 def create_extension():
     return DaskGatewayExtension()
-

@@ -95,4 +95,3 @@ class ExtensionManager:
             for extension in self.extensions
             for name in getattr(extension, "logger_names", ())
         ]
-
