@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Resolved task PVC mounts supplied to Dask Gateway",
+  "type": "array",
+  "maxItems": 64,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["claimName", "mountPath", "subPath", "readOnly"],
+    "properties": {
+      "claimName": {"type": "string", "minLength": 1, "maxLength": 253},
+      "mountPath": {"type": "string", "minLength": 1},
+      "subPath": {"type": "string"},
+      "readOnly": {"type": "boolean"}
+    }
+  }
+}

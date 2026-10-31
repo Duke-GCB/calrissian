@@ -5,6 +5,7 @@ import os
 import re
 import logging
 from dask_gateway import Gateway
+from calrissian_dask.pvc_mounts import MOUNTS_ENVIRONMENT, MOUNTS_OPTION
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -85,6 +86,11 @@ cluster_options['worker_cores_limit'] = int(worker_cores_limit)
 
 cluster_options['worker_memory'] = worker_memory
 
+if MOUNTS_ENVIRONMENT in os.environ:
+    if MOUNTS_OPTION not in cluster_options:
+        raise RuntimeError("Gateway profile does not support task PVC propagation")
+    cluster_options[MOUNTS_OPTION] = os.environ[MOUNTS_ENVIRONMENT]
+
 logger.info(f"Cluster options: {cluster_options}")
 logger.info(dir(cluster_options))
 cluster = gateway.new_cluster(cluster_options, shutdown_on_close=False)
@@ -98,16 +104,16 @@ logger.info(f"Resource requirements: {worker_cores} cores, {worker_memory}")
 # DaskGateway.Requirement.ResourceRequirement.max_cores and
 # DaskGateway.Requirement.ResourceRequirement.max_ram, respectively.
 
-worker_cores_limit = int(worker_cores_limit)
+worker_cores_limit_count = int(worker_cores_limit)
 worker_mem = parse_memory(worker_memory)
 
-if worker_cores_limit <= 0:
+if worker_cores_limit_count <= 0:
     raise ValueError("workerCoresLimit must be > 0")
 if worker_mem <= 0:
     raise ValueError("workerMemory must be > 0")
 
 workers = min(
-    int(max_cores) // worker_cores_limit,
+    int(max_cores) // worker_cores_limit_count,
     parse_memory(max_ram) // worker_mem,
 )
 

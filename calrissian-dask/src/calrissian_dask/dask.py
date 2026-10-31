@@ -1,3 +1,6 @@
+"""Build and monitor CWL tasks backed by Calrissian-owned Gateway clusters."""
+
+from calrissian_dask.pvc_mounts import MOUNTS_ENVIRONMENT, serialize_task_pvcs
 from calrissian.scheduling import apply_gpu_tolerations
 import os
 import logging
@@ -7,7 +10,10 @@ from importlib.resources import files
 from decimal import InvalidOperation
 from kubernetes.utils.quantity import parse_quantity
 
-from typing import List, Optional, Union
+from typing import TYPE_CHECKING, List, Optional, Union
+
+if TYPE_CHECKING:
+    from calrissian.context import CalrissianRuntimeContext
 from datetime import datetime
 
 from kubernetes import client, watch
@@ -63,7 +69,10 @@ def dask_req_validate(requirement: Optional[CWLObjectType]) -> bool:
 
 class KubernetesDaskPodBuilder(KubernetesPodBuilder):
     
-    def __init__(self, dask_gateway_url, dask_gateway_controller, *args, **kwargs):
+    def __init__(self, dask_gateway_url: str, dask_gateway_controller: object,
+                 *args: object, pvc_mounts: str | None = None, **kwargs: object) -> None:
+        """Build a Dask task pod with optional resolved worker PVC mappings."""
+        self.pvc_mounts = pvc_mounts
         self.helper_environment = kwargs.pop('helper_environment', None)
         super().__init__(*args, **kwargs)
         if self.helper_environment is None:
@@ -138,12 +147,18 @@ class KubernetesDaskPodBuilder(KubernetesPodBuilder):
                     f'CALRISSIAN_DASK_CLEANUP_{resource.upper()}_LIMIT')
         return resources
 
-    def container_environment(self, environment=None):
+    def container_environment(self, environment: dict[str, str] | None = None) -> list[dict[str, str]]:
+        """Supply cluster budgets and optional PVC descriptors to lifecycle hooks."""
+        if self.dask_requirement is None:
+            raise ValueError("DaskGatewayRequirement is required for a Dask task")
         env_entries = []
         source_environment = self.environment if environment is None else environment
         for name, value in sorted(source_environment.items()):
             env_entries.append({'name': name, 'value': value})
         
+        if self.pvc_mounts is not None:
+            env_entries.append({'name': MOUNTS_ENVIRONMENT, 'value': self.pvc_mounts})
+
         env_entries.append({'name': 'DASK_GATEWAY_WORKER_CORES', 'value': str(self.dask_requirement.get("workerCores"))})
         env_entries.append({'name': 'DASK_GATEWAY_WORKER_MEMORY', 'value': str(self.dask_requirement.get("workerMemory"))})
         env_entries.append({'name': 'DASK_GATEWAY_WORKER_CORES_LIMIT', 'value': str(self.dask_requirement.get("workerCoresLimit"))})
@@ -282,11 +297,12 @@ class CalrissianCommandLineDaskJob(CalrissianCommandLineJob):
         self.volume_builder.add_configmap_volume(name, cm_name)
         self.volume_builder.add_configmap_volume_binding(name, target)
 
-    def create_kubernetes_runtime(self, runtimeContext):
+    def create_kubernetes_runtime(self, runtimeContext: "CalrissianRuntimeContext") -> dict[str, object]:
+        """Resolve task staging and optionally forward its PVC mounts to workers."""
         # In cwltool, the runtime list starts as something like ['docker','run'] and these various builder methods
         # append to that list with docker (or singularity) options like volume mount paths
         # As we build up kubernetes, these aren't really used this way so we leave it empty
-        runtime = []
+        runtime: list[str] = []
 
         # Append volume for outdir
         self._add_volume_binding(os.path.realpath(self.outdir), self.builder.outdir, writable=True)
@@ -335,6 +351,11 @@ class CalrissianCommandLineDaskJob(CalrissianCommandLineJob):
         resolved_environment = self.resolve_secrets(self.environment, runtimeContext.secret_store)
         helper_environment = self.environment_without_secrets(self.environment, runtimeContext.secret_store)
         builder_options = {}
+        options = getattr(runtimeContext, 'extension_options', {}).get('dask_gateway', {})
+        if options.get('mount_task_pvcs') is True:
+            builder_options['pvc_mounts'] = serialize_task_pvcs(
+                self.volume_builder.volumes, self.volume_builder.volume_mounts)
+
         if helper_environment != resolved_environment:
             builder_options['helper_environment'] = helper_environment
 
@@ -486,7 +507,7 @@ class KubernetesDaskClient(KubernetesClient):
         self._container_log_threads = {}
 
     @retry_exponential_if_exception_type((ApiException, HTTPError), log)
-    def wait_for_completion(self, cm_name: str=None) -> CompletionResult:
+    def wait_for_completion(self, cm_name: str | None = None) -> CompletionResult:
 
         resource_version = None
 
@@ -553,7 +574,7 @@ class KubernetesDaskClient(KubernetesClient):
                     statuses = self.get_list_or_none(pod.status.container_statuses)
                     main_status = self.get_container_by_name(statuses, 'main-container')
                     # Wait for cleanup too, but never use its exit status for CWL.
-                    all_terminated = bool(statuses) and all(
+                    all_terminated = statuses is not None and bool(statuses) and all(
                         self.state_is_terminated(status.state) for status in statuses)
                     if not all_terminated:
                         statuses = self.get_list_or_none(pod.status.container_statuses)

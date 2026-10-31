@@ -7,7 +7,7 @@ name = "calrissian-dask"
 version = "0.1.0"
 description = "Optional Dask Gateway extension for Calrissian"
 requires-python = ">=3.10"
-dependencies = ["calrissian>=0.19.1"]
+dependencies = ["calrissian>=0.19.1", "jsonschema>=4.23,<5"]
 
 [project.entry-points."calrissian.extensions"]
 dask-gateway = "calrissian_dask.plugin:create_extension"
