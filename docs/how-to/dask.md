@@ -130,3 +130,78 @@ task dask:cleanup:test
 The suite checks computation and cluster cleanup separately. It is distinct
 from official CWL conformance testing. For case details and artifacts, see the
 [compatibility-suite reference](https://github.com/Duke-GCB/calrissian/blob/develop/dask-gateway/README.md#cwl-extension-compatibility-suite).
+
+## Share staged files with Gateway workers
+
+Add `--dask-mount-task-pvcs` to the Calrissian command when workers need to read
+staged files or write distributed output files. It is disabled by default and
+requires a compatible Gateway profile. Application CWL inputs do not change.
+
+The runner already discovers PVCs through `CALRISSIAN_POD_NAME`. The extension
+uses each task's resolved mount mappings, including its container paths and PVC
+subpaths, rather than copying the runner's mount paths. It forwards only
+PVC-backed mounts, preserving read-only restrictions. ConfigMaps, Secrets,
+service-account credentials and emptyDir volumes are not propagated. The worker
+identity must have filesystem permissions to access the selected files.
+
+The transport is `DASK_GATEWAY_PVC_MOUNTS` in the initialization hook and the
+Gateway string option `worker_pvc_mounts`. The JSON contract is defined in
+`calrissian-dask/src/calrissian_dask/resources/pvc-mounts.schema.json`.
+Custom initialization hooks selected through `--dask-script-configmap` must pass
+that environment value to `cluster_options.worker_pvc_mounts` when present.
+Unsupported profiles must fail rather than silently dropping the setting.
+
+### Configure the Gateway profile
+
+Gateway must have `jsonschema>=4.23,<5` installed; an optional image recipe is
+`dask-gateway/Dockerfile.pvc-profile`. From the checkout root, generate a helper
+for the PVCs explicitly approved by operations:
+
+```sh
+python dask-gateway/render-pvc-config.py --allow-claim EXECUTION_PVC > /tmp/pvc-profile.py
+```
+
+Supply it as an additional Gateway configuration fragment, for example with
+Helm `--set-file gateway.extraConfig.pvc-mounts=/tmp/pvc-profile.py` alongside
+`dask-gateway/values.yaml`. That values file declares `worker_pvc_mounts` and calls
+the helper only when requested. The helper validates the schema, approved claims,
+paths and collisions and merges the worker configuration. Other Gateway profiles
+must provide equivalent handling, including preserving their existing overrides.
+Claim approval must follow the deployment's user/namespace isolation policy; the
+example allowlist is intended for the local integration profile.
+
+The feature does not provision storage. Use storage suitable for the worker
+placement, normally RWX across nodes. An unresolved `subPathExpr` is rejected.
+The scheduler and Gateway API server do not receive these PVC mounts.
+
+### Run the small file-read probe
+
+`dask-gateway/tests/pvc-read.cwl` submits a file read to a worker and asserts its
+contents. `pvc-read-job.yaml` supplies `pvc-input.txt`. The result records the
+worker address, cluster name and identical staged-file path.
+
+Build the current wheels and the probe image before loading it into minikube:
+
+```sh
+uv build --wheel --out-dir dist .
+uv build --wheel --out-dir calrissian-dask/dist calrissian-dask
+docker build -f dask-gateway/Dockerfile.pvc-probe -t calrissian-pvc-probe:cohort .
+minikube -p YOUR_PROFILE image load calrissian-pvc-probe:cohort
+```
+
+From a Calrissian runner using this feature image, with the probe files staged
+on its PVC and a compatible Gateway profile, run:
+
+```sh
+calrissian --dask-gateway-url YOUR_GATEWAY_URL \
+  --dask-mount-task-pvcs --max-cores 1 --max-ram 2G \
+  --tmpdir-prefix PVC_PATH/tmp/ --tmp-outdir-prefix PVC_PATH/tmpout/ \
+  --outdir PVC_PATH/result \
+  dask-gateway/tests/pvc-read.cwl dask-gateway/tests/pvc-read-job.yaml
+```
+
+Add deployment-specific lifecycle ConfigMap and service-account arguments where
+required. The worker must return the expected file content; a success in the
+runner alone does not verify propagation. Inspect both task and worker mounts
+and confirm cluster cleanup. The local minikube result is recorded in
+[the PVC probe verification](../reference/dask-pvc-probe-2026-10-31.md).
