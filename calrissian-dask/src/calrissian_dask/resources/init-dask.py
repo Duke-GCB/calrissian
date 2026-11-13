@@ -1,11 +1,19 @@
-# this code is responsible for creating a Dask cluster
-# it's executed by the CWL runner in the context of the Dask Gateway extension
-# this is for the prototyping purposes only
+"""Provision a Gateway cluster from a task image without runner dependencies.
+
+Calrissian supplies the environment and owns cluster disposal. This standalone
+script requires only the standard library and the task's dask-gateway client.
+"""
+
+import logging
 import os
 import re
-import logging
+
 from dask_gateway import Gateway
-from calrissian_dask.pvc_mounts import MOUNTS_ENVIRONMENT, MOUNTS_OPTION
+
+# These wire names cross the runner/task boundary. Keep them local so the task
+# image does not need to install the runner extension merely to import constants.
+MOUNTS_ENVIRONMENT = "DASK_GATEWAY_PVC_MOUNTS"
+MOUNTS_OPTION = "worker_pvc_mounts"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)

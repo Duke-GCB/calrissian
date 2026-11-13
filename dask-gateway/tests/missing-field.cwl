@@ -9,6 +9,9 @@
       "coresMin": 1,
       "ramMin": 512
     },
+    "NetworkAccess": {
+      "networkAccess": true
+    },
     "calrissian:DaskGatewayRequirement": {
       "workerCoresLimit": 1,
       "workerMemory": "256M",

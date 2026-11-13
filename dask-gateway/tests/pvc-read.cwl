@@ -14,9 +14,9 @@ requirements:
   calrissian:DaskGatewayRequirement:
     workerCores: 1
     workerCoresLimit: 1
-    workerMemory: 1GiB
+    workerMemory: 1G
     clusterMaxCores: 1
-    clusterMaxMemory: 1GiB
+    clusterMaxMemory: 1G
 baseCommand: [python, '-c']
 arguments:
   - position: 0
