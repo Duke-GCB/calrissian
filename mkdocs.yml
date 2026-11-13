@@ -51,6 +51,7 @@ nav:
   - Validation and troubleshooting: how-to/validation.md
 - Reference:
   - Dask PVC probe: reference/dask-pvc-probe-2026-10-31.md
+  - CWL candidate readiness: reference/cwl-readiness-2026-10-31.md
   - Overview: reference/index.md
   - CLI and configuration: reference/configuration.md
   - Compatibility: reference/compatibility.md

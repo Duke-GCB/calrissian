@@ -13,6 +13,12 @@ image contains the Calrissian runtime without the extension. Use
 `ghcr.io/duke-gcb/calrissian-dask` for a runner image with the extension already
 installed.
 
+The default initialization script runs inside the task image and is
+self-contained: it imports only the standard library and `dask-gateway`.
+Calrissian supplies its settings through environment variables, including the
+optional `DASK_GATEWAY_PVC_MOUNTS` descriptor. PVC propagation does not require
+a custom lifecycle ConfigMap or installing the runner extension in the task.
+
 Calrissian can provision a Dask cluster for a tool declaring its
 `DaskGatewayRequirement` extension. This is separate from standard CWL conformance.
 The [architecture](../explanation/architecture.md) distinguishes Calrissian task
@@ -92,8 +98,39 @@ The schema allows expressions for these fields. For implementation details, see:
 - [Extension schema](https://github.com/Duke-GCB/calrissian/blob/develop/calrissian-dask/src/calrissian_dask/resources/schema.yaml).
 - [Minimal computation fixture](https://github.com/Duke-GCB/calrissian/blob/develop/dask-gateway/tests/minimal.cwl).
 
-`NetworkAccess: true` expresses tool intent. Cluster policy must also allow
-connections to Gateway, scheduler, and workers.
+Gateway-based Dask tools must explicitly declare
+`NetworkAccess: {networkAccess: true}`. `DaskGatewayRequirement` does not grant
+network access implicitly. In CWL v1.2, an omitted NetworkAccess requirement is
+handled as false by Calrissian. With enforcing policies, that blocks initialization
+and cleanup as well as computation because the containers share a Pod network
+namespace. Cluster policy must also allow connections to Gateway, scheduler and
+workers. The Dask fixtures declare the permission explicitly; ordinary denied
+network tests retain their restrictions.
+
+## Validate server resource and image policies
+
+`dask-gateway/readiness-values.yaml` is an opt-in validation overlay, not a
+production default. Layer it after the base Gateway values and any operator PVC
+profile when reproducing the candidate readiness checks. It approves only
+`calrissian-cwl-readiness:430ce62` and `calrissian-pvc-probe:cohort` as worker
+images, caps each worker at one CPU/1 GiB and the worker pool at two workers,
+two CPU and 2 GiB, and enables a 60-second idle timeout.
+
+Gateway's aggregate cluster caps include scheduler limits. This overlay includes
+the base profile's additional one CPU/512 MiB scheduler limit; increasing these
+scheduler limits requires reviewing the arithmetic. The worker budget remains
+two CPU/2 GiB. The server rejects unapproved images, oversized workers and caller
+attempts to override the idle/worker caps. A scale request above the pool limit
+is clamped with a warning rather than provisioning additional workers.
+
+Idle termination covers idle clusters. Operations owns recovery when task/node
+loss prevents disposal and work remains active. Operations must retain a durable
+execution-to-cluster mapping and define its recovery service and deadline before
+that failure path can be signed off. The current configuration does not install
+an orphan reaper or establish that production guarantee.
+
+See the [candidate readiness record](../reference/cwl-readiness-2026-10-31.md)
+for measured results and the unresolved client-connection probes.
 
 ## Configure cleanup resources
 
@@ -205,3 +242,29 @@ required. The worker must return the expected file content; a success in the
 runner alone does not verify propagation. Inspect both task and worker mounts
 and confirm cluster cleanup. The local minikube result is recorded in
 [the PVC probe verification](../reference/dask-pvc-probe-2026-10-31.md).
+
+
+## Use the published core wheel for plugin development
+
+In the sibling openEO workspace, the plugin's `local-wheels` group selects
+`calrissian==0.19.1` from the explicit `harbor` uv index. The development endpoint
+is `http://localhost:8095/cr.terradue.com/python-oci-develop/`. Keep credentials
+in the workspace `harbor.env`; the root Taskfile maps them to uv's named-index
+variables. From the workspace root:
+
+```sh
+task pyoci:start
+task uv:sync PROJECT=calrissian/calrissian-dask
+```
+
+For direct uv commands, export `UV_INDEX_HARBOR_USERNAME` and
+`UV_INDEX_HARBOR_PASSWORD` first. No committed uv.lock is introduced; normal uv
+sync commands may create local locks. The normal distribution requirement remains
+`calrissian>=0.19.1`, and the registry group selects the approved built baseline.
+
+Core tests remain a deliberate exception: their existing Hatch workspace installs
+the plugin from source. Keep using the core's configured Hatch checks for those
+tests. Diagnostic runner image builds in `../dask-calrissian-example` use
+`task wheels:runner` to build core/plugin artifacts in their own `dist/`
+directories, publish that exact cohort to Harbor, then download and verify it for
+Docker. Build tasks load the workspace credentials without copying them into images.
