@@ -1,0 +1,21 @@
+calrissian/calrissian-dask/src/calrissian_dask/resources/dispose-dask.py:3: error: Cannot find implementation or library stub for module named "dask_gateway"  [import-not-found]
+calrissian/calrissian-dask/src/calrissian_dask/resources/dispose-dask.py:3: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
+calrissian/calrissian-dask/src/calrissian_dask/resources/init-dask.py:7: error: Skipping analyzing "dask_gateway": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+calrissian/calrissian-dask/src/calrissian_dask/dask.py:11: error: Skipping analyzing "kubernetes.utils.quantity": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+calrissian/calrissian-dask/src/calrissian_dask/dask.py:11: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
+calrissian/calrissian-dask/src/calrissian_dask/dask.py:19: error: Module "kubernetes" has no attribute "watch"  [attr-defined]
+calrissian/calrissian-dask/src/calrissian_dask/dask.py:20: error: Module "kubernetes.client.rest" has no attribute "ApiException"  [attr-defined]
+calrissian/calrissian-dask/src/calrissian_dask/dask.py:542: error: Value of type "V1ContainerStatus | V1Container" is not indexable  [index]
+calrissian/calrissian-dask/src/calrissian_dask/dask.py:543: error: Value of type "V1ContainerStatus | V1Container" is not indexable  [index]
+calrissian/calrissian-dask/src/calrissian_dask/dask.py:545: error: Value of type "V1ContainerStatus | V1Container" is not indexable  [index]
+calrissian/calrissian-dask/src/calrissian_dask/dask.py:575: error: Argument 1 to "get_container_by_name" of "KubernetesDaskClient" has incompatible type "V1ContainerStatus | V1Container | None"; expected "list[V1ContainerStatus | V1Container] | None"  [arg-type]
+calrissian/calrissian-dask/src/calrissian_dask/dask.py:578: error: Item "V1ContainerStatus" of "V1ContainerStatus | V1Container" has no attribute "__iter__" (not iterable)  [union-attr]
+calrissian/calrissian-dask/src/calrissian_dask/dask.py:578: error: Item "V1Container" of "V1ContainerStatus | V1Container" has no attribute "__iter__" (not iterable)  [union-attr]
+calrissian/calrissian-dask/src/calrissian_dask/dask.py:583: error: Item "V1ContainerStatus" of "V1ContainerStatus | V1Container" has no attribute "__iter__" (not iterable)  [union-attr]
+calrissian/calrissian-dask/src/calrissian_dask/dask.py:583: error: Item "V1Container" of "V1ContainerStatus | V1Container" has no attribute "__iter__" (not iterable)  [union-attr]
+calrissian/calrissian-dask/src/calrissian_dask/dask.py:607: error: Item "V1Container" of "V1ContainerStatus | V1Container" has no attribute "state"  [union-attr]
+calrissian/calrissian-dask/src/calrissian_dask/dask.py:617: error: Item "V1Container" of "V1ContainerStatus | V1Container" has no attribute "state"  [union-attr]
+calrissian/calrissian-dask/src/calrissian_dask/dask.py:617: error: Argument 1 to "_handle_completion" of "KubernetesClient" has incompatible type "V1ContainerState | Any | None"; expected "V1ContainerState"  [arg-type]
+calrissian/calrissian-dask/src/calrissian_dask/dask.py:617: error: Argument 2 to "_handle_completion" of "KubernetesClient" has incompatible type "V1ContainerStatus | V1Container"; expected "V1Container"  [arg-type]
+calrissian/calrissian-dask/src/calrissian_dask/dask.py:648: error: Incompatible return value type (got "list[V1ContainerStatus | V1Container]", expected "V1ContainerStatus | V1Container | None")  [return-value]
+Found 18 errors in 3 files (checked 8 source files)

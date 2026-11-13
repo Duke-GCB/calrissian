@@ -14,7 +14,7 @@ VALIDATE = '''
 import sys
 from unittest.mock import patch
 from calrissian.main import main
-with patch('calrissian.main.PodMonitor.cleanup'), patch('calrissian.main.DaskPodMonitor.cleanup'):
+with patch('calrissian.main.PodMonitor.cleanup'), patch('calrissian_dask.plugin.DaskPodMonitor.cleanup'):
     sys.exit(main())
 '''
 
@@ -71,10 +71,10 @@ class DaskGPUCompatibilityTestCase(TestCase):
 
     def test_schema_registration_is_repeatable(self):
         code = """
-from calrissian.main import add_custom_schema
+from calrissian_dask.plugin import register_dask_schema
 from cwltool.process import supportedProcessRequirements
-add_custom_schema()
-add_custom_schema()
+register_dask_schema()
+register_dask_schema()
 assert supportedProcessRequirements.count(
     'https://calrissian-cwl.github.io/schema#DaskGatewayRequirement') == 1
 """
@@ -86,28 +86,31 @@ assert supportedProcessRequirements.count(
 import sys
 import tempfile
 from unittest.mock import patch, Mock
-from calrissian.main import add_custom_schema
+from calrissian_dask.plugin import register_dask_schema
 from calrissian.context import CalrissianLoadingContext, CalrissianRuntimeContext
-from calrissian.dask import CalrissianCommandLineDaskJob, KubernetesDaskPodBuilder
+from calrissian_dask.dask import CalrissianCommandLineDaskJob, KubernetesDaskPodBuilder
 from calrissian.executor import ThreadPoolJobExecutor
 from cwltool.load_tool import load_tool
 
-add_custom_schema()
+register_dask_schema()
 with tempfile.TemporaryDirectory() as directory, \\
      patch('calrissian.k8s.load_config_get_namespace', return_value='default'), \\
      patch('calrissian.k8s.KubernetesClient.get_current_pod', return_value=Mock()), \\
      patch('calrissian.job.KubernetesVolumeBuilder'):
     context = CalrissianRuntimeContext({
         'max_gpus': 1, 'basedir': directory, 'outdir': directory,
-        'tmpdir_prefix': directory + '/', 'dask_gateway_url': 'http://example.invalid',
+        'tmpdir_prefix': directory + '/',
         'select_resources': ThreadPoolJobExecutor(1024, 1, 1).select_resources,
     })
+    context.extension_options['dask_gateway'] = {
+        'url': 'http://example.invalid', 'script_configmap': None,
+    }
     tool = load_tool(sys.argv[1], CalrissianLoadingContext())
     job = next(tool.job({}, Mock(), context))
     assert isinstance(job, CalrissianCommandLineDaskJob), type(job)
     job.setup_kubernetes(context)
     builder = KubernetesDaskPodBuilder(
-        context.dask_gateway_url, False, 'combined', job.builder, 'ubuntu:24.04',
+        context.extension_options['dask_gateway']['url'], False, 'combined', job.builder, 'ubuntu:24.04',
         {'HOME': directory}, [], [], ['true'], None, None, None,
         {}, {}, {'gpu': 'true'}, {}, None, {})
     pod = builder.build()

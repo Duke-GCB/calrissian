@@ -6,6 +6,8 @@ requirements:
   ResourceRequirement:
     coresMin: 1
     ramMin: 512
+  NetworkAccess:
+    networkAccess: true
   calrissian:DaskGatewayRequirement:
     workerCores: 1
     workerCoresLimit: 1

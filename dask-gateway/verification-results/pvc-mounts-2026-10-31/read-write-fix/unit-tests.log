@@ -1,0 +1,18 @@
+........................................................ [ 10%]
+...................................................................... [ 22%]
+........................................................................ [ 35%]
+..........................s...................................... [ 47%]
+............................................................ [ 58%]
+................................................................ [ 69%]
+.................................................................. [ 81%]
+........................................................................ [ 94%]
+...............................                                          [100%]
+=============================== warnings summary ===============================
+tests/test_k8s.py::KubernetesClientTestCase::test_follow_logs_redacts_cwl_secrets
+tests/test_k8s.py::KubernetesClientTestCase::test_follow_logs_streams_to_logging
+tests/test_k8s.py::KubernetesClientTestCase::test_follow_logs_streams_to_logging
+  /data/work/git.terradue.com/openeo/calrissian/calrissian/k8s.py:174: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return {"timestamp": f"{datetime.utcnow().isoformat()}Z", "pod": pod_name, "entry": log_entry}
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+555 passed, 1 skipped, 3 warnings, 51 subtests passed in 34.48s

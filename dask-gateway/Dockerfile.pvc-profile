@@ -1,0 +1,6 @@
+# Optional schema-validation dependency for the operator's PVC-aware profile.
+ARG GATEWAY_IMAGE=ghcr.io/dask/dask-gateway-server:2026.3.0
+FROM ${GATEWAY_IMAGE}
+USER root
+RUN python -m pip install --no-cache-dir 'jsonschema>=4.23,<5' && python -m pip check
+USER dask

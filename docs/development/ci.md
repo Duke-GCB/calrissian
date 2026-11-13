@@ -10,18 +10,25 @@ publish `latest`. Version tags such as `v1.2.3` and `v1.2.3-rc1` publish the
 matching normalized version tag. Each published image also receives a tag with
 the full source commit SHA. Before any image build begins, this workflow reuses
 the Python build and test matrix on Python 3.10 through 3.14; a failed job blocks
-scanning and publishing. The runtime and conformance images are built with
-Kaniko, exported as archives, scanned, and then copied to GHCR with Skopeo.
-The conformance image is built from the locally staged runtime image so the
-published pair comes from the same workflow run.
+scanning and publishing. The core runtime, Dask-enabled runtime, and conformance
+images are built with Kaniko, exported as archives, scanned, and then copied to
+GHCR with Skopeo. The `calrissian` image contains core Calrissian;
+`calrissian-dask` layers the separately packaged Dask extension on top. The
+conformance image is built from the locally staged core runtime, so it does not
+include the Dask extension.
 
 ## Trivy policy
 
-The runtime and conformance image archives are scanned for vulnerabilities
-rated **HIGH** or **CRITICAL**. Any such finding fails the publishing job. The
-CycloneDX SBOMs, image archives, and JSON scan reports are retained as workflow
-artifacts for 30 days. The SBOMs are not submitted to OWASP Dependency-Check by
-this workflow.
+All three image archives are scanned for vulnerabilities rated **HIGH** or
+**CRITICAL**. Any such finding fails the publishing job. The CycloneDX SBOMs,
+image archives, and JSON scan reports are retained as workflow artifacts for
+30 days. The SBOMs are not submitted to OWASP Dependency-Check by this workflow.
+
+The `dask-compatibility` workflow separately runs the Dask CWL/lifecycle suite
+for each release in `dask-gateway/versions.json` on Minikube. It validates the
+configured Gateway client and chart along with each Dask/Distributed version;
+these tests use simple authentication and do not certify authenticated
+production deployments.
 
 There are no vulnerability exceptions by default. If a finding is confirmed
 to be a false positive or an accepted temporary risk, add a narrowly scoped

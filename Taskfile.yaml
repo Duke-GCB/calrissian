@@ -62,6 +62,15 @@ tasks:
     cmds:
     - python3 dask-gateway/test-cleanup.py
 
+  dask:deploy:
+    desc: Deploy the Dask profile using configured versions (optionally DASK_VERSION=...)
+    vars:
+      DASK_VERSION: '{{default "" .DASK_VERSION}}'
+    env:
+      DASK_VERSION: '{{.DASK_VERSION}}'
+    cmds:
+    - python3 dask-gateway/run-deploy.py
+
   dask:test:
     desc: Run the Dask extension CWL suite (optionally ID=3)
     env:
@@ -69,15 +78,26 @@ tasks:
     cmds:
     - 'python3 dask-gateway/run-tests.py ${DASK_TEST_ID:+--id "$DASK_TEST_ID"}'
 
+  dask:test:matrix:
+    desc: Deploy and run the Dask suite for each configured Dask release
+    vars:
+      VERSIONS: '{{default "" .VERSIONS}}'
+      ID: '{{default "" .ID}}'
+    env:
+      DASK_TEST_VERSIONS: '{{.VERSIONS}}'
+      DASK_TEST_ID: '{{.ID}}'
+    cmds:
+    - python3 dask-gateway/run-version-matrix.py
+
   docs:cli:
     desc: Refresh the CLI reference from the argument parser
     cmds:
-    - uv run --no-project --with-editable . python scripts/generate-cli-reference.py
+    - uv run --no-project --with-editable . --with-editable ./calrissian-dask python scripts/generate-cli-reference.py
 
   docs:api:
     desc: Generate the Python API reference from the current source
     cmds:
-    - uv run --no-project --with . --with pdocs --with legacy-cgi --with setuptools pdocs as_markdown --output_dir ./docs/api/latest --exclude_source --overwrite calrissian
+    - uv run --no-project --with . --with ./calrissian-dask --with pdocs --with legacy-cgi --with setuptools pdocs as_markdown --output_dir ./docs/api/latest --exclude_source --overwrite calrissian calrissian_dask
     - python3 scripts/fix-api-doc-links.py
 
   docs:uml:

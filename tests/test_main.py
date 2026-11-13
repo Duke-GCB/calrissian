@@ -38,19 +38,23 @@ class CalrissianMainTestCase(TestCase):
         mock_exit_code = Mock()
         mock_cwlmain.return_value = mock_exit_code  # not called before main
         mock_parse_arguments.return_value.dask_gateway_url = None  # No custom schema callback
+        mock_parse_arguments.return_value.dask_script_configmap = None
         result = main()
         self.assertTrue(mock_arg_parser.called)
         self.assertEqual(mock_add_arguments.call_args, call(mock_arg_parser.return_value))
         self.assertEqual(mock_parse_arguments.call_args, call(mock_arg_parser.return_value))
         self.assertEqual(mock_get_log_level.call_args, call(mock_parse_arguments.return_value))
-        self.assertEqual(mock_activate_logging.call_args, call(mock_get_log_level.return_value))
+        self.assertEqual(mock_activate_logging.call_args.args[0], mock_get_log_level.return_value)
         self.assertEqual(mock_memory_parser.parse_to_megabytes.call_args, call(mock_parse_arguments.return_value.max_ram))
         self.assertEqual(mock_cpu_parser.parse.call_args, call(mock_parse_arguments.return_value.max_cores))
         self.assertEqual(mock_executor.call_args,
                          call(mock_memory_parser.parse_to_megabytes.return_value, mock_cpu_parser.parse.return_value, 1))
         self.assertTrue(mock_runtime_context.called)
-        mock_loading_context.assert_called_once_with(
-            relax_path_checks=mock_parse_arguments.return_value.relax_path_checks)
+        self.assertEqual(
+            mock_loading_context.call_args.kwargs['relax_path_checks'],
+            mock_parse_arguments.return_value.relax_path_checks,
+        )
+        self.assertIn('extension_manager', mock_loading_context.call_args.kwargs)
         self.assertEqual(mock_cwlmain.call_args, call(args=mock_parse_arguments.return_value,
                                                       executor=mock_executor.return_value,
                                                       loadingContext=mock_loading_context.return_value,
@@ -69,7 +73,7 @@ class CalrissianMainTestCase(TestCase):
     def test_add_arguments(self):
         mock_parser = Mock()
         add_arguments(mock_parser)
-        self.assertEqual(mock_parser.add_argument.call_count, 22)
+        self.assertEqual(mock_parser.add_argument.call_count, 20)
 
     def test_env_from_options_reach_runtime_context(self):
         parser = ArgumentParser()
@@ -181,12 +185,12 @@ class CalrissianMainTestCase(TestCase):
     def test_activate_logging(self, mock_logging):
         mock_level = Mock()
         activate_logging(mock_level)
-        self.assertEqual(mock_logging.getLogger.call_count, 14) #
-        #  setLevel should be called 7 times
-        self.assertEqual([call(mock_level)] * 7, mock_logging.getLogger.return_value.setLevel.mock_calls)
-        # addHandler should be called 7 times
+        self.assertEqual(mock_logging.getLogger.call_count, 12)
+        #  setLevel should be called 6 times
+        self.assertEqual([call(mock_level)] * 6, mock_logging.getLogger.return_value.setLevel.mock_calls)
+        # addHandler should be called 6 times
         mock_streamhandler = mock_logging.StreamHandler.return_value
-        self.assertEqual([call(mock_streamhandler)] * 7, mock_logging.getLogger.return_value.addHandler.mock_calls)
+        self.assertEqual([call(mock_streamhandler)] * 6, mock_logging.getLogger.return_value.addHandler.mock_calls)
 
     def test_get_log_level(self):
         args_quiet = Mock(quiet=True, verbose=False, debug=False)

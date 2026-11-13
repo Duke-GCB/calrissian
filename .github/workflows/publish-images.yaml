@@ -81,6 +81,19 @@ jobs:
             --tar-path=/out/calrissian.tar \
             --insecure-registry=localhost:5000
 
+      - name: Build Dask runtime image archive with Kaniko
+        run: |
+          docker run --rm --network host \
+            --volume "$GITHUB_WORKSPACE:/workspace:ro" \
+            --volume "$RUNNER_TEMP:/out" \
+            "$KANIKO_IMAGE" \
+            --context=dir:///workspace \
+            --dockerfile=/workspace/Dockerfile.dask \
+            --build-arg=CALRISSIAN_IMAGE=localhost:5000/calrissian:build \
+            --destination=localhost:5000/calrissian-dask:build \
+            --tar-path=/out/calrissian-dask.tar \
+            --insecure-registry=localhost:5000
+
       - name: Build conformance image archive with Kaniko
         run: |
           docker run --rm --network host \
@@ -100,6 +113,8 @@ jobs:
             --input /work/calrissian.tar --format cyclonedx --output /work/calrissian.cdx.json
           docker run --rm --volume "$RUNNER_TEMP:/work" "$TRIVY_IMAGE" image \
             --input /work/conformance.tar --format cyclonedx --output /work/conformance.cdx.json
+          docker run --rm --volume "$RUNNER_TEMP:/work" "$TRIVY_IMAGE" image \
+            --input /work/calrissian-dask.tar --format cyclonedx --output /work/calrissian-dask.cdx.json
 
       - name: Scan runtime image archive
         id: scan-runtime
@@ -125,6 +140,18 @@ jobs:
             --severity HIGH,CRITICAL --exit-code 1 \
             --format json --output /work/conformance-trivy.json
 
+      - name: Scan Dask runtime image archive
+        id: scan-dask-runtime
+        continue-on-error: true
+        run: |
+          docker run --rm \
+            --volume "$RUNNER_TEMP:/work" \
+            --volume "$GITHUB_WORKSPACE/.trivyignore.yaml:/work/.trivyignore.yaml:ro" \
+            "$TRIVY_IMAGE" image --input /work/calrissian-dask.tar \
+            --ignorefile /work/.trivyignore.yaml --scanners vuln \
+            --severity HIGH,CRITICAL --exit-code 1 \
+            --format json --output /work/calrissian-dask-trivy.json
+
       - name: Upload image archives, SBOMs, and scan reports
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -133,6 +160,7 @@ jobs:
           path: |
             ${{ runner.temp }}/calrissian.tar
             ${{ runner.temp }}/conformance.tar
+            ${{ runner.temp }}/calrissian-dask.tar
             ${{ runner.temp }}/*.cdx.json
             ${{ runner.temp }}/*-trivy.json
           if-no-files-found: warn
@@ -143,8 +171,9 @@ jobs:
         env:
           RUNTIME_SCAN: ${{ steps.scan-runtime.outcome }}
           CONFORMANCE_SCAN: ${{ steps.scan-conformance.outcome }}
+          DASK_RUNTIME_SCAN: ${{ steps.scan-dask-runtime.outcome }}
         run: |
-          test "$RUNTIME_SCAN" = success && test "$CONFORMANCE_SCAN" = success
+          test "$RUNTIME_SCAN" = success && test "$CONFORMANCE_SCAN" = success && test "$DASK_RUNTIME_SCAN" = success
 
       - name: Authenticate Skopeo to GHCR
         env:
@@ -161,7 +190,7 @@ jobs:
         run: |
           set -euo pipefail
           mapfile -t image_tags <<< "$IMAGE_TAGS"
-          for image in calrissian conformance; do
+          for image in calrissian calrissian-dask conformance; do
             for tag in "${image_tags[@]}"; do
               docker run --rm --volume "$RUNNER_TEMP:/work" "$SKOPEO_IMAGE" copy \
                 --dest-authfile /work/ghcr-auth.json \

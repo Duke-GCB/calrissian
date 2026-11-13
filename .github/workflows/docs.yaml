@@ -14,6 +14,8 @@ on:
     - 'scripts/generate-cli-reference.py'
     - 'pyproject.toml'
     - 'calrissian/**'
+    - 'calrissian-dask/**'
+    - 'calrissian-dask/pyproject.toml'
     - '.github/workflows/docs.yaml'
   release:
     types: [created]

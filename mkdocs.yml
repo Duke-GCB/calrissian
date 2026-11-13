@@ -50,6 +50,8 @@ nav:
   - Authenticated Dask Gateway: how-to/dask-production.md
   - Validation and troubleshooting: how-to/validation.md
 - Reference:
+  - Dask PVC probe: reference/dask-pvc-probe-2026-10-31.md
+  - CWL candidate readiness: reference/cwl-readiness-2026-10-31.md
   - Overview: reference/index.md
   - CLI and configuration: reference/configuration.md
   - Compatibility: reference/compatibility.md
@@ -77,11 +79,12 @@ nav:
 - Development:
   - Contributing: development/contributing.md
   - CI and image security: development/ci.md
+  - Extension packages: development/extensions.md
   - Project diagrams: development/diagrams.md
   - Python API:
     - Package: api/latest/calrissian/index.md
     - Context: api/latest/calrissian/context.md
-    - Dask: api/latest/calrissian/dask.md
+    - Dask extension: api/latest/calrissian_dask/index.md
     - Executor: api/latest/calrissian/executor.md
     - Job: api/latest/calrissian/job.md
     - Kubernetes: api/latest/calrissian/k8s.md

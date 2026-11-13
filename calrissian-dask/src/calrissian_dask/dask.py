@@ -1,12 +1,19 @@
+"""Build and monitor CWL tasks backed by Calrissian-owned Gateway clusters."""
+
+from calrissian_dask.pvc_mounts import MOUNTS_ENVIRONMENT, serialize_task_pvcs
 from calrissian.scheduling import apply_gpu_tolerations
 import os
 import logging
 import yaml
 import threading
+from importlib.resources import files
 from decimal import InvalidOperation
 from kubernetes.utils.quantity import parse_quantity
 
-from typing import List, Optional, Union
+from typing import TYPE_CHECKING, List, Optional, Union
+
+if TYPE_CHECKING:
+    from calrissian.context import CalrissianRuntimeContext
 from datetime import datetime
 
 from kubernetes import client, watch
@@ -62,7 +69,10 @@ def dask_req_validate(requirement: Optional[CWLObjectType]) -> bool:
 
 class KubernetesDaskPodBuilder(KubernetesPodBuilder):
     
-    def __init__(self, dask_gateway_url, dask_gateway_controller, *args, **kwargs):
+    def __init__(self, dask_gateway_url: str, dask_gateway_controller: object,
+                 *args: object, pvc_mounts: str | None = None, **kwargs: object) -> None:
+        """Build a Dask task pod with optional resolved worker PVC mappings."""
+        self.pvc_mounts = pvc_mounts
         self.helper_environment = kwargs.pop('helper_environment', None)
         super().__init__(*args, **kwargs)
         if self.helper_environment is None:
@@ -92,9 +102,7 @@ class KubernetesDaskPodBuilder(KubernetesPodBuilder):
         """
         if self.dask_gateway_controller:
             return ['python', '/controller/init-dask.py']
-        src = os.path.join(os.path.dirname(__file__), "dask/init-dask.py")
-        with open(src, 'r') as f:
-            file_content = f.read()
+        file_content = files("calrissian_dask.resources").joinpath("init-dask.py").read_text("utf-8")
         return ['python', '-c', file_content]
 
 
@@ -104,10 +112,7 @@ class KubernetesDaskPodBuilder(KubernetesPodBuilder):
         """
         if self.dask_gateway_controller:
             return ['python', '/controller/dispose-dask.py']
-        src = os.path.join(os.path.dirname(__file__), "dask/dispose-dask.py")
-
-        with open(src, 'r') as f:
-            file_content = f.read()
+        file_content = files("calrissian_dask.resources").joinpath("dispose-dask.py").read_text("utf-8")
         return ['python', '-c', file_content]
 
 
@@ -142,12 +147,18 @@ class KubernetesDaskPodBuilder(KubernetesPodBuilder):
                     f'CALRISSIAN_DASK_CLEANUP_{resource.upper()}_LIMIT')
         return resources
 
-    def container_environment(self, environment=None):
+    def container_environment(self, environment: dict[str, str] | None = None) -> list[dict[str, str]]:
+        """Supply cluster budgets and optional PVC descriptors to lifecycle hooks."""
+        if self.dask_requirement is None:
+            raise ValueError("DaskGatewayRequirement is required for a Dask task")
         env_entries = []
         source_environment = self.environment if environment is None else environment
         for name, value in sorted(source_environment.items()):
             env_entries.append({'name': name, 'value': value})
         
+        if self.pvc_mounts is not None:
+            env_entries.append({'name': MOUNTS_ENVIRONMENT, 'value': self.pvc_mounts})
+
         env_entries.append({'name': 'DASK_GATEWAY_WORKER_CORES', 'value': str(self.dask_requirement.get("workerCores"))})
         env_entries.append({'name': 'DASK_GATEWAY_WORKER_MEMORY', 'value': str(self.dask_requirement.get("workerMemory"))})
         env_entries.append({'name': 'DASK_GATEWAY_WORKER_CORES_LIMIT', 'value': str(self.dask_requirement.get("workerCoresLimit"))})
@@ -275,20 +286,23 @@ class CalrissianCommandLineDaskJob(CalrissianCommandLineJob):
         return self.client.wait_for_completion(cm_name=cm_name)
 
     def get_dask_script_cm_name(self, runtimeContext):
-        return runtimeContext.dask_script_configmap
+        options = getattr(runtimeContext, 'extension_options', {}).get('dask_gateway', {})
+        return options.get('script_configmap', getattr(runtimeContext, 'dask_script_configmap', None))
 
     def get_dask_gateway_url(self, runtimeContext):
-        return runtimeContext.dask_gateway_url
+        options = getattr(runtimeContext, 'extension_options', {}).get('dask_gateway', {})
+        return options.get('url', getattr(runtimeContext, 'dask_gateway_url', None))
 
     def _add_configmap_volume_and_binding(self, name, cm_name, target):
         self.volume_builder.add_configmap_volume(name, cm_name)
         self.volume_builder.add_configmap_volume_binding(name, target)
 
-    def create_kubernetes_runtime(self, runtimeContext):
+    def create_kubernetes_runtime(self, runtimeContext: "CalrissianRuntimeContext") -> dict[str, object]:
+        """Resolve task staging and optionally forward its PVC mounts to workers."""
         # In cwltool, the runtime list starts as something like ['docker','run'] and these various builder methods
         # append to that list with docker (or singularity) options like volume mount paths
         # As we build up kubernetes, these aren't really used this way so we leave it empty
-        runtime = []
+        runtime: list[str] = []
 
         # Append volume for outdir
         self._add_volume_binding(os.path.realpath(self.outdir), self.builder.outdir, writable=True)
@@ -337,6 +351,11 @@ class CalrissianCommandLineDaskJob(CalrissianCommandLineJob):
         resolved_environment = self.resolve_secrets(self.environment, runtimeContext.secret_store)
         helper_environment = self.environment_without_secrets(self.environment, runtimeContext.secret_store)
         builder_options = {}
+        options = getattr(runtimeContext, 'extension_options', {}).get('dask_gateway', {})
+        if options.get('mount_task_pvcs') is True:
+            builder_options['pvc_mounts'] = serialize_task_pvcs(
+                self.volume_builder.volumes, self.volume_builder.volume_mounts)
+
         if helper_environment != resolved_environment:
             builder_options['helper_environment'] = helper_environment
 
@@ -488,7 +507,7 @@ class KubernetesDaskClient(KubernetesClient):
         self._container_log_threads = {}
 
     @retry_exponential_if_exception_type((ApiException, HTTPError), log)
-    def wait_for_completion(self, cm_name: str=None) -> CompletionResult:
+    def wait_for_completion(self, cm_name: str | None = None) -> CompletionResult:
 
         resource_version = None
 
@@ -523,17 +542,39 @@ class KubernetesDaskClient(KubernetesClient):
                     if init_status and self.state_is_terminated(init_status[0].state):
                         init_status_code = init_status[0].state.terminated.exit_code
                         if init_status_code is not None and init_status_code != 0:
+                            init_name = init_status[0].name
+                            init_log = ""
+                            try:
+                                init_log = self.core_api_instance.read_namespaced_pod_log(
+                                    name=pod.metadata.name,
+                                    namespace=self.namespace,
+                                    container=init_name,
+                                    tail_lines=100,
+                                )
+                                if isinstance(init_log, bytes):
+                                    init_log = init_log.decode("utf-8", errors="replace")
+                                init_log = self.redact_log_line(str(init_log).strip())[-12000:]
+                            except Exception as error:
+                                log.warning(
+                                    "Could not read failed init container %s logs for pod %s: %s",
+                                    init_name, pod.metadata.name, error,
+                                )
                             with DaskPodMonitor() as monitor:
                                 self.delete_pod_name(pod.metadata.name)
                                 self.delete_configmap_name(cm_name=cm_name)
                                 monitor.remove(pod)
                             self._clear_pod()
                             w.stop()
+                            detail = f"; init log: {init_log}" if init_log else ""
+                            raise CalrissianJobException(
+                                f"Dask task pod {pod.metadata.name} init container "
+                                f"failed with exit code {init_status_code}{detail}"
+                            )
 
                     statuses = self.get_list_or_none(pod.status.container_statuses)
                     main_status = self.get_container_by_name(statuses, 'main-container')
                     # Wait for cleanup too, but never use its exit status for CWL.
-                    all_terminated = bool(statuses) and all(
+                    all_terminated = statuses is not None and bool(statuses) and all(
                         self.state_is_terminated(status.state) for status in statuses)
                     if not all_terminated:
                         statuses = self.get_list_or_none(pod.status.container_statuses)

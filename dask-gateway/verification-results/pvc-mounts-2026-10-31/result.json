@@ -1,0 +1,2 @@
+{"text": "Read this file from the execution PVC.\n", "worker": "tls://10.244.0.70:40047", "path": "/var/lib/cwl/stg175577a9-a4ca-4aaf-94af-3691d9c2dd10/pvc-input.txt", "cluster": "openeo.03c57909e260472492b3806fe43ca7bc"}
+

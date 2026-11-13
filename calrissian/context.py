@@ -1,4 +1,5 @@
 from calrissian.tool import calrissian_make_tool
+from calrissian.extensions import ExtensionManager
 from cwltool.context import LoadingContext, RuntimeContext
 import logging
 
@@ -7,6 +8,7 @@ log = logging.getLogger('calrissian.context')
 class CalrissianLoadingContext(LoadingContext):
 
     def __init__(self, **kwargs):
+        self.extension_manager = kwargs.pop('extension_manager', None) or ExtensionManager.discover()
         kwargs['construct_tool_object'] = calrissian_make_tool
         kwargs.setdefault('relax_path_checks', True)
         return super(CalrissianLoadingContext, self).__init__(kwargs)
@@ -33,7 +35,5 @@ class CalrissianRuntimeContext(RuntimeContext):
         self.pod_priority_class = None
         self.env_from_secret = None
         self.env_from_configmap = None
-
-        self.dask_gateway_url = None
-        self.dask_script_configmap = None
+        self.extension_options = {}
         return super(CalrissianRuntimeContext, self).__init__(kwargs)

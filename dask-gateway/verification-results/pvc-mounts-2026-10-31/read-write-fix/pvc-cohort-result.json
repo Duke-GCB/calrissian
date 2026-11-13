@@ -1,0 +1,2 @@
+{"worker": "tls://10.244.0.167:33969", "path": "/var/lib/cwl/stg37ccfdc4-dd20-44a6-bc0a-776b4d53c064/pvc-input.txt", "worker_output": "/BGIQeQ/worker-write.txt", "text": "Read this file from the execution PVC.\n", "read_error": null, "output_write_error": null, "input_write_errno": 30, "input_read_only": true, "cluster": "openeo.58ec3062ee974f10a7682e1580e9f083"}
+

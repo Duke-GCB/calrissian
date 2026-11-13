@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "calrissian-dask"
+version = "0.1.0"
+description = "Optional Dask Gateway extension for Calrissian"
+requires-python = ">=3.10"
+dependencies = ["calrissian>=0.19.1", "jsonschema>=4.23,<5"]
+
+[project.entry-points."calrissian.extensions"]
+dask-gateway = "calrissian_dask.plugin:create_extension"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/calrissian_dask"]
+
+# Workspace wheels are published to Harbor; published requirements remain portable.
+[dependency-groups]
+local-wheels = [
+  "calrissian==0.19.1",
+]
+
+[tool.uv]
+default-groups = ["local-wheels"]
+
+[tool.uv.sources]
+calrissian = { index = "harbor" }
+
+[[tool.uv.index]]
+name = "harbor"
+url = "http://localhost:8095/cr.terradue.com/python-oci-develop/"
+explicit = true
+authenticate = "always"
+# Development uploads may replace a wheel without changing its version.
+cache-control = { api = "no-cache", files = "no-cache" }

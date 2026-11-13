@@ -1,0 +1,157 @@
+{
+  "result": {
+    "text": "Read this file from the execution PVC.\n",
+    "worker": "tls://10.244.0.70:40047",
+    "path": "/var/lib/cwl/stg175577a9-a4ca-4aaf-94af-3691d9c2dd10/pvc-input.txt",
+    "cluster": "openeo.03c57909e260472492b3806fe43ca7bc"
+  },
+  "cluster_phase_after_cleanup": "Stopped",
+  "source_verification": {
+    "installed_source_semantics_match": true,
+    "files": [
+      "__init__.py",
+      "dask.py",
+      "plugin.py",
+      "pvc_mounts.py",
+      "resources/__init__.py",
+      "resources/dispose-dask.py",
+      "resources/init-dask.py",
+      "resources/pvc-mounts.schema.json"
+    ]
+  },
+  "storage": {
+    "name": "calrissian-pvc-probe",
+    "accessModes": [
+      "ReadWriteMany"
+    ],
+    "phase": "Bound",
+    "implementation": "Dedicated single-node hostPath PV with node affinity, not a multi-node RWX test"
+  },
+  "task_mounts_match_worker": true,
+  "pod_specs": [
+    {
+      "name": "dask-worker-03c57909e260472492b3806fe43ca7bc-qmc4s",
+      "uid": "513221a5-e44e-4b2c-ab07-77797eb33a40",
+      "automountServiceAccountToken": false,
+      "pvc_volumes": {
+        "user-workspace": {
+          "claimName": "calrissian-pvc-probe"
+        },
+        "calrissian-pvc-2": {
+          "claimName": "calrissian-pvc-probe"
+        },
+        "calrissian-pvc-3": {
+          "claimName": "calrissian-pvc-probe",
+          "readOnly": true
+        }
+      },
+      "containers": [
+        {
+          "name": "dask-worker",
+          "image": "calrissian-pvc-probe:verified",
+          "pvc_mounts": [
+            {
+              "mountPath": "/user_workspaces",
+              "name": "user-workspace"
+            },
+            {
+              "mountPath": "/WUqRwU",
+              "name": "calrissian-pvc-2",
+              "subPath": "probe/tmpout/2wjg39v8"
+            },
+            {
+              "mountPath": "/var/lib/cwl/stg175577a9-a4ca-4aaf-94af-3691d9c2dd10/pvc-input.txt",
+              "name": "calrissian-pvc-3",
+              "readOnly": true,
+              "subPath": "probe/pvc-input.txt"
+            }
+          ]
+        }
+      ],
+      "image_ids": [
+        {
+          "name": "dask-worker",
+          "image": "docker.io/library/calrissian-pvc-probe:verified",
+          "imageID": "sha256:eb6d0f554cdeb5c1f93425017f9af15751201672bd13dcad43b943e0cded41ba"
+        }
+      ]
+    },
+    {
+      "name": "pvc-read-cwl-pod-vtisytfi",
+      "uid": "61a04608-3705-4682-80da-442eca60d33a",
+      "automountServiceAccountToken": false,
+      "pvc_volumes": {
+        "calrissian-pvc-probe": {
+          "claimName": "calrissian-pvc-probe"
+        }
+      },
+      "containers": [
+        {
+          "name": "main-container",
+          "image": "calrissian-pvc-probe:verified",
+          "pvc_mounts": [
+            {
+              "mountPath": "/WUqRwU",
+              "name": "calrissian-pvc-probe",
+              "subPath": "probe/tmpout/2wjg39v8"
+            },
+            {
+              "mountPath": "/var/lib/cwl/stg175577a9-a4ca-4aaf-94af-3691d9c2dd10/pvc-input.txt",
+              "name": "calrissian-pvc-probe",
+              "readOnly": true,
+              "subPath": "probe/pvc-input.txt"
+            }
+          ]
+        },
+        {
+          "name": "sidecar-container",
+          "image": "calrissian-pvc-probe:verified",
+          "pvc_mounts": [
+            {
+              "mountPath": "/WUqRwU",
+              "name": "calrissian-pvc-probe",
+              "subPath": "probe/tmpout/2wjg39v8"
+            },
+            {
+              "mountPath": "/var/lib/cwl/stg175577a9-a4ca-4aaf-94af-3691d9c2dd10/pvc-input.txt",
+              "name": "calrissian-pvc-probe",
+              "readOnly": true,
+              "subPath": "probe/pvc-input.txt"
+            }
+          ]
+        }
+      ],
+      "image_ids": [
+        {
+          "name": "main-container",
+          "image": "docker.io/library/calrissian-pvc-probe:verified",
+          "imageID": "sha256:eb6d0f554cdeb5c1f93425017f9af15751201672bd13dcad43b943e0cded41ba"
+        },
+        {
+          "name": "sidecar-container",
+          "image": "docker.io/library/calrissian-pvc-probe:verified",
+          "imageID": "sha256:eb6d0f554cdeb5c1f93425017f9af15751201672bd13dcad43b943e0cded41ba"
+        }
+      ]
+    }
+  ],
+  "images": [
+    "[calrissian-pvc-probe:verified] sha256:760116fc19c3a0baf7ae3c95a2a72c2af05736c606f11e0a9c003223716baf59",
+    "[gateway-pvc-probe:local] sha256:c165d94d915506e2ede66463fc0472359460fc16595a1ac1d383e1d8d88a51e2"
+  ],
+  "wheels": {
+    "calrissian_dask-0.1.0-py3-none-any.whl": "48dfdcf8d53e6261bee716e57af4e11feeffe70b4821c54daac03a1b73d197bb",
+    "calrissian-0.19.1-py3-none-any.whl": "8d44815eb427c564b6700199caeace1a14a770d3a4846532c9bc240eb3965f32"
+  },
+  "tests": "554 passed, 1 skipped, 51 subtests passed; nine focused PVC tests included",
+  "initial_attempt": "An exploratory attempt failed with Gateway CommClosedError; subsequent independent runs and the final exact-source run succeeded. No connection retry workaround was added.",
+  "instrumentation": "Operator disposal hook delayed 20 seconds for pod-spec capture; default extension lifecycle is unchanged.",
+  "strict_docs": {
+    "passed": false,
+    "warnings_at_head": 17,
+    "warnings_with_feature": 17,
+    "identical_warnings": true
+  },
+  "gateway_restored": true,
+  "temporary_probe_resources_removed": true
+}

@@ -27,11 +27,12 @@ options. Run `task docs:cli` after changing the parser.
 | `--conf` | `conf` | string; repeatable / JSON list | unset | Defines the default values for the CLI arguments |
 | `--no-network-access-pod-label` | `no_network_access_pod_labels` | string; parser permits an omitted value | unset | YAML file to set the pod label to use for disabling network access |
 | `--network-access-pod-label` | `network_access_pod_labels` | string; parser permits an omitted value | unset | YAML file to set the pod label to use for enabling network access |
-| `--dask-gateway-url` | `dask_gateway_url` | string; parser permits an omitted value | unset | Defines the Dask Gateway URL |
-| `--dask-script-configmap` | `dask_script_configmap` | string; parser permits an omitted value | unset | Name of the already existing configmap with custom script for dask |
 | `--pod-priority-class` | `pod_priority_class` | string; parser permits an omitted value | unset | Priority Class Name assigned to the pod |
 | `--env-from-secret` | `env_from_secret` | string; repeatable / JSON list | unset | Secret Id to set the pod environment |
 | `--env-from-configmap` | `env_from_configmap` | string; repeatable / JSON list | unset | ConfigMap Id to set the pod environment |
+| `--dask-gateway-url` | `dask_gateway_url` | string; parser permits an omitted value | unset | Defines the Dask Gateway URL |
+| `--dask-script-configmap` | `dask_script_configmap` | string; parser permits an omitted value | unset | Name of the already existing ConfigMap with custom Dask scripts |
+| `--dask-mount-task-pvcs` | `dask_mount_task_pvcs` | flag / JSON boolean | false | Mirror this task's resolved PVC mounts onto Gateway workers; requires a compatible Gateway profile |
 
 <!-- generated-options:end -->
 

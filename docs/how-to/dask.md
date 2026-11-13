@@ -1,5 +1,24 @@
 # Run the Dask Gateway extension
 
+Install `calrissian-dask` in the Calrissian runner environment to enable the
+extension. The standard Python `calrissian` distribution does not include it:
+
+```sh
+python -m pip install calrissian-dask
+```
+
+The task image must provide a compatible `dask-gateway` client; it does not
+need the `calrissian-dask` package. The standard `ghcr.io/duke-gcb/calrissian`
+image contains the Calrissian runtime without the extension. Use
+`ghcr.io/duke-gcb/calrissian-dask` for a runner image with the extension already
+installed.
+
+The default initialization script runs inside the task image and is
+self-contained: it imports only the standard library and `dask-gateway`.
+Calrissian supplies its settings through environment variables, including the
+optional `DASK_GATEWAY_PVC_MOUNTS` descriptor. PVC propagation does not require
+a custom lifecycle ConfigMap or installing the runner extension in the task.
+
 Calrissian can provision a Dask cluster for a tool declaring its
 `DaskGatewayRequirement` extension. This is separate from standard CWL conformance.
 The [architecture](../explanation/architecture.md) distinguishes Calrissian task
@@ -76,11 +95,42 @@ The extension fields describe worker/cluster allocations:
 
 The schema allows expressions for these fields. For implementation details, see:
 
-- [Extension schema](https://github.com/Duke-GCB/calrissian/blob/develop/calrissian/dask/custom_schema/schema.yaml).
+- [Extension schema](https://github.com/Duke-GCB/calrissian/blob/develop/calrissian-dask/src/calrissian_dask/resources/schema.yaml).
 - [Minimal computation fixture](https://github.com/Duke-GCB/calrissian/blob/develop/dask-gateway/tests/minimal.cwl).
 
-`NetworkAccess: true` expresses tool intent. Cluster policy must also allow
-connections to Gateway, scheduler, and workers.
+Gateway-based Dask tools must explicitly declare
+`NetworkAccess: {networkAccess: true}`. `DaskGatewayRequirement` does not grant
+network access implicitly. In CWL v1.2, an omitted NetworkAccess requirement is
+handled as false by Calrissian. With enforcing policies, that blocks initialization
+and cleanup as well as computation because the containers share a Pod network
+namespace. Cluster policy must also allow connections to Gateway, scheduler and
+workers. The Dask fixtures declare the permission explicitly; ordinary denied
+network tests retain their restrictions.
+
+## Validate server resource and image policies
+
+`dask-gateway/readiness-values.yaml` is an opt-in validation overlay, not a
+production default. Layer it after the base Gateway values and any operator PVC
+profile when reproducing the candidate readiness checks. It approves only
+`calrissian-cwl-readiness:430ce62` and `calrissian-pvc-probe:cohort` as worker
+images, caps each worker at one CPU/1 GiB and the worker pool at two workers,
+two CPU and 2 GiB, and enables a 60-second idle timeout.
+
+Gateway's aggregate cluster caps include scheduler limits. This overlay includes
+the base profile's additional one CPU/512 MiB scheduler limit; increasing these
+scheduler limits requires reviewing the arithmetic. The worker budget remains
+two CPU/2 GiB. The server rejects unapproved images, oversized workers and caller
+attempts to override the idle/worker caps. A scale request above the pool limit
+is clamped with a warning rather than provisioning additional workers.
+
+Idle termination covers idle clusters. Operations owns recovery when task/node
+loss prevents disposal and work remains active. Operations must retain a durable
+execution-to-cluster mapping and define its recovery service and deadline before
+that failure path can be signed off. The current configuration does not install
+an orphan reaper or establish that production guarantee.
+
+See the [candidate readiness record](../reference/cwl-readiness-2026-10-31.md)
+for measured results and the unresolved client-connection probes.
 
 ## Configure cleanup resources
 
@@ -117,3 +167,104 @@ task dask:cleanup:test
 The suite checks computation and cluster cleanup separately. It is distinct
 from official CWL conformance testing. For case details and artifacts, see the
 [compatibility-suite reference](https://github.com/Duke-GCB/calrissian/blob/develop/dask-gateway/README.md#cwl-extension-compatibility-suite).
+
+## Share staged files with Gateway workers
+
+Add `--dask-mount-task-pvcs` to the Calrissian command when workers need to read
+staged files or write distributed output files. It is disabled by default and
+requires a compatible Gateway profile. Application CWL inputs do not change.
+
+The runner already discovers PVCs through `CALRISSIAN_POD_NAME`. The extension
+uses each task's resolved mount mappings, including its container paths and PVC
+subpaths, rather than copying the runner's mount paths. It forwards only
+PVC-backed mounts, preserving read-only restrictions. ConfigMaps, Secrets,
+service-account credentials and emptyDir volumes are not propagated. The worker
+identity must have filesystem permissions to access the selected files.
+
+The transport is `DASK_GATEWAY_PVC_MOUNTS` in the initialization hook and the
+Gateway string option `worker_pvc_mounts`. The JSON contract is defined in
+`calrissian-dask/src/calrissian_dask/resources/pvc-mounts.schema.json`.
+Custom initialization hooks selected through `--dask-script-configmap` must pass
+that environment value to `cluster_options.worker_pvc_mounts` when present.
+Unsupported profiles must fail rather than silently dropping the setting.
+
+### Configure the Gateway profile
+
+Gateway must have `jsonschema>=4.23,<5` installed; an optional image recipe is
+`dask-gateway/Dockerfile.pvc-profile`. From the checkout root, generate a helper
+for the PVCs explicitly approved by operations:
+
+```sh
+python dask-gateway/render-pvc-config.py --allow-claim EXECUTION_PVC > /tmp/pvc-profile.py
+```
+
+Supply it as an additional Gateway configuration fragment, for example with
+Helm `--set-file gateway.extraConfig.pvc-mounts=/tmp/pvc-profile.py` alongside
+`dask-gateway/values.yaml`. That values file declares `worker_pvc_mounts` and calls
+the helper only when requested. The helper validates the schema, approved claims,
+paths and collisions and merges the worker configuration. Other Gateway profiles
+must provide equivalent handling, including preserving their existing overrides.
+Claim approval must follow the deployment's user/namespace isolation policy; the
+example allowlist is intended for the local integration profile.
+
+The feature does not provision storage. Use storage suitable for the worker
+placement, normally RWX across nodes. An unresolved `subPathExpr` is rejected.
+The scheduler and Gateway API server do not receive these PVC mounts.
+
+### Run the small file-read probe
+
+`dask-gateway/tests/pvc-read.cwl` submits a file read to a worker and asserts its
+contents. `pvc-read-job.yaml` supplies `pvc-input.txt`. The result records the
+worker address, cluster name and identical staged-file path.
+
+Build the current wheels and the probe image before loading it into minikube:
+
+```sh
+uv build --wheel --out-dir dist .
+uv build --wheel --out-dir calrissian-dask/dist calrissian-dask
+docker build -f dask-gateway/Dockerfile.pvc-probe -t calrissian-pvc-probe:cohort .
+minikube -p YOUR_PROFILE image load calrissian-pvc-probe:cohort
+```
+
+From a Calrissian runner using this feature image, with the probe files staged
+on its PVC and a compatible Gateway profile, run:
+
+```sh
+calrissian --dask-gateway-url YOUR_GATEWAY_URL \
+  --dask-mount-task-pvcs --max-cores 1 --max-ram 2G \
+  --tmpdir-prefix PVC_PATH/tmp/ --tmp-outdir-prefix PVC_PATH/tmpout/ \
+  --outdir PVC_PATH/result \
+  dask-gateway/tests/pvc-read.cwl dask-gateway/tests/pvc-read-job.yaml
+```
+
+Add deployment-specific lifecycle ConfigMap and service-account arguments where
+required. The worker must return the expected file content; a success in the
+runner alone does not verify propagation. Inspect both task and worker mounts
+and confirm cluster cleanup. The local minikube result is recorded in
+[the PVC probe verification](../reference/dask-pvc-probe-2026-10-31.md).
+
+
+## Use the published core wheel for plugin development
+
+In the sibling openEO workspace, the plugin's `local-wheels` group selects
+`calrissian==0.19.1` from the explicit `harbor` uv index. The development endpoint
+is `http://localhost:8095/cr.terradue.com/python-oci-develop/`. Keep credentials
+in the workspace `harbor.env`; the root Taskfile maps them to uv's named-index
+variables. From the workspace root:
+
+```sh
+task pyoci:start
+task uv:sync PROJECT=calrissian/calrissian-dask
+```
+
+For direct uv commands, export `UV_INDEX_HARBOR_USERNAME` and
+`UV_INDEX_HARBOR_PASSWORD` first. No committed uv.lock is introduced; normal uv
+sync commands may create local locks. The normal distribution requirement remains
+`calrissian>=0.19.1`, and the registry group selects the approved built baseline.
+
+Core tests remain a deliberate exception: their existing Hatch workspace installs
+the plugin from source. Keep using the core's configured Hatch checks for those
+tests. Diagnostic runner image builds in `../dask-calrissian-example` use
+`task wheels:runner` to build core/plugin artifacts in their own `dist/`
+directories, publish that exact cohort to Harbor, then download and verify it for
+Docker. Build tasks load the workspace credentials without copying them into images.

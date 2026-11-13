@@ -15,18 +15,31 @@ gateway:
   extraConfig:
     cluster-options: |
       from dask_gateway_server.options import Options, String, Float, Integer
+      def option_handler(options):
+          configuration = {
+              "image": options.image,
+              "worker_cores": options.worker_cores,
+              "worker_cores_limit": options.worker_cores_limit,
+              "worker_memory": options.worker_memory,
+          }
+          if options.worker_pvc_mounts != "[]":
+              if "calrissian_worker_pvcs" not in globals():
+                  raise ValueError("Task PVC propagation requires the operator profile helper")
+              configuration.update(calrissian_worker_pvcs(options))
+          return configuration
+
       c.Backend.cluster_options = Options(
           String("image", default="worker:latest"),
           Float("worker_cores", default=0.1, min=0.01),
           Integer("worker_cores_limit", default=1, min=1),
           String("worker_memory", default="256M"),
-          handler=lambda options: {
-              "image": options.image,
-              "worker_cores": options.worker_cores,
-              "worker_cores_limit": options.worker_cores_limit,
-              "worker_memory": options.worker_memory,
-          },
+          String("worker_pvc_mounts", default="[]"),
+          handler=option_handler,
       )
+    dask-cli-commands: |
+      # Use unified CLI commands across the Dask releases in this matrix.
+      c.KubeClusterConfig.scheduler_cmd = ["dask", "scheduler"]
+      c.KubeClusterConfig.worker_cmd = ["dask", "worker"]
 traefik:
   service:
     type: ClusterIP

@@ -34,7 +34,7 @@ jobs:
         sh scripts/bootstrap-pip.sh
         python -m pip install "certifi>=2026.10.19" "uv>=0.13.4" hatch
     - name: Build package
-      run: hatch build
+      run: hatch build --all
     - name: Test package
       run: hatch run test.py3.12:testv
     - name: Publish package distributions to PyPI

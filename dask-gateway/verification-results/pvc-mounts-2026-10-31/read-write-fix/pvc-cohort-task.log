@@ -1,0 +1,6 @@
+/workspace/sentinel/run-pvc-cohort/logs/pvc-read.cwl.log
+2026-10-31T12:20:27.791839Z - pvc-read-cwl-pod-guqkgryz - INFO:__main__:Sidecar: Waiting for completion signal (/shared/completed) from main container...
+2026-10-31T12:20:27.791926Z - pvc-read-cwl-pod-guqkgryz - INFO:__main__:Sidecar: Completion signal received. Shutting down Dask cluster...
+2026-10-31T12:20:27.899468Z - pvc-read-cwl-pod-guqkgryz - INFO:__main__:Sidecar: Connected to Dask cluster: openeo.58ec3062ee974f10a7682e1580e9f083
+2026-10-31T12:20:27.911671Z - pvc-read-cwl-pod-guqkgryz - INFO:__main__:Sidecar: Dask cluster shut down successfully.
+

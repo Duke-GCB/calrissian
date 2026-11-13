@@ -1,0 +1,19 @@
+Using Python 3.12.15 environment at: /tmp/calrissian-pvc-test-venv
+Resolved 34 packages in 330ms
+Prepared 9 packages in 99ms
+Installed 15 packages in 5ms
+ + cloudpickle==3.1.2
+ + dask==2026.8.0
+ + dask-gateway==2026.3.0
+ + distributed==2026.8.0
+ + fsspec==2026.9.0
+ + kubernetes-stubs==22.6.0.post1
+ + locket==1.0.0
+ + partd==1.4.2
+ + sortedcontainers==2.4.0
+ + tblib==3.2.2
+ + toolz==1.2.0
+ + tornado==6.6
+ + types-jsonschema==4.26.0.20261006
+ + types-pyyaml==6.0.12.20261030
+ + zict==3.0.0

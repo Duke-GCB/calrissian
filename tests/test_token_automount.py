@@ -11,7 +11,7 @@ from cwltool.main import arg_parser
 from calrissian.context import CalrissianRuntimeContext
 from calrissian.main import add_arguments, parse_arguments
 from calrissian.job import CalrissianCommandLineJob, KubernetesPodBuilder
-from calrissian.dask import KubernetesDaskPodBuilder
+from calrissian_dask.dask import KubernetesDaskPodBuilder
 
 
 @pytest.mark.parametrize('kind', [KubernetesPodBuilder, KubernetesDaskPodBuilder])
