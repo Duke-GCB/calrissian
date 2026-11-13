@@ -28,3 +28,8 @@ __pycache__/
 
 # Local Dask integration evidence.
 /dask-gateway/test-results/
+
+# Generated from the Dask plugin uv local-wheel sources.
+calrissian-dask/.uv-wheels/
+verification-results
+readiness-values.yaml
